@@ -8,13 +8,31 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(199, 210, 254, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(199, 210, 254, 0); }
+        }
+
         body {
             font-family: 'Inter', sans-serif;
-            background-image: url('https://i.imgur.com/CLS4xwt.jpeg');
+            background-image: url('https://i.imgur.com/HnUnpQJ.jpeg');
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
             color: #f0f0f0;
+        }
+
+        .hero-section {
+            animation: fadeIn 1s ease-out;
+        }
+        
+        .cta-button {
+            animation: pulse 2s infinite;
         }
 
         .glass-card {
@@ -126,7 +144,8 @@
         #manage-meals-modal.active #manage-modal-content,
         #edit-meal-modal.active #edit-modal-content,
         #start-date-modal.active #start-date-modal-content,
-        #sleep-modal.active #sleep-modal-content {
+        #sleep-modal.active #sleep-modal-content,
+        #auth-modal.active #auth-modal-content {
             transform: scale(1);
             opacity: 1;
         }
@@ -225,214 +244,247 @@
 <body class="antialiased text-gray-200">
 
     <div id="app-container" class="container mx-auto p-4 md:p-8 max-w-7xl">
-        <!-- Header -->
-        <header class="mb-8 text-center">
-            <h1 class="text-4xl md:text-5xl font-bold text-white">Pregnancy Wellness Planner</h1>
-        </header>
+        <!-- New Hero Section -->
+        <section id="hero-section" class="hero-section text-center py-16 md:py-24">
+            <h1 class="text-4xl md:text-6xl font-bold text-white mb-4">Your Journey, Beautifully Planned</h1>
+            <p class="text-lg md:text-xl text-indigo-200 max-w-3xl mx-auto mb-8">
+                A smart, compassionate companion for your pregnancy. Track meals, monitor wellness, and get AI-powered insights, all in one place.
+            </p>
+            <div id="auth-buttons" class="space-x-4">
+                <button id="sign-up-btn" class="cta-button bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 px-8 rounded-full transition-colors text-lg">
+                    Get Started
+                </button>
+            </div>
+            <div id="user-info" class="hidden items-center justify-center mt-4">
+                <p class="text-indigo-200">Welcome, <span id="user-name" class="font-semibold text-white"></span>!</p>
+                <button id="sign-out-btn" class="ml-4 text-sm text-indigo-300 hover:text-white">Sign Out</button>
+            </div>
+        </section>
 
-        <!-- Tab Navigation -->
-        <div class="flex justify-center space-x-4 mb-8">
-            <button id="tab-meal-plan" class="tab-btn active">🥣 Meal Plan</button>
-            <button id="tab-symptom-tracker" class="tab-btn">💗 Symptom & Mood Tracker</button>
-        </div>
+        <!-- Main Application (Initially hidden) -->
+        <div id="main-app" class="hidden">
+            <!-- Header -->
+            <header class="mb-8 text-center">
+                <h1 class="text-4xl md:text-5xl font-bold text-white">Pregnancy Wellness Planner</h1>
+            </header>
 
-        <!-- Main Content -->
-        <main>
-            <!-- Meal Planner Tab -->
-            <div id="content-meal-plan" class="tab-content active">
-                <div class="glass-card p-4 md:p-6">
-                    <div class="flex items-center mb-6 px-2">
-                        <svg class="w-8 h-8 text-purple-300 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 15.546c-.523 0-1.046.151-1.5.454a2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0c.004-.867.126-1.723.38-2.546.174-.53.385-1.054.64-1.571a21.89 21.89 0 012.652-3.956c1.522-1.657 2.733-3.482 3.683-5.527a5.553 5.553 0 011.02-1.923c.37-.621.733-1.21 1.09-1.742a2.492 2.492 0 014.226 2.158c-.373.632-.74,1.226-1.11,1.845a5.553 5.553 0 01-1.02,1.923c-.95,2.045-2.16,3.87-3.684,5.527a21.885 21.885 0 01-2.652,3.956c-.255.517-.466,1.041-.64,1.571-.254.823-.376,1.68-.38,2.546z"></path></svg>
-                        <h2 class="text-2xl font-bold">Weekly Meal Plan</h2>
-                    </div>
-                    
-                    <div class="overflow-x-auto horizontal-scroll pb-4 -mx-4 px-4 md:mx-0 md:px-0">
-                        <div id="meal-plan-grid" class="grid grid-cols-8 gap-2 md:gap-4 min-w-[60rem]">
-                            <!-- Grid will be populated by JS -->
-                        </div>
-                    </div>
-                    
-                    <div id="loading-spinner" class="flex justify-center items-center h-64">
-                        <svg class="animate-spin -ml-1 mr-3 h-8 w-8 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        <span class="text-lg">Loading Meal Plan...</span>
-                    </div>
-
-                    <div class="mt-8 pt-6 border-t border-gray-700 grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div>
-                            <h3 class="text-xl font-bold mb-4 flex items-center">
-                                <svg class="w-6 h-6 text-blue-300 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
-                                🫶 Tips for the Partner
-                            </h3>
-                            <div id="partner-tips-container" class="space-y-2 text-gray-300 list-disc list-inside">
-                                <!-- AI-generated tips will go here -->
-                                <p id="partner-tips-loader" class="text-gray-400">Loading personalized tips...</p>
-                            </div>
-                            <h4 class="text-lg font-bold mt-6 mb-2 text-red-400">To Avoid</h4>
-                            <div id="partner-avoid-container" class="space-y-2 text-gray-300 list-disc list-inside">
-                                <!-- AI-generated avoid tips will go here -->
-                                <p id="partner-avoid-loader" class="text-gray-400">Loading personalized tips...</p>
-                            </div>
-                        </div>
-                        <div>
-                            <h3 class="text-xl font-bold mb-4 flex items-center">
-                                <svg class="w-6 h-6 text-green-300 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                Hydration & Snacks
-                            </h3>
-                             <div id="hydration-snacks-container" class="space-y-2 text-gray-300 list-disc list-inside">
-                                <!-- AI-generated tips will go here -->
-                                <p id="hydration-snacks-loader" class="text-gray-400">Loading personalized tips...</p>
-                            </div>
-                            <h4 class="text-lg font-bold mt-6 mb-2 text-red-400">To Avoid</h4>
-                            <div id="hydration-avoid-container" class="space-y-2 text-gray-300 list-disc list-inside">
-                                <!-- AI-generated avoid tips will go here -->
-                                <p id="hydration-avoid-loader" class="text-gray-400">Loading personalized tips...</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <!-- Tab Navigation -->
+            <div class="flex justify-center space-x-4 mb-8">
+                <button id="tab-meal-plan" class="tab-btn active">🥣 Meal Plan</button>
+                <button id="tab-symptom-tracker" class="tab-btn">💗 Symptom & Mood Tracker</button>
             </div>
 
-            <!-- Symptom Tracker Tab -->
-            <div id="content-symptom-tracker" class="tab-content">
-                <div class="space-y-8">
-                    <!-- Top Row -->
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        <!-- AI Symptom Assistant -->
-                        <div class="glass-card p-4 md:p-6 lg:col-span-2">
-                            <h3 class="text-xl font-bold mb-4 flex items-center">🤖 AI Symptom Assistant</h3>
-                            <p class="text-gray-300 mb-4">Feeling something? Describe it below for gentle, non-medical suggestions.</p>
-                            <textarea id="symptom-input" class="symptom-input min-h-[80px]" placeholder="e.g., I feel dizzy and tired today..."></textarea>
-                            <button id="symptom-check-btn" class="mt-4 w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
-                                <span id="symptom-btn-text">Get Suggestions</span>
-                                <svg id="symptom-loader" class="animate-spin ml-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                            </button>
-                            <div id="symptom-response" class="mt-4"></div>
-                        </div>
-                        <!-- Side Cards -->
-                        <div class="space-y-8">
-                           <div class="glass-card p-4 md:p-6 text-center">
-                                <h3 class="text-xl font-bold mb-2">💡 Wellness Tip</h3>
-                                <p id="wellness-tip" class="text-gray-300">Eat small meals every 3 hours to help with nausea and maintain energy.</p>
-                           </div>
-                           <div id="baby-growth-card" class="glass-card p-4 md:p-6 text-center cursor-pointer hover:bg-white/10 transition-colors">
-                                <h3 class="text-xl font-bold mb-2">🍼 Baby Growth</h3>
-                                <p id="baby-growth-snapshot" class="text-gray-300 text-lg">Week 10 — baby is the size of a strawberry 🍓</p>
-                           </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Wellness Dashboard -->
+            <!-- Main Content -->
+            <main>
+                <!-- Meal Planner Tab -->
+                <div id="content-meal-plan" class="tab-content active">
                     <div class="glass-card p-4 md:p-6">
-                        <h3 class="text-2xl font-bold mb-6 flex items-center">📈 Wellness Dashboard</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-                            <!-- Daily Health Summary -->
-                            <div class="bg-white/5 rounded-xl p-4 space-y-3">
-                                <h4 class="font-bold text-lg">🩺 Daily Summary</h4>
-                                <div class="flex justify-between items-center text-sm"><span>Mood:</span> <span id="summary-mood" class="font-semibold text-lg"></span></div>
-                                <div class="flex justify-between items-center text-sm"><span>Sleep:</span> <span id="summary-sleep" class="font-semibold"></span></div>
-                                <div class="flex justify-between items-center text-sm"><span>Water:</span> <span id="summary-water" class="font-semibold"></span></div>
-                                <div class="flex justify-between items-center text-sm"><span>Energy:</span> <span id="summary-energy" class="font-semibold"></span></div>
-                                <div id="summary-ai-insight" class="ai-insight mt-2"></div>
+                        <div class="flex items-center mb-6 px-2">
+                            <svg class="w-8 h-8 text-purple-300 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 15.546c-.523 0-1.046.151-1.5.454a2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0c.004-.867.126-1.723.38-2.546.174-.53.385-1.054.64-1.571a21.89 21.89 0 012.652-3.956c1.522-1.657 2.733-3.482 3.683-5.527a5.553 5.553 0 011.02-1.923c.37-.621.733-1.21 1.09-1.742a2.492 2.492 0 014.226 2.158c-.373.632-.74,1.226-1.11,1.845a5.553 5.553 0 01-1.02,1.923c-.95,2.045-2.16,3.87-3.684,5.527a21.885 21.885 0 01-2.652,3.956c-.255.517-.466,1.041-.64,1.571-.254.823-.376,1.68-.38,2.546z"></path></svg>
+                            <h2 class="text-2xl font-bold">Weekly Meal Plan</h2>
+                        </div>
+                        
+                        <div class="overflow-x-auto horizontal-scroll pb-4 -mx-4 px-4 md:mx-0 md:px-0">
+                            <div id="meal-plan-grid" class="grid grid-cols-8 gap-2 md:gap-4 min-w-[60rem]">
+                                <!-- Grid will be populated by JS -->
                             </div>
+                        </div>
+                        
+                        <div id="loading-spinner" class="flex justify-center items-center h-64">
+                            <svg class="animate-spin -ml-1 mr-3 h-8 w-8 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span class="text-lg">Loading Meal Plan...</span>
+                        </div>
 
-                             <!-- Hydration Tracker -->
-                             <div class="bg-white/5 rounded-xl p-4 flex flex-col items-center justify-center">
-                                <h4 class="font-bold text-lg mb-2">💧 Hydration</h4>
-                                <div class="relative w-32 h-32">
-                                    <svg class="w-full h-full" viewBox="0 0 100 100">
-                                        <circle class="text-gray-700" stroke-width="10" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50" />
-                                        <circle id="hydration-progress" class="text-blue-400" stroke-width="10" stroke-linecap="round" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50" style="stroke-dasharray: 283; stroke-dashoffset: 283; transition: stroke-dashoffset 0.5s ease-in-out;" transform="rotate(-90 50 50)" />
-                                    </svg>
-                                    <div id="hydration-text" class="absolute inset-0 flex flex-col items-center justify-center text-2xl font-bold">
-                                    </div>
+                        <div class="mt-8 pt-6 border-t border-gray-700 grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div>
+                                <h3 class="text-xl font-bold mb-4 flex items-center">
+                                    <svg class="w-6 h-6 text-blue-300 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                                    🫶 Tips for the Partner
+                                </h3>
+                                <div id="partner-tips-container" class="space-y-2 text-gray-300 list-disc list-inside">
+                                    <!-- AI-generated tips will go here -->
+                                    <p id="partner-tips-loader" class="text-gray-400">Loading personalized tips...</p>
                                 </div>
-                                <div class="flex space-x-2 mt-3">
-                                    <button id="hydration-minus" class="bg-white/10 rounded-full w-8 h-8 font-bold text-lg">-</button>
-                                    <button id="hydration-plus" class="bg-white/10 rounded-full w-8 h-8 font-bold text-lg">+</button>
+                                <h4 class="text-lg font-bold mt-6 mb-2 text-red-400">To Avoid</h4>
+                                <div id="partner-avoid-container" class="space-y-2 text-gray-300 list-disc list-inside">
+                                    <!-- AI-generated avoid tips will go here -->
+                                    <p id="partner-avoid-loader" class="text-gray-400">Loading personalized tips...</p>
                                 </div>
-                                <p id="hydration-ai-insight" class="ai-insight text-center mt-2 w-full"></p>
                             </div>
-
-                            <!-- Mood & Energy Log -->
-                            <div class="bg-white/5 rounded-xl p-4">
-                                <h4 class="font-bold text-lg mb-3">💬 Daily Logs</h4>
-                                <p class="text-sm text-gray-400 mb-2">How are you feeling today?</p>
-                                <div id="mood-log-buttons" class="flex justify-around mb-3">
-                                    <button class="text-3xl hover:scale-125 transition-transform mood-btn" data-mood="😣">😣</button>
-                                    <button class="text-3xl hover:scale-125 transition-transform mood-btn" data-mood="😐">😐</button>
-                                    <button class="text-3xl hover:scale-125 transition-transform mood-btn" data-mood="🙂">🙂</button>
-                                    <button class="text-3xl hover:scale-125 transition-transform mood-btn" data-mood="😊">😊</button>
-                                    <button class="text-3xl hover:scale-125 transition-transform mood-btn" data-mood="🥰">🥰</button>
+                            <div>
+                                <h3 class="text-xl font-bold mb-4 flex items-center">
+                                    <svg class="w-6 h-6 text-green-300 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    Hydration & Snacks
+                                </h3>
+                                 <div id="hydration-snacks-container" class="space-y-2 text-gray-300 list-disc list-inside">
+                                    <!-- AI-generated tips will go here -->
+                                    <p id="hydration-snacks-loader" class="text-gray-400">Loading personalized tips...</p>
                                 </div>
-                                <div class="w-full h-2 rounded-full bg-gradient-to-r from-red-500 via-yellow-400 to-green-500 mb-4"></div>
-                                
-                                <p class="text-sm text-gray-400 mb-2">What's your energy level?</p>
-                                <div id="energy-log-buttons" class="flex justify-around mb-3">
-                                    <button class="text-2xl hover:scale-125 transition-transform energy-btn p-1 rounded-full" data-energy="1">😴</button>
-                                    <button class="text-2xl hover:scale-125 transition-transform energy-btn p-1 rounded-full" data-energy="2">🚶‍♀️</button>
-                                    <button class="text-2xl hover:scale-125 transition-transform energy-btn p-1 rounded-full" data-energy="3">🙂</button>
-                                    <button class="text-2xl hover:scale-125 transition-transform energy-btn p-1 rounded-full" data-energy="4">🤸‍♀️</button>
-                                    <button class="text-2xl hover:scale-125 transition-transform energy-btn p-1 rounded-full" data-energy="5">⚡️</button>
+                                <h4 class="text-lg font-bold mt-6 mb-2 text-red-400">To Avoid</h4>
+                                <div id="hydration-avoid-container" class="space-y-2 text-gray-300 list-disc list-inside">
+                                    <!-- AI-generated avoid tips will go here -->
+                                    <p id="hydration-avoid-loader" class="text-gray-400">Loading personalized tips...</p>
                                 </div>
-                                <div class="w-full h-2 rounded-full bg-gradient-to-r from-yellow-600 via-yellow-400 to-teal-400 mb-3"></div>
-
-                                <div id="mood-ai-insight" class="ai-insight"></div>
                             </div>
-                            
-                            <!-- Weekly Wellness Chart -->
-                            <div class="bg-white/5 rounded-xl p-4 md:col-span-2 lg:col-span-3">
-                                <h4 class="font-bold text-lg mb-2">📊 Weekly Wellness</h4>
-                                <canvas id="wellnessChart"></canvas>
-                                <div id="chart-ai-insight" class="ai-insight mt-3"></div>
-                            </div>
-
-                            <!-- Nutrition Tracker -->
-                            <div class="bg-white/5 rounded-xl p-4 lg:col-span-2">
-                                <h4 class="font-bold text-lg mb-3">🍽️ Nutrition Tracker</h4>
-                                <p class="text-xs text-gray-400 mb-3">Based on today's scheduled meals.</p>
-                                <div class="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
-                                    <div id="nutrition-iron">
-                                        <div class="flex justify-between mb-1"><span>Iron</span><span class="status-text"></span></div>
-                                        <div class="w-full bg-gray-700 rounded-full h-1.5"><div class="progress-bar h-1.5 rounded-full"></div></div>
-                                    </div>
-                                    <div id="nutrition-calcium">
-                                        <div class="flex justify-between mb-1"><span>Calcium</span><span class="status-text"></span></div>
-                                        <div class="w-full bg-gray-700 rounded-full h-1.5"><div class="progress-bar h-1.5 rounded-full"></div></div>
-                                    </div>
-                                     <div id="nutrition-folate">
-                                        <div class="flex justify-between mb-1"><span>Folate</span><span class="status-text"></span></div>
-                                        <div class="w-full bg-gray-700 rounded-full h-1.5"><div class="progress-bar h-1.5 rounded-full"></div></div>
-                                    </div>
-                                    <div id="nutrition-fiber">
-                                        <div class="flex justify-between mb-1"><span>Fiber</span><span class="status-text"></span></div>
-                                        <div class="w-full bg-gray-700 rounded-full h-1.5"><div class="progress-bar h-1.5 rounded-full"></div></div>
-                                    </div>
-                                </div>
-                                <div id="nutrition-ai-insight" class="ai-insight mt-4"></div>
-                            </div>
-                            
-                             <!-- Sleep Monitor -->
-                            <div id="sleep-monitor-card" class="bg-white/5 rounded-xl p-4 cursor-pointer hover:bg-white/10 transition-colors">
-                                <h4 class="font-bold text-lg mb-3">😴 Sleep Monitor</h4>
-                                <div id="sleep-monitor-display" class="text-center mb-3">
-                                    <p class="text-4xl font-bold"><span id="sleep-hours"></span> <span class="text-lg font-normal">hrs</span></p>
-                                    <p class="text-xs text-gray-400">Last Night</p>
-                                </div>
-                                <div id="sleep-ai-insight" class="ai-insight"></div>
-                            </div>
-
                         </div>
                     </div>
                 </div>
-            </div>
-        </main>
+
+                <!-- Symptom Tracker Tab -->
+                <div id="content-symptom-tracker" class="tab-content">
+                    <div class="space-y-8">
+                        <!-- Top Row -->
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            <!-- AI Symptom Assistant -->
+                            <div class="glass-card p-4 md:p-6 lg:col-span-2">
+                                <h3 class="text-xl font-bold mb-4 flex items-center">🤖 AI Symptom Assistant</h3>
+                                <p class="text-gray-300 mb-4">Feeling something? Describe it below for gentle, non-medical suggestions.</p>
+                                <textarea id="symptom-input" class="symptom-input min-h-[80px]" placeholder="e.g., I feel dizzy and tired today..."></textarea>
+                                <button id="symptom-check-btn" class="mt-4 w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
+                                    <span id="symptom-btn-text">Get Suggestions</span>
+                                    <svg id="symptom-loader" class="animate-spin ml-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                </button>
+                                <div id="symptom-response" class="mt-4"></div>
+                            </div>
+                            <!-- Side Cards -->
+                            <div class="space-y-8">
+                               <div class="glass-card p-4 md:p-6 text-center">
+                                    <h3 class="text-xl font-bold mb-2">💡 Wellness Tip</h3>
+                                    <p id="wellness-tip" class="text-gray-300">Eat small meals every 3 hours to help with nausea and maintain energy.</p>
+                               </div>
+                               <div id="baby-growth-card" class="glass-card p-4 md:p-6 text-center cursor-pointer hover:bg-white/10 transition-colors">
+                                    <h3 class="text-xl font-bold mb-2">🍼 Baby Growth</h3>
+                                    <p id="baby-growth-snapshot" class="text-gray-300 text-lg">Week 10 — baby is the size of a strawberry 🍓</p>
+                               </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Wellness Dashboard -->
+                        <div class="glass-card p-4 md:p-6">
+                            <h3 class="text-2xl font-bold mb-6 flex items-center">📈 Wellness Dashboard</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                                <!-- Daily Health Summary -->
+                                <div class="bg-white/5 rounded-xl p-4 space-y-3">
+                                    <h4 class="font-bold text-lg">🩺 Daily Summary</h4>
+                                    <div class="flex justify-between items-center text-sm"><span>Mood:</span> <span id="summary-mood" class="font-semibold text-lg"></span></div>
+                                    <div class="flex justify-between items-center text-sm"><span>Sleep:</span> <span id="summary-sleep" class="font-semibold"></span></div>
+                                    <div class="flex justify-between items-center text-sm"><span>Water:</span> <span id="summary-water" class="font-semibold"></span></div>
+                                    <div class="flex justify-between items-center text-sm"><span>Energy:</span> <span id="summary-energy" class="font-semibold"></span></div>
+                                    <div id="summary-ai-insight" class="ai-insight mt-2"></div>
+                                </div>
+
+                                 <!-- Hydration Tracker -->
+                                 <div class="bg-white/5 rounded-xl p-4 flex flex-col items-center justify-center">
+                                    <h4 class="font-bold text-lg mb-2">💧 Hydration</h4>
+                                    <div class="relative w-32 h-32">
+                                        <svg class="w-full h-full" viewBox="0 0 100 100">
+                                            <circle class="text-gray-700" stroke-width="10" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50" />
+                                            <circle id="hydration-progress" class="text-blue-400" stroke-width="10" stroke-linecap="round" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50" style="stroke-dasharray: 283; stroke-dashoffset: 283; transition: stroke-dashoffset 0.5s ease-in-out;" transform="rotate(-90 50 50)" />
+                                        </svg>
+                                        <div id="hydration-text" class="absolute inset-0 flex flex-col items-center justify-center text-2xl font-bold">
+                                        </div>
+                                    </div>
+                                    <div class="flex space-x-2 mt-3">
+                                        <button id="hydration-minus" class="bg-white/10 rounded-full w-8 h-8 font-bold text-lg">-</button>
+                                        <button id="hydration-plus" class="bg-white/10 rounded-full w-8 h-8 font-bold text-lg">+</button>
+                                    </div>
+                                    <p id="hydration-ai-insight" class="ai-insight text-center mt-2 w-full"></p>
+                                </div>
+
+                                <!-- Mood & Energy Log -->
+                                <div class="bg-white/5 rounded-xl p-4">
+                                    <h4 class="font-bold text-lg mb-3">💬 Daily Logs</h4>
+                                    <p class="text-sm text-gray-400 mb-2">How are you feeling today?</p>
+                                    <div id="mood-log-buttons" class="flex justify-around mb-3">
+                                        <button class="text-3xl hover:scale-125 transition-transform mood-btn" data-mood="😣">😣</button>
+                                        <button class="text-3xl hover:scale-125 transition-transform mood-btn" data-mood="😐">😐</button>
+                                        <button class="text-3xl hover:scale-125 transition-transform mood-btn" data-mood="🙂">🙂</button>
+                                        <button class="text-3xl hover:scale-125 transition-transform mood-btn" data-mood="😊">😊</button>
+                                        <button class="text-3xl hover:scale-125 transition-transform mood-btn" data-mood="🥰">🥰</button>
+                                    </div>
+                                    <div class="w-full h-2 rounded-full bg-gradient-to-r from-red-500 via-yellow-400 to-green-500 mb-4"></div>
+                                    
+                                    <p class="text-sm text-gray-400 mb-2">What's your energy level?</p>
+                                    <div id="energy-log-buttons" class="flex justify-around mb-3">
+                                        <button class="text-2xl hover:scale-125 transition-transform energy-btn p-1 rounded-full" data-energy="1">😴</button>
+                                        <button class="text-2xl hover:scale-125 transition-transform energy-btn p-1 rounded-full" data-energy="2">🚶‍♀️</button>
+                                        <button class="text-2xl hover:scale-125 transition-transform energy-btn p-1 rounded-full" data-energy="3">🙂</button>
+                                        <button class="text-2xl hover:scale-125 transition-transform energy-btn p-1 rounded-full" data-energy="4">🤸‍♀️</button>
+                                        <button class="text-2xl hover:scale-125 transition-transform energy-btn p-1 rounded-full" data-energy="5">⚡️</button>
+                                    </div>
+                                    <div class="w-full h-2 rounded-full bg-gradient-to-r from-yellow-600 via-yellow-400 to-teal-400 mb-3"></div>
+
+                                    <div id="mood-ai-insight" class="ai-insight"></div>
+                                </div>
+                                
+                                <!-- Weekly Wellness Chart -->
+                                <div class="bg-white/5 rounded-xl p-4 md:col-span-2 lg:col-span-3">
+                                    <h4 class="font-bold text-lg mb-2">📊 Weekly Wellness</h4>
+                                    <canvas id="wellnessChart"></canvas>
+                                    <div id="chart-ai-insight" class="ai-insight mt-3"></div>
+                                </div>
+
+                                <!-- Nutrition Tracker -->
+                                <div class="bg-white/5 rounded-xl p-4 lg:col-span-2">
+                                    <h4 class="font-bold text-lg mb-3">🍽️ Nutrition Tracker</h4>
+                                    <p class="text-xs text-gray-400 mb-3">Based on today's scheduled meals.</p>
+                                    <div class="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+                                        <div id="nutrition-iron">
+                                            <div class="flex justify-between mb-1"><span>Iron</span><span class="status-text"></span></div>
+                                            <div class="w-full bg-gray-700 rounded-full h-1.5"><div class="progress-bar h-1.5 rounded-full"></div></div>
+                                        </div>
+                                        <div id="nutrition-calcium">
+                                            <div class="flex justify-between mb-1"><span>Calcium</span><span class="status-text"></span></div>
+                                            <div class="w-full bg-gray-700 rounded-full h-1.5"><div class="progress-bar h-1.5 rounded-full"></div></div>
+                                        </div>
+                                         <div id="nutrition-folate">
+                                            <div class="flex justify-between mb-1"><span>Folate</span><span class="status-text"></span></div>
+                                            <div class="w-full bg-gray-700 rounded-full h-1.5"><div class="progress-bar h-1.5 rounded-full"></div></div>
+                                        </div>
+                                        <div id="nutrition-fiber">
+                                            <div class="flex justify-between mb-1"><span>Fiber</span><span class="status-text"></span></div>
+                                            <div class="w-full bg-gray-700 rounded-full h-1.5"><div class="progress-bar h-1.5 rounded-full"></div></div>
+                                        </div>
+                                    </div>
+                                    <div id="nutrition-ai-insight" class="ai-insight mt-4"></div>
+                                </div>
+                                
+                                 <!-- Sleep Monitor -->
+                                <div id="sleep-monitor-card" class="bg-white/5 rounded-xl p-4 cursor-pointer hover:bg-white/10 transition-colors">
+                                    <h4 class="font-bold text-lg mb-3">😴 Sleep Monitor</h4>
+                                    <div id="sleep-monitor-display" class="text-center mb-3">
+                                        <p class="text-4xl font-bold"><span id="sleep-hours"></span> <span class="text-lg font-normal">hrs</span></p>
+                                        <p class="text-xs text-gray-400">Last Night</p>
+                                    </div>
+                                    <div id="sleep-ai-insight" class="ai-insight"></div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
     </div>
 
     <!-- Modals -->
+    <!-- Auth Modal -->
+    <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
+        <div id="auth-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-sm transform scale-95 opacity-0 transition-transform transition-opacity duration-300 text-center">
+            <h3 class="text-2xl font-bold mb-2">Welcome!</h3>
+            <p class="text-indigo-200 mb-6">Sign in to save and share your journey.</p>
+            <button id="google-signin-btn" class="w-full bg-white text-gray-800 font-semibold py-3 px-4 rounded-lg flex items-center justify-center transition-transform hover:scale-105">
+                <svg class="w-6 h-6 mr-3" viewBox="0 0 48 48"><path fill="#4285F4" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path><path fill="#34A853" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6.02C43.51 39.88 46.98 32.93 46.98 24.55z"></path><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path><path fill="#EA4335" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6.02c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path><path fill="none" d="M0 0h48v48H0z"></path></svg>
+                Sign In with Google
+            </button>
+             <button id="auth-modal-close-btn" class="mt-6 text-sm text-indigo-300 hover:text-white">Cancel</button>
+        </div>
+    </div>
+    
     <div id="meal-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
         <div id="modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-md transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
              <h3 id="modal-title" class="text-2xl font-bold mb-4 text-center">Edit Meal</h3>
@@ -541,7 +593,7 @@
     <script type="module">
         // Firebase Imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, onSnapshot, setDoc, getDoc, updateDoc, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- WELLNESS DATA MANAGEMENT ---
@@ -662,6 +714,17 @@
 
 
         // DOM Elements
+        const heroSection = document.getElementById('hero-section');
+        const mainApp = document.getElementById('main-app');
+        const authButtons = document.getElementById('auth-buttons');
+        const signUpBtn = document.getElementById('sign-up-btn');
+        const userInfo = document.getElementById('user-info');
+        const userNameEl = document.getElementById('user-name');
+        const signOutBtn = document.getElementById('sign-out-btn');
+        const authModal = document.getElementById('auth-modal');
+        const googleSignInBtn = document.getElementById('google-signin-btn');
+        const authModalCloseBtn = document.getElementById('auth-modal-close-btn');
+
         // Tabs
         const mealPlanTab = document.getElementById('tab-meal-plan');
         const symptomTrackerTab = document.getElementById('tab-symptom-tracker');
@@ -732,9 +795,8 @@
         const aiMealCloseBtn = document.getElementById('ai-meal-close-btn');
         
         // Firebase Setup
-        const appId = 'PreggyJourney'; // You can use your app name here
+        const appId = 'PreggyJourney'; 
         
-        // **STEP 3.2: PASTE FIREBASE CONFIG HERE**
         const firebaseConfig = {
             apiKey: "AIzaSyAdVV6m_OlSaXYwO7TH8EJANSJfTBhUtD0",
             authDomain: "preggyjourney-505cc.firebaseapp.com",
@@ -755,6 +817,7 @@
             const app = initializeApp(firebaseConfig);
             const auth = getAuth(app);
             const db = getFirestore(app);
+            const provider = new GoogleAuthProvider();
 
             let userId = null;
             let mealPlanRef = null;
@@ -788,40 +851,83 @@
                 dinner: ["Chicken soup + rice + steamed veggies", "Tofu soup with mushroom", "Noodle soup with egg", "Rice porridge with fish", "Clear veggie soup + rice + boiled egg"]
             };
 
+            // --- AUTHENTICATION LOGIC ---
             onAuthStateChanged(auth, async user => {
                 if (user) {
+                    // User is signed in
                     userId = user.uid;
-                    mealPlanRef = doc(db, `artifacts/${appId}/users/${userId}/mealPlan`, 'weekly-v2');
-                    mealOptionsRef = doc(db, `artifacts/${appId}/public/data/mealOptions`, 'v1');
-                    symptomTrackerCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/symptomLogs`);
-                    wellnessDataRef = doc(db, `artifacts/${appId}/users/${userId}/wellness`, 'daily');
-
+                    userNameEl.textContent = user.displayName.split(' ')[0]; // Show first name
+                    authButtons.classList.add('hidden');
+                    userInfo.classList.add('flex');
+                    userInfo.classList.remove('hidden');
+                    mainApp.classList.remove('hidden');
+                    heroSection.classList.add('hidden'); // Hide hero after login
                     
+                    mealPlanRef = doc(db, `users/${userId}/mealPlan`, 'weekly-v2');
+                    mealOptionsRef = doc(db, `users/${userId}/mealOptions`, 'v1'); // User-specific meal options
+                    symptomTrackerCollectionRef = collection(db, `users/${userId}/symptomLogs`);
+                    wellnessDataRef = doc(db, `users/${userId}/wellness`, 'daily');
+
                     await initializeMealOptions();
                     await initializeWellnessData(wellnessDataRef);
                     
                     loadMealPlan();
                     loadMealOptions();
                     loadWellnessData();
-                    updatePartnerTips(); // Initial load
-                    updateHydrationAndSnacks(); // Initial load
+                    updatePartnerTips();
+                    updateHydrationAndSnacks();
                     updatePartnerAvoidTips();
                     updateHydrationAvoidTips();
+                    
+                    // Ensure chart is rendered if navigating directly to symptom tab
+                    if(symptomTrackerContent.classList.contains('active')) {
+                         if (!wellnessChart) renderWellnessChart();
+                         updateWellnessChartData();
+                    }
 
                 } else {
+                    // User is signed out
                     userId = null;
+                    authButtons.classList.remove('hidden');
+                    userInfo.classList.remove('flex');
+                    userInfo.classList.add('hidden');
+                    mainApp.classList.add('hidden');
+                    heroSection.classList.remove('hidden');
+
                     if (unsubscribeMealPlan) unsubscribeMealPlan();
                     if (unsubscribeMealOptions) unsubscribeMealOptions();
                     if (unsubscribeWellnessData) unsubscribeWellnessData();
                 }
             });
-            
-            // **STEP 3.3: UPDATE AUTHENTICATION LOGIC**
-            async function authenticateUser() {
-                try {
-                    await signInAnonymously(auth);
-                } catch (error) { console.error("Authentication failed:", error); }
+
+            const signInWithGoogle = () => {
+                signInWithPopup(auth, provider).catch(error => {
+                    console.error("Google Sign-In Error:", error);
+                });
+            };
+
+            const doSignOut = () => {
+                signOut(auth).catch(error => {
+                    console.error("Sign Out Error:", error);
+                });
+            };
+
+            signUpBtn.addEventListener('click', () => {
+                authModal.classList.remove('hidden');
+                setTimeout(() => authModal.classList.add('active'), 10);
+            });
+            googleSignInBtn.addEventListener('click', () => {
+                signInWithGoogle();
+                closeAuthModal();
+            });
+            signOutBtn.addEventListener('click', doSignOut);
+
+            function closeAuthModal() {
+                authModal.classList.remove('active');
+                setTimeout(() => authModal.classList.add('hidden'), 300);
             }
+            authModalCloseBtn.addEventListener('click', closeAuthModal);
+            authModal.addEventListener('click', (e) => e.target === authModal && closeAuthModal());
 
             // --- TAB SWITCHING LOGIC ---
             function switchTab(activeTab) {
@@ -830,20 +936,24 @@
                     symptomTrackerTab.classList.remove('active');
                     mealPlanContent.classList.add('active');
                     symptomTrackerContent.classList.remove('active');
-                    updatePartnerTips(); // Update tips when switching to meal tab
-                    updateHydrationAndSnacks(); // Update tips when switching to meal tab
-                    updatePartnerAvoidTips();
-                    updateHydrationAvoidTips();
+                    if(userId) { // only update if logged in
+                        updatePartnerTips();
+                        updateHydrationAndSnacks();
+                        updatePartnerAvoidTips();
+                        updateHydrationAvoidTips();
+                    }
                 } else if (activeTab === 'symptom') {
                     mealPlanTab.classList.remove('active');
                     symptomTrackerTab.classList.add('active');
                     mealPlanContent.classList.remove('active');
                     symptomTrackerContent.classList.add('active');
-                    updateDashboardUI();
-                    if (!wellnessChart) {
-                        renderWellnessChart();
+                    if(userId) { // only update if logged in
+                        updateDashboardUI();
+                        if (!wellnessChart) {
+                            renderWellnessChart();
+                        }
+                        updateWellnessChartData();
                     }
-                     updateWellnessChartData();
                 }
             }
             mealPlanTab.addEventListener('click', () => switchTab('meal'));
@@ -889,6 +999,8 @@
                         if (manageMealsModal.classList.contains('active')) {
                             populateMealList();
                         }
+                    } else { // Handle case where user has no options yet
+                        dynamicMealOptions = { ...defaultMealOptions };
                     }
                 }, (error) => console.error("Error listening to meal options:", error));
             }
@@ -1882,7 +1994,7 @@
             }
             
             function updateWellnessChartData() {
-                if (!wellnessChart) return;
+                if (!wellnessChart || !userId) return; // Don't update if not logged in or chart not ready
                 
                 const sleepData = sleepDays.map(day => {
                     const { sleep, wake } = wellnessData.sleep[day] || { sleep: '', wake: '' };
@@ -2113,10 +2225,7 @@
             aiSuggestionBtn.addEventListener('click', () => generateAiMealPlan(currentDayForAI, null));
             
             document.addEventListener('DOMContentLoaded', () => {
-                 mealPlanGrid.style.display = 'none';
-                 loadingSpinner.style.display = 'flex';
-                 authenticateUser();
-                 switchTab('meal');
+                 mainApp.classList.add('hidden');
             });
         }
 
