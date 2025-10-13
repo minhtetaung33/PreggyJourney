@@ -430,8 +430,11 @@
 
                                 <!-- Nutrition Tracker -->
                                 <div class="bg-white/5 rounded-xl p-4 lg:col-span-2">
-                                    <h4 class="font-bold text-lg mb-3">🍽️ Nutrition Tracker</h4>
-                                    <p class="text-xs text-gray-400 mb-3">Based on today's scheduled meals.</p>
+                                    <h4 id="nutrition-tracker-header" class="font-bold text-lg mb-3 cursor-pointer hover:text-purple-300 transition-colors">
+                                        🍽️ Nutrition Tracker
+                                        <span class="text-xs font-normal text-gray-400 ml-1">(Click to add supplements)</span>
+                                    </h4>
+                                    <p class="text-xs text-gray-400 mb-3">Based on today's scheduled meals & supplements.</p>
                                     <div class="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
                                         <div id="nutrition-iron">
                                             <div class="flex justify-between mb-1"><span>Iron</span><span class="status-text"></span></div>
@@ -586,6 +589,25 @@
                 <button id="ai-meal-save-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Save to Meal Plan</button>
              </div>
               <button id="ai-meal-close-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg transition-colors mt-4">Close</button>
+        </div>
+    </div>
+
+    <!-- Supplement Modal -->
+    <div id="supplement-modal" class="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-md flex justify-center items-center hidden z-50 p-4">
+        <div id="supplement-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
+            <h3 class="text-2xl font-bold mb-6 text-center">Manage Supplements</h3>
+            <div id="supplement-list-container" class="space-y-2 mb-6 max-h-60 overflow-y-auto pr-2">
+                 <!-- JS will populate this -->
+            </div>
+            <div class="space-y-4">
+                <input type="text" id="new-supplement-input" class="meal-select w-full" placeholder="e.g., Prenatal vitamin with Iron...">
+                <div id="supplement-api-feedback" class="text-sm p-3 rounded-md bg-opacity-20 hidden"></div>
+                <button id="add-supplement-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
+                    <span id="add-supplement-text">Analyze & Add Supplement</span>
+                    <svg id="supplement-api-loader" class="animate-spin ml-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                </button>
+                <button id="supplement-modal-close-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg transition-colors">Done</button>
+            </div>
         </div>
     </div>
 
@@ -793,6 +815,16 @@
         const aiMealRegenerateBtn = document.getElementById('ai-meal-regenerate-btn');
         const aiMealSaveBtn = document.getElementById('ai-meal-save-btn');
         const aiMealCloseBtn = document.getElementById('ai-meal-close-btn');
+        // Nutrition & Supplements
+        const nutritionTrackerHeader = document.getElementById('nutrition-tracker-header');
+        const supplementModal = document.getElementById('supplement-modal');
+        const supplementListContainer = document.getElementById('supplement-list-container');
+        const newSupplementInput = document.getElementById('new-supplement-input');
+        const addSupplementBtn = document.getElementById('add-supplement-btn');
+        const supplementApiFeedback = document.getElementById('supplement-api-feedback');
+        const addSupplementText = document.getElementById('add-supplement-text');
+        const supplementApiLoader = document.getElementById('supplement-api-loader');
+        const supplementModalCloseBtn = document.getElementById('supplement-modal-close-btn');
         
         // Firebase Setup
         const appId = 'PreggyJourney'; 
@@ -825,14 +857,17 @@
             let symptomTrackerCollectionRef = null;
             let wellnessDataRef = null;
             let customMealNutrientsRef = null;
+            let supplementsRef = null;
 
             let unsubscribeMealPlan = null;
             let unsubscribeMealOptions = null;
             let unsubscribeWellnessData = null;
             let unsubscribeCustomMealNutrients = null;
+            let unsubscribeSupplements = null;
             
             let dynamicMealOptions = {};
             let customMealNutrients = {};
+            let userSupplements = [];
             let wellnessChart = null;
             let currentGeneratedPlan = null;
             let currentDayForAI = null;
@@ -871,14 +906,17 @@
                     symptomTrackerCollectionRef = collection(db, `users/${userId}/symptomLogs`);
                     wellnessDataRef = doc(db, `users/${userId}/wellness`, 'daily');
                     customMealNutrientsRef = doc(db, `users/${userId}/mealNutrients`, 'custom-v1');
+                    supplementsRef = doc(db, `users/${userId}/supplements`, 'v1');
 
                     await initializeMealOptions();
                     await initializeCustomMealNutrients();
+                    await initializeSupplements();
                     await initializeWellnessData(wellnessDataRef);
                     
                     loadMealPlan();
                     loadMealOptions();
                     loadCustomMealNutrients();
+                    loadSupplements();
                     loadWellnessData();
                     updatePartnerTips();
                     updateHydrationAndSnacks();
@@ -904,6 +942,7 @@
                     if (unsubscribeMealOptions) unsubscribeMealOptions();
                     if (unsubscribeWellnessData) unsubscribeWellnessData();
                     if (unsubscribeCustomMealNutrients) unsubscribeCustomMealNutrients();
+                    if (unsubscribeSupplements) unsubscribeSupplements();
                 }
             });
 
@@ -984,6 +1023,14 @@
                 }
             }
 
+            async function initializeSupplements() {
+                if (!supplementsRef) return;
+                const docSnap = await getDoc(supplementsRef);
+                if (!docSnap.exists()) {
+                    await setDoc(supplementsRef, { list: [] });
+                }
+            }
+
             function loadMealPlan() {
                 if (!mealPlanRef) return;
                 if (unsubscribeMealPlan) unsubscribeMealPlan();
@@ -1029,6 +1076,23 @@
                         populateMealList(); // Refresh list if open
                     }
                 }, (error) => console.error("Error listening to custom meal nutrients:", error));
+            }
+
+            function loadSupplements() {
+                if (!supplementsRef) return;
+                if (unsubscribeSupplements) unsubscribeSupplements();
+                unsubscribeSupplements = onSnapshot(supplementsRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        userSupplements = docSnap.data().list || [];
+                    } else {
+                        userSupplements = [];
+                    }
+                    if (supplementModal.classList.contains('active')) {
+                        populateSupplementList();
+                    }
+                    // Always update nutrition tracker when supplements change
+                    updateNutritionTrackerFromMealPlan();
+                }, (error) => console.error("Error listening to supplements:", error));
             }
 
             function loadWellnessData() {
@@ -1793,27 +1857,24 @@
                 const dayKey = days[dayIndex];
 
                 const aiSummary = wellnessData.dailyNutrition ? wellnessData.dailyNutrition[dayKey] : null;
+                const totals = { iron: 0, calcium: 0, folate: 0, fiber: 0 };
 
                 if (aiSummary) {
-                    // Use the AI-generated summary if available
-                    const nutritionData = {
-                        iron: getStatusFromAI(aiSummary.iron),
-                        calcium: getStatusFromAI(aiSummary.calcium),
-                        folate: getStatusFromAI(aiSummary.folate),
-                        fiber: getStatusFromAI(aiSummary.fiber)
-                    };
-                    updateNutritionUI(nutritionData);
+                    // Start with AI-generated summary values
+                    const statusMap = { 'low': 2, 'okay': 5, 'good': 8 }; // Convert status to a numeric value
+                    totals.iron = statusMap[aiSummary.iron.toLowerCase()] || 0;
+                    totals.calcium = statusMap[aiSummary.calcium.toLowerCase()] || 0;
+                    totals.folate = statusMap[aiSummary.folate.toLowerCase()] || 0;
+                    totals.fiber = statusMap[aiSummary.fiber.toLowerCase()] || 0;
                 } else {
                     // Fallback to manual calculation if no AI summary exists for today
-                    const dailyGoals = { iron: 8, calcium: 10, folate: 10, fiber: 8 }; // Arbitrary goals
-                    const totals = { iron: 0, calcium: 0, folate: 0, fiber: 0 };
-
                     if (currentMealPlanData) {
+                        const allNutrients = { ...mealNutrients, ...customMealNutrients };
                         for (const mealKey in currentMealPlanData) {
                             if (currentMealPlanData[mealKey] && typeof currentMealPlanData[mealKey] === 'object') {
                                 const mealName = currentMealPlanData[mealKey][dayKey];
-                                if (mealName && mealNutrients[mealName]) {
-                                    const nutrients = mealNutrients[mealName];
+                                if (mealName && allNutrients[mealName]) {
+                                    const nutrients = allNutrients[mealName];
                                     totals.iron += nutrients.iron || 0;
                                     totals.calcium += nutrients.calcium || 0;
                                     totals.folate += nutrients.folate || 0;
@@ -1822,15 +1883,26 @@
                             }
                         }
                     }
-
-                    const nutritionData = {
-                        iron: calculateNutrientStatus(totals.iron, dailyGoals.iron),
-                        calcium: calculateNutrientStatus(totals.calcium, dailyGoals.calcium),
-                        folate: calculateNutrientStatus(totals.folate, dailyGoals.folate),
-                        fiber: calculateNutrientStatus(totals.fiber, dailyGoals.fiber)
-                    };
-                    updateNutritionUI(nutritionData);
                 }
+
+                // Add supplement values to the daily totals
+                userSupplements.forEach(supplement => {
+                    if (supplement.nutrients) {
+                        totals.iron += supplement.nutrients.iron || 0;
+                        totals.calcium += supplement.nutrients.calcium || 0;
+                        totals.folate += supplement.nutrients.folate || 0;
+                        totals.fiber += supplement.nutrients.fiber || 0;
+                    }
+                });
+
+                const dailyGoals = { iron: 8, calcium: 10, folate: 10, fiber: 8 }; // Arbitrary goals
+                const nutritionData = {
+                    iron: calculateNutrientStatus(totals.iron, dailyGoals.iron),
+                    calcium: calculateNutrientStatus(totals.calcium, dailyGoals.calcium),
+                    folate: calculateNutrientStatus(totals.folate, dailyGoals.folate),
+                    fiber: calculateNutrientStatus(totals.fiber, dailyGoals.fiber)
+                };
+                updateNutritionUI(nutritionData);
             }
             
             function getStatusFromAI(statusString) {
@@ -1940,9 +2012,10 @@
             }
 
             function updateEnergyLog() {
-                const todayIndex = new Date().getDay(); // Sunday is 0
+                const todayIndex = new new Date().getDay(); // Sunday is 0
                 const currentDayKey = sleepDays[(todayIndex + 6) % 7]; // Monday is 0
-                const currentEnergy = wellnessData.weeklyLog[currentDayKey].energy;
+                const currentEnergy = wellnessData.weeklyLog[currentDayKey]?.energy;
+                if(currentEnergy === undefined) return;
 
                 const buttons = energyLogButtons.querySelectorAll('.energy-btn');
                 buttons.forEach(btn => {
@@ -2099,6 +2172,110 @@
                 symptomResponseEl.innerHTML = html;
             }
             
+            // --- SUPPLEMENT MODAL LOGIC ---
+            function openSupplementModal() {
+                populateSupplementList();
+                supplementModal.classList.remove('hidden');
+                setTimeout(() => supplementModal.classList.add('active'), 10);
+            }
+
+            function closeSupplementModal() {
+                supplementApiFeedback.classList.add('hidden');
+                newSupplementInput.value = '';
+                supplementModal.classList.remove('active');
+                setTimeout(() => supplementModal.classList.add('hidden'), 300);
+            }
+
+            function populateSupplementList() {
+                supplementListContainer.innerHTML = '';
+                if (userSupplements.length === 0) {
+                    supplementListContainer.innerHTML = `<p class="text-center text-gray-400">No supplements added yet.</p>`;
+                    return;
+                }
+
+                userSupplements.forEach(supplement => {
+                    const item = document.createElement('div');
+                    item.className = 'flex items-center justify-between p-3 bg-white bg-opacity-5 rounded-lg';
+                    const nutrients = supplement.nutrients || { iron: '?', calcium: '?', folate: '?', fiber: '?' };
+                    
+                    item.innerHTML = `
+                        <div class="flex-1 pr-2">
+                            <span class="font-semibold text-white">${supplement.name}</span>
+                            <div class="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs mt-1.5 text-gray-300">
+                                <span class="flex items-center" title="Iron">Iron: ${nutrients.iron}</span>
+                                <span class="flex items-center" title="Calcium">Ca: ${nutrients.calcium}</span>
+                                <span class="flex items-center" title="Folate">Folate: ${nutrients.folate}</span>
+                                <span class="flex items-center" title="Fiber">Fiber: ${nutrients.fiber}</span>
+                            </div>
+                        </div>
+                        <button class="icon-btn delete-supplement-btn" data-id="${supplement.id}"><svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                    `;
+                    item.querySelector('.delete-supplement-btn').addEventListener('click', () => handleDeleteSupplement(supplement.id));
+                    supplementListContainer.appendChild(item);
+                });
+            }
+
+            async function handleAddSupplement() {
+                const supplementName = newSupplementInput.value.trim();
+                if (!supplementName) return;
+
+                addSupplementText.textContent = 'Analyzing...';
+                supplementApiLoader.classList.remove('hidden');
+                addSupplementBtn.disabled = true;
+
+                const systemPrompt = `You are a nutritional database assistant. The user will provide the name of a supplement. Analyze it and return its estimated contribution to the four key pregnancy nutrients: iron, calcium, folate, and fiber. Use an integer scale of 0 (none), 1 (low), 2 (medium), or 3 (high). Your response must be in JSON format.`;
+                const userQuery = `Analyze this supplement: "${supplementName}"`;
+                const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                const payload = {
+                    contents: [{ parts: [{ text: userQuery }] }],
+                    systemInstruction: { parts: [{ text: systemPrompt }] },
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "OBJECT",
+                            properties: {
+                                "iron": { "type": "NUMBER" }, "calcium": { "type": "NUMBER" },
+                                "folate": { "type": "NUMBER" }, "fiber": { "type": "NUMBER" }
+                            },
+                            required: ["iron", "calcium", "folate", "fiber"]
+                        }
+                    }
+                };
+
+                try {
+                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!response.ok) throw new Error('API Error');
+                    const result = await response.json();
+                    const nutrients = JSON.parse(result.candidates[0].content.parts[0].text);
+
+                    const newSupplement = {
+                        id: self.crypto.randomUUID(),
+                        name: supplementName,
+                        nutrients: nutrients
+                    };
+
+                    const updatedList = [...userSupplements, newSupplement];
+                    await setDoc(supplementsRef, { list: updatedList });
+                    newSupplementInput.value = '';
+                    showApiFeedback('Supplement added successfully!', 'success', supplementApiFeedback);
+
+                } catch (error) {
+                    console.error("Error adding supplement:", error);
+                    showApiFeedback('Could not analyze supplement. Please try again.', 'error', supplementApiFeedback);
+                } finally {
+                    addSupplementText.textContent = 'Analyze & Add Supplement';
+                    supplementApiLoader.classList.add('hidden');
+                    addSupplementBtn.disabled = false;
+                }
+            }
+
+            async function handleDeleteSupplement(supplementId) {
+                const updatedList = userSupplements.filter(s => s.id !== supplementId);
+                await setDoc(supplementsRef, { list: updatedList });
+            }
+
+
             function updateWellnessChartData() {
                 if (!wellnessChart || !userId) return; // Don't update if not logged in or chart not ready
                 
@@ -2316,6 +2493,14 @@
                 }
                 closeSleepModal();
             });
+
+            // Nutrition Tracker & Supplement Listeners
+            nutritionTrackerHeader.addEventListener('click', openSupplementModal);
+            supplementModalCloseBtn.addEventListener('click', closeSupplementModal);
+            supplementModal.addEventListener('click', (e) => e.target === supplementModal && closeSupplementModal());
+            addSupplementBtn.addEventListener('click', handleAddSupplement);
+            newSupplementInput.addEventListener('keyup', (e) => e.key === 'Enter' && handleAddSupplement());
+
 
             // AI Meal Planner Listeners
             aiMealCloseBtn.addEventListener('click', closeAiMealPlannerModal);
