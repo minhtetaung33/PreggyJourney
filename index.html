@@ -594,7 +594,7 @@
         // Firebase Imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, setDoc, getDoc, updateDoc, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, setDoc, getDoc, updateDoc, collection, addDoc, serverTimestamp, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- WELLNESS DATA MANAGEMENT ---
         const defaultWellnessData = {
@@ -824,12 +824,15 @@
             let mealOptionsRef = null;
             let symptomTrackerCollectionRef = null;
             let wellnessDataRef = null;
+            let customMealNutrientsRef = null;
 
             let unsubscribeMealPlan = null;
             let unsubscribeMealOptions = null;
             let unsubscribeWellnessData = null;
+            let unsubscribeCustomMealNutrients = null;
             
             let dynamicMealOptions = {};
+            let customMealNutrients = {};
             let wellnessChart = null;
             let currentGeneratedPlan = null;
             let currentDayForAI = null;
@@ -867,12 +870,15 @@
                     mealOptionsRef = doc(db, `users/${userId}/mealOptions`, 'v1'); // User-specific meal options
                     symptomTrackerCollectionRef = collection(db, `users/${userId}/symptomLogs`);
                     wellnessDataRef = doc(db, `users/${userId}/wellness`, 'daily');
+                    customMealNutrientsRef = doc(db, `users/${userId}/mealNutrients`, 'custom-v1');
 
                     await initializeMealOptions();
+                    await initializeCustomMealNutrients();
                     await initializeWellnessData(wellnessDataRef);
                     
                     loadMealPlan();
                     loadMealOptions();
+                    loadCustomMealNutrients();
                     loadWellnessData();
                     updatePartnerTips();
                     updateHydrationAndSnacks();
@@ -897,6 +903,7 @@
                     if (unsubscribeMealPlan) unsubscribeMealPlan();
                     if (unsubscribeMealOptions) unsubscribeMealOptions();
                     if (unsubscribeWellnessData) unsubscribeWellnessData();
+                    if (unsubscribeCustomMealNutrients) unsubscribeCustomMealNutrients();
                 }
             });
 
@@ -969,6 +976,14 @@
                 }
             }
             
+            async function initializeCustomMealNutrients() {
+                if (!customMealNutrientsRef) return;
+                const docSnap = await getDoc(customMealNutrientsRef);
+                if (!docSnap.exists()) {
+                    await setDoc(customMealNutrientsRef, {}); // Create an empty doc
+                }
+            }
+
             function loadMealPlan() {
                 if (!mealPlanRef) return;
                 if (unsubscribeMealPlan) unsubscribeMealPlan();
@@ -1005,6 +1020,17 @@
                 }, (error) => console.error("Error listening to meal options:", error));
             }
             
+            function loadCustomMealNutrients() {
+                if (!customMealNutrientsRef) return;
+                if (unsubscribeCustomMealNutrients) unsubscribeCustomMealNutrients();
+                unsubscribeCustomMealNutrients = onSnapshot(customMealNutrientsRef, (docSnap) => {
+                    customMealNutrients = docSnap.exists() ? docSnap.data() : {};
+                     if (manageMealsModal.classList.contains('active')) {
+                        populateMealList(); // Refresh list if open
+                    }
+                }, (error) => console.error("Error listening to custom meal nutrients:", error));
+            }
+
             function loadWellnessData() {
                 if (!wellnessDataRef) return;
                 if(unsubscribeWellnessData) unsubscribeWellnessData();
@@ -1109,6 +1135,8 @@
             function populateMealList() {
                 mealListContainer.innerHTML = '';
                 const meals = dynamicMealOptions[currentMealKeyForManage] || [];
+                const allNutrients = { ...mealNutrients, ...customMealNutrients };
+
                 if (meals.length === 0) {
                     mealListContainer.innerHTML = `<p class="text-center text-gray-400">No meals added yet.</p>`;
                     return;
@@ -1116,7 +1144,7 @@
                 meals.forEach(meal => {
                     const item = document.createElement('div');
                     item.className = 'flex items-center justify-between p-3 bg-white bg-opacity-5 rounded-lg';
-                    const nutrients = mealNutrients[meal] || { iron: '?', calcium: '?', folate: '?', fiber: '?' };
+                    const nutrients = allNutrients[meal] || { iron: '?', calcium: '?', folate: '?', fiber: '?' };
 
                     item.innerHTML = `
                         <div class="flex-1 pr-2">
@@ -1142,6 +1170,9 @@
                 const currentMeals = [...(dynamicMealOptions[key] || [])];
                 const newMeals = currentMeals.filter(m => m !== mealToDelete);
                 await updateDoc(mealOptionsRef, { [key]: newMeals });
+                if (customMealNutrientsRef) {
+                    await updateDoc(customMealNutrientsRef, { [mealToDelete]: deleteField() });
+                }
             }
 
             let saveEditHandler = null; 
@@ -1165,10 +1196,30 @@
                 const newMeal = editMealInput.value.trim();
                 if (!newMeal || newMeal === oldMeal) return;
                 editApiLoader.classList.remove('hidden'); editMealText.textContent = 'Checking...'; editModalSaveBtn.disabled = true; editApiFeedback.classList.add('hidden');
-                const systemPrompt = `You are a helpful and friendly prenatal nutritionist. Your goal is to evaluate if a meal is healthy and suitable for a pregnant woman, especially in the first trimester. Your response must be in JSON format according to the provided schema. If the meal is suitable, set isSuitable to true. If it is not suitable (e.g., contains raw fish, unpasteurized cheese, high-mercury fish, excessive caffeine, deli meats, etc.), set isSuitable to false, provide a brief, gentle, one-sentence explanation in the reasoning field, and suggest one or two healthier alternatives in the alternatives array.`;
+                const systemPrompt = `You are a helpful and friendly prenatal nutritionist. Your goal is to evaluate if a meal is healthy and suitable for a pregnant woman, especially in the first trimester. If the meal is suitable, provide an estimated nutritional profile with integer values from 0 (none) to 3 (high) for iron, calcium, folate, and fiber. Your response must be in JSON format according to the provided schema. If the meal is not suitable, set isSuitable to false and explain why.`;
                 const userQuery = `Evaluate this meal: "${newMeal}"`;
                 const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-                const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json", responseSchema: { type: "OBJECT", properties: { "isSuitable": { "type": "BOOLEAN" }, "mealName": { "type": "STRING" }, "reasoning": { "type": "STRING" }, "alternatives": { "type": "ARRAY", "items": { "type": "STRING" } } }, required: ["isSuitable", "mealName"] } } };
+                const payload = { 
+                    contents: [{ parts: [{ text: userQuery }] }], 
+                    systemInstruction: { parts: [{ text: systemPrompt }] }, 
+                    generationConfig: { 
+                        responseMimeType: "application/json", 
+                        responseSchema: { 
+                            type: "OBJECT", 
+                            properties: { 
+                                "isSuitable": { "type": "BOOLEAN" }, 
+                                "mealName": { "type": "STRING" }, 
+                                "reasoning": { "type": "STRING" }, 
+                                "alternatives": { "type": "ARRAY", "items": { "type": "STRING" } },
+                                "nutrients": { 
+                                    "type": "OBJECT", 
+                                    "properties": { "iron": {"type": "NUMBER"}, "calcium": {"type": "NUMBER"}, "folate": {"type": "NUMBER"}, "fiber": {"type": "NUMBER"}}
+                                }
+                            }, 
+                            required: ["isSuitable", "mealName"] 
+                        } 
+                    } 
+                };
                 try {
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                     if (!response.ok) throw new Error(`API error: ${response.statusText}`);
@@ -1177,7 +1228,20 @@
                         const currentMeals = [...(dynamicMealOptions[key] || [])];
                         if (currentMeals.includes(data.mealName) && data.mealName !== oldMeal) { showApiFeedback(`"${data.mealName}" is already on the list.`, 'warning', editApiFeedback); return; }
                         const mealIndex = currentMeals.indexOf(oldMeal);
-                        if (mealIndex > -1) { currentMeals[mealIndex] = data.mealName; await updateDoc(mealOptionsRef, { [key]: currentMeals }); await updateMealPlanGrid(oldMeal, data.mealName); closeEditModal(); }
+                        if (mealIndex > -1) { 
+                            currentMeals[mealIndex] = data.mealName; 
+                            await updateDoc(mealOptionsRef, { [key]: currentMeals }); 
+                            await updateMealPlanGrid(oldMeal, data.mealName);
+                            // Update nutrients, deleting old if name changed
+                            if (customMealNutrientsRef && data.nutrients) {
+                                let nutrientUpdate = { [data.mealName]: data.nutrients };
+                                if (oldMeal !== data.mealName) {
+                                    nutrientUpdate[oldMeal] = deleteField();
+                                }
+                                await updateDoc(customMealNutrientsRef, nutrientUpdate);
+                            }
+                            closeEditModal(); 
+                        }
                     } else {
                         let feedback = `<strong>That might not be the best choice.</strong><br>${data.reasoning}`;
                         if (data.alternatives && data.alternatives.length > 0) { feedback += `<br>Maybe try: ${data.alternatives.join(' or ')}.`; }
@@ -1198,16 +1262,43 @@
             async function handleAddMeal() {
                 const userMeal = newMealInput.value.trim(); if (!userMeal) return;
                 apiLoader.classList.remove('hidden'); addMealText.textContent = 'Checking...'; addMealBtn.disabled = true; apiFeedback.classList.add('hidden');
-                const systemPrompt = `You are a helpful and friendly prenatal nutritionist. Your goal is to evaluate if a meal is healthy and suitable for a pregnant woman, especially in the first trimester. Your response must be in JSON format according to the provided schema. If the meal is suitable, set isSuitable to true. If it is not suitable (e.g., contains raw fish, unpasteurized cheese, high-mercury fish, excessive caffeine, deli meats, etc.), set isSuitable to false, provide a brief, gentle, one-sentence explanation in the reasoning field, and suggest one or two healthier alternatives in the alternatives array.`;
+                const systemPrompt = `You are a helpful and friendly prenatal nutritionist. Your goal is to evaluate if a meal is healthy and suitable for a pregnant woman, especially in the first trimester. If the meal is suitable, provide an estimated nutritional profile with integer values from 0 (none) to 3 (high) for iron, calcium, folate, and fiber. Your response must be in JSON format according to the provided schema. If the meal is not suitable, set isSuitable to false and explain why.`;
                 const userQuery = `Evaluate this meal: "${userMeal}"`; const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-                const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json", responseSchema: { type: "OBJECT", properties: { "isSuitable": { "type": "BOOLEAN" }, "mealName": { "type": "STRING" }, "reasoning": { "type": "STRING" }, "alternatives": { "type": "ARRAY", "items": { "type": "STRING" } } }, required: ["isSuitable", "mealName"] } } };
+                const payload = { 
+                    contents: [{ parts: [{ text: userQuery }] }], 
+                    systemInstruction: { parts: [{ text: systemPrompt }] }, 
+                    generationConfig: { 
+                        responseMimeType: "application/json", 
+                        responseSchema: { 
+                            type: "OBJECT", 
+                            properties: { 
+                                "isSuitable": { "type": "BOOLEAN" }, 
+                                "mealName": { "type": "STRING" }, 
+                                "reasoning": { "type": "STRING" }, 
+                                "alternatives": { "type": "ARRAY", "items": { "type": "STRING" } },
+                                "nutrients": { 
+                                    "type": "OBJECT", 
+                                    "properties": { "iron": {"type": "NUMBER"}, "calcium": {"type": "NUMBER"}, "folate": {"type": "NUMBER"}, "fiber": {"type": "NUMBER"}}
+                                }
+                            }, 
+                            required: ["isSuitable", "mealName"] 
+                        } 
+                    } 
+                };
                 try {
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                     if (!response.ok) throw new Error(`API error: ${response.statusText}`);
                     const result = await response.json(); const text = result.candidates[0].content.parts[0].text; const data = JSON.parse(text);
                     if (data.isSuitable) {
                         const currentMeals = [...(dynamicMealOptions[currentMealKeyForManage] || [])];
-                        if (!currentMeals.includes(data.mealName)) { currentMeals.push(data.mealName); await updateDoc(mealOptionsRef, { [currentMealKeyForManage]: currentMeals }); newMealInput.value = ''; showApiFeedback(`Success! "${data.mealName}" was added.`, 'success', apiFeedback);
+                        if (!currentMeals.includes(data.mealName)) { 
+                            currentMeals.push(data.mealName); 
+                            await updateDoc(mealOptionsRef, { [currentMealKeyForManage]: currentMeals });
+                            if (customMealNutrientsRef && data.nutrients) {
+                                await updateDoc(customMealNutrientsRef, { [data.mealName]: data.nutrients });
+                            }
+                            newMealInput.value = ''; 
+                            showApiFeedback(`Success! "${data.mealName}" was added.`, 'success', apiFeedback);
                         } else { showApiFeedback(`"${data.mealName}" is already on the list.`, 'warning', apiFeedback); }
                     } else {
                         let feedback = `<strong>That might not be the best choice.</strong><br>${data.reasoning}`;
