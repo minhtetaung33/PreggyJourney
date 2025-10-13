@@ -145,7 +145,8 @@
         #edit-meal-modal.active #edit-modal-content,
         #start-date-modal.active #start-date-modal-content,
         #sleep-modal.active #sleep-modal-content,
-        #auth-modal.active #auth-modal-content {
+        #auth-modal.active #auth-modal-content,
+        #manage-supplements-modal.active #manage-supplements-content {
             transform: scale(1);
             opacity: 1;
         }
@@ -238,6 +239,17 @@
         #ai-meal-modal-content {
             max-height: 85vh;
             overflow-y: auto;
+        }
+        .clickable-header {
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border-radius: 0.5rem;
+            padding: 0.25rem;
+            display: flex;
+            align-items: center;
+        }
+        .clickable-header:hover {
+            background-color: rgba(255,255,255,0.1);
         }
     </style>
 </head>
@@ -430,11 +442,12 @@
 
                                 <!-- Nutrition Tracker -->
                                 <div class="bg-white/5 rounded-xl p-4 lg:col-span-2">
-                                    <h4 id="nutrition-tracker-header" class="font-bold text-lg mb-3 cursor-pointer hover:text-purple-300 transition-colors">
-                                        🍽️ Nutrition Tracker
-                                        <span class="text-xs font-normal text-gray-400 ml-1">(Click to add supplements)</span>
-                                    </h4>
-                                    <p class="text-xs text-gray-400 mb-3">Based on today's scheduled meals & supplements.</p>
+                                    <div id="nutrition-tracker-header" class="clickable-header mb-3">
+                                        <h4 class="font-bold text-lg flex-grow">🍽️ Nutrition Tracker</h4>
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                                    </div>
+                                    <p class="text-xs text-gray-400 mb-2">Based on today's scheduled meals & supplements.</p>
+                                    <div id="daily-supplements-list" class="flex flex-wrap gap-2 mb-3"></div>
                                     <div class="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
                                         <div id="nutrition-iron">
                                             <div class="flex justify-between mb-1"><span>Iron</span><span class="status-text"></span></div>
@@ -591,22 +604,21 @@
               <button id="ai-meal-close-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg transition-colors mt-4">Close</button>
         </div>
     </div>
-
-    <!-- Supplement Modal -->
-    <div id="supplement-modal" class="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-md flex justify-center items-center hidden z-50 p-4">
-        <div id="supplement-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
-            <h3 class="text-2xl font-bold mb-6 text-center">Manage Supplements</h3>
-            <div id="supplement-list-container" class="space-y-2 mb-6 max-h-60 overflow-y-auto pr-2">
-                 <!-- JS will populate this -->
-            </div>
+    
+    <!-- Manage Supplements Modal -->
+    <div id="manage-supplements-modal" class="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-md flex justify-center items-center hidden z-50 p-4">
+        <div id="manage-supplements-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
+            <h3 class="text-2xl font-bold mb-6 text-center">Manage & Log Supplements</h3>
+            <p class="text-sm text-center text-gray-300 mb-4">Add supplements to your saved list. Click a supplement in the list to log it for today.</p>
+            <div id="supplement-list-container" class="space-y-2 mb-6 max-h-60 overflow-y-auto pr-2 modal-scroll"></div>
             <div class="space-y-4">
-                <input type="text" id="new-supplement-input" class="meal-select w-full" placeholder="e.g., Prenatal vitamin with Iron...">
+                <input type="text" id="new-supplement-input" class="meal-select w-full" placeholder="e.g., Prenatal Vitamin, Iron Supplement...">
                 <div id="supplement-api-feedback" class="text-sm p-3 rounded-md bg-opacity-20 hidden"></div>
                 <button id="add-supplement-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
-                    <span id="add-supplement-text">Analyze & Add Supplement</span>
+                    <span id="add-supplement-text">Check & Add Supplement</span>
                     <svg id="supplement-api-loader" class="animate-spin ml-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                 </button>
-                <button id="supplement-modal-close-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg transition-colors">Done</button>
+                <button id="manage-supplements-close-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg transition-colors">Done</button>
             </div>
         </div>
     </div>
@@ -616,14 +628,15 @@
         // Firebase Imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, setDoc, getDoc, updateDoc, collection, addDoc, serverTimestamp, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, setDoc, getDoc, updateDoc, collection, addDoc, serverTimestamp, deleteField, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- WELLNESS DATA MANAGEMENT ---
         const defaultWellnessData = {
             pregnancyStartDate: '2025-08-01',
             pregnancyEndDate: '',
             dailyTip: "Stretch your legs for 5 minutes every hour to reduce swelling.",
-            dailyNutrition: {}, // Add this new property
+            dailyNutrition: {},
+            dailySupplements: { monday: [], tuesday: [], wednesday: [], thursday: [], friday: [], saturday: [], sunday: [] },
             mood: {
                 emoji: "😊",
                 level: "Happy",
@@ -715,10 +728,12 @@
                 const firestoreData = docSnap.data();
                 const mergedSleep = { ...defaultWellnessData.sleep, ...firestoreData.sleep };
                 const mergedWeeklyLog = { ...defaultWellnessData.weeklyLog, ...firestoreData.weeklyLog };
+                const mergedSupplements = { ...defaultWellnessData.dailySupplements, ...firestoreData.dailySupplements };
                 wellnessData = {
                     ...defaultWellnessData,
                     ...firestoreData,
-                    dailyNutrition: firestoreData.dailyNutrition || {}, // Initialize dailyNutrition
+                    dailyNutrition: firestoreData.dailyNutrition || {},
+                    dailySupplements: mergedSupplements,
                     sleep: mergedSleep,
                     weeklyLog: mergedWeeklyLog,
                     mood: { ...defaultWellnessData.mood, ...firestoreData.mood },
@@ -726,10 +741,6 @@
                     energy: { ...defaultWellnessData.energy, ...firestoreData.energy },
                 };
             }
-        }
-
-        function updateWellnessData(newData) {
-             Object.assign(wellnessData, newData);
         }
 
         // --- END WELLNESS DATA ---
@@ -815,17 +826,18 @@
         const aiMealRegenerateBtn = document.getElementById('ai-meal-regenerate-btn');
         const aiMealSaveBtn = document.getElementById('ai-meal-save-btn');
         const aiMealCloseBtn = document.getElementById('ai-meal-close-btn');
-        // Nutrition & Supplements
+        // Supplements
         const nutritionTrackerHeader = document.getElementById('nutrition-tracker-header');
-        const supplementModal = document.getElementById('supplement-modal');
+        const manageSupplementsModal = document.getElementById('manage-supplements-modal');
         const supplementListContainer = document.getElementById('supplement-list-container');
         const newSupplementInput = document.getElementById('new-supplement-input');
         const addSupplementBtn = document.getElementById('add-supplement-btn');
-        const supplementApiFeedback = document.getElementById('supplement-api-feedback');
         const addSupplementText = document.getElementById('add-supplement-text');
         const supplementApiLoader = document.getElementById('supplement-api-loader');
-        const supplementModalCloseBtn = document.getElementById('supplement-modal-close-btn');
-        
+        const supplementApiFeedback = document.getElementById('supplement-api-feedback');
+        const manageSupplementsCloseBtn = document.getElementById('manage-supplements-close-btn');
+        const dailySupplementsList = document.getElementById('daily-supplements-list');
+
         // Firebase Setup
         const appId = 'PreggyJourney'; 
         
@@ -857,17 +869,21 @@
             let symptomTrackerCollectionRef = null;
             let wellnessDataRef = null;
             let customMealNutrientsRef = null;
-            let supplementsRef = null;
+            let userSupplementsRef = null;
+            let supplementNutrientsRef = null;
 
             let unsubscribeMealPlan = null;
             let unsubscribeMealOptions = null;
             let unsubscribeWellnessData = null;
             let unsubscribeCustomMealNutrients = null;
-            let unsubscribeSupplements = null;
+            let unsubscribeUserSupplements = null;
+            let unsubscribeSupplementNutrients = null;
             
             let dynamicMealOptions = {};
             let customMealNutrients = {};
             let userSupplements = [];
+            let supplementNutrients = {};
+
             let wellnessChart = null;
             let currentGeneratedPlan = null;
             let currentDayForAI = null;
@@ -902,11 +918,12 @@
                     heroSection.classList.add('hidden'); // Hide hero after login
                     
                     mealPlanRef = doc(db, `users/${userId}/mealPlan`, 'weekly-v2');
-                    mealOptionsRef = doc(db, `users/${userId}/mealOptions`, 'v1'); // User-specific meal options
+                    mealOptionsRef = doc(db, `users/${userId}/mealOptions`, 'v1');
                     symptomTrackerCollectionRef = collection(db, `users/${userId}/symptomLogs`);
                     wellnessDataRef = doc(db, `users/${userId}/wellness`, 'daily');
                     customMealNutrientsRef = doc(db, `users/${userId}/mealNutrients`, 'custom-v1');
-                    supplementsRef = doc(db, `users/${userId}/supplements`, 'v1');
+                    userSupplementsRef = doc(db, `users/${userId}/supplements`, 'list-v1');
+                    supplementNutrientsRef = doc(db, `users/${userId}/supplements`, 'nutrients-v1');
 
                     await initializeMealOptions();
                     await initializeCustomMealNutrients();
@@ -923,7 +940,6 @@
                     updatePartnerAvoidTips();
                     updateHydrationAvoidTips();
                     
-                    // Ensure chart is rendered if navigating directly to symptom tab
                     if(symptomTrackerContent.classList.contains('active')) {
                          if (!wellnessChart) renderWellnessChart();
                          updateWellnessChartData();
@@ -942,7 +958,8 @@
                     if (unsubscribeMealOptions) unsubscribeMealOptions();
                     if (unsubscribeWellnessData) unsubscribeWellnessData();
                     if (unsubscribeCustomMealNutrients) unsubscribeCustomMealNutrients();
-                    if (unsubscribeSupplements) unsubscribeSupplements();
+                    if (unsubscribeUserSupplements) unsubscribeUserSupplements();
+                    if (unsubscribeSupplementNutrients) unsubscribeSupplementNutrients();
                 }
             });
 
@@ -1006,49 +1023,38 @@
             symptomTrackerTab.addEventListener('click', () => switchTab('symptom'));
 
 
-            // --- MEAL PLANNER LOGIC ---
+            // --- DATA INITIALIZATION & LOADING ---
             async function initializeMealOptions() {
                 if (!mealOptionsRef) return;
                 const docSnap = await getDoc(mealOptionsRef);
-                if (!docSnap.exists()) {
-                    await setDoc(mealOptionsRef, defaultMealOptions);
-                }
+                if (!docSnap.exists()) await setDoc(mealOptionsRef, defaultMealOptions);
             }
             
             async function initializeCustomMealNutrients() {
                 if (!customMealNutrientsRef) return;
                 const docSnap = await getDoc(customMealNutrientsRef);
-                if (!docSnap.exists()) {
-                    await setDoc(customMealNutrientsRef, {}); // Create an empty doc
-                }
+                if (!docSnap.exists()) await setDoc(customMealNutrientsRef, {});
             }
 
             async function initializeSupplements() {
-                if (!supplementsRef) return;
-                const docSnap = await getDoc(supplementsRef);
-                if (!docSnap.exists()) {
-                    await setDoc(supplementsRef, { list: [] });
+                if (userSupplementsRef && supplementNutrientsRef) {
+                    const listSnap = await getDoc(userSupplementsRef);
+                    if (!listSnap.exists()) await setDoc(userSupplementsRef, { list: [] });
+                    const nutrientsSnap = await getDoc(supplementNutrientsRef);
+                    if (!nutrientsSnap.exists()) await setDoc(supplementNutrientsRef, {});
                 }
             }
-
+            
             function loadMealPlan() {
                 if (!mealPlanRef) return;
                 if (unsubscribeMealPlan) unsubscribeMealPlan();
                 unsubscribeMealPlan = onSnapshot(mealPlanRef, async (docSnap) => {
-                    loadingSpinner.style.display = 'none';
-                    mealPlanGrid.style.display = 'grid';
-                    let data;
-                    if (!docSnap.exists()) {
-                        await setDoc(mealPlanRef, defaultMealPlan);
-                        data = defaultMealPlan;
-                    } else {
-                        data = docSnap.data();
-                    }
+                    loadingSpinner.style.display = 'none'; mealPlanGrid.style.display = 'grid';
+                    let data = docSnap.exists() ? docSnap.data() : defaultMealPlan;
+                    if (!docSnap.exists()) await setDoc(mealPlanRef, defaultMealPlan);
                     currentMealPlanData = data;
                     renderMealPlan(data);
-                    if (symptomTrackerContent.classList.contains('active')) {
-                        updateDashboardUI();
-                    }
+                    if (symptomTrackerContent.classList.contains('active')) updateDashboardUI();
                 }, (error) => console.error("Error listening to meal plan:", error));
             }
 
@@ -1056,14 +1062,8 @@
                 if (!mealOptionsRef) return;
                 if (unsubscribeMealOptions) unsubscribeMealOptions();
                 unsubscribeMealOptions = onSnapshot(mealOptionsRef, (docSnap) => {
-                    if (docSnap.exists()) {
-                        dynamicMealOptions = docSnap.data();
-                        if (manageMealsModal.classList.contains('active')) {
-                            populateMealList();
-                        }
-                    } else { // Handle case where user has no options yet
-                        dynamicMealOptions = { ...defaultMealOptions };
-                    }
+                    dynamicMealOptions = docSnap.exists() ? docSnap.data() : { ...defaultMealOptions };
+                    if (manageMealsModal.classList.contains('active')) populateMealList();
                 }, (error) => console.error("Error listening to meal options:", error));
             }
             
@@ -1072,27 +1072,25 @@
                 if (unsubscribeCustomMealNutrients) unsubscribeCustomMealNutrients();
                 unsubscribeCustomMealNutrients = onSnapshot(customMealNutrientsRef, (docSnap) => {
                     customMealNutrients = docSnap.exists() ? docSnap.data() : {};
-                     if (manageMealsModal.classList.contains('active')) {
-                        populateMealList(); // Refresh list if open
-                    }
+                     if (manageMealsModal.classList.contains('active')) populateMealList();
                 }, (error) => console.error("Error listening to custom meal nutrients:", error));
             }
 
             function loadSupplements() {
-                if (!supplementsRef) return;
-                if (unsubscribeSupplements) unsubscribeSupplements();
-                unsubscribeSupplements = onSnapshot(supplementsRef, (docSnap) => {
-                    if (docSnap.exists()) {
-                        userSupplements = docSnap.data().list || [];
-                    } else {
-                        userSupplements = [];
-                    }
-                    if (supplementModal.classList.contains('active')) {
-                        populateSupplementList();
-                    }
-                    // Always update nutrition tracker when supplements change
-                    updateNutritionTrackerFromMealPlan();
-                }, (error) => console.error("Error listening to supplements:", error));
+                if (userSupplementsRef) {
+                    if (unsubscribeUserSupplements) unsubscribeUserSupplements();
+                    unsubscribeUserSupplements = onSnapshot(userSupplementsRef, (docSnap) => {
+                        userSupplements = docSnap.exists() ? docSnap.data().list || [] : [];
+                        if (manageSupplementsModal.classList.contains('active')) populateSupplementList();
+                    });
+                }
+                if (supplementNutrientsRef) {
+                    if (unsubscribeSupplementNutrients) unsubscribeSupplementNutrients();
+                    unsubscribeSupplementNutrients = onSnapshot(supplementNutrientsRef, (docSnap) => {
+                        supplementNutrients = docSnap.exists() ? docSnap.data() : {};
+                         if (manageSupplementsModal.classList.contains('active')) populateSupplementList();
+                    });
+                }
             }
 
             function loadWellnessData() {
@@ -1103,23 +1101,25 @@
                         const firestoreData = docSnap.data();
                         const mergedSleep = { ...defaultWellnessData.sleep, ...firestoreData.sleep };
                         const mergedWeeklyLog = { ...defaultWellnessData.weeklyLog, ...firestoreData.weeklyLog };
+                        const mergedSupplements = { ...defaultWellnessData.dailySupplements, ...firestoreData.dailySupplements };
                         wellnessData = {
                             ...defaultWellnessData,
                             ...firestoreData,
-                            dailyNutrition: firestoreData.dailyNutrition || {}, // Initialize dailyNutrition here too
+                            dailyNutrition: firestoreData.dailyNutrition || {},
+                            dailySupplements: mergedSupplements,
                             sleep: mergedSleep,
                             weeklyLog: mergedWeeklyLog,
                             mood: { ...defaultWellnessData.mood, ...firestoreData.mood },
                             water: { ...defaultWellnessData.water, ...firestoreData.water },
                             energy: { ...defaultWellnessData.energy, ...firestoreData.energy },
                         };
-
                         updateDashboardUI();
                         updateWellnessChartData();
                     }
                 });
             }
 
+            // --- MEAL PLANNER LOGIC ---
             async function updateMealPlan(meal, day, value) {
                 if (!mealPlanRef) return;
                 await updateDoc(mealPlanRef, { [`${meal}.${day}`]: value });
@@ -1296,12 +1296,9 @@
                             currentMeals[mealIndex] = data.mealName; 
                             await updateDoc(mealOptionsRef, { [key]: currentMeals }); 
                             await updateMealPlanGrid(oldMeal, data.mealName);
-                            // Update nutrients, deleting old if name changed
                             if (customMealNutrientsRef && data.nutrients) {
                                 let nutrientUpdate = { [data.mealName]: data.nutrients };
-                                if (oldMeal !== data.mealName) {
-                                    nutrientUpdate[oldMeal] = deleteField();
-                                }
+                                if (oldMeal !== data.mealName) nutrientUpdate[oldMeal] = deleteField();
                                 await updateDoc(customMealNutrientsRef, nutrientUpdate);
                             }
                             closeEditModal(); 
@@ -1383,13 +1380,10 @@
                 currentDayForAI = dayKey;
                 lastCraving = null;
                 aiModalTitle.textContent = `AI Meal Plan for ${dayTitles[dayKey]}`;
-                
-                // Reset to initial state
                 aiMealInitialView.classList.remove('hidden');
                 aiMealPlanContainer.classList.add('hidden');
                 aiMealButtons.classList.add('hidden');
                 cravingInput.value = '';
-
                 aiMealModal.classList.remove('hidden');
                 setTimeout(() => aiMealModal.classList.add('active'), 10);
             }
@@ -1402,27 +1396,21 @@
             async function generateAiMealPlan(dayKey, craving) {
                 currentGeneratedPlan = null;
                 lastCraving = craving; 
-
-                // Switch to loading view
                 aiMealInitialView.classList.add('hidden');
                 aiMealPlanContainer.classList.remove('hidden');
                 aiMealLoader.classList.remove('hidden');
                 aiMealPlanDisplay.classList.add('hidden');
                 aiMealFeedback.classList.add('hidden');
                 aiMealButtons.classList.add('hidden');
-
                 const pregnancyStartDate = new Date(wellnessData.pregnancyStartDate);
                 const today = new Date();
                 const diffTime = Math.abs(today - pregnancyStartDate);
                 const pregnancyWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7));
-
                 const breakfastOpts = dynamicMealOptions.breakfast || [];
                 const lunchOpts = dynamicMealOptions.lunch || [];
                 const snackOpts = dynamicMealOptions.snack || [];
                 const dinnerOpts = dynamicMealOptions.dinner || [];
-                
                 const cravingText = craving ? `The user's specific craving today is "${craving}".` : "The user has not specified a craving, so create a generally balanced and appealing plan.";
-
                 const systemPrompt = `You are an expert prenatal nutritionist creating a one-day meal plan for a woman in week ${pregnancyWeek} of her pregnancy. This is part of an ongoing session, so each plan you generate must be unique and different from previous suggestions.
 1.  **Primary Goal**: Create a complete, balanced, and varied one-day meal plan. You MUST provide a suggestion for all five meal slots: Breakfast, Snack AM, Lunch, Snack PM, and Dinner.
 2.  **Handle the Craving**: ${cravingText} If there is a craving, you must incorporate it creatively into one of the meal slots.
@@ -1435,13 +1423,8 @@
 6.  **Nutritional Summary**: Provide a summary of the day's estimated nutrient levels. For each nutrient (iron, calcium, folate, fiber), classify the total daily intake as "Low", "Okay", or "Good".
 7.  **Feedback**: Provide a brief, one-sentence nutritional feedback about the overall plan or the user's craving.
 8.  **Format**: Your response must be in JSON format according to the schema.`;
-                
                 let userQuery = `Available meal options:\n- Breakfast: [${breakfastOpts.join(', ')}]\n- Lunch: [${lunchOpts.join(', ')}]\n- Snack: [${snackOpts.join(', ')}]\n- Dinner: [${dinnerOpts.join(', ')}]\n\nGenerate a new, unique meal plan for a user in week ${pregnancyWeek}.`;
-                if(craving) {
-                    userQuery += ` The user is craving: "${craving}".`
-                }
-
-
+                if(craving) userQuery += ` The user is craving: "${craving}".`
                 const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                 const payload = {
@@ -1455,22 +1438,17 @@
                                 "plan": {
                                     type: "OBJECT",
                                     properties: {
-                                        "breakfast": { "type": "OBJECT", "properties": { "name": { "type": "STRING" }, "calories": { "type": "NUMBER" }, "percentage": { "type": "STRING" } } },
-                                        "lunch": { "type": "OBJECT", "properties": { "name": { "type": "STRING" }, "calories": { "type": "NUMBER" }, "percentage": { "type": "STRING" } } },
-                                        "snackAM": { "type": "OBJECT", "properties": { "name": { "type": "STRING" }, "calories": { "type": "NUMBER" }, "percentage": { "type": "STRING" } } },
-                                        "snackPM": { "type": "OBJECT", "properties": { "name": { "type": "STRING" }, "calories": { "type": "NUMBER" }, "percentage": { "type": "STRING" } } },
-                                        "dinner": { "type": "OBJECT", "properties": { "name": { "type": "STRING" }, "calories": { "type": "NUMBER" }, "percentage": { "type": "STRING" } } }
+                                        "breakfast": { "type": "OBJECT", "properties": { "name": { "type": "STRING" }, "calories": { "type": "NUMBER" } } },
+                                        "lunch": { "type": "OBJECT", "properties": { "name": { "type": "STRING" }, "calories": { "type": "NUMBER" } } },
+                                        "snackAM": { "type": "OBJECT", "properties": { "name": { "type": "STRING" }, "calories": { "type": "NUMBER" } } },
+                                        "snackPM": { "type": "OBJECT", "properties": { "name": { "type": "STRING" }, "calories": { "type": "NUMBER" } } },
+                                        "dinner": { "type": "OBJECT", "properties": { "name": { "type": "STRING" }, "calories": { "type": "NUMBER" } } }
                                     },
                                     required: ["breakfast", "snackAM", "lunch", "snackPM", "dinner"]
                                 },
                                 "nutritionSummary": {
                                     "type": "OBJECT",
-                                    "properties": {
-                                        "iron": {"type": "STRING"},
-                                        "calcium": {"type": "STRING"},
-                                        "folate": {"type": "STRING"},
-                                        "fiber": {"type": "STRING"}
-                                    },
+                                    properties: { "iron": {"type": "STRING"}, "calcium": {"type": "STRING"}, "folate": {"type": "STRING"}, "fiber": {"type": "STRING"} },
                                     "required": ["iron", "calcium", "folate", "fiber"]
                                 },
                                 "totalCalories": { "type": "NUMBER" },
@@ -1480,16 +1458,12 @@
                         }
                     }
                 };
-
                 try {
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                     if (!response.ok) throw new Error(`API error: ${response.statusText}`);
-
-                    const result = await response.json();
-                    const text = result.candidates[0].content.parts[0].text;
-                    const data = JSON.parse(text);
+                    const result = await response.json(); const text = result.candidates[0].content.parts[0].text; const data = JSON.parse(text);
                     currentGeneratedPlan = data;
-                    displayAiMealPlan(data.plan, data.feedback, data.totalCalories);
+                    displayAiMealPlan(data);
                 } catch (error) {
                     console.error("AI Meal Plan generation failed:", error);
                     aiMealPlanDisplay.innerHTML = `<p class="text-center text-red-300">Sorry, something went wrong while generating the meal plan. Please try again.</p>`;
@@ -1500,13 +1474,14 @@
                 }
             }
             
-            function displayAiMealPlan(plan, feedback, totalCalories) {
+            function displayAiMealPlan(data) {
+                const { plan, feedback, totalCalories } = data;
                 aiMealPlanDisplay.innerHTML = `
-                    <div class="p-3 bg-white/5 rounded-lg flex justify-between items-center"><span><strong>Breakfast:</strong> ${plan.breakfast?.name || 'N/A'}</span> <span class="text-sm font-semibold text-purple-300">${plan.breakfast?.calories || 0} kcal (${plan.breakfast?.percentage || '0%'})</span></div>
-                    <div class="p-3 bg-white/5 rounded-lg flex justify-between items-center"><span><strong>Snack (AM):</strong> ${plan.snackAM?.name || 'N/A'}</span> <span class="text-sm font-semibold text-purple-300">${plan.snackAM?.calories || 0} kcal (${plan.snackAM?.percentage || '0%'})</span></div>
-                    <div class="p-3 bg-white/5 rounded-lg flex justify-between items-center"><span><strong>Lunch:</strong> ${plan.lunch?.name || 'N/A'}</span> <span class="text-sm font-semibold text-purple-300">${plan.lunch?.calories || 0} kcal (${plan.lunch?.percentage || '0%'})</span></div>
-                    <div class="p-3 bg-white/5 rounded-lg flex justify-between items-center"><span><strong>Snack (PM):</strong> ${plan.snackPM?.name || 'N/A'}</span> <span class="text-sm font-semibold text-purple-300">${plan.snackPM?.calories || 0} kcal (${plan.snackPM?.percentage || '0%'})</span></div>
-                    <div class="p-3 bg-white/5 rounded-lg flex justify-between items-center"><span><strong>Dinner:</strong> ${plan.dinner?.name || 'N/A'}</span> <span class="text-sm font-semibold text-purple-300">${plan.dinner?.calories || 0} kcal (${plan.dinner?.percentage || '0%'})</span></div>
+                    <div class="p-3 bg-white/5 rounded-lg flex justify-between items-center"><span><strong>Breakfast:</strong> ${plan.breakfast?.name || 'N/A'}</span> <span class="text-sm font-semibold text-purple-300">${plan.breakfast?.calories || 0} kcal</span></div>
+                    <div class="p-3 bg-white/5 rounded-lg flex justify-between items-center"><span><strong>Snack (AM):</strong> ${plan.snackAM?.name || 'N/A'}</span> <span class="text-sm font-semibold text-purple-300">${plan.snackAM?.calories || 0} kcal</span></div>
+                    <div class="p-3 bg-white/5 rounded-lg flex justify-between items-center"><span><strong>Lunch:</strong> ${plan.lunch?.name || 'N/A'}</span> <span class="text-sm font-semibold text-purple-300">${plan.lunch?.calories || 0} kcal</span></div>
+                    <div class="p-3 bg-white/5 rounded-lg flex justify-between items-center"><span><strong>Snack (PM):</strong> ${plan.snackPM?.name || 'N/A'}</span> <span class="text-sm font-semibold text-purple-300">${plan.snackPM?.calories || 0} kcal</span></div>
+                    <div class="p-3 bg-white/5 rounded-lg flex justify-between items-center"><span><strong>Dinner:</strong> ${plan.dinner?.name || 'N/A'}</span> <span class="text-sm font-semibold text-purple-300">${plan.dinner?.calories || 0} kcal</span></div>
                     <div class="mt-4 p-3 bg-white/10 rounded-lg text-center"><strong>Total Estimated Calories:</strong> <span class="font-bold text-lg text-purple-300">${totalCalories || 0} kcal</span></div>
                 `;
                 if(feedback) {
@@ -1517,105 +1492,55 @@
 
             async function handleSaveAiPlan() {
                 if (!currentGeneratedPlan || !currentDayForAI || !currentGeneratedPlan.plan) return;
-                
-                const updates = {};
-                const plan = currentGeneratedPlan.plan;
-
+                const updates = {}; const plan = currentGeneratedPlan.plan;
                 if (plan.breakfast?.name) updates[`breakfast.${currentDayForAI}`] = plan.breakfast.name;
                 if (plan.lunch?.name) updates[`lunch.${currentDayForAI}`] = plan.lunch.name;
                 if (plan.snackAM?.name) updates[`snackAM.${currentDayForAI}`] = plan.snackAM.name;
                 if (plan.snackPM?.name) updates[`snackPM.${currentDayForAI}`] = plan.snackPM.name;
                 if (plan.dinner?.name) updates[`dinner.${currentDayForAI}`] = plan.dinner.name;
-                
-                if (Object.keys(updates).length > 0) {
-                    await updateDoc(mealPlanRef, updates);
-                }
+                if (Object.keys(updates).length > 0) await updateDoc(mealPlanRef, updates);
 
-                // Also save the nutritional summary for the day
                 if (currentGeneratedPlan.nutritionSummary) {
                     const dailyNutritionUpdate = { ...wellnessData.dailyNutrition };
                     dailyNutritionUpdate[currentDayForAI] = currentGeneratedPlan.nutritionSummary;
                     await setDoc(wellnessDataRef, { dailyNutrition: dailyNutritionUpdate }, { merge: true });
                 }
-
                 closeAiMealPlannerModal();
             }
 
 
             // --- SYMPTOM TRACKER & DASHBOARD LOGIC ---
-
             const sleepDays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
             const moodToValue = {'😣': 1, '😐': 2, '🙂': 3, '😊': 4, '🥰': 5};
-
 
             async function updateHydrationAndSnacks() {
                 const container = document.getElementById('hydration-snacks-container');
                 const loader = document.getElementById('hydration-snacks-loader');
                 if (!container || !loader) return;
-
-                loader.style.display = 'block';
-                container.innerHTML = '';
-                container.appendChild(loader);
-
+                loader.style.display = 'block'; container.innerHTML = ''; container.appendChild(loader);
                 try {
                     const pregnancyStartDate = new Date(wellnessData.pregnancyStartDate);
                     const today = new Date();
                     const diffTime = Math.abs(today - pregnancyStartDate);
                     const pregnancyWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) || 5;
-                    
                     const todayIndex = new Date().getDay();
                     const dayKey = days[todayIndex === 0 ? 6 : todayIndex - 1];
-                    const todaysMeals = {
-                        breakfast: currentMealPlanData.breakfast[dayKey],
-                        lunch: currentMealPlanData.lunch[dayKey],
-                        snackAM: currentMealPlanData.snackAM[dayKey],
-                        snackPM: currentMealPlanData.snackPM[dayKey],
-                        dinner: currentMealPlanData.dinner[dayKey],
-                    };
+                    const todaysMeals = { breakfast: currentMealPlanData.breakfast[dayKey], lunch: currentMealPlanData.lunch[dayKey], snackAM: currentMealPlanData.snackAM[dayKey], snackPM: currentMealPlanData.snackPM[dayKey], dinner: currentMealPlanData.dinner[dayKey] };
                     const mealPlanString = Object.entries(todaysMeals).map(([key, value]) => `${key}: ${value || 'Not set'}`).join(', ');
-
                     const systemPrompt = `You are a prenatal nutritionist providing daily hydration and snacking tips. Generate 3-4 short, actionable tips based on the user's pregnancy week, mood, and meal plan. The tips should be practical and easy to follow. Respond ONLY with a JSON array of strings.`;
-                    const userQuery = `
-                        Context for today:
-                        - Pregnancy Week: ${pregnancyWeek}
-                        - Today's Meal Plan: ${mealPlanString}
-                        - Her current mood: ${wellnessData.mood.level}
-                        - Her current energy level: ${wellnessData.energy.level}
-                        
-                        Generate 3-4 hydration and snack tips.
-                    `;
-
+                    const userQuery = `Context for today:\n- Pregnancy Week: ${pregnancyWeek}\n- Today's Meal Plan: ${mealPlanString}\n- Her current mood: ${wellnessData.mood.level}\n- Her current energy level: ${wellnessData.energy.level}\n\nGenerate 3-4 hydration and snack tips.`;
                     const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
                     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-                    const payload = {
-                        contents: [{ parts: [{ text: userQuery }] }],
-                        systemInstruction: { parts: [{ text: systemPrompt }] },
-                        generationConfig: {
-                            responseMimeType: "application/json",
-                            responseSchema: { type: "ARRAY", items: { type: "STRING" } }
-                        }
-                    };
-
+                    const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json", responseSchema: { type: "ARRAY", items: { type: "STRING" } } } };
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                     if (!response.ok) throw new Error('API response not OK');
-
-                    const result = await response.json();
-                    const tips = JSON.parse(result.candidates[0].content.parts[0].text);
-
+                    const result = await response.json(); const tips = JSON.parse(result.candidates[0].content.parts[0].text);
                     loader.style.display = 'none';
-                    if (tips && tips.length > 0) {
-                        tips.forEach(tip => {
-                            const li = document.createElement('li');
-                            li.textContent = tip;
-                            container.appendChild(li);
-                        });
-                    } else {
-                        container.innerHTML = `<p>Could not generate tips at the moment.</p>`;
-                    }
+                    if (tips && tips.length > 0) { tips.forEach(tip => { const li = document.createElement('li'); li.textContent = tip; container.appendChild(li); }); } 
+                    else { container.innerHTML = `<p>Could not generate tips at the moment.</p>`; }
                 } catch (error) {
                     console.error("Failed to generate hydration/snack tips:", error);
-                    loader.style.display = 'none';
-                    container.innerHTML = `<li>Keep a water bottle handy to sip throughout the day.</li><li>A handful of almonds can be a great energy-boosting snack.</li><li>Try adding a slice of lemon or cucumber to your water for a refreshing change.</li>`;
+                    loader.style.display = 'none'; container.innerHTML = `<li>Keep a water bottle handy to sip throughout the day.</li><li>A handful of almonds can be a great energy-boosting snack.</li><li>Try adding a slice of lemon or cucumber to your water for a refreshing change.</li>`;
                 }
             }
 
@@ -1623,71 +1548,30 @@
                 const container = document.getElementById('partner-tips-container');
                 const loader = document.getElementById('partner-tips-loader');
                 if (!container || !loader) return;
-                
-                loader.style.display = 'block';
-                container.innerHTML = ''; // Clear previous tips
-                container.appendChild(loader);
-
+                loader.style.display = 'block'; container.innerHTML = ''; container.appendChild(loader);
                 try {
                     const pregnancyStartDate = new Date(wellnessData.pregnancyStartDate);
                     const today = new Date();
                     const diffTime = Math.abs(today - pregnancyStartDate);
                     const pregnancyWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) || 5;
-
                     const todayIndex = new Date().getDay();
                     const dayKey = days[todayIndex === 0 ? 6 : todayIndex - 1];
-                    const todaysMeals = {
-                        breakfast: currentMealPlanData.breakfast[dayKey],
-                        lunch: currentMealPlanData.lunch[dayKey],
-                        snackAM: currentMealPlanData.snackAM[dayKey],
-                        snackPM: currentMealPlanData.snackPM[dayKey],
-                        dinner: currentMealPlanData.dinner[dayKey],
-                    };
+                    const todaysMeals = { breakfast: currentMealPlanData.breakfast[dayKey], lunch: currentMealPlanData.lunch[dayKey], snackAM: currentMealPlanData.snackAM[dayKey], snackPM: currentMealPlanData.snackPM[dayKey], dinner: currentMealPlanData.dinner[dayKey] };
                     const mealPlanString = Object.entries(todaysMeals).map(([key, value]) => `${key}: ${value || 'Not set'}`).join(', ');
-
                     const systemPrompt = `You are a supportive, empathetic, and creative assistant for a pregnant woman's partner. Your task is to generate 3-4 short, actionable, and thoughtful tips for the partner based on the provided daily context. The tips should be encouraging and focus on practical help and emotional support. Respond ONLY with a JSON array of strings.`;
-                    const userQuery = `
-                        Context for today:
-                        - Pregnancy Week: ${pregnancyWeek}
-                        - Today's Meal Plan: ${mealPlanString}
-                        - Her current mood: ${wellnessData.mood.level}
-                        - Her current energy level: ${wellnessData.energy.level}
-                        
-                        Generate 3-4 tips for the partner.
-                    `;
-                    
+                    const userQuery = `Context for today:\n- Pregnancy Week: ${pregnancyWeek}\n- Today's Meal Plan: ${mealPlanString}\n- Her current mood: ${wellnessData.mood.level}\n- Her current energy level: ${wellnessData.energy.level}\n\nGenerate 3-4 tips for the partner.`;
                     const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
                     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-                    const payload = {
-                        contents: [{ parts: [{ text: userQuery }] }],
-                        systemInstruction: { parts: [{ text: systemPrompt }] },
-                        generationConfig: {
-                            responseMimeType: "application/json",
-                            responseSchema: { type: "ARRAY", items: { type: "STRING" } }
-                        }
-                    };
-
+                    const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json", responseSchema: { type: "ARRAY", items: { type: "STRING" } } } };
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                     if (!response.ok) throw new Error('API response not OK');
-                    
-                    const result = await response.json();
-                    const tips = JSON.parse(result.candidates[0].content.parts[0].text);
-                    
+                    const result = await response.json(); const tips = JSON.parse(result.candidates[0].content.parts[0].text);
                     loader.style.display = 'none';
-                    if (tips && tips.length > 0) {
-                        tips.forEach(tip => {
-                            const li = document.createElement('li');
-                            li.textContent = tip;
-                            container.appendChild(li);
-                        });
-                    } else {
-                         container.innerHTML = `<p>Could not generate tips at the moment.</p>`;
-                    }
-
+                    if (tips && tips.length > 0) { tips.forEach(tip => { const li = document.createElement('li'); li.textContent = tip; container.appendChild(li); }); } 
+                    else { container.innerHTML = `<p>Could not generate tips at the moment.</p>`; }
                 } catch (error) {
                     console.error("Failed to generate partner tips:", error);
-                    loader.style.display = 'none';
-                    container.innerHTML = `<li>Offer a gentle back rub tonight.</li><li>Make sure she has a full water bottle.</li><li>Ask if there's anything you can do to make her more comfortable.</li>`;
+                    loader.style.display = 'none'; container.innerHTML = `<li>Offer a gentle back rub tonight.</li><li>Make sure she has a full water bottle.</li><li>Ask if there's anything you can do to make her more comfortable.</li>`;
                 }
             }
 
@@ -1695,56 +1579,26 @@
                 const container = document.getElementById('hydration-avoid-container');
                 const loader = document.getElementById('hydration-avoid-loader');
                 if (!container || !loader) return;
-
-                loader.style.display = 'block';
-                container.innerHTML = '';
-                container.appendChild(loader);
-
+                loader.style.display = 'block'; container.innerHTML = ''; container.appendChild(loader);
                 try {
                     const pregnancyStartDate = new Date(wellnessData.pregnancyStartDate);
                     const today = new Date();
                     const diffTime = Math.abs(today - pregnancyStartDate);
                     const pregnancyWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) || 5;
-                    
                     const systemPrompt = `You are a prenatal nutritionist providing a list of foods, drinks, or habits to avoid. Generate 2-3 short, critical "to avoid" tips based on the user's pregnancy week. Focus on common, important avoidances like raw fish, unpasteurized products, high-mercury fish, excessive caffeine, etc., relevant to the week. Respond ONLY with a JSON array of strings.`;
-                    const userQuery = `
-                        Context for today:
-                        - Pregnancy Week: ${pregnancyWeek}
-                        
-                        Generate 2-3 crucial hydration and snack-related things to avoid.
-                    `;
-
+                    const userQuery = `Context for today:\n- Pregnancy Week: ${pregnancyWeek}\n\nGenerate 2-3 crucial hydration and snack-related things to avoid.`;
                     const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
                     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-                    const payload = {
-                        contents: [{ parts: [{ text: userQuery }] }],
-                        systemInstruction: { parts: [{ text: systemPrompt }] },
-                        generationConfig: {
-                            responseMimeType: "application/json",
-                            responseSchema: { type: "ARRAY", items: { type: "STRING" } }
-                        }
-                    };
-
+                    const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json", responseSchema: { type: "ARRAY", items: { type: "STRING" } } } };
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                     if (!response.ok) throw new Error('API response not OK');
-
-                    const result = await response.json();
-                    const tips = JSON.parse(result.candidates[0].content.parts[0].text);
-
+                    const result = await response.json(); const tips = JSON.parse(result.candidates[0].content.parts[0].text);
                     loader.style.display = 'none';
-                    if (tips && tips.length > 0) {
-                        tips.forEach(tip => {
-                            const li = document.createElement('li');
-                            li.textContent = tip;
-                            container.appendChild(li);
-                        });
-                    } else {
-                        container.innerHTML = `<p>Could not generate tips at the moment.</p>`;
-                    }
+                    if (tips && tips.length > 0) { tips.forEach(tip => { const li = document.createElement('li'); li.textContent = tip; container.appendChild(li); }); } 
+                    else { container.innerHTML = `<p>Could not generate tips at the moment.</p>`; }
                 } catch (error) {
                     console.error("Failed to generate hydration/snack avoid tips:", error);
-                    loader.style.display = 'none';
-                    container.innerHTML = `<li>Avoid unpasteurized juices or milk.</li><li>Limit caffeine intake.</li><li>Stay away from high-mercury fish like shark or swordfish.</li>`;
+                    loader.style.display = 'none'; container.innerHTML = `<li>Avoid unpasteurized juices or milk.</li><li>Limit caffeine intake.</li><li>Stay away from high-mercury fish like shark or swordfish.</li>`;
                 }
             }
 
@@ -1752,66 +1606,33 @@
                 const container = document.getElementById('partner-avoid-container');
                 const loader = document.getElementById('partner-avoid-loader');
                 if (!container || !loader) return;
-                
-                loader.style.display = 'block';
-                container.innerHTML = ''; // Clear previous tips
-                container.appendChild(loader);
-
+                loader.style.display = 'block'; container.innerHTML = ''; container.appendChild(loader);
                 try {
                     const pregnancyStartDate = new Date(wellnessData.pregnancyStartDate);
                     const today = new Date();
                     const diffTime = Math.abs(today - pregnancyStartDate);
                     const pregnancyWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) || 5;
-
                     const systemPrompt = `You are a supportive, empathetic, and creative assistant for a pregnant woman's partner. Your task is to generate 2-3 short, actionable things the partner should AVOID saying or doing, based on the provided daily context. The tips should focus on avoiding common insensitive comments or unhelpful actions. Respond ONLY with a JSON array of strings.`;
-                    const userQuery = `
-                        Context for today:
-                        - Pregnancy Week: ${pregnancyWeek}
-                        - Her current mood: ${wellnessData.mood.level}
-                        - Her current energy level: ${wellnessData.energy.level}
-                        
-                        Generate 2-3 things for the partner to avoid.
-                    `;
-                    
+                    const userQuery = `Context for today:\n- Pregnancy Week: ${pregnancyWeek}\n- Her current mood: ${wellnessData.mood.level}\n- Her current energy level: ${wellnessData.energy.level}\n\nGenerate 2-3 things for the partner to avoid.`;
                     const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
                     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-                    const payload = {
-                        contents: [{ parts: [{ text: userQuery }] }],
-                        systemInstruction: { parts: [{ text: systemPrompt }] },
-                        generationConfig: {
-                            responseMimeType: "application/json",
-                            responseSchema: { type: "ARRAY", items: { type: "STRING" } }
-                        }
-                    };
-
+                    const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json", responseSchema: { type: "ARRAY", items: { type: "STRING" } } } };
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                     if (!response.ok) throw new Error('API response not OK');
-                    
-                    const result = await response.json();
-                    const tips = JSON.parse(result.candidates[0].content.parts[0].text);
-                    
+                    const result = await response.json(); const tips = JSON.parse(result.candidates[0].content.parts[0].text);
                     loader.style.display = 'none';
-                    if (tips && tips.length > 0) {
-                        tips.forEach(tip => {
-                            const li = document.createElement('li');
-                            li.textContent = tip;
-                            container.appendChild(li);
-                        });
-                    } else {
-                         container.innerHTML = `<p>Could not generate tips at the moment.</p>`;
-                    }
-
+                    if (tips && tips.length > 0) { tips.forEach(tip => { const li = document.createElement('li'); li.textContent = tip; container.appendChild(li); }); } 
+                    else { container.innerHTML = `<p>Could not generate tips at the moment.</p>`; }
                 } catch (error) {
                     console.error("Failed to generate partner avoid tips:", error);
-                    loader.style.display = 'none';
-                    container.innerHTML = `<li>Avoid commenting on her changing body unless it's a compliment.</li><li>Don't dismiss her feelings or symptoms, even if they seem minor.</li>`;
+                    loader.style.display = 'none'; container.innerHTML = `<li>Avoid commenting on her changing body unless it's a compliment.</li><li>Don't dismiss her feelings or symptoms, even if they seem minor.</li>`;
                 }
             }
 
             function updateDashboardUI() {
                 updateDailySummary();
                 updateHydrationCircle();
-                updateNutritionTrackerFromMealPlan();
+                updateNutritionTracker();
                 updateSleepMonitor();
                 updateMoodLog();
                 updateEnergyLog();
@@ -1821,15 +1642,12 @@
             function updateDailySummary() {
                 const { mood, water, energy } = wellnessData;
                 const lastNightSleep = calculateLastNightSleep();
-
                 document.getElementById('summary-mood').textContent = mood.emoji;
                 document.getElementById('summary-sleep').textContent = `${lastNightSleep.hours} hours`;
                 document.getElementById('summary-water').textContent = `${water.intake} / ${water.goal} glasses`;
                 const energySpan = document.getElementById('summary-energy');
                 energySpan.textContent = energy.level;
                 energySpan.className = `font-semibold ${energy.color}`;
-
-                // AI Insight
                 let insight = `You slept ${lastNightSleep.hours} hours and drank ${water.intake} glasses of water. `;
                 if(lastNightSleep.hours < 7) insight += "Try to get a bit more rest tonight. ";
                 if(water.intake < 5) insight += "Don't forget to hydrate! ";
@@ -1843,91 +1661,64 @@
                 const radius = circle.r.baseVal.value;
                 const circumference = 2 * Math.PI * radius;
                 const offset = circumference - (intake / goal) * circumference;
-
-                circle.style.strokeDasharray = circumference;
-                circle.style.strokeDashoffset = offset;
-
+                circle.style.strokeDasharray = circumference; circle.style.strokeDashoffset = offset;
                 hydrationText.innerHTML = `${intake}<span class="text-sm">/${goal}</span>`;
                 document.getElementById('hydration-ai-insight').textContent = intake < goal ? `You're doing great! Just ${goal - intake} more glasses to go.` : "You've hit your hydration goal for today! 🎉";
             }
             
-            function updateNutritionTrackerFromMealPlan() {
-                const todayIndex = new Date().getDay();
-                const dayIndex = todayIndex === 0 ? 6 : todayIndex - 1;
-                const dayKey = days[dayIndex];
-
+            function updateNutritionTracker() {
+                const todayIndex = new Date().getDay(); const dayIndex = todayIndex === 0 ? 6 : todayIndex - 1; const dayKey = days[dayIndex];
                 const aiSummary = wellnessData.dailyNutrition ? wellnessData.dailyNutrition[dayKey] : null;
-                const totals = { iron: 0, calcium: 0, folate: 0, fiber: 0 };
+                updateDailySupplementsUI(dayKey);
 
                 if (aiSummary) {
-                    // Start with AI-generated summary values
-                    const statusMap = { 'low': 2, 'okay': 5, 'good': 8 }; // Convert status to a numeric value
-                    totals.iron = statusMap[aiSummary.iron.toLowerCase()] || 0;
-                    totals.calcium = statusMap[aiSummary.calcium.toLowerCase()] || 0;
-                    totals.folate = statusMap[aiSummary.folate.toLowerCase()] || 0;
-                    totals.fiber = statusMap[aiSummary.fiber.toLowerCase()] || 0;
+                    const nutritionData = { iron: getStatusFromAI(aiSummary.iron), calcium: getStatusFromAI(aiSummary.calcium), folate: getStatusFromAI(aiSummary.folate), fiber: getStatusFromAI(aiSummary.fiber) };
+                    updateNutritionUI(nutritionData);
                 } else {
-                    // Fallback to manual calculation if no AI summary exists for today
+                    const dailyGoals = { iron: 8, calcium: 10, folate: 10, fiber: 8 };
+                    const totals = { iron: 0, calcium: 0, folate: 0, fiber: 0 };
+                    const allMealNutrients = { ...mealNutrients, ...customMealNutrients };
+                    
                     if (currentMealPlanData) {
-                        const allNutrients = { ...mealNutrients, ...customMealNutrients };
                         for (const mealKey in currentMealPlanData) {
                             if (currentMealPlanData[mealKey] && typeof currentMealPlanData[mealKey] === 'object') {
                                 const mealName = currentMealPlanData[mealKey][dayKey];
-                                if (mealName && allNutrients[mealName]) {
-                                    const nutrients = allNutrients[mealName];
-                                    totals.iron += nutrients.iron || 0;
-                                    totals.calcium += nutrients.calcium || 0;
-                                    totals.folate += nutrients.folate || 0;
-                                    totals.fiber += nutrients.fiber || 0;
+                                if (mealName && allMealNutrients[mealName]) {
+                                    const nutrients = allMealNutrients[mealName];
+                                    totals.iron += nutrients.iron || 0; totals.calcium += nutrients.calcium || 0; totals.folate += nutrients.folate || 0; totals.fiber += nutrients.fiber || 0;
                                 }
                             }
                         }
                     }
+
+                    const todaysSupplements = wellnessData.dailySupplements[dayKey] || [];
+                    todaysSupplements.forEach(suppName => {
+                        if (supplementNutrients[suppName]) {
+                            const nutrients = supplementNutrients[suppName];
+                            totals.iron += nutrients.iron || 0; totals.calcium += nutrients.calcium || 0; totals.folate += nutrients.folate || 0; totals.fiber += nutrients.fiber || 0;
+                        }
+                    });
+
+                    const nutritionData = { iron: calculateNutrientStatus(totals.iron, dailyGoals.iron), calcium: calculateNutrientStatus(totals.calcium, dailyGoals.calcium), folate: calculateNutrientStatus(totals.folate, dailyGoals.folate), fiber: calculateNutrientStatus(totals.fiber, dailyGoals.fiber) };
+                    updateNutritionUI(nutritionData);
                 }
-
-                // Add supplement values to the daily totals
-                userSupplements.forEach(supplement => {
-                    if (supplement.nutrients) {
-                        totals.iron += supplement.nutrients.iron || 0;
-                        totals.calcium += supplement.nutrients.calcium || 0;
-                        totals.folate += supplement.nutrients.folate || 0;
-                        totals.fiber += supplement.nutrients.fiber || 0;
-                    }
-                });
-
-                const dailyGoals = { iron: 8, calcium: 10, folate: 10, fiber: 8 }; // Arbitrary goals
-                const nutritionData = {
-                    iron: calculateNutrientStatus(totals.iron, dailyGoals.iron),
-                    calcium: calculateNutrientStatus(totals.calcium, dailyGoals.calcium),
-                    folate: calculateNutrientStatus(totals.folate, dailyGoals.folate),
-                    fiber: calculateNutrientStatus(totals.fiber, dailyGoals.fiber)
-                };
-                updateNutritionUI(nutritionData);
             }
             
             function getStatusFromAI(statusString) {
                 statusString = (statusString || 'low').toLowerCase();
                  let status, color, bgColor, percentage;
-                if (statusString === 'good') {
-                    status = 'Good'; color = 'text-green-400'; bgColor = 'bg-green-500'; percentage = 90;
-                } else if (statusString === 'okay') {
-                    status = 'Okay'; color = 'text-yellow-400'; bgColor = 'bg-yellow-500'; percentage = 60;
-                } else { // 'low'
-                    status = 'Low'; color = 'text-red-400'; bgColor = 'bg-red-500'; percentage = 25;
-                }
+                if (statusString === 'good') { status = 'Good'; color = 'text-green-400'; bgColor = 'bg-green-500'; percentage = 90; } 
+                else if (statusString === 'okay') { status = 'Okay'; color = 'text-yellow-400'; bgColor = 'bg-yellow-500'; percentage = 60; } 
+                else { status = 'Low'; color = 'text-red-400'; bgColor = 'bg-red-500'; percentage = 25; }
                 return { status, percentage, color, bgColor };
             }
 
             function calculateNutrientStatus(total, goal) {
                 const percentage = goal > 0 ? Math.min(Math.round((total / goal) * 100), 100) : 0;
                 let status, color, bgColor;
-                if (percentage >= 80) {
-                    status = 'Good'; color = 'text-green-400'; bgColor = 'bg-green-500';
-                } else if (percentage >= 40) {
-                    status = 'Okay'; color = 'text-yellow-400'; bgColor = 'bg-yellow-500';
-                } else {
-                    status = 'Low'; color = 'text-red-400'; bgColor = 'bg-red-500';
-                }
+                if (percentage >= 80) { status = 'Good'; color = 'text-green-400'; bgColor = 'bg-green-500'; } 
+                else if (percentage >= 40) { status = 'Okay'; color = 'text-yellow-400'; bgColor = 'bg-yellow-500'; } 
+                else { status = 'Low'; color = 'text-red-400'; bgColor = 'bg-red-500'; }
                 return { status, percentage, color, bgColor };
             }
 
@@ -1962,23 +1753,17 @@
                 if (!sleepTimeStr || !wakeTimeStr) return 0;
                 const [sleepH, sleepM] = sleepTimeStr.split(':').map(Number);
                 const [wakeH, wakeM] = wakeTimeStr.split(':').map(Number);
-                let sleepDate = new Date();
-                sleepDate.setHours(sleepH, sleepM, 0, 0);
-                let wakeDate = new Date();
-                wakeDate.setHours(wakeH, wakeM, 0, 0);
-                if (wakeDate < sleepDate) {
-                    wakeDate.setDate(wakeDate.getDate() + 1);
-                }
+                let sleepDate = new Date(); sleepDate.setHours(sleepH, sleepM, 0, 0);
+                let wakeDate = new Date(); wakeDate.setHours(wakeH, wakeM, 0, 0);
+                if (wakeDate < sleepDate) wakeDate.setDate(wakeDate.getDate() + 1);
                 const durationMillis = wakeDate - sleepDate;
                 const durationHours = durationMillis / (1000 * 60 * 60);
                 return Math.round(durationHours * 10) / 10;
             }
 
             function calculateLastNightSleep() {
-                const todayIndex = new Date().getDay(); // Sunday is 0, Monday is 1...
-                const yesterdayIndex = (todayIndex + 6) % 7;
+                const todayIndex = new Date().getDay(); const yesterdayIndex = (todayIndex + 6) % 7;
                 const sleepDayKey = sleepDays[yesterdayIndex];
-                
                 const { sleep, wake } = wellnessData.sleep[sleepDayKey] || { sleep: '', wake: '' };
                 const hours = calculateSleepDuration(sleep, wake);
                 return { hours };
@@ -1987,13 +1772,9 @@
             function updateSleepMonitor() {
                 const { hours } = calculateLastNightSleep();
                 document.getElementById('sleep-hours').textContent = hours;
-
                 let insight = "A consistent sleep schedule does wonders. Keep it up!";
-                if (hours < 7) {
-                    insight = `You slept less than 7 hours. Try relaxing tea or a warm bath before bed.`;
-                } else if (hours > 9) {
-                    insight = `You got plenty of rest! Great job prioritizing sleep.`;
-                }
+                if (hours < 7) insight = `You slept less than 7 hours. Try relaxing tea or a warm bath before bed.`;
+                else if (hours > 9) insight = `You got plenty of rest! Great job prioritizing sleep.`;
                 document.getElementById('sleep-ai-insight').textContent = insight;
             }
             
@@ -2001,33 +1782,23 @@
                 const { mood } = wellnessData;
                 const buttons = moodLogButtons.querySelectorAll('.mood-btn');
                 buttons.forEach(btn => {
-                    if (btn.dataset.mood === mood.emoji) {
-                        btn.classList.add('selected');
-                    } else {
-                        btn.classList.remove('selected');
-                    }
+                    if (btn.dataset.mood === mood.emoji) btn.classList.add('selected');
+                    else btn.classList.remove('selected');
                 });
-
                 document.getElementById('mood-ai-insight').textContent = mood.aiInsight;
             }
 
             function updateEnergyLog() {
-                const todayIndex = new new Date().getDay(); // Sunday is 0
-                const currentDayKey = sleepDays[(todayIndex + 6) % 7]; // Monday is 0
-                const currentEnergy = wellnessData.weeklyLog[currentDayKey]?.energy;
-                if(currentEnergy === undefined) return;
-
+                const todayIndex = new Date().getDay(); const currentDayKey = sleepDays[(todayIndex === 0 ? 7 : todayIndex) -1];
+                const currentEnergy = wellnessData.weeklyLog[currentDayKey]?.energy || 3;
                 const buttons = energyLogButtons.querySelectorAll('.energy-btn');
                 buttons.forEach(btn => {
-                    if (parseInt(btn.dataset.energy) === currentEnergy) {
-                        btn.classList.add('selected');
-                    } else {
-                        btn.classList.remove('selected');
-                    }
+                    if (parseInt(btn.dataset.energy) === currentEnergy) btn.classList.add('selected');
+                    else btn.classList.remove('selected');
                 });
             }
 
-
+            // --- EVENT LISTENERS & HANDLERS ---
             hydrationPlusBtn.addEventListener('click', async () => {
                 if (wellnessData.water.intake < wellnessData.water.goal) {
                     wellnessData.water.intake++;
@@ -2043,12 +1814,8 @@
             });
             
             moodLogButtons.addEventListener('click', async (e) => {
-                const button = e.target.closest('.mood-btn');
-                if(!button) return;
-                
-                const todayIndex = new Date().getDay(); // Sunday is 0
-                const currentDayKey = sleepDays[(todayIndex + 6) % 7]; // Monday is 0
-
+                const button = e.target.closest('.mood-btn'); if(!button) return;
+                const todayIndex = new Date().getDay(); const currentDayKey = sleepDays[(todayIndex === 0 ? 7 : todayIndex) - 1];
                 const newMoodEmoji = button.dataset.mood;
                 const moodMessages = {
                     '😣': { level: "Stressed", aiInsight: "It's okay to have tough days. Try some deep breathing or a short, calming walk." },
@@ -2057,40 +1824,22 @@
                     '😊': { level: "Happy", aiInsight: "Glad you're feeling happy! Embrace the positive energy today." },
                     '🥰': { level: "Blissful", aiInsight: "Wonderful! Cherish these blissful moments." }
                 };
-                
-                const newMoodData = {
-                    emoji: newMoodEmoji,
-                    ...moodMessages[newMoodEmoji]
-                };
-                
+                const newMoodData = { emoji: newMoodEmoji, ...moodMessages[newMoodEmoji] };
                 const newWeeklyLog = { ...wellnessData.weeklyLog };
+                if (!newWeeklyLog[currentDayKey]) newWeeklyLog[currentDayKey] = {};
                 newWeeklyLog[currentDayKey].mood = newMoodEmoji;
-
                 await setDoc(wellnessDataRef, { mood: newMoodData, weeklyLog: newWeeklyLog }, { merge: true });
             });
 
             energyLogButtons.addEventListener('click', async (e) => {
-                const button = e.target.closest('.energy-btn');
-                if(!button) return;
-                
-                const todayIndex = new Date().getDay(); // Sunday is 0
-                const currentDayKey = sleepDays[(todayIndex + 6) % 7]; // Monday is 0
-
+                const button = e.target.closest('.energy-btn'); if(!button) return;
+                const todayIndex = new Date().getDay(); const currentDayKey = sleepDays[(todayIndex === 0 ? 7 : todayIndex) - 1];
                 const newEnergyLevel = parseInt(button.dataset.energy);
-
-                const energyMap = {
-                    1: { level: 'Very Low', color: 'text-red-400' },
-                    2: { level: 'Low', color: 'text-yellow-400' },
-                    3: { level: 'Moderate', color: 'text-green-400' },
-                    4: { level: 'Good', color: 'text-teal-400' },
-                    5: { level: 'High', color: 'text-purple-400' }
-                };
-
+                const energyMap = { 1: { level: 'Very Low', color: 'text-red-400' }, 2: { level: 'Low', color: 'text-yellow-400' }, 3: { level: 'Moderate', color: 'text-green-400' }, 4: { level: 'Good', color: 'text-teal-400' }, 5: { level: 'High', color: 'text-purple-400' } };
                 const newEnergyData = energyMap[newEnergyLevel];
-                
                 const newWeeklyLog = { ...wellnessData.weeklyLog };
+                if (!newWeeklyLog[currentDayKey]) newWeeklyLog[currentDayKey] = {};
                 newWeeklyLog[currentDayKey].energy = newEnergyLevel;
-
                 await setDoc(wellnessDataRef, { energy: newEnergyData, weeklyLog: newWeeklyLog }, { merge: true });
             });
 
@@ -2098,12 +1847,7 @@
             async function handleSymptomCheck() {
                 const symptomText = symptomInput.value.trim();
                 if (!symptomText) return;
-
-                symptomLoader.classList.remove('hidden');
-                symptomBtnText.textContent = 'Analyzing...';
-                symptomCheckBtn.disabled = true;
-                symptomResponseEl.innerHTML = '';
-
+                symptomLoader.classList.remove('hidden'); symptomBtnText.textContent = 'Analyzing...'; symptomCheckBtn.disabled = true; symptomResponseEl.innerHTML = '';
                 const systemPrompt = "You are a caring and gentle wellness assistant for pregnant women. Analyze the user's described symptom. Provide potential non-medical causes and gentle, safe remedies. Crucially, always include a disclaimer that this is not medical advice and they should consult a doctor. Respond in JSON format according to the schema.";
                 const userQuery = `My symptom today: "${symptomText}"`;
                 const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
@@ -2115,41 +1859,22 @@
                         responseMimeType: "application/json",
                         responseSchema: {
                             type: "OBJECT",
-                            properties: {
-                                "possibleCauses": { "type": "ARRAY", "items": { "type": "STRING" } },
-                                "gentleRemedies": { "type": "ARRAY", "items": { "type": "STRING" } },
-                                "disclaimer": { "type": "STRING" }
-                            },
+                            properties: { "possibleCauses": { "type": "ARRAY", "items": { "type": "STRING" } }, "gentleRemedies": { "type": "ARRAY", "items": { "type": "STRING" } }, "disclaimer": { "type": "STRING" } },
                             required: ["possibleCauses", "gentleRemedies", "disclaimer"]
                         }
                     }
                 };
-
                 try {
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                     if (!response.ok) throw new Error(`API error: ${response.statusText}`);
-
-                    const result = await response.json();
-                    const text = result.candidates[0].content.parts[0].text;
-                    const data = JSON.parse(text);
-
+                    const result = await response.json(); const text = result.candidates[0].content.parts[0].text; const data = JSON.parse(text);
                     displaySymptomResponse(data);
-
-                    if (symptomTrackerCollectionRef) {
-                        await addDoc(symptomTrackerCollectionRef, {
-                            symptom: symptomText,
-                            aiResponse: data,
-                            createdAt: serverTimestamp()
-                        });
-                    }
-
+                    if (symptomTrackerCollectionRef) await addDoc(symptomTrackerCollectionRef, { symptom: symptomText, aiResponse: data, createdAt: serverTimestamp() });
                 } catch (error) {
                     console.error("Symptom check API call failed:", error);
                     symptomResponseEl.innerHTML = `<div class="p-3 rounded-md bg-red-500 bg-opacity-30 text-red-200">Sorry, something went wrong. Please try again.</div>`;
                 } finally {
-                    symptomLoader.classList.add('hidden');
-                    symptomBtnText.textContent = 'Get Suggestions';
-                    symptomCheckBtn.disabled = false;
+                    symptomLoader.classList.add('hidden'); symptomBtnText.textContent = 'Get Suggestions'; symptomCheckBtn.disabled = false;
                 }
             }
 
@@ -2172,135 +1897,19 @@
                 symptomResponseEl.innerHTML = html;
             }
             
-            // --- SUPPLEMENT MODAL LOGIC ---
-            function openSupplementModal() {
-                populateSupplementList();
-                supplementModal.classList.remove('hidden');
-                setTimeout(() => supplementModal.classList.add('active'), 10);
-            }
-
-            function closeSupplementModal() {
-                supplementApiFeedback.classList.add('hidden');
-                newSupplementInput.value = '';
-                supplementModal.classList.remove('active');
-                setTimeout(() => supplementModal.classList.add('hidden'), 300);
-            }
-
-            function populateSupplementList() {
-                supplementListContainer.innerHTML = '';
-                if (userSupplements.length === 0) {
-                    supplementListContainer.innerHTML = `<p class="text-center text-gray-400">No supplements added yet.</p>`;
-                    return;
-                }
-
-                userSupplements.forEach(supplement => {
-                    const item = document.createElement('div');
-                    item.className = 'flex items-center justify-between p-3 bg-white bg-opacity-5 rounded-lg';
-                    const nutrients = supplement.nutrients || { iron: '?', calcium: '?', folate: '?', fiber: '?' };
-                    
-                    item.innerHTML = `
-                        <div class="flex-1 pr-2">
-                            <span class="font-semibold text-white">${supplement.name}</span>
-                            <div class="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs mt-1.5 text-gray-300">
-                                <span class="flex items-center" title="Iron">Iron: ${nutrients.iron}</span>
-                                <span class="flex items-center" title="Calcium">Ca: ${nutrients.calcium}</span>
-                                <span class="flex items-center" title="Folate">Folate: ${nutrients.folate}</span>
-                                <span class="flex items-center" title="Fiber">Fiber: ${nutrients.fiber}</span>
-                            </div>
-                        </div>
-                        <button class="icon-btn delete-supplement-btn" data-id="${supplement.id}"><svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
-                    `;
-                    item.querySelector('.delete-supplement-btn').addEventListener('click', () => handleDeleteSupplement(supplement.id));
-                    supplementListContainer.appendChild(item);
-                });
-            }
-
-            async function handleAddSupplement() {
-                const supplementName = newSupplementInput.value.trim();
-                if (!supplementName) return;
-
-                addSupplementText.textContent = 'Analyzing...';
-                supplementApiLoader.classList.remove('hidden');
-                addSupplementBtn.disabled = true;
-
-                const systemPrompt = `You are a nutritional database assistant. The user will provide the name of a supplement. Analyze it and return its estimated contribution to the four key pregnancy nutrients: iron, calcium, folate, and fiber. Use an integer scale of 0 (none), 1 (low), 2 (medium), or 3 (high). Your response must be in JSON format.`;
-                const userQuery = `Analyze this supplement: "${supplementName}"`;
-                const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-                const payload = {
-                    contents: [{ parts: [{ text: userQuery }] }],
-                    systemInstruction: { parts: [{ text: systemPrompt }] },
-                    generationConfig: {
-                        responseMimeType: "application/json",
-                        responseSchema: {
-                            type: "OBJECT",
-                            properties: {
-                                "iron": { "type": "NUMBER" }, "calcium": { "type": "NUMBER" },
-                                "folate": { "type": "NUMBER" }, "fiber": { "type": "NUMBER" }
-                            },
-                            required: ["iron", "calcium", "folate", "fiber"]
-                        }
-                    }
-                };
-
-                try {
-                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                    if (!response.ok) throw new Error('API Error');
-                    const result = await response.json();
-                    const nutrients = JSON.parse(result.candidates[0].content.parts[0].text);
-
-                    const newSupplement = {
-                        id: self.crypto.randomUUID(),
-                        name: supplementName,
-                        nutrients: nutrients
-                    };
-
-                    const updatedList = [...userSupplements, newSupplement];
-                    await setDoc(supplementsRef, { list: updatedList });
-                    newSupplementInput.value = '';
-                    showApiFeedback('Supplement added successfully!', 'success', supplementApiFeedback);
-
-                } catch (error) {
-                    console.error("Error adding supplement:", error);
-                    showApiFeedback('Could not analyze supplement. Please try again.', 'error', supplementApiFeedback);
-                } finally {
-                    addSupplementText.textContent = 'Analyze & Add Supplement';
-                    supplementApiLoader.classList.add('hidden');
-                    addSupplementBtn.disabled = false;
-                }
-            }
-
-            async function handleDeleteSupplement(supplementId) {
-                const updatedList = userSupplements.filter(s => s.id !== supplementId);
-                await setDoc(supplementsRef, { list: updatedList });
-            }
-
-
+            // --- CHARTS & DYNAMIC CONTENT ---
             function updateWellnessChartData() {
-                if (!wellnessChart || !userId) return; // Don't update if not logged in or chart not ready
-                
-                const sleepData = sleepDays.map(day => {
-                    const { sleep, wake } = wellnessData.sleep[day] || { sleep: '', wake: '' };
-                    return calculateSleepDuration(sleep, wake);
-                });
-                
+                if (!wellnessChart || !userId) return;
+                const sleepData = sleepDays.map(day => { const { sleep, wake } = wellnessData.sleep[day] || { sleep: '', wake: '' }; return calculateSleepDuration(sleep, wake); });
                 const energyData = sleepDays.map(day => (wellnessData.weeklyLog[day] || {energy: 0}).energy);
                 const moodData = sleepDays.map(day => moodToValue[(wellnessData.weeklyLog[day] || {mood: '😐'}).mood] || 2);
-                
-                wellnessChart.data.datasets[0].data = energyData;
-                wellnessChart.data.datasets[1].data = moodData;
-                wellnessChart.data.datasets[2].data = sleepData;
+                wellnessChart.data.datasets[0].data = energyData; wellnessChart.data.datasets[1].data = moodData; wellnessChart.data.datasets[2].data = sleepData;
                 wellnessChart.update();
-
-                // Update AI Insight
                 const avgSleep = sleepData.reduce((a, b) => a + b, 0) / sleepData.length;
                 const avgMood = moodData.reduce((a, b) => a + b, 0) / moodData.length;
                 let insight = `Your average sleep this week is ${avgSleep.toFixed(1)} hours. `;
-                if (avgMood > 3.5) {
-                    insight += "It seems like you've had a great week overall! ";
-                } else if (avgMood < 2.5) {
-                    insight += "It looks like a tough week. Remember to rest and be kind to yourself. ";
-                }
+                if (avgMood > 3.5) insight += "It seems like you've had a great week overall! ";
+                else if (avgMood < 2.5) insight += "It looks like a tough week. Remember to rest and be kind to yourself. ";
                 document.getElementById('chart-ai-insight').textContent = insight;
             }
 
@@ -2309,63 +1918,19 @@
                 const data = {
                     labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
                     datasets: [
-                        {
-                            label: 'Energy (1-5)',
-                            data: [],
-                            borderColor: '#facc15', // yellow-400
-                            backgroundColor: '#facc1533',
-                            type: 'line',
-                            tension: 0.4,
-                            yAxisID: 'y'
-                        },
-                         {
-                            label: 'Mood (1-5)',
-                            data: [],
-                            borderColor: '#a78bfa', // purple-400
-                            backgroundColor: '#a78bfa33',
-                            type: 'line',
-                            tension: 0.4,
-                            yAxisID: 'y'
-                        },
-                        {
-                            label: 'Sleep (hours)',
-                            data: [],
-                            borderColor: '#60a5fa', // blue-400
-                            backgroundColor: '#60a5fa',
-                            type: 'bar',
-                            yAxisID: 'y1'
-                        }
+                        { label: 'Energy (1-5)', data: [], borderColor: '#facc15', backgroundColor: '#facc1533', type: 'line', tension: 0.4, yAxisID: 'y' },
+                        { label: 'Mood (1-5)', data: [], borderColor: '#a78bfa', backgroundColor: '#a78bfa33', type: 'line', tension: 0.4, yAxisID: 'y' },
+                        { label: 'Sleep (hours)', data: [], borderColor: '#60a5fa', backgroundColor: '#60a5fa', type: 'bar', yAxisID: 'y1' }
                     ]
                 };
                  wellnessChart = new Chart(ctx, {
-                    type: 'bar',
-                    data: data,
+                    type: 'bar', data: data,
                     options: {
-                        responsive: true,
-                        interaction: {
-                            mode: 'index',
-                            intersect: false,
-                        },
+                        responsive: true, interaction: { mode: 'index', intersect: false },
                         scales: {
                             x: { ticks: { color: '#9ca3af' }, grid: { color: '#ffffff1a'} },
-                            y: {
-                                type: 'linear',
-                                display: true,
-                                position: 'left',
-                                title: { display: true, text: 'Energy / Mood', color: '#d1d5db' },
-                                ticks: { color: '#d1d5db' },
-                                grid: { color: '#ffffff1a' },
-                                max: 5,
-                                min: 0
-                            },
-                            y1: {
-                                type: 'linear',
-                                display: true,
-                                position: 'right',
-                                title: { display: true, text: 'Sleep Hours', color: '#60a5fa' },
-                                ticks: { color: '#60a5fa' },
-                                grid: { drawOnChartArea: false }
-                            }
+                            y: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'Energy / Mood', color: '#d1d5db' }, ticks: { color: '#d1d5db' }, grid: { color: '#ffffff1a' }, max: 5, min: 0 },
+                            y1: { type: 'linear', display: true, position: 'right', title: { display: true, text: 'Sleep Hours', color: '#60a5fa' }, ticks: { color: '#60a5fa' }, grid: { drawOnChartArea: false } }
                         },
                         plugins: { legend: { labels: { color: '#d1d5db' } } }
                     }
@@ -2378,52 +1943,139 @@
                 const today = new Date();
                 const diffTime = Math.abs(today - pregnancyStartDate);
                 const diffWeeks = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7));
-
-                // Update Baby Growth Snapshot
                 const babySizes = {
-                    4: {fruit: 'poppy seed', emoji: '🌱'}, 5: {fruit: 'peppercorn', emoji: '🌶️'}, 6: {fruit: 'sweet pea', emoji: '🟢'},
-                    7: {fruit: 'blueberry', emoji: '🫐'}, 8: {fruit: 'raspberry', emoji: '🍓'}, 9: {fruit: 'cherry', emoji: '🍒'},
-                    10: {fruit: 'strawberry', emoji: '🍓'}, 11: {fruit: 'lime', emoji: '🍈'}, 12: {fruit: 'plum', emoji: '🍑'},
-                    13: {fruit: 'peach', emoji: '🍑'}, 14: {fruit: 'lemon', emoji: '🍋'}, 15: {fruit: 'apple', emoji: '🍎'},
-                    16: {fruit: 'avocado', emoji: '🥑'}, 17: {fruit: 'pear', emoji: '🍐'}, 18: {fruit: 'bell pepper', emoji: '🫑'},
-                    19: {fruit: 'mango', emoji: '🥭'}, 20: {fruit: 'banana', emoji: '🍌'},
+                    4: {fruit: 'poppy seed', emoji: '🌱'}, 5: {fruit: 'peppercorn', emoji: '🌶️'}, 6: {fruit: 'sweet pea', emoji: '🟢'}, 7: {fruit: 'blueberry', emoji: '🫐'}, 8: {fruit: 'raspberry', emoji: '🍓'}, 9: {fruit: 'cherry', emoji: '🍒'}, 10: {fruit: 'strawberry', emoji: '🍓'}, 11: {fruit: 'lime', emoji: '🍈'}, 12: {fruit: 'plum', emoji: '🍑'}, 13: {fruit: 'peach', emoji: '🍑'}, 14: {fruit: 'lemon', emoji: '🍋'}, 15: {fruit: 'apple', emoji: '🍎'}, 16: {fruit: 'avocado', emoji: '🥑'}, 17: {fruit: 'pear', emoji: '🍐'}, 18: {fruit: 'bell pepper', emoji: '🫑'}, 19: {fruit: 'mango', emoji: '🥭'}, 20: {fruit: 'banana', emoji: '🍌'},
                 };
                 const size = babySizes[diffWeeks] || {fruit: 'a little miracle', emoji: '✨'};
                 babyGrowthSnapshotEl.innerHTML = `Week ${diffWeeks} — baby is the size of a ${size.fruit} ${size.emoji}`;
-
-                // Update Wellness Tip
                 const wellnessTipEl = document.getElementById('wellness-tip');
                 const tip = wellnessTipsByWeek[diffWeeks] || "Stay hydrated and listen to your body's needs today.";
-                wellnessTipEl.textContent = tip;
-                wellnessData.dailyTip = tip;
+                wellnessTipEl.textContent = tip; wellnessData.dailyTip = tip;
             }
 
-            function closeStartDateModal() {
-                startDateModal.classList.remove('active');
-                setTimeout(() => startDateModal.classList.add('hidden'), 300);
+            // --- SUPPLEMENTS LOGIC ---
+            function openSupplementModal() {
+                populateSupplementList();
+                manageSupplementsModal.classList.remove('hidden');
+                setTimeout(() => manageSupplementsModal.classList.add('active'), 10);
+            }
+            function closeSupplementModal() {
+                manageSupplementsModal.classList.remove('active');
+                setTimeout(() => manageSupplementsModal.classList.add('hidden'), 300);
+            }
+
+            function populateSupplementList() {
+                supplementListContainer.innerHTML = '';
+                if (userSupplements.length === 0) {
+                    supplementListContainer.innerHTML = `<p class="text-center text-gray-400">No supplements added yet.</p>`;
+                    return;
+                }
+                userSupplements.forEach(supp => {
+                    const item = document.createElement('div');
+                    item.className = 'flex items-center justify-between p-3 bg-white bg-opacity-5 rounded-lg hover:bg-opacity-10';
+                    const nutrients = supplementNutrients[supp] || { iron: '?', calcium: '?', folate: '?', fiber: '?' };
+
+                    item.innerHTML = `<div class="flex-1 pr-2 cursor-pointer supplement-log-btn" data-supp="${supp}">
+                            <span class="font-semibold text-white">${supp}</span>
+                            <div class="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs mt-1.5 text-gray-300">
+                                <span class="flex items-center" title="Iron">Iron: ${nutrients.iron}</span>
+                                <span class="flex items-center" title="Calcium">Ca: ${nutrients.calcium}</span>
+                                <span class="flex items-center" title="Folate">Folate: ${nutrients.folate}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <button class="icon-btn delete-supp-btn" data-supp="${supp}"><svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                        </div>`;
+                    item.querySelector('.delete-supp-btn').addEventListener('click', (e) => { e.stopPropagation(); deleteSupplement(supp); });
+                    item.querySelector('.supplement-log-btn').addEventListener('click', () => addSupplementToDay(supp));
+                    supplementListContainer.appendChild(item);
+                });
+            }
+
+            async function addSupplementToDay(suppName) {
+                const todayIndex = new Date().getDay(); const dayKey = days[(todayIndex === 0 ? 7 : todayIndex) - 1];
+                await updateDoc(wellnessDataRef, { [`dailySupplements.${dayKey}`]: arrayUnion(suppName) });
+                showApiFeedback(`Logged "${suppName}" for today.`, 'success', supplementApiFeedback);
+            }
+
+             function updateDailySupplementsUI(dayKey) {
+                dailySupplementsList.innerHTML = '';
+                const todaysSupplements = wellnessData.dailySupplements[dayKey] || [];
+                if (todaysSupplements.length === 0) {
+                    dailySupplementsList.innerHTML = `<p class="text-xs text-gray-400 italic">No supplements logged for today.</p>`;
+                    return;
+                }
+                todaysSupplements.forEach(suppName => {
+                    const pill = document.createElement('div');
+                    pill.className = 'flex items-center bg-purple-500 bg-opacity-20 text-purple-200 text-xs font-semibold px-2.5 py-1 rounded-full';
+                    pill.innerHTML = `<span>${suppName}</span>
+                    <button class="ml-2 remove-supp-btn" data-supp="${suppName}">
+                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                    </button>`;
+                    pill.querySelector('.remove-supp-btn').addEventListener('click', () => removeSupplementFromDay(suppName));
+                    dailySupplementsList.appendChild(pill);
+                });
+            }
+
+            async function removeSupplementFromDay(suppName) {
+                 const todayIndex = new Date().getDay(); const dayKey = days[(todayIndex === 0 ? 7 : todayIndex) - 1];
+                 await updateDoc(wellnessDataRef, { [`dailySupplements.${dayKey}`]: arrayRemove(suppName) });
+            }
+
+            async function deleteSupplement(suppToDelete) {
+                await updateDoc(userSupplementsRef, { list: arrayRemove(suppToDelete) });
+                await updateDoc(supplementNutrientsRef, { [suppToDelete]: deleteField() });
+            }
+
+            async function handleAddSupplement() {
+                const userSupp = newSupplementInput.value.trim(); if (!userSupp) return;
+                supplementApiLoader.classList.remove('hidden'); addSupplementText.textContent = 'Checking...'; addSupplementBtn.disabled = true; supplementApiFeedback.classList.add('hidden');
+                const systemPrompt = "You are a prenatal nutritionist. Evaluate if the given supplement is generally safe and common for pregnancy. Provide an estimated nutritional profile (integers 0-3 for high) for iron, calcium, and folate. Fiber is not needed. Respond in JSON format per the schema.";
+                const userQuery = `Evaluate this supplement for pregnancy: "${userSupp}"`; const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                const payload = {
+                    contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] },
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "OBJECT", properties: { "isSuitable": { "type": "BOOLEAN" }, "supplementName": { "type": "STRING" }, "reasoning": { "type": "STRING" }, "nutrients": { "type": "OBJECT", "properties": { "iron": {"type": "NUMBER"}, "calcium": {"type": "NUMBER"}, "folate": {"type": "NUMBER"} } } },
+                            required: ["isSuitable", "supplementName"]
+                        }
+                    }
+                };
+                 try {
+                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!response.ok) throw new Error(`API error: ${response.statusText}`);
+                    const result = await response.json(); const text = result.candidates[0].content.parts[0].text; const data = JSON.parse(text);
+                    if (data.isSuitable) {
+                        if (!userSupplements.includes(data.supplementName)) {
+                            await updateDoc(userSupplementsRef, { list: arrayUnion(data.supplementName) });
+                            if (supplementNutrientsRef && data.nutrients) {
+                                await updateDoc(supplementNutrientsRef, { [data.supplementName]: {...data.nutrients, fiber: 0} });
+                            }
+                            newSupplementInput.value = ''; showApiFeedback(`Success! "${data.supplementName}" was added.`, 'success', supplementApiFeedback);
+                        } else { showApiFeedback(`"${data.supplementName}" is already on the list.`, 'warning', supplementApiFeedback); }
+                    } else {
+                        showApiFeedback(`<strong>Caution:</strong><br>${data.reasoning}`, 'error', supplementApiFeedback);
+                    }
+                } catch (error) { console.error("Gemini API call failed for supplement:", error); showApiFeedback("Sorry, I couldn't verify that right now.", 'error', supplementApiFeedback); } 
+                finally { supplementApiLoader.classList.add('hidden'); addSupplementText.textContent = 'Check & Add Supplement'; addSupplementBtn.disabled = false; }
             }
             
+            // --- MODALS & OTHER UI ---
+            function closeStartDateModal() { startDateModal.classList.remove('active'); setTimeout(() => startDateModal.classList.add('hidden'), 300); }
             function populateSleepModal() {
                 sleepScheduleContainer.innerHTML = '';
                 sleepDays.forEach(day => {
                     const dayData = wellnessData.sleep[day] || { sleep: '', wake: '' };
                     const item = document.createElement('div');
                     item.className = 'grid grid-cols-3 items-center gap-2';
-                    item.innerHTML = `
-                        <label class="font-semibold capitalize">${day}</label>
-                        <input type="time" id="sleep-time-${day}" class="date-input" value="${dayData.sleep}">
-                        <input type="time" id="wake-time-${day}" class="date-input" value="${dayData.wake}">
-                    `;
+                    item.innerHTML = `<label class="font-semibold capitalize">${day}</label><input type="time" id="sleep-time-${day}" class="date-input" value="${dayData.sleep}"><input type="time" id="wake-time-${day}" class="date-input" value="${dayData.wake}">`;
                     sleepScheduleContainer.appendChild(item);
                 });
             }
+            function closeSleepModal() { sleepModal.classList.remove('active'); setTimeout(() => sleepModal.classList.add('hidden'), 300); }
 
-            function closeSleepModal() {
-                sleepModal.classList.remove('active');
-                setTimeout(() => sleepModal.classList.add('hidden'), 300);
-            }
-
-            // Event Listeners
+            // General Event Listeners
             modalCloseBtn.addEventListener('click', closeModal);
             modal.addEventListener('click', (e) => e.target === modal && closeModal());
             modalSelect.addEventListener('change', (e) => { if (currentMeal && currentDay) { updateMealPlan(currentMeal, currentDay, e.target.value); } });
@@ -2436,90 +2088,51 @@
             editMealModal.addEventListener('click', (e) => e.target === editMealModal && closeEditModal());
             symptomCheckBtn.addEventListener('click', handleSymptomCheck);
             babyGrowthCard.addEventListener('click', () => {
-                startDateInput.value = wellnessData.pregnancyStartDate;
-                endDateInput.value = wellnessData.pregnancyEndDate || '';
-                startDateModal.classList.remove('hidden');
-                setTimeout(() => startDateModal.classList.add('active'), 10);
+                startDateInput.value = wellnessData.pregnancyStartDate; endDateInput.value = wellnessData.pregnancyEndDate || '';
+                startDateModal.classList.remove('hidden'); setTimeout(() => startDateModal.classList.add('active'), 10);
             });
             startDateModalCancelBtn.addEventListener('click', closeStartDateModal);
             startDateModal.addEventListener('click', (e) => e.target === startDateModal && closeStartDateModal());
             startDateModalSaveBtn.addEventListener('click', async () => {
-                const newStartDate = startDateInput.value;
-                let newEndDate = endDateInput.value;
-
+                const newStartDate = startDateInput.value; let newEndDate = endDateInput.value;
                 if (newStartDate) {
-                    if (!newEndDate) {
-                        // Calculate default 40 weeks from start date
-                        const startDate = new Date(newStartDate);
-                        // Add 40 weeks (280 days). Using getDate and setDate handles month/year rollovers.
-                        startDate.setDate(startDate.getDate() + (40 * 7));
-                        newEndDate = startDate.toISOString().split('T')[0];
-                    }
-
-                    if (newStartDate !== wellnessData.pregnancyStartDate || newEndDate !== wellnessData.pregnancyEndDate) {
-                         await setDoc(wellnessDataRef, { 
-                            pregnancyStartDate: newStartDate,
-                            pregnancyEndDate: newEndDate
-                        }, { merge: true });
-                    }
+                    if (!newEndDate) { const startDate = new Date(newStartDate); startDate.setDate(startDate.getDate() + (40 * 7)); newEndDate = startDate.toISOString().split('T')[0]; }
+                    if (newStartDate !== wellnessData.pregnancyStartDate || newEndDate !== wellnessData.pregnancyEndDate) await setDoc(wellnessDataRef, { pregnancyStartDate: newStartDate, pregnancyEndDate: newEndDate }, { merge: true });
                 }
                 closeStartDateModal();
             });
-
             sleepMonitorCard.addEventListener('click', () => {
-                populateSleepModal();
-                sleepModal.classList.remove('hidden');
+                populateSleepModal(); sleepModal.classList.remove('hidden');
                 setTimeout(() => sleepModal.classList.add('active'), 10);
             });
             sleepModalCancelBtn.addEventListener('click', closeSleepModal);
             sleepModal.addEventListener('click', (e) => e.target === sleepModal && closeSleepModal());
             sleepModalSaveBtn.addEventListener('click', async () => {
-                const newSleepData = {};
-                let hasChanged = false;
+                const newSleepData = {}; let hasChanged = false;
                 sleepDays.forEach(day => {
-                    const sleepInput = document.getElementById(`sleep-time-${day}`);
-                    const wakeInput = document.getElementById(`wake-time-${day}`);
-                    newSleepData[day] = {
-                        sleep: sleepInput.value,
-                        wake: wakeInput.value
-                    };
-                    if (newSleepData[day].sleep !== (wellnessData.sleep[day] || {}).sleep || newSleepData[day].wake !== (wellnessData.sleep[day] || {}).wake) {
-                        hasChanged = true;
-                    }
+                    const sleepInput = document.getElementById(`sleep-time-${day}`); const wakeInput = document.getElementById(`wake-time-${day}`);
+                    newSleepData[day] = { sleep: sleepInput.value, wake: wakeInput.value };
+                    if (newSleepData[day].sleep !== (wellnessData.sleep[day] || {}).sleep || newSleepData[day].wake !== (wellnessData.sleep[day] || {}).wake) hasChanged = true;
                 });
-
-                if (hasChanged) {
-                    await setDoc(wellnessDataRef, { sleep: newSleepData }, { merge: true });
-                }
+                if (hasChanged) await setDoc(wellnessDataRef, { sleep: newSleepData }, { merge: true });
                 closeSleepModal();
             });
-
-            // Nutrition Tracker & Supplement Listeners
-            nutritionTrackerHeader.addEventListener('click', openSupplementModal);
-            supplementModalCloseBtn.addEventListener('click', closeSupplementModal);
-            supplementModal.addEventListener('click', (e) => e.target === supplementModal && closeSupplementModal());
-            addSupplementBtn.addEventListener('click', handleAddSupplement);
-            newSupplementInput.addEventListener('keyup', (e) => e.key === 'Enter' && handleAddSupplement());
-
-
-            // AI Meal Planner Listeners
             aiMealCloseBtn.addEventListener('click', closeAiMealPlannerModal);
             aiMealModal.addEventListener('click', (e) => e.target === aiMealModal && closeAiMealPlannerModal());
             aiMealRegenerateBtn.addEventListener('click', () => generateAiMealPlan(currentDayForAI, lastCraving));
             aiMealSaveBtn.addEventListener('click', handleSaveAiPlan);
-            generateFromCravingBtn.addEventListener('click', () => {
-                const cravingText = cravingInput.value.trim();
-                if(cravingText) {
-                    generateAiMealPlan(currentDayForAI, cravingText);
-                }
-            });
+            generateFromCravingBtn.addEventListener('click', () => { const cravingText = cravingInput.value.trim(); if(cravingText) generateAiMealPlan(currentDayForAI, cravingText); });
             aiSuggestionBtn.addEventListener('click', () => generateAiMealPlan(currentDayForAI, null));
             
-            document.addEventListener('DOMContentLoaded', () => {
-                 mainApp.classList.add('hidden');
-            });
+            // Supplement Listeners
+            nutritionTrackerHeader.addEventListener('click', openSupplementModal);
+            manageSupplementsCloseBtn.addEventListener('click', closeSupplementModal);
+            manageSupplementsModal.addEventListener('click', e => e.target === manageSupplementsModal && closeSupplementModal());
+            addSupplementBtn.addEventListener('click', handleAddSupplement);
+            newSupplementInput.addEventListener('keyup', e => e.key === 'Enter' && handleAddSupplement());
+            
+            document.addEventListener('DOMContentLoaded', () => { mainApp.classList.add('hidden'); });
         }
-
     </script>
 </body>
 </html>
