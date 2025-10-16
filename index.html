@@ -1438,7 +1438,7 @@
                 editApiLoader.classList.remove('hidden'); editMealText.textContent = 'Checking...'; editModalSaveBtn.disabled = true; editApiFeedback.classList.add('hidden');
                 const systemPrompt = `You are a helpful and friendly prenatal nutritionist. Your goal is to evaluate if a meal is healthy and suitable for a pregnant woman, especially in the first trimester. If the meal is suitable, provide an estimated nutritional profile with integer values from 0 (none) to 3 (high) for iron, calcium, folate, and fiber. Your response must be in JSON format according to the provided schema. If the meal is not suitable, set isSuitable to false and explain why.`;
                 const userQuery = `Evaluate this meal: "${newMeal}"`;
-                const apiKey = ""; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                const apiKey = ""; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
                 const payload = { 
                     contents: [{ parts: [{ text: userQuery }] }], 
                     systemInstruction: { parts: [{ text: systemPrompt }] }, 
@@ -1500,7 +1500,7 @@
                 const userMeal = newMealInput.value.trim(); if (!userMeal) return;
                 apiLoader.classList.remove('hidden'); addMealText.textContent = 'Checking...'; addMealBtn.disabled = true; apiFeedback.classList.add('hidden');
                 const systemPrompt = `You are a helpful and friendly prenatal nutritionist. Your goal is to evaluate if a meal is healthy and suitable for a pregnant woman, especially in the first trimester. If the meal is suitable, provide an estimated nutritional profile with integer values from 0 (none) to 3 (high) for iron, calcium, folate, and fiber. Your response must be in JSON format according to the provided schema. If the meal is not suitable, set isSuitable to false and explain why.`;
-                const userQuery = `Evaluate this meal: "${userMeal}"`; const apiKey = ""; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                const userQuery = `Evaluate this meal: "${userMeal}"`; const apiKey = ""; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
                 const payload = { 
                     contents: [{ parts: [{ text: userQuery }] }], 
                     systemInstruction: { parts: [{ text: systemPrompt }] }, 
@@ -1602,7 +1602,7 @@
                 let userQuery = `Available meal options:\n- Breakfast: [${breakfastOpts.join(', ')}]\n- Lunch: [${lunchOpts.join(', ')}]\n- Snack: [${snackOpts.join(', ')}]\n- Dinner: [${dinnerOpts.join(', ')}]\n\nGenerate a new, unique meal plan for a user in week ${pregnancyWeek}.`;
                 if(craving) userQuery += ` The user is craving: "${craving}".`
                 const apiKey = "";
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
                 const payload = {
                     contents: [{ parts: [{ text: userQuery }] }],
                     systemInstruction: { parts: [{ text: systemPrompt }] },
@@ -1706,7 +1706,7 @@
                     const systemPrompt = `You are a prenatal nutritionist providing daily hydration and snacking tips. Generate 3-4 short, actionable tips based on the user's pregnancy week, mood, and meal plan. The tips should be practical and easy to follow. Respond ONLY with a JSON array of strings.`;
                     const userQuery = `Context for today:\n- Pregnancy Week: ${pregnancyWeek}\n- Today's Meal Plan: ${mealPlanString}\n- Her current mood: ${wellnessData.mood.level}\n- Her current energy level: ${wellnessData.energy.level}\n\nGenerate 3-4 hydration and snack tips.`;
                     const apiKey = "";
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
                     const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json", responseSchema: { type: "ARRAY", items: { type: "STRING" } } } };
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                     if (!response.ok) throw new Error('API response not OK');
@@ -1737,7 +1737,7 @@
                     const systemPrompt = `You are a supportive, empathetic, and creative assistant for a pregnant woman's partner. Your task is to generate 3-4 short, actionable, and thoughtful tips for the partner based on the provided daily context. The tips should be encouraging and focus on practical help and emotional support. Respond ONLY with a JSON array of strings.`;
                     const userQuery = `Context for today:\n- Pregnancy Week: ${pregnancyWeek}\n- Today's Meal Plan: ${mealPlanString}\n- Her current mood: ${wellnessData.mood.level}\n- Her current energy level: ${wellnessData.energy.level}\n\nGenerate 3-4 tips for the partner.`;
                     const apiKey = "";
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
                     const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json", responseSchema: { type: "ARRAY", items: { type: "STRING" } } } };
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                     if (!response.ok) throw new Error('API response not OK');
@@ -1764,7 +1764,7 @@
                     const systemPrompt = `You are a prenatal nutritionist providing a list of foods, drinks, or habits to avoid. Generate 2-3 short, critical "to avoid" tips based on the user's pregnancy week. Focus on common, important avoidances like raw fish, unpasteurized products, high-mercury fish, excessive caffeine, etc., relevant to the week. Respond ONLY with a JSON array of strings.`;
                     const userQuery = `Context for today:\n- Pregnancy Week: ${pregnancyWeek}\n\nGenerate 2-3 crucial hydration and snack-related things to avoid.`;
                     const apiKey = "";
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
                     const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json", responseSchema: { type: "ARRAY", items: { type: "STRING" } } } };
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                     if (!response.ok) throw new Error('API response not OK');
@@ -1791,7 +1791,7 @@
                     const systemPrompt = `You are a supportive, empathetic, and creative assistant for a pregnant woman's partner. Your task is to generate 2-3 short, actionable things the partner should AVOID saying or doing, based on the provided daily context. The tips should focus on avoiding common insensitive comments or unhelpful actions. Respond ONLY with a JSON array of strings.`;
                     const userQuery = `Context for today:\n- Pregnancy Week: ${pregnancyWeek}\n- Her current mood: ${wellnessData.mood.level}\n- Her current energy level: ${wellnessData.energy.level}\n\nGenerate 2-3 things for the partner to avoid.`;
                     const apiKey = "";
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
                     const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json", responseSchema: { type: "ARRAY", items: { type: "STRING" } } } };
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                     if (!response.ok) throw new Error('API response not OK');
@@ -2027,7 +2027,7 @@
                 const systemPrompt = "You are a caring and gentle wellness assistant for pregnant women. Analyze the user's described symptom. Provide potential non-medical causes and gentle, safe remedies. Crucially, always include a disclaimer that this is not medical advice and they should consult a doctor. Respond in JSON format according to the schema.";
                 const userQuery = `My symptom today: "${symptomText}"`;
                 const apiKey = "";
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
                 const payload = {
                     contents: [{ parts: [{ text: userQuery }] }],
                     systemInstruction: { parts: [{ text: systemPrompt }] },
@@ -2207,7 +2207,7 @@
                 const userSupp = newSupplementInput.value.trim(); if (!userSupp) return;
                 supplementApiLoader.classList.remove('hidden'); addSupplementText.textContent = 'Checking...'; addSupplementBtn.disabled = true; supplementApiFeedback.classList.add('hidden');
                 const systemPrompt = "You are a prenatal nutritionist. Evaluate if the given supplement is generally safe and common for pregnancy. Provide an estimated nutritional profile (integers 0-3 for high) for iron, calcium, and folate. Fiber is not needed. Respond in JSON format per the schema.";
-                const userQuery = `Evaluate this supplement for pregnancy: "${userSupp}"`; const apiKey = ""; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                const userQuery = `Evaluate this supplement for pregnancy: "${userSupp}"`; const apiKey = ""; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
                 const payload = {
                     contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] },
                     generationConfig: {
@@ -2381,7 +2381,7 @@
                 const pregnancyWeek = Math.floor(Math.abs(new Date() - new Date(wellnessData.pregnancyStartDate)) / (1000 * 60 * 60 * 24 * 7));
                 const systemPrompt = `You are a helpful assistant for a pregnant woman. Generate a concise to-do list of 4-5 important, actionable tasks for week ${pregnancyWeek} of pregnancy. Categorize each task as 'Health', 'Baby', 'Home', or 'Reminder'. Provide the response ONLY in a JSON array format.`;
                 const userQuery = `Generate a weekly to-do list for week ${pregnancyWeek}.`;
-                const apiKey = ""; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                const apiKey = ""; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
                 const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json", responseSchema: { type: "ARRAY", items: { type: "OBJECT", properties: { "task": { "type": "STRING" }, "category": { "type": "STRING" } } } } } };
                 try {
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -2697,7 +2697,7 @@
                 const notesToSummarize = currentReflections.slice(0, 3).map(n => `Title: ${n.title}\nContent: ${n.content}`).join('\n\n---\n\n');
                 const systemPrompt = "You are an empathetic assistant. Summarize the user's reflection notes into one short, insightful, and emotional paragraph. Focus on the underlying feelings and themes.";
                 const userQuery = `Here are my last few notes:\n${notesToSummarize}`;
-                const apiKey = ""; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                const apiKey = ""; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
                 const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }};
 
                 aiSummaryContent.textContent = "Summarizing your thoughts...";
