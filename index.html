@@ -20,7 +20,7 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background-image: url('https://i.imgur.com/CLS4xwt.jpeg');
+            background-image: url('https://i.imgur.com/HnUnpQJ.jpeg');
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
@@ -146,7 +146,9 @@
         #start-date-modal.active #start-date-modal-content,
         #sleep-modal.active #sleep-modal-content,
         #auth-modal.active #auth-modal-content,
-        #manage-supplements-modal.active #manage-supplements-content {
+        #manage-supplements-modal.active #manage-supplements-content,
+        #reflection-modal.active #reflection-modal-content,
+        #ai-summary-modal.active #ai-summary-modal-content {
             transform: scale(1);
             opacity: 1;
         }
@@ -251,6 +253,26 @@
         .clickable-header:hover {
             background-color: rgba(255,255,255,0.1);
         }
+
+        /* Journey Tab Styles */
+        .todo-item { transition: all 0.3s ease; }
+        .todo-item.completed { opacity: 0.5; }
+        .todo-item.completed span { text-decoration: line-through; }
+        @keyframes check-anim { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .todo-checkbox:checked + div svg { animation: check-anim 0.3s ease-out forwards; }
+        
+        .wish-item-card { transition: all 0.3s ease; }
+        .wish-item-card.purchased { box-shadow: 0 0 15px rgba(5, 255, 161, 0.4); border-color: rgba(5, 255, 161, 0.6); }
+
+        .reflection-note {
+            transition: all 0.3s ease;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.2);
+        }
+        .reflection-note:hover { transform: translateY(-5px) rotate(1deg); box-shadow: 8px 8px 25px rgba(0,0,0,0.3); }
+        .note-color-pink { background-color: rgba(236, 72, 153, 0.2); border-left-color: #ec4899; }
+        .note-color-teal { background-color: rgba(20, 184, 166, 0.2); border-left-color: #14b8a6; }
+        .note-color-yellow { background-color: rgba(234, 179, 8, 0.2); border-left-color: #eab308; }
+
     </style>
 </head>
 <body class="antialiased text-gray-200">
@@ -281,9 +303,10 @@
             </header>
 
             <!-- Tab Navigation -->
-            <div class="flex justify-center space-x-4 mb-8">
+            <div class="flex flex-wrap justify-center gap-2 md:gap-4 mb-8">
                 <button id="tab-meal-plan" class="tab-btn active">🥣 Meal Plan</button>
-                <button id="tab-symptom-tracker" class="tab-btn">💗 Symptom & Mood Tracker</button>
+                <button id="tab-symptom-tracker" class="tab-btn">💗 Wellness</button>
+                <button id="tab-journey" class="tab-btn">✨ Journey</button>
             </div>
 
             <!-- Main Content -->
@@ -483,6 +506,85 @@
                         </div>
                     </div>
                 </div>
+
+                 <!-- Journey Tab -->
+                <div id="content-journey" class="tab-content">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <!-- Left Column: To-Do List & Reflections -->
+                        <div class="lg:col-span-2 space-y-8">
+                            <!-- To-Do List -->
+                            <div class="glass-card p-4 md:p-6">
+                                <h3 class="text-2xl font-bold mb-4">✅ To-Do List</h3>
+                                <div id="todo-list-container" class="space-y-3 max-h-72 overflow-y-auto modal-scroll pr-2 mb-4"></div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-white/10">
+                                    <input type="text" id="new-todo-input" class="meal-select" placeholder="New task...">
+                                    <select id="new-todo-category" class="meal-select">
+                                        <option value="Health">🧘‍♀️ Health</option>
+                                        <option value="Baby">🍼 Baby Prep</option>
+                                        <option value="Home">🏡 Home</option>
+                                        <option value="Reminder">💬 Reminder</option>
+                                    </select>
+                                </div>
+                                <button id="add-todo-btn" class="w-full mt-4 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Add Task</button>
+                                <div class="mt-6 text-center">
+                                    <p class="mb-2 text-indigo-200">Need ideas? Let AI help!</p>
+                                    <button id="ai-generate-todos-btn" class="btn-secondary font-semibold py-2 px-5 rounded-lg">Generate Weekly To-Do List</button>
+                                </div>
+                            </div>
+
+                            <!-- Tiny Reflections -->
+                             <div class="glass-card p-4 md:p-6">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h3 class="text-2xl font-bold">📝 Tiny Reflections</h3>
+                                    <div>
+                                        <button id="ai-summarize-reflections-btn" title="Summarize my last 3 notes" class="icon-btn mr-2"><svg class="w-6 h-6 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg></button>
+                                        <button id="add-reflection-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg text-sm">New Note</button>
+                                    </div>
+                                </div>
+                                <div id="reflections-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Little Wishes -->
+                        <div class="glass-card p-4 md:p-6">
+                            <h3 class="text-2xl font-bold mb-4">🎁 Little Wishes</h3>
+                            <div class="mb-4">
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span>Purchased</span>
+                                    <span id="wishlist-progress-text">0/0 Items</span>
+                                </div>
+                                <div class="w-full bg-gray-700 rounded-full h-2.5">
+                                    <div id="wishlist-progress-bar" class="bg-gradient-to-r from-teal-400 to-blue-500 h-2.5 rounded-full" style="width: 0%; transition: width 0.5s ease;"></div>
+                                </div>
+                            </div>
+                            <div id="wishlist-container" class="space-y-3 max-h-[28rem] overflow-y-auto modal-scroll pr-2 mb-4"></div>
+                            <div class="pt-4 border-t border-white/10 space-y-3">
+                                 <input type="text" id="new-wish-item" class="meal-select text-sm" placeholder="Item name (e.g., Baby Monitor)">
+                                 <select id="new-wish-category" class="meal-select text-sm">
+                                     <option value="Baby Care">Baby Care</option>
+                                     <option value="Nursery">Nursery</option>
+                                     <option value="Hospital Bag">Hospital Bag</option>
+                                     <option value="Health">Health</option>
+                                     <option value="Postpartum">Postpartum</option>
+                                     <option value="Custom">Custom</option>
+                                 </select>
+                                 <div class="flex gap-2">
+                                     <input type="text" id="new-wish-price" class="meal-select text-sm w-1/2" placeholder="Price ($)">
+                                     <input type="text" id="new-wish-link" class="meal-select text-sm w-1/2" placeholder="Store Link">
+                                 </div>
+                                 <button id="add-wish-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Add Wish</button>
+                            </div>
+                             <div class="mt-6 text-center">
+                                <p class="mb-2 text-indigo-200">Let AI suggest items!</p>
+                                <form id="ai-wish-form" class="flex gap-2">
+                                    <input type="text" id="ai-wish-prompt" class="meal-select text-sm flex-grow" placeholder="e.g., Hospital bag for third trimester">
+                                    <button type="submit" class="btn-secondary font-semibold py-2 px-4 rounded-lg">Go</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </main>
         </div>
     </div>
@@ -623,12 +725,43 @@
         </div>
     </div>
 
+    <!-- Reflection Modal -->
+    <div id="reflection-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
+        <div id="reflection-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
+            <h3 id="reflection-modal-title" class="text-2xl font-bold mb-4 text-center">New Reflection</h3>
+            <input type="text" id="reflection-title-input" class="meal-select mb-4" placeholder="Note Title...">
+            <textarea id="reflection-content-input" class="symptom-input min-h-[120px] mb-4" placeholder="Your thoughts..."></textarea>
+            <div class="flex items-center justify-between mb-6">
+                <span class="text-gray-300">Color Tag:</span>
+                <div class="flex gap-3" id="reflection-color-tags">
+                    <button data-color="pink" class="w-8 h-8 rounded-full bg-pink-500/50 border-2 border-transparent"></button>
+                    <button data-color="teal" class="w-8 h-8 rounded-full bg-teal-500/50 border-2 border-transparent"></button>
+                    <button data-color="yellow" class="w-8 h-8 rounded-full bg-yellow-500/50 border-2 border-transparent"></button>
+                </div>
+            </div>
+            <div class="flex gap-4">
+                <button id="reflection-modal-cancel-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg">Cancel</button>
+                <button id="reflection-modal-save-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg">Save</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- AI Summary Modal -->
+    <div id="ai-summary-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
+        <div id="ai-summary-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-md transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
+             <h3 class="text-2xl font-bold mb-4 text-center">AI Reflection Summary</h3>
+             <div id="ai-summary-content" class="text-gray-300 bg-white/5 p-4 rounded-lg min-h-[100px]"></div>
+             <button id="ai-summary-close-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors mt-6">Close</button>
+        </div>
+    </div>
+
+
 
     <script type="module">
         // Firebase Imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, setDoc, getDoc, updateDoc, collection, addDoc, serverTimestamp, deleteField, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, setDoc, getDoc, updateDoc, collection, addDoc, serverTimestamp, deleteField, arrayUnion, arrayRemove, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- WELLNESS DATA MANAGEMENT ---
         const defaultWellnessData = {
@@ -761,8 +894,11 @@
         // Tabs
         const mealPlanTab = document.getElementById('tab-meal-plan');
         const symptomTrackerTab = document.getElementById('tab-symptom-tracker');
+        const journeyTab = document.getElementById('tab-journey');
         const mealPlanContent = document.getElementById('content-meal-plan');
         const symptomTrackerContent = document.getElementById('content-symptom-tracker');
+        const journeyContent = document.getElementById('content-journey');
+
         // Meal Planner
         const loadingSpinner = document.getElementById('loading-spinner');
         const mealPlanGrid = document.getElementById('meal-plan-grid');
@@ -837,6 +973,36 @@
         const supplementApiFeedback = document.getElementById('supplement-api-feedback');
         const manageSupplementsCloseBtn = document.getElementById('manage-supplements-close-btn');
         const dailySupplementsList = document.getElementById('daily-supplements-list');
+        // Journey Tab
+        const todoListContainer = document.getElementById('todo-list-container');
+        const newTodoInput = document.getElementById('new-todo-input');
+        const newTodoCategory = document.getElementById('new-todo-category');
+        const addTodoBtn = document.getElementById('add-todo-btn');
+        const aiGenerateTodosBtn = document.getElementById('ai-generate-todos-btn');
+        const wishlistContainer = document.getElementById('wishlist-container');
+        const wishlistProgressText = document.getElementById('wishlist-progress-text');
+        const wishlistProgressBar = document.getElementById('wishlist-progress-bar');
+        const newWishItem = document.getElementById('new-wish-item');
+        const newWishCategory = document.getElementById('new-wish-category');
+        const newWishPrice = document.getElementById('new-wish-price');
+        const newWishLink = document.getElementById('new-wish-link');
+        const addWishBtn = document.getElementById('add-wish-btn');
+        const aiWishForm = document.getElementById('ai-wish-form');
+        const aiWishPrompt = document.getElementById('ai-wish-prompt');
+        const reflectionsContainer = document.getElementById('reflections-container');
+        const addReflectionBtn = document.getElementById('add-reflection-btn');
+        const reflectionModal = document.getElementById('reflection-modal');
+        const reflectionModalTitle = document.getElementById('reflection-modal-title');
+        const reflectionTitleInput = document.getElementById('reflection-title-input');
+        const reflectionContentInput = document.getElementById('reflection-content-input');
+        const reflectionColorTags = document.getElementById('reflection-color-tags');
+        const reflectionModalCancelBtn = document.getElementById('reflection-modal-cancel-btn');
+        const reflectionModalSaveBtn = document.getElementById('reflection-modal-save-btn');
+        const aiSummarizeReflectionsBtn = document.getElementById('ai-summarize-reflections-btn');
+        const aiSummaryModal = document.getElementById('ai-summary-modal');
+        const aiSummaryContent = document.getElementById('ai-summary-content');
+        const aiSummaryCloseBtn = document.getElementById('ai-summary-close-btn');
+
 
         // Firebase Setup
         const appId = 'PreggyJourney'; 
@@ -864,20 +1030,9 @@
             const provider = new GoogleAuthProvider();
 
             let userId = null;
-            let mealPlanRef = null;
-            let mealOptionsRef = null;
-            let symptomTrackerCollectionRef = null;
-            let wellnessDataRef = null;
-            let customMealNutrientsRef = null;
-            let userSupplementsRef = null;
-            let supplementNutrientsRef = null;
+            let mealPlanRef, mealOptionsRef, symptomTrackerCollectionRef, wellnessDataRef, customMealNutrientsRef, userSupplementsRef, supplementNutrientsRef, todosRef, wishesRef, reflectionsRef;
 
-            let unsubscribeMealPlan = null;
-            let unsubscribeMealOptions = null;
-            let unsubscribeWellnessData = null;
-            let unsubscribeCustomMealNutrients = null;
-            let unsubscribeUserSupplements = null;
-            let unsubscribeSupplementNutrients = null;
+            let unsubscribeMealPlan, unsubscribeMealOptions, unsubscribeWellnessData, unsubscribeCustomMealNutrients, unsubscribeUserSupplements, unsubscribeSupplementNutrients, unsubscribeTodos, unsubscribeWishes, unsubscribeReflections;
             
             let dynamicMealOptions = {};
             let customMealNutrients = {};
@@ -924,6 +1079,9 @@
                     customMealNutrientsRef = doc(db, `users/${userId}/mealNutrients`, 'custom-v1');
                     userSupplementsRef = doc(db, `users/${userId}/supplements`, 'list-v1');
                     supplementNutrientsRef = doc(db, `users/${userId}/supplements`, 'nutrients-v1');
+                    todosRef = collection(db, `users/${userId}/todos`);
+                    wishesRef = collection(db, `users/${userId}/wishes`);
+                    reflectionsRef = collection(db, `users/${userId}/reflections`);
 
                     await initializeMealOptions();
                     await initializeCustomMealNutrients();
@@ -935,6 +1093,10 @@
                     loadCustomMealNutrients();
                     loadSupplements();
                     loadWellnessData();
+                    loadTodos();
+                    loadWishes();
+                    loadReflections();
+
                     updatePartnerTips();
                     updateHydrationAndSnacks();
                     updatePartnerAvoidTips();
@@ -960,6 +1122,9 @@
                     if (unsubscribeCustomMealNutrients) unsubscribeCustomMealNutrients();
                     if (unsubscribeUserSupplements) unsubscribeUserSupplements();
                     if (unsubscribeSupplementNutrients) unsubscribeSupplementNutrients();
+                    if (unsubscribeTodos) unsubscribeTodos();
+                    if (unsubscribeWishes) unsubscribeWishes();
+                    if (unsubscribeReflections) unsubscribeReflections();
                 }
             });
 
@@ -994,33 +1159,37 @@
 
             // --- TAB SWITCHING LOGIC ---
             function switchTab(activeTab) {
+                const tabs = {
+                    meal: { btn: mealPlanTab, content: mealPlanContent },
+                    symptom: { btn: symptomTrackerTab, content: symptomTrackerContent },
+                    journey: { btn: journeyTab, content: journeyContent }
+                };
+
+                Object.keys(tabs).forEach(key => {
+                    tabs[key].btn.classList.remove('active');
+                    tabs[key].content.classList.remove('active');
+                });
+
+                tabs[activeTab].btn.classList.add('active');
+                tabs[activeTab].content.classList.add('active');
+
+                if (!userId) return;
+
                 if (activeTab === 'meal') {
-                    mealPlanTab.classList.add('active');
-                    symptomTrackerTab.classList.remove('active');
-                    mealPlanContent.classList.add('active');
-                    symptomTrackerContent.classList.remove('active');
-                    if(userId) { // only update if logged in
-                        updatePartnerTips();
-                        updateHydrationAndSnacks();
-                        updatePartnerAvoidTips();
-                        updateHydrationAvoidTips();
-                    }
+                    updatePartnerTips();
+                    updateHydrationAndSnacks();
+                    updatePartnerAvoidTips();
+                    updateHydrationAvoidTips();
                 } else if (activeTab === 'symptom') {
-                    mealPlanTab.classList.remove('active');
-                    symptomTrackerTab.classList.add('active');
-                    mealPlanContent.classList.remove('active');
-                    symptomTrackerContent.classList.add('active');
-                    if(userId) { // only update if logged in
-                        updateDashboardUI();
-                        if (!wellnessChart) {
-                            renderWellnessChart();
-                        }
-                        updateWellnessChartData();
-                    }
+                    updateDashboardUI();
+                    if (!wellnessChart) renderWellnessChart();
+                    updateWellnessChartData();
                 }
             }
+
             mealPlanTab.addEventListener('click', () => switchTab('meal'));
             symptomTrackerTab.addEventListener('click', () => switchTab('symptom'));
+            journeyTab.addEventListener('click', () => switchTab('journey'));
 
 
             // --- DATA INITIALIZATION & LOADING ---
