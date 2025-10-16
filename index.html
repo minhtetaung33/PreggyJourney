@@ -273,26 +273,6 @@
         .note-color-teal { background-color: rgba(20, 184, 166, 0.2); border-left-color: #14b8a6; }
         .note-color-yellow { background-color: rgba(234, 179, 8, 0.2); border-left-color: #eab308; }
 
-        .product-result-card {
-            background: rgba(255, 255, 255, 0.08);
-            border-radius: 0.75rem;
-            padding: 0.75rem;
-            display: flex;
-            gap: 0.75rem;
-            align-items: center;
-            transition: background-color 0.2s;
-        }
-        .product-result-card:hover {
-            background: rgba(255, 255, 255, 0.15);
-        }
-        .product-result-card img {
-            width: 60px;
-            height: 60px;
-            object-fit: cover;
-            border-radius: 0.5rem;
-            background-color: rgba(0,0,0,0.2);
-        }
-
     </style>
 </head>
 <body class="antialiased text-gray-200">
@@ -595,25 +575,7 @@
                                  </div>
                                  <button id="add-wish-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Add Wish</button>
                             </div>
-
-                            <!-- AI Product Search Section -->
-                            <div class="relative flex py-4 items-center">
-                                <div class="flex-grow border-t border-white/20"></div>
-                                <span class="flex-shrink mx-4 text-xs text-indigo-300 uppercase">OR</span>
-                                <div class="flex-grow border-t border-white/20"></div>
-                            </div>
-
-                            <form id="ai-product-search-form" class="space-y-3">
-                                <p class="text-indigo-200 text-center text-sm">Find an item with AI Search</p>
-                                <input type="text" id="ai-product-search-prompt" class="meal-select text-sm" placeholder="e.g., Hatch sound machine on Amazon">
-                                <button type="submit" class="w-full btn-secondary font-semibold py-2 px-4 rounded-lg flex items-center justify-center">
-                                    <span id="ai-product-search-btn-text">Find Item</span>
-                                    <svg id="ai-product-search-loader" class="animate-spin ml-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                </button>
-                            </form>
-                            <div id="ai-product-search-results" class="mt-4 space-y-3 max-h-60 overflow-y-auto modal-scroll pr-2"></div>
-                            
-                            <div class="mt-6 text-center">
+                             <div class="mt-6 text-center">
                                 <p class="mb-2 text-indigo-200">Let AI suggest items!</p>
                                 <form id="ai-wish-form" class="flex gap-2">
                                     <input type="text" id="ai-wish-prompt" class="meal-select text-sm flex-grow" placeholder="e.g., Hospital bag for third trimester">
@@ -801,9 +763,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, onSnapshot, setDoc, getDoc, updateDoc, collection, addDoc, serverTimestamp, deleteField, arrayUnion, arrayRemove, query, orderBy, limit, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // --- Centralized API Key ---
-        const GEMINI_API_KEY = "AlzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
 
         // --- WELLNESS DATA MANAGEMENT ---
         const defaultWellnessData = {
@@ -1031,11 +990,6 @@
         const addWishBtn = document.getElementById('add-wish-btn');
         const aiWishForm = document.getElementById('ai-wish-form');
         const aiWishPrompt = document.getElementById('ai-wish-prompt');
-        const aiProductSearchForm = document.getElementById('ai-product-search-form');
-        const aiProductSearchPrompt = document.getElementById('ai-product-search-prompt');
-        const aiProductSearchBtnText = document.getElementById('ai-product-search-btn-text');
-        const aiProductSearchLoader = document.getElementById('ai-product-search-loader');
-        const aiProductSearchResults = document.getElementById('ai-product-search-results');
         const reflectionsContainer = document.getElementById('reflections-container');
         const addReflectionBtn = document.getElementById('add-reflection-btn');
         const reflectionModal = document.getElementById('reflection-modal');
@@ -1479,7 +1433,7 @@
                 editApiLoader.classList.remove('hidden'); editMealText.textContent = 'Checking...'; editModalSaveBtn.disabled = true; editApiFeedback.classList.add('hidden');
                 const systemPrompt = `You are a helpful and friendly prenatal nutritionist. Your goal is to evaluate if a meal is healthy and suitable for a pregnant woman, especially in the first trimester. If the meal is suitable, provide an estimated nutritional profile with integer values from 0 (none) to 3 (high) for iron, calcium, folate, and fiber. Your response must be in JSON format according to the provided schema. If the meal is not suitable, set isSuitable to false and explain why.`;
                 const userQuery = `Evaluate this meal: "${newMeal}"`;
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
+                const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                 const payload = { 
                     contents: [{ parts: [{ text: userQuery }] }], 
                     systemInstruction: { parts: [{ text: systemPrompt }] }, 
@@ -1541,7 +1495,7 @@
                 const userMeal = newMealInput.value.trim(); if (!userMeal) return;
                 apiLoader.classList.remove('hidden'); addMealText.textContent = 'Checking...'; addMealBtn.disabled = true; apiFeedback.classList.add('hidden');
                 const systemPrompt = `You are a helpful and friendly prenatal nutritionist. Your goal is to evaluate if a meal is healthy and suitable for a pregnant woman, especially in the first trimester. If the meal is suitable, provide an estimated nutritional profile with integer values from 0 (none) to 3 (high) for iron, calcium, folate, and fiber. Your response must be in JSON format according to the provided schema. If the meal is not suitable, set isSuitable to false and explain why.`;
-                const userQuery = `Evaluate this meal: "${userMeal}"`; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
+                const userQuery = `Evaluate this meal: "${userMeal}"`; const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                 const payload = { 
                     contents: [{ parts: [{ text: userQuery }] }], 
                     systemInstruction: { parts: [{ text: systemPrompt }] }, 
@@ -1642,7 +1596,8 @@
 8.  **Format**: Your response must be in JSON format according to the schema.`;
                 let userQuery = `Available meal options:\n- Breakfast: [${breakfastOpts.join(', ')}]\n- Lunch: [${lunchOpts.join(', ')}]\n- Snack: [${snackOpts.join(', ')}]\n- Dinner: [${dinnerOpts.join(', ')}]\n\nGenerate a new, unique meal plan for a user in week ${pregnancyWeek}.`;
                 if(craving) userQuery += ` The user is craving: "${craving}".`
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
+                const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                 const payload = {
                     contents: [{ parts: [{ text: userQuery }] }],
                     systemInstruction: { parts: [{ text: systemPrompt }] },
@@ -1745,7 +1700,8 @@
                     const mealPlanString = Object.entries(todaysMeals).map(([key, value]) => `${key}: ${value || 'Not set'}`).join(', ');
                     const systemPrompt = `You are a prenatal nutritionist providing daily hydration and snacking tips. Generate 3-4 short, actionable tips based on the user's pregnancy week, mood, and meal plan. The tips should be practical and easy to follow. Respond ONLY with a JSON array of strings.`;
                     const userQuery = `Context for today:\n- Pregnancy Week: ${pregnancyWeek}\n- Today's Meal Plan: ${mealPlanString}\n- Her current mood: ${wellnessData.mood.level}\n- Her current energy level: ${wellnessData.energy.level}\n\nGenerate 3-4 hydration and snack tips.`;
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
+                    const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                     const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json", responseSchema: { type: "ARRAY", items: { type: "STRING" } } } };
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                     if (!response.ok) throw new Error('API response not OK');
@@ -1775,7 +1731,8 @@
                     const mealPlanString = Object.entries(todaysMeals).map(([key, value]) => `${key}: ${value || 'Not set'}`).join(', ');
                     const systemPrompt = `You are a supportive, empathetic, and creative assistant for a pregnant woman's partner. Your task is to generate 3-4 short, actionable, and thoughtful tips for the partner based on the provided daily context. The tips should be encouraging and focus on practical help and emotional support. Respond ONLY with a JSON array of strings.`;
                     const userQuery = `Context for today:\n- Pregnancy Week: ${pregnancyWeek}\n- Today's Meal Plan: ${mealPlanString}\n- Her current mood: ${wellnessData.mood.level}\n- Her current energy level: ${wellnessData.energy.level}\n\nGenerate 3-4 tips for the partner.`;
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
+                    const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                     const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json", responseSchema: { type: "ARRAY", items: { type: "STRING" } } } };
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                     if (!response.ok) throw new Error('API response not OK');
@@ -1801,7 +1758,8 @@
                     const pregnancyWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) || 5;
                     const systemPrompt = `You are a prenatal nutritionist providing a list of foods, drinks, or habits to avoid. Generate 2-3 short, critical "to avoid" tips based on the user's pregnancy week. Focus on common, important avoidances like raw fish, unpasteurized products, high-mercury fish, excessive caffeine, etc., relevant to the week. Respond ONLY with a JSON array of strings.`;
                     const userQuery = `Context for today:\n- Pregnancy Week: ${pregnancyWeek}\n\nGenerate 2-3 crucial hydration and snack-related things to avoid.`;
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
+                    const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                     const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json", responseSchema: { type: "ARRAY", items: { type: "STRING" } } } };
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                     if (!response.ok) throw new Error('API response not OK');
@@ -1827,7 +1785,8 @@
                     const pregnancyWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) || 5;
                     const systemPrompt = `You are a supportive, empathetic, and creative assistant for a pregnant woman's partner. Your task is to generate 2-3 short, actionable things the partner should AVOID saying or doing, based on the provided daily context. The tips should focus on avoiding common insensitive comments or unhelpful actions. Respond ONLY with a JSON array of strings.`;
                     const userQuery = `Context for today:\n- Pregnancy Week: ${pregnancyWeek}\n- Her current mood: ${wellnessData.mood.level}\n- Her current energy level: ${wellnessData.energy.level}\n\nGenerate 2-3 things for the partner to avoid.`;
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
+                    const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                     const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json", responseSchema: { type: "ARRAY", items: { type: "STRING" } } } };
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                     if (!response.ok) throw new Error('API response not OK');
@@ -2062,7 +2021,8 @@
                 symptomLoader.classList.remove('hidden'); symptomBtnText.textContent = 'Analyzing...'; symptomCheckBtn.disabled = true; symptomResponseEl.innerHTML = '';
                 const systemPrompt = "You are a caring and gentle wellness assistant for pregnant women. Analyze the user's described symptom. Provide potential non-medical causes and gentle, safe remedies. Crucially, always include a disclaimer that this is not medical advice and they should consult a doctor. Respond in JSON format according to the schema.";
                 const userQuery = `My symptom today: "${symptomText}"`;
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
+                const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                 const payload = {
                     contents: [{ parts: [{ text: userQuery }] }],
                     systemInstruction: { parts: [{ text: systemPrompt }] },
@@ -2242,7 +2202,7 @@
                 const userSupp = newSupplementInput.value.trim(); if (!userSupp) return;
                 supplementApiLoader.classList.remove('hidden'); addSupplementText.textContent = 'Checking...'; addSupplementBtn.disabled = true; supplementApiFeedback.classList.add('hidden');
                 const systemPrompt = "You are a prenatal nutritionist. Evaluate if the given supplement is generally safe and common for pregnancy. Provide an estimated nutritional profile (integers 0-3 for high) for iron, calcium, and folate. Fiber is not needed. Respond in JSON format per the schema.";
-                const userQuery = `Evaluate this supplement for pregnancy: "${userSupp}"`; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
+                const userQuery = `Evaluate this supplement for pregnancy: "${userSupp}"`; const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                 const payload = {
                     contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] },
                     generationConfig: {
@@ -2416,7 +2376,7 @@
                 const pregnancyWeek = Math.floor(Math.abs(new Date() - new Date(wellnessData.pregnancyStartDate)) / (1000 * 60 * 60 * 24 * 7));
                 const systemPrompt = `You are a helpful assistant for a pregnant woman. Generate a concise to-do list of 4-5 important, actionable tasks for week ${pregnancyWeek} of pregnancy. Categorize each task as 'Health', 'Baby', 'Home', or 'Reminder'. Provide the response ONLY in a JSON array format.`;
                 const userQuery = `Generate a weekly to-do list for week ${pregnancyWeek}.`;
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
+                const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                 const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json", responseSchema: { type: "ARRAY", items: { type: "OBJECT", properties: { "task": { "type": "STRING" }, "category": { "type": "STRING" } } } } } };
                 try {
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -2511,7 +2471,7 @@
                 const pregnancyWeek = Math.floor(Math.abs(new Date() - new Date(wellnessData.pregnancyStartDate)) / (1000 * 60 * 60 * 24 * 7));
                 const systemPrompt = `You are a helpful shopping assistant for a pregnant woman. Based on the user's request and their pregnancy week (${pregnancyWeek}), generate a list of 5-7 relevant items. For each item, provide a category from this list: 'Baby Care', 'Nursery', 'Hospital Bag', 'Health', 'Postpartum', or 'Custom'. Respond ONLY in a JSON array format.`;
                 const userQuery = `My request: "${prompt}". I am in week ${pregnancyWeek} of pregnancy.`;
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
+                const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                 const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json", responseSchema: { type: "ARRAY", items: { type: "OBJECT", properties: { "item": { "type": "STRING" }, "category": { "type": "STRING" } } } } } };
                 try {
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -2525,89 +2485,6 @@
                     aiWishPrompt.value = '';
                 } catch (error) { console.error("AI Wishlist generation failed:", error); }
             });
-
-            async function handleProductSearch(e) {
-                e.preventDefault();
-                const query = aiProductSearchPrompt.value.trim();
-                if (!query) return;
-
-                aiProductSearchBtnText.textContent = "Searching...";
-                aiProductSearchLoader.classList.remove('hidden');
-                aiProductSearchResults.innerHTML = '';
-
-                const systemPrompt = "You are an expert shopping assistant. Your goal is to find products based on a user's query. Use your search tool to find up to 3 relevant products. For each product, you MUST provide the product name, price, a direct URL to the product image, and a direct URL to the store page. Respond ONLY with a JSON array of objects, adhering strictly to the provided schema. If no relevant products are found, return an empty array.";
-                const userQuery = `Find this product: "${query}"`;
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
-                
-                const payload = {
-                    contents: [{ parts: [{ text: userQuery }] }],
-                    tools: [{ "google_search": {} }],
-                    systemInstruction: { parts: [{ text: systemPrompt }] },
-                    generationConfig: {
-                        responseMimeType: "application/json",
-                        responseSchema: {
-                            type: "ARRAY",
-                            items: {
-                                type: "OBJECT",
-                                properties: {
-                                    "name": { "type": "STRING" },
-                                    "price": { "type": "STRING" },
-                                    "imageUrl": { "type": "STRING" },
-                                    "storeUrl": { "type": "STRING" }
-                                },
-                                required: ["name", "price", "imageUrl", "storeUrl"]
-                            }
-                        }
-                    }
-                };
-
-                try {
-                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                    if (!response.ok) throw new Error(`API error: ${response.statusText}`);
-                    const result = await response.json();
-                    const products = JSON.parse(result.candidates[0].content.parts[0].text);
-                    renderProductSearchResults(products);
-                } catch (error) {
-                    console.error("AI Product Search failed:", error);
-                    aiProductSearchResults.innerHTML = `<p class="text-center text-red-300 text-sm">Sorry, I couldn't find products for that search. Please try a different query.</p>`;
-                } finally {
-                    aiProductSearchBtnText.textContent = "Find Item";
-                    aiProductSearchLoader.classList.add('hidden');
-                }
-            }
-            
-            function renderProductSearchResults(products) {
-                aiProductSearchResults.innerHTML = '';
-                if (!products || products.length === 0) {
-                     aiProductSearchResults.innerHTML = `<p class="text-center text-gray-400 text-sm">No results found. Try being more specific!</p>`;
-                     return;
-                }
-                products.forEach(product => {
-                    const card = document.createElement('div');
-                    card.className = 'product-result-card';
-                    card.innerHTML = `
-                        <img src="${product.imageUrl}" alt="${product.name}" onerror="this.src='https://placehold.co/60x60/302b63/FFFFFF?text=Item'">
-                        <div class="flex-1 min-w-0">
-                            <p class="text-sm font-semibold truncate">${product.name}</p>
-                            <p class="text-xs text-teal-300">${product.price || 'Price not found'}</p>
-                        </div>
-                        <button class="btn-secondary text-xs font-bold py-1.5 px-3 rounded-lg add-searched-item-btn">Add</button>
-                    `;
-                    card.querySelector('.add-searched-item-btn').addEventListener('click', () => {
-                        autofillWishForm(product);
-                    });
-                    aiProductSearchResults.appendChild(card);
-                });
-            }
-
-            function autofillWishForm(product) {
-                newWishItem.value = product.name;
-                newWishPrice.value = product.price.replace('$', '').trim();
-                newWishLink.value = product.storeUrl;
-                aiProductSearchResults.innerHTML = '';
-                aiProductSearchPrompt.value = '';
-                newWishItem.focus();
-            }
 
             newWishCategory.addEventListener('change', () => {
                 if (newWishCategory.value === 'Custom') {
@@ -2720,7 +2597,7 @@
                 const notesToSummarize = currentReflections.slice(0, 3).map(n => `Title: ${n.title}\nContent: ${n.content}`).join('\n\n---\n\n');
                 const systemPrompt = "You are an empathetic assistant. Summarize the user's reflection notes into one short, insightful, and emotional paragraph. Focus on the underlying feelings and themes.";
                 const userQuery = `Here are my last few notes:\n${notesToSummarize}`;
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
+                const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                 const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }};
 
                 aiSummaryContent.textContent = "Summarizing your thoughts...";
@@ -2742,8 +2619,6 @@
                 aiSummaryModal.classList.remove('active');
                 setTimeout(() => aiSummaryModal.classList.add('hidden'), 300);
             });
-            
-            aiProductSearchForm.addEventListener('submit', handleProductSearch);
 
             document.addEventListener('DOMContentLoaded', () => { mainApp.classList.add('hidden'); });
         }
