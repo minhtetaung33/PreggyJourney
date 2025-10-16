@@ -573,19 +573,20 @@
                                      <input type="text" id="new-wish-price" class="meal-select text-sm w-1/2" placeholder="Price ($)">
                                      <input type="text" id="new-wish-link" class="meal-select text-sm w-1/2" placeholder="Store Link">
                                  </div>
-                                 <input type="hidden" id="new-wish-image-url">
                                  <button id="add-wish-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Add Wish</button>
                             </div>
                              <div class="mt-6 text-center">
-                                <p class="mb-2 text-indigo-200 font-bold">Smart Wish Finder</p>
+                                <h4 class="text-lg font-bold mb-2 text-indigo-200">✨ Smart Wish Finder</h4>
                                 <form id="ai-wish-form" class="flex gap-2">
-                                    <input type="text" id="ai-wish-prompt" class="meal-select text-sm flex-grow" placeholder="e.g., Hatch Rest on Amazon...">
-                                    <button type="submit" class="btn-secondary font-semibold p-2.5 rounded-lg flex items-center justify-center">
+                                    <input type="text" id="ai-wish-prompt" class="meal-select text-sm flex-grow" placeholder="e.g., Hatch Rest sound machine on Amazon">
+                                    <button type="submit" class="btn-secondary font-semibold py-2 px-4 rounded-lg">
                                         <svg id="ai-wish-search-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                                        <svg id="ai-wish-loader" class="animate-spin h-5 w-5 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                        <svg id="ai-wish-loader-icon" class="animate-spin h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                                     </button>
                                 </form>
-                                <div id="ai-wish-results-container" class="mt-4 space-y-3 text-left"></div>
+                                <div id="ai-wish-results-container" class="mt-4 space-y-3 max-h-60 overflow-y-auto modal-scroll pr-2 text-left">
+                                    <!-- AI search results will be injected here -->
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1009,6 +1010,9 @@
         const aiSummaryContent = document.getElementById('ai-summary-content');
         const aiSummaryCloseBtn = document.getElementById('ai-summary-close-btn');
         const customCategoryInput = document.getElementById('custom-category-input');
+        const aiWishResultsContainer = document.getElementById('ai-wish-results-container');
+        const aiWishSearchIcon = document.getElementById('ai-wish-search-icon');
+        const aiWishLoaderIcon = document.getElementById('ai-wish-loader-icon');
 
 
         // Firebase Setup
@@ -1438,7 +1442,7 @@
                 editApiLoader.classList.remove('hidden'); editMealText.textContent = 'Checking...'; editModalSaveBtn.disabled = true; editApiFeedback.classList.add('hidden');
                 const systemPrompt = `You are a helpful and friendly prenatal nutritionist. Your goal is to evaluate if a meal is healthy and suitable for a pregnant woman, especially in the first trimester. If the meal is suitable, provide an estimated nutritional profile with integer values from 0 (none) to 3 (high) for iron, calcium, folate, and fiber. Your response must be in JSON format according to the provided schema. If the meal is not suitable, set isSuitable to false and explain why.`;
                 const userQuery = `Evaluate this meal: "${newMeal}"`;
-                const apiKey = ""; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+                const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                 const payload = { 
                     contents: [{ parts: [{ text: userQuery }] }], 
                     systemInstruction: { parts: [{ text: systemPrompt }] }, 
@@ -1500,7 +1504,7 @@
                 const userMeal = newMealInput.value.trim(); if (!userMeal) return;
                 apiLoader.classList.remove('hidden'); addMealText.textContent = 'Checking...'; addMealBtn.disabled = true; apiFeedback.classList.add('hidden');
                 const systemPrompt = `You are a helpful and friendly prenatal nutritionist. Your goal is to evaluate if a meal is healthy and suitable for a pregnant woman, especially in the first trimester. If the meal is suitable, provide an estimated nutritional profile with integer values from 0 (none) to 3 (high) for iron, calcium, folate, and fiber. Your response must be in JSON format according to the provided schema. If the meal is not suitable, set isSuitable to false and explain why.`;
-                const userQuery = `Evaluate this meal: "${userMeal}"`; const apiKey = ""; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+                const userQuery = `Evaluate this meal: "${userMeal}"`; const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                 const payload = { 
                     contents: [{ parts: [{ text: userQuery }] }], 
                     systemInstruction: { parts: [{ text: systemPrompt }] }, 
@@ -1601,8 +1605,8 @@
 8.  **Format**: Your response must be in JSON format according to the schema.`;
                 let userQuery = `Available meal options:\n- Breakfast: [${breakfastOpts.join(', ')}]\n- Lunch: [${lunchOpts.join(', ')}]\n- Snack: [${snackOpts.join(', ')}]\n- Dinner: [${dinnerOpts.join(', ')}]\n\nGenerate a new, unique meal plan for a user in week ${pregnancyWeek}.`;
                 if(craving) userQuery += ` The user is craving: "${craving}".`
-                const apiKey = "";
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+                const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                 const payload = {
                     contents: [{ parts: [{ text: userQuery }] }],
                     systemInstruction: { parts: [{ text: systemPrompt }] },
@@ -1705,8 +1709,8 @@
                     const mealPlanString = Object.entries(todaysMeals).map(([key, value]) => `${key}: ${value || 'Not set'}`).join(', ');
                     const systemPrompt = `You are a prenatal nutritionist providing daily hydration and snacking tips. Generate 3-4 short, actionable tips based on the user's pregnancy week, mood, and meal plan. The tips should be practical and easy to follow. Respond ONLY with a JSON array of strings.`;
                     const userQuery = `Context for today:\n- Pregnancy Week: ${pregnancyWeek}\n- Today's Meal Plan: ${mealPlanString}\n- Her current mood: ${wellnessData.mood.level}\n- Her current energy level: ${wellnessData.energy.level}\n\nGenerate 3-4 hydration and snack tips.`;
-                    const apiKey = "";
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+                    const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                     const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json", responseSchema: { type: "ARRAY", items: { type: "STRING" } } } };
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                     if (!response.ok) throw new Error('API response not OK');
@@ -1736,8 +1740,8 @@
                     const mealPlanString = Object.entries(todaysMeals).map(([key, value]) => `${key}: ${value || 'Not set'}`).join(', ');
                     const systemPrompt = `You are a supportive, empathetic, and creative assistant for a pregnant woman's partner. Your task is to generate 3-4 short, actionable, and thoughtful tips for the partner based on the provided daily context. The tips should be encouraging and focus on practical help and emotional support. Respond ONLY with a JSON array of strings.`;
                     const userQuery = `Context for today:\n- Pregnancy Week: ${pregnancyWeek}\n- Today's Meal Plan: ${mealPlanString}\n- Her current mood: ${wellnessData.mood.level}\n- Her current energy level: ${wellnessData.energy.level}\n\nGenerate 3-4 tips for the partner.`;
-                    const apiKey = "";
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+                    const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                     const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json", responseSchema: { type: "ARRAY", items: { type: "STRING" } } } };
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                     if (!response.ok) throw new Error('API response not OK');
@@ -1760,11 +1764,11 @@
                     const pregnancyStartDate = new Date(wellnessData.pregnancyStartDate);
                     const today = new Date();
                     const diffTime = Math.abs(today - pregnancyStartDate);
-                    const pregnancyWeek = Math.floor(Math.abs(today - pregnancyStartDate) / (1000 * 60 * 60 * 24 * 7)) || 5;
+                    const pregnancyWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) || 5;
                     const systemPrompt = `You are a prenatal nutritionist providing a list of foods, drinks, or habits to avoid. Generate 2-3 short, critical "to avoid" tips based on the user's pregnancy week. Focus on common, important avoidances like raw fish, unpasteurized products, high-mercury fish, excessive caffeine, etc., relevant to the week. Respond ONLY with a JSON array of strings.`;
                     const userQuery = `Context for today:\n- Pregnancy Week: ${pregnancyWeek}\n\nGenerate 2-3 crucial hydration and snack-related things to avoid.`;
-                    const apiKey = "";
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+                    const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                     const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json", responseSchema: { type: "ARRAY", items: { type: "STRING" } } } };
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                     if (!response.ok) throw new Error('API response not OK');
@@ -1787,11 +1791,11 @@
                     const pregnancyStartDate = new Date(wellnessData.pregnancyStartDate);
                     const today = new Date();
                     const diffTime = Math.abs(today - pregnancyStartDate);
-                    const pregnancyWeek = Math.floor(Math.abs(today - pregnancyStartDate) / (1000 * 60 * 60 * 24 * 7)) || 5;
+                    const pregnancyWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) || 5;
                     const systemPrompt = `You are a supportive, empathetic, and creative assistant for a pregnant woman's partner. Your task is to generate 2-3 short, actionable things the partner should AVOID saying or doing, based on the provided daily context. The tips should focus on avoiding common insensitive comments or unhelpful actions. Respond ONLY with a JSON array of strings.`;
                     const userQuery = `Context for today:\n- Pregnancy Week: ${pregnancyWeek}\n- Her current mood: ${wellnessData.mood.level}\n- Her current energy level: ${wellnessData.energy.level}\n\nGenerate 2-3 things for the partner to avoid.`;
-                    const apiKey = "";
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+                    const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                     const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json", responseSchema: { type: "ARRAY", items: { type: "STRING" } } } };
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                     if (!response.ok) throw new Error('API response not OK');
@@ -2026,8 +2030,8 @@
                 symptomLoader.classList.remove('hidden'); symptomBtnText.textContent = 'Analyzing...'; symptomCheckBtn.disabled = true; symptomResponseEl.innerHTML = '';
                 const systemPrompt = "You are a caring and gentle wellness assistant for pregnant women. Analyze the user's described symptom. Provide potential non-medical causes and gentle, safe remedies. Crucially, always include a disclaimer that this is not medical advice and they should consult a doctor. Respond in JSON format according to the schema.";
                 const userQuery = `My symptom today: "${symptomText}"`;
-                const apiKey = "";
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+                const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                 const payload = {
                     contents: [{ parts: [{ text: userQuery }] }],
                     systemInstruction: { parts: [{ text: systemPrompt }] },
@@ -2207,7 +2211,7 @@
                 const userSupp = newSupplementInput.value.trim(); if (!userSupp) return;
                 supplementApiLoader.classList.remove('hidden'); addSupplementText.textContent = 'Checking...'; addSupplementBtn.disabled = true; supplementApiFeedback.classList.add('hidden');
                 const systemPrompt = "You are a prenatal nutritionist. Evaluate if the given supplement is generally safe and common for pregnancy. Provide an estimated nutritional profile (integers 0-3 for high) for iron, calcium, and folate. Fiber is not needed. Respond in JSON format per the schema.";
-                const userQuery = `Evaluate this supplement for pregnancy: "${userSupp}"`; const apiKey = ""; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+                const userQuery = `Evaluate this supplement for pregnancy: "${userSupp}"`; const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                 const payload = {
                     contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] },
                     generationConfig: {
@@ -2381,7 +2385,7 @@
                 const pregnancyWeek = Math.floor(Math.abs(new Date() - new Date(wellnessData.pregnancyStartDate)) / (1000 * 60 * 60 * 24 * 7));
                 const systemPrompt = `You are a helpful assistant for a pregnant woman. Generate a concise to-do list of 4-5 important, actionable tasks for week ${pregnancyWeek} of pregnancy. Categorize each task as 'Health', 'Baby', 'Home', or 'Reminder'. Provide the response ONLY in a JSON array format.`;
                 const userQuery = `Generate a weekly to-do list for week ${pregnancyWeek}.`;
-                const apiKey = ""; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+                const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                 const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json", responseSchema: { type: "ARRAY", items: { type: "OBJECT", properties: { "task": { "type": "STRING" }, "category": { "type": "STRING" } } } } } };
                 try {
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -2417,7 +2421,6 @@
                     item.className = `wish-item-card p-3 bg-white/5 rounded-lg border border-transparent ${wish.purchased ? 'purchased opacity-60' : ''}`;
                     item.innerHTML = `
                         <div class="flex items-start justify-between">
-                             ${wish.imageUrl ? `<img src="${wish.imageUrl}" alt="${wish.item}" class="w-12 h-12 object-cover rounded-md mr-3 flex-shrink-0" onerror="this.style.display='none'">` : '<div class="w-12 h-12 bg-white/5 rounded-md mr-3 flex-shrink-0"></div>'}
                             <div class="flex-1 min-w-0">
                                 <p class="font-bold break-words">${wish.item}</p>
                                 <p class="text-xs text-indigo-300">${wish.category}</p>
@@ -2456,48 +2459,46 @@
                 }
                 if (!item || !wishesRef || !category) return;
                 
-                const imageUrl = document.getElementById('new-wish-image-url').value;
                 await addDoc(wishesRef, {
                     item,
-                    category,
+                    category: category,
                     price: newWishPrice.value.trim(),
                     link: newWishLink.value.trim(),
-                    imageUrl: imageUrl,
                     purchased: false,
                     createdAt: serverTimestamp()
                 });
                 newWishItem.value = newWishPrice.value = newWishLink.value = '';
-                document.getElementById('new-wish-image-url').value = '';
                 customCategoryInput.value = '';
                 newWishCategory.value = 'Baby Care';
                 customCategoryInput.classList.add('hidden');
             });
             
-            aiWishForm.addEventListener('submit', async (e) => {
+            aiWishForm.addEventListener('submit', (e) => {
                 e.preventDefault();
+                handleSmartWishSearch();
+            });
+
+            async function handleSmartWishSearch() {
                 const prompt = aiWishPrompt.value.trim();
                 if(!prompt) return;
 
-                const searchIcon = document.getElementById('ai-wish-search-icon');
-                const loaderIcon = document.getElementById('ai-wish-loader');
-                const resultsContainer = document.getElementById('ai-wish-results-container');
-                const submitBtn = aiWishForm.querySelector('button[type="submit"]');
+                aiWishSearchIcon.classList.add('hidden');
+                aiWishLoaderIcon.classList.remove('hidden');
+                aiWishResultsContainer.innerHTML = `<p class="text-center text-gray-400">Searching for products...</p>`;
 
-                searchIcon.classList.add('hidden');
-                loaderIcon.classList.remove('hidden');
-                submitBtn.disabled = true;
-                resultsContainer.innerHTML = '<p class="text-center text-gray-400">Searching for products...</p>';
+                const pregnancyWeek = Math.floor(Math.abs(new Date() - new Date(wellnessData.pregnancyStartDate)) / (1000 * 60 * 60 * 24 * 7));
+                
+                const systemPrompt = `You are a helpful shopping assistant for a pregnant woman in week ${pregnancyWeek}. The user will provide a natural language query for a product.
+1.  Use the Google Search tool to find the product at the specified store (or a major retailer if none is specified).
+2.  Return up to 3 top results.
+3.  For each result, extract the product name, price (as a string, e.g., "29.99"), a direct image URL, and the product page URL.
+4.  Assign a relevant category for each item from this list: 'Baby Care', 'Nursery', 'Hospital Bag', 'Health', 'Postpartum'. If it doesn't fit, use 'Custom'.
+5.  Respond ONLY in the specified JSON format. If no relevant products are found, return an empty array.`;
 
-                const systemPrompt = `You are a smart shopping assistant for a pregnant woman. The user will provide a product search query.
-1.  Use Google Search to find relevant products that match the query.
-2.  Return a list of the top 2-3 results.
-3.  For each result, you MUST provide: a concise product name, the price as a string (e.g., "29.99"), the store name, a direct URL to the product page, and a publicly accessible, hotlinkable image URL.
-4.  If a store is mentioned (e.g., "on Amazon", "from Target"), prioritize results from that store.
-5.  Your response MUST be in a valid JSON array format according to the schema. If you cannot find any results, return an empty array.`;
+                const userQuery = `Find this product: "${prompt}".`;
+                const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; 
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
 
-                const userQuery = `Find products for this query: "${prompt}"`;
-                const apiKey = ""; 
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
                 const payload = {
                     contents: [{ parts: [{ text: userQuery }] }],
                     systemInstruction: { parts: [{ text: systemPrompt }] },
@@ -2510,12 +2511,12 @@
                                 type: "OBJECT",
                                 properties: {
                                     "productName": { "type": "STRING" },
+                                    "category": { "type": "STRING" },
                                     "price": { "type": "STRING" },
-                                    "store": { "type": "STRING" },
+                                    "imageUrl": { "type": "STRING" },
                                     "productUrl": { "type": "STRING" },
-                                    "imageUrl": { "type": "STRING" }
                                 },
-                                required: ["productName", "price", "store", "productUrl", "imageUrl"]
+                                required: ["productName", "category", "price", "imageUrl", "productUrl"]
                             }
                         }
                     }
@@ -2524,67 +2525,60 @@
                 try {
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                     if (!response.ok) throw new Error(`API error: ${response.statusText}`);
-
                     const result = await response.json();
-                    const text = result.candidates[0].content.parts[0].text;
-                    const data = JSON.parse(text);
-                    
-                    resultsContainer.innerHTML = ''; // Clear loading message
-                    if (data && data.length > 0) {
-                        data.forEach(product => {
-                            const card = document.createElement('div');
-                            card.className = 'p-3 bg-white/10 rounded-lg flex items-center gap-3';
-                            card.innerHTML = `
-                                <img src="${product.imageUrl}" alt="${product.productName}" class="w-16 h-16 object-cover rounded-md flex-shrink-0" onerror="this.style.display='none'">
-                                <div class="flex-1 min-w-0">
-                                    <p class="font-semibold text-white truncate">${product.productName}</p>
-                                    <p class="text-sm text-gray-300">${product.store} - <span class="font-bold text-teal-300">$${product.price}</span></p>
-                                </div>
-                                <button class="add-found-wish-btn btn-secondary font-semibold py-2 px-3 rounded-lg text-sm">Add</button>
-                            `;
-                            const addButton = card.querySelector('.add-found-wish-btn');
-                            addButton.addEventListener('click', () => {
-                                newWishItem.value = product.productName;
-                                newWishPrice.value = product.price;
-                                newWishLink.value = product.productUrl;
-                                document.getElementById('new-wish-image-url').value = product.imageUrl;
-                                
-                                const categories = ['Baby Care', 'Nursery', 'Hospital Bag', 'Health', 'Postpartum'];
-                                let foundCategory = 'Custom';
-                                for(const cat of categories) {
-                                    if (product.productName.toLowerCase().includes(cat.toLowerCase().split(' ')[0])) {
-                                        foundCategory = cat;
-                                        break;
-                                    }
-                                }
-                                newWishCategory.value = foundCategory;
-                                if (foundCategory === 'Custom') {
-                                    customCategoryInput.classList.remove('hidden');
-                                } else {
-                                    customCategoryInput.classList.add('hidden');
-                                }
-
-                                addButton.textContent = 'Added!';
-                                addButton.disabled = true;
-                                setTimeout(() => {
-                                    addButton.textContent = 'Add';
-                                    addButton.disabled = false;
-                                }, 2000);
-                            });
-                            resultsContainer.appendChild(card);
-                        });
-                    } else {
-                        resultsContainer.innerHTML = '<p class="text-center text-gray-400">No products found. Try a different search!</p>';
-                    }
+                    const data = JSON.parse(result.candidates[0].content.parts[0].text);
+                    renderAiWishResults(data);
                 } catch (error) {
-                    console.error("AI Wishlist search failed:", error);
-                    resultsContainer.innerHTML = '<p class="text-center text-red-400">Sorry, the smart search failed. Please try again.</p>';
+                    console.error("AI Smart Wish Finder failed:", error);
+                    aiWishResultsContainer.innerHTML = `<p class="text-center text-red-400">Sorry, something went wrong. Please try a different search.</p>`;
                 } finally {
-                    searchIcon.classList.remove('hidden');
-                    loaderIcon.classList.add('hidden');
-                    submitBtn.disabled = false;
+                    aiWishSearchIcon.classList.remove('hidden');
+                    aiWishLoaderIcon.classList.add('hidden');
                 }
-            });
+            }
+            
+            function renderAiWishResults(results) {
+                aiWishResultsContainer.innerHTML = '';
+                if (!results || results.length === 0) {
+                    aiWishResultsContainer.innerHTML = `<p class="text-center text-gray-400">No products found. Try being more specific!</p>`;
+                    return;
+                }
+
+                results.forEach(product => {
+                    const card = document.createElement('div');
+                    card.className = 'p-2 bg-white/10 rounded-lg flex items-center gap-3';
+                    card.innerHTML = `
+                        <img src="${product.imageUrl}" alt="${product.productName}" class="w-12 h-12 object-cover rounded-md flex-shrink-0" onerror="this.src='https://placehold.co/48x48/3730a3/e0e7ff?text=N/A'">
+                        <div class="flex-grow min-w-0">
+                            <p class="text-sm font-semibold truncate text-white">${product.productName}</p>
+                            <p class="text-xs text-teal-300">$${product.price}</p>
+                        </div>
+                        <button class="btn-secondary text-xs font-bold py-1.5 px-3 rounded-md add-wish-from-ai-btn flex-shrink-0">Add</button>
+                    `;
+                    
+                    const addButton = card.querySelector('.add-wish-from-ai-btn');
+                    addButton.addEventListener('click', () => {
+                        newWishItem.value = product.productName;
+                        newWishPrice.value = product.price;
+                        newWishLink.value = product.productUrl;
+                        
+                        const categoryOption = newWishCategory.querySelector(`option[value="${product.category}"]`);
+                        if (categoryOption) {
+                            newWishCategory.value = product.category;
+                            customCategoryInput.classList.add('hidden');
+                        } else {
+                            newWishCategory.value = 'Custom';
+                            customCategoryInput.value = product.category;
+                            customCategoryInput.classList.remove('hidden');
+                        }
+                        
+                        aiWishResultsContainer.innerHTML = '';
+                        aiWishPrompt.value = '';
+                    });
+
+                    aiWishResultsContainer.appendChild(card);
+                });
+            }
 
             newWishCategory.addEventListener('change', () => {
                 if (newWishCategory.value === 'Custom') {
@@ -2697,7 +2691,7 @@
                 const notesToSummarize = currentReflections.slice(0, 3).map(n => `Title: ${n.title}\nContent: ${n.content}`).join('\n\n---\n\n');
                 const systemPrompt = "You are an empathetic assistant. Summarize the user's reflection notes into one short, insightful, and emotional paragraph. Focus on the underlying feelings and themes.";
                 const userQuery = `Here are my last few notes:\n${notesToSummarize}`;
-                const apiKey = ""; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+                const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                 const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }};
 
                 aiSummaryContent.textContent = "Summarizing your thoughts...";
