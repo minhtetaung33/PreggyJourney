@@ -20,7 +20,7 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background-image: url('https://i.imgur.com/HnUnpQJ.jpeg');
+            background-image: url('https://i.imgur.com/CLS4xwt.jpeg');
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
@@ -761,7 +761,7 @@
         // Firebase Imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, setDoc, getDoc, updateDoc, collection, addDoc, serverTimestamp, deleteField, arrayUnion, arrayRemove, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, setDoc, getDoc, updateDoc, collection, addDoc, serverTimestamp, deleteField, arrayUnion, arrayRemove, query, orderBy, limit, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- WELLNESS DATA MANAGEMENT ---
         const defaultWellnessData = {
@@ -2300,6 +2300,308 @@
             addSupplementBtn.addEventListener('click', handleAddSupplement);
             newSupplementInput.addEventListener('keyup', e => e.key === 'Enter' && handleAddSupplement());
             
+            // --- JOURNEY TAB LOGIC ---
+            let currentTodos = [], currentWishes = [], currentReflections = [];
+
+            // To-Do List Logic
+            function loadTodos() {
+                if (!todosRef) return;
+                if(unsubscribeTodos) unsubscribeTodos();
+                const q = query(todosRef, orderBy("createdAt", "desc"));
+                unsubscribeTodos = onSnapshot(q, (snapshot) => {
+                    currentTodos = [];
+                    snapshot.forEach(doc => currentTodos.push({ id: doc.id, ...doc.data() }));
+                    renderTodos(currentTodos);
+                });
+            }
+
+            function renderTodos(todos) {
+                todoListContainer.innerHTML = '';
+                if (todos.length === 0) {
+                    todoListContainer.innerHTML = `<p class="text-center text-gray-400">No tasks yet. Add one below!</p>`;
+                    return;
+                }
+                const categoryIcons = { Health: '🧘‍♀️', Baby: '🍼', Home: '🏡', Reminder: '💬' };
+                todos.forEach(todo => {
+                    const item = document.createElement('div');
+                    item.className = `todo-item flex items-center justify-between p-3 bg-white/5 rounded-lg ${todo.completed ? 'completed' : ''}`;
+                    item.innerHTML = `
+                        <div class="flex items-center flex-1 min-w-0">
+                            <label for="todo-${todo.id}" class="flex items-center cursor-pointer">
+                                <input type="checkbox" id="todo-${todo.id}" class="hidden todo-checkbox">
+                                <div class="w-6 h-6 border-2 border-purple-400 rounded-md mr-3 flex-shrink-0 flex items-center justify-center check-label">
+                                    ${todo.completed ? '<svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>' : ''}
+                                </div>
+                                <div>
+                                    <span class="font-semibold break-words">${todo.text}</span>
+                                    <span class="text-xs text-gray-400 ml-2 whitespace-nowrap">${categoryIcons[todo.category] || ''} ${todo.category}</span>
+                                </div>
+                            </label>
+                        </div>
+                        <button class="icon-btn delete-todo-btn ml-2 flex-shrink-0"><svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                    `;
+                    
+                    const toggleTodo = async () => {
+                         if (!todosRef) return;
+                         const todoDocRef = doc(db, `users/${userId}/todos`, todo.id);
+                         await updateDoc(todoDocRef, { completed: !todo.completed });
+                    };
+                    
+                    item.querySelector('label').addEventListener('click', (e) => {
+                        e.preventDefault();
+                        toggleTodo();
+                    });
+
+                    item.querySelector('.delete-todo-btn').addEventListener('click', async () => {
+                        if (!todosRef) return;
+                        const todoDocRef = doc(db, `users/${userId}/todos`, todo.id);
+                        await deleteDoc(todoDocRef);
+                    });
+
+                    todoListContainer.appendChild(item);
+                });
+            }
+
+            addTodoBtn.addEventListener('click', async () => {
+                const text = newTodoInput.value.trim();
+                const category = newTodoCategory.value;
+                if (!text || !todosRef) return;
+                await addDoc(todosRef, { text, category, completed: false, createdAt: serverTimestamp() });
+                newTodoInput.value = '';
+            });
+
+            aiGenerateTodosBtn.addEventListener('click', async () => {
+                const pregnancyWeek = Math.floor(Math.abs(new Date() - new Date(wellnessData.pregnancyStartDate)) / (1000 * 60 * 60 * 24 * 7));
+                const systemPrompt = `You are a helpful assistant for a pregnant woman. Generate a concise to-do list of 4-5 important, actionable tasks for week ${pregnancyWeek} of pregnancy. Categorize each task as 'Health', 'Baby', 'Home', or 'Reminder'. Provide the response ONLY in a JSON array format.`;
+                const userQuery = `Generate a weekly to-do list for week ${pregnancyWeek}.`;
+                const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json", responseSchema: { type: "ARRAY", items: { type: "OBJECT", properties: { "task": { "type": "STRING" }, "category": { "type": "STRING" } } } } } };
+                try {
+                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!response.ok) throw new Error(`API error: ${response.statusText}`);
+                    const result = await response.json(); const data = JSON.parse(result.candidates[0].content.parts[0].text);
+                    for (const item of data) {
+                        if (item.task && item.category && todosRef) {
+                            await addDoc(todosRef, { text: item.task, category: item.category, completed: false, createdAt: serverTimestamp() });
+                        }
+                    }
+                } catch (error) { console.error("AI To-do generation failed:", error); }
+            });
+
+            // Little Wishes List Logic
+            function loadWishes() {
+                if (!wishesRef) return;
+                if(unsubscribeWishes) unsubscribeWishes();
+                const q = query(wishesRef, orderBy("createdAt", "desc"));
+                unsubscribeWishes = onSnapshot(q, (snapshot) => {
+                    currentWishes = [];
+                    snapshot.forEach(doc => currentWishes.push({ id: doc.id, ...doc.data() }));
+                    renderWishes(currentWishes);
+                });
+            }
+
+            function renderWishes(wishes) {
+                wishlistContainer.innerHTML = '';
+                if (wishes.length === 0) {
+                    wishlistContainer.innerHTML = `<p class="text-center text-gray-400">No wishes yet. Add one below!</p>`;
+                }
+                wishes.forEach(wish => {
+                    const item = document.createElement('div');
+                    item.className = `wish-item-card p-3 bg-white/5 rounded-lg border border-transparent ${wish.purchased ? 'purchased opacity-60' : ''}`;
+                    item.innerHTML = `
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1 min-w-0">
+                                <p class="font-bold break-words">${wish.item}</p>
+                                <p class="text-xs text-indigo-300">${wish.category}</p>
+                            </div>
+                            <div class="flex items-center ml-2">
+                                <input type="checkbox" class="h-5 w-5 rounded bg-white/20 text-teal-400 focus:ring-teal-500 border-gray-500 cursor-pointer" ${wish.purchased ? 'checked' : ''}>
+                                <button class="icon-btn delete-wish-btn ml-1"><svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center mt-2 text-sm">
+                            <span class="font-semibold text-teal-300">${wish.price ? `$${wish.price}`: ''}</span>
+                            ${wish.link ? `<a href="${wish.link}" target="_blank" class="text-blue-400 hover:underline">Store Link</a>` : ''}
+                        </div>
+                    `;
+                    item.querySelector('input[type="checkbox"]').addEventListener('change', async (e) => {
+                        const wishDocRef = doc(db, `users/${userId}/wishes`, wish.id);
+                        await updateDoc(wishDocRef, { purchased: e.target.checked });
+                    });
+                    item.querySelector('.delete-wish-btn').addEventListener('click', async () => {
+                        const wishDocRef = doc(db, `users/${userId}/wishes`, wish.id);
+                        await deleteDoc(wishDocRef);
+                    });
+                    wishlistContainer.appendChild(item);
+                });
+                
+                const purchasedCount = wishes.filter(w => w.purchased).length;
+                wishlistProgressText.textContent = `${purchasedCount}/${wishes.length} Items`;
+                wishlistProgressBar.style.width = wishes.length > 0 ? `${(purchasedCount / wishes.length) * 100}%` : '0%';
+            }
+
+            addWishBtn.addEventListener('click', async () => {
+                const item = newWishItem.value.trim();
+                if (!item || !wishesRef) return;
+                await addDoc(wishesRef, {
+                    item,
+                    category: newWishCategory.value,
+                    price: newWishPrice.value.trim(),
+                    link: newWishLink.value.trim(),
+                    purchased: false,
+                    createdAt: serverTimestamp()
+                });
+                newWishItem.value = newWishPrice.value = newWishLink.value = '';
+            });
+            
+            aiWishForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const prompt = aiWishPrompt.value.trim();
+                if(!prompt) return;
+                const pregnancyWeek = Math.floor(Math.abs(new Date() - new Date(wellnessData.pregnancyStartDate)) / (1000 * 60 * 60 * 24 * 7));
+                const systemPrompt = `You are a helpful shopping assistant for a pregnant woman. Based on the user's request and their pregnancy week (${pregnancyWeek}), generate a list of 5-7 relevant items. For each item, provide a category from this list: 'Baby Care', 'Nursery', 'Hospital Bag', 'Health', 'Postpartum', or 'Custom'. Respond ONLY in a JSON array format.`;
+                const userQuery = `My request: "${prompt}". I am in week ${pregnancyWeek} of pregnancy.`;
+                const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json", responseSchema: { type: "ARRAY", items: { type: "OBJECT", properties: { "item": { "type": "STRING" }, "category": { "type": "STRING" } } } } } };
+                try {
+                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!response.ok) throw new Error(`API error: ${response.statusText}`);
+                    const result = await response.json(); const data = JSON.parse(result.candidates[0].content.parts[0].text);
+                     for (const item of data) {
+                        if (item.item && item.category && wishesRef) {
+                            await addDoc(wishesRef, { item: item.item, category: item.category, price: '', link: '', purchased: false, createdAt: serverTimestamp() });
+                        }
+                    }
+                    aiWishPrompt.value = '';
+                } catch (error) { console.error("AI Wishlist generation failed:", error); }
+            });
+
+            // Tiny Reflections Logic
+            function loadReflections() {
+                if (!reflectionsRef) return;
+                if(unsubscribeReflections) unsubscribeReflections();
+                const q = query(reflectionsRef, orderBy("createdAt", "desc"));
+                unsubscribeReflections = onSnapshot(q, (snapshot) => {
+                    currentReflections = [];
+                    snapshot.forEach(doc => currentReflections.push({ id: doc.id, ...doc.data() }));
+                    renderReflections(currentReflections);
+                });
+            }
+
+            function renderReflections(reflections) {
+                reflectionsContainer.innerHTML = '';
+                 if (reflections.length === 0) {
+                    reflectionsContainer.innerHTML = `<p class="text-center text-gray-400 col-span-full">No reflections yet. Add a new note to begin!</p>`;
+                    return;
+                }
+                reflections.forEach(note => {
+                    const item = document.createElement('div');
+                    item.className = `reflection-note p-4 rounded-lg border-l-4 note-color-${note.color}`;
+                    item.innerHTML = `
+                        <h4 class="font-bold break-words">${note.title}</h4>
+                        <p class="text-sm text-gray-300 mt-2 break-words">${note.content.substring(0, 100)}${note.content.length > 100 ? '...' : ''}</p>
+                        <p class="text-xs text-gray-500 mt-3">${new Date(note.createdAt?.toDate()).toLocaleDateString()}</p>
+                    `;
+                    item.addEventListener('click', () => openReflectionModal(note));
+                    reflectionsContainer.appendChild(item);
+                });
+            }
+
+            let activeReflectionId = null;
+            let activeColor = 'pink';
+
+            function openReflectionModal(note = null) {
+                if (note) {
+                    activeReflectionId = note.id;
+                    reflectionModalTitle.textContent = "Edit Reflection";
+                    reflectionTitleInput.value = note.title;
+                    reflectionContentInput.value = note.content;
+                    activeColor = note.color;
+                } else {
+                    activeReflectionId = null;
+                    reflectionModalTitle.textContent = "New Reflection";
+                    reflectionTitleInput.value = '';
+                    reflectionContentInput.value = '';
+                    activeColor = 'pink';
+                }
+                updateColorTags();
+                reflectionModal.classList.remove('hidden');
+                setTimeout(() => reflectionModal.classList.add('active'), 10);
+            }
+            
+            function closeReflectionModal() {
+                reflectionModal.classList.remove('active');
+                setTimeout(() => reflectionModal.classList.add('hidden'), 300);
+            }
+
+            function updateColorTags() {
+                reflectionColorTags.querySelectorAll('button').forEach(btn => {
+                    if (btn.dataset.color === activeColor) {
+                        btn.classList.add('border-white');
+                    } else {
+                        btn.classList.remove('border-white');
+                    }
+                });
+            }
+
+            addReflectionBtn.addEventListener('click', () => openReflectionModal());
+            reflectionModalCancelBtn.addEventListener('click', closeReflectionModal);
+            reflectionModal.addEventListener('click', e => e.target === reflectionModal && closeReflectionModal());
+
+            reflectionColorTags.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON') {
+                    activeColor = e.target.dataset.color;
+                    updateColorTags();
+                }
+            });
+
+            reflectionModalSaveBtn.addEventListener('click', async () => {
+                const title = reflectionTitleInput.value.trim();
+                const content = reflectionContentInput.value.trim();
+                if (!title || !content) return;
+
+                if (activeReflectionId) {
+                    const noteDocRef = doc(db, `users/${userId}/reflections`, activeReflectionId);
+                    await updateDoc(noteDocRef, { title, content, color: activeColor });
+                } else {
+                    await addDoc(reflectionsRef, { title, content, color: activeColor, createdAt: serverTimestamp() });
+                }
+                closeReflectionModal();
+            });
+
+            aiSummarizeReflectionsBtn.addEventListener('click', async () => {
+                if (currentReflections.length < 2) {
+                    aiSummaryContent.textContent = "You need at least two notes for a summary.";
+                    aiSummaryModal.classList.remove('hidden');
+                    setTimeout(() => aiSummaryModal.classList.add('active'), 10);
+                    return;
+                }
+                const notesToSummarize = currentReflections.slice(0, 3).map(n => `Title: ${n.title}\nContent: ${n.content}`).join('\n\n---\n\n');
+                const systemPrompt = "You are an empathetic assistant. Summarize the user's reflection notes into one short, insightful, and emotional paragraph. Focus on the underlying feelings and themes.";
+                const userQuery = `Here are my last few notes:\n${notesToSummarize}`;
+                const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }};
+
+                aiSummaryContent.textContent = "Summarizing your thoughts...";
+                aiSummaryModal.classList.remove('hidden');
+                setTimeout(() => aiSummaryModal.classList.add('active'), 10);
+
+                try {
+                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!response.ok) throw new Error(`API error: ${response.statusText}`);
+                    const result = await response.json();
+                    aiSummaryContent.textContent = result.candidates[0].content.parts[0].text;
+                } catch (error) { 
+                    console.error("AI Summary failed:", error); 
+                    aiSummaryContent.textContent = "Sorry, I couldn't generate a summary right now.";
+                }
+            });
+
+            aiSummaryCloseBtn.addEventListener('click', () => {
+                aiSummaryModal.classList.remove('active');
+                setTimeout(() => aiSummaryModal.classList.add('hidden'), 300);
+            });
+
             document.addEventListener('DOMContentLoaded', () => { mainApp.classList.add('hidden'); });
         }
     </script>
