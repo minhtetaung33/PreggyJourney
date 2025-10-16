@@ -2524,7 +2524,7 @@
 
                 const systemPrompt = `You are an intelligent shopping assistant. Your task is to take a user's natural language query for a product, perform a grounded Google Search to find relevant items, and return the top 3-4 results. You must extract the product name, a price (as a string, e.g., "29.99"), a direct link to the product page, and a publicly accessible image URL for each product. If a store is specified (like Amazon, Target, Walmart), prioritize results from that store. Your response must be in JSON format according to the provided schema.`;
                 const userQuery = `Find products for: "${prompt}"`;
-                const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
+                const apiKey = ""; // FIX: Changed to empty string to allow environment to inject the key.
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                 const payload = {
                     contents: [{ parts: [{ text: userQuery }] }],
@@ -2550,10 +2550,23 @@
                 
                 try {
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                    if (!response.ok) throw new Error(`API error: ${response.statusText}`);
+                    // IMPROVEMENT: Added more detailed error logging.
+                    if (!response.ok) {
+                        const errorBody = await response.json();
+                        console.error("API Error Body:", JSON.stringify(errorBody, null, 2));
+                        throw new Error(`API error: ${response.statusText}`);
+                    }
                     const result = await response.json();
-                    const data = JSON.parse(result.candidates[0].content.parts[0].text);
-                    renderSearchResults(data);
+                    
+                    const firstCandidate = result.candidates?.[0];
+                    const firstPart = firstCandidate?.content?.parts?.[0];
+
+                    if (firstPart && firstPart.text) {
+                        const data = JSON.parse(firstPart.text);
+                        renderSearchResults(data);
+                    } else {
+                        throw new Error("Invalid response structure from API.");
+                    }
                 } catch (error) {
                     console.error("AI Product Search failed:", error);
                     wishSearchResults.innerHTML = `<p class="text-center text-red-300">Sorry, I couldn't find any items. Please try a different search.</p>`;
