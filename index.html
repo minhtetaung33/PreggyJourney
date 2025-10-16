@@ -558,22 +558,7 @@
                                 </div>
                             </div>
                             <div id="wishlist-container" class="space-y-3 max-h-[28rem] overflow-y-auto modal-scroll pr-2 mb-4"></div>
-                            
-                            <!-- AI Product Search -->
-                            <div class="pt-4 border-t border-white/10">
-                                <p class="text-center font-semibold text-indigo-200 mb-3">Find an Item Online</p>
-                                <div class="flex gap-2">
-                                    <input type="text" id="ai-product-search-prompt" class="meal-select text-sm flex-grow" placeholder="e.g., Hatch sound machine on Amazon">
-                                    <button id="ai-product-search-btn" class="btn-secondary font-semibold py-2 px-4 rounded-lg flex items-center justify-center">
-                                        <svg id="ai-product-search-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                                        <svg id="ai-product-search-loader" class="animate-spin h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                    </button>
-                                </div>
-                                <div id="ai-product-search-results" class="mt-4 space-y-2 max-h-60 overflow-y-auto modal-scroll pr-2"></div>
-                            </div>
-
-                            <div class="pt-4 border-t border-white/10 space-y-3 mt-4">
-                                 <p class="text-center font-semibold text-indigo-200">Or Add Manually</p>
+                            <div class="pt-4 border-t border-white/10 space-y-3">
                                  <input type="text" id="new-wish-item" class="meal-select text-sm" placeholder="Item name (e.g., Baby Monitor)">
                                  <select id="new-wish-category" class="meal-select text-sm">
                                      <option value="Baby Care">Baby Care</option>
@@ -1019,11 +1004,6 @@
         const aiSummaryContent = document.getElementById('ai-summary-content');
         const aiSummaryCloseBtn = document.getElementById('ai-summary-close-btn');
         const customCategoryInput = document.getElementById('custom-category-input');
-        const aiProductSearchPrompt = document.getElementById('ai-product-search-prompt');
-        const aiProductSearchBtn = document.getElementById('ai-product-search-btn');
-        const aiProductSearchResults = document.getElementById('ai-product-search-results');
-        const aiProductSearchIcon = document.getElementById('ai-product-search-icon');
-        const aiProductSearchLoader = document.getElementById('ai-product-search-loader');
 
 
         // Firebase Setup
@@ -2478,7 +2458,6 @@
                     category: category,
                     price: newWishPrice.value.trim(),
                     link: newWishLink.value.trim(),
-                    imageUrl: '', // Manually added items don't have an image
                     purchased: false,
                     createdAt: serverTimestamp()
                 });
@@ -2503,7 +2482,7 @@
                     const result = await response.json(); const data = JSON.parse(result.candidates[0].content.parts[0].text);
                      for (const item of data) {
                         if (item.item && item.category && wishesRef) {
-                            await addDoc(wishesRef, { item: item.item, category: item.category, price: '', link: '', purchased: false, imageUrl: '', createdAt: serverTimestamp() });
+                            await addDoc(wishesRef, { item: item.item, category: item.category, price: '', link: '', purchased: false, createdAt: serverTimestamp() });
                         }
                     }
                     aiWishPrompt.value = '';
@@ -2517,98 +2496,6 @@
                     customCategoryInput.classList.add('hidden');
                 }
             });
-
-            // AI Product Search Logic
-            async function handleProductSearch() {
-                const query = aiProductSearchPrompt.value.trim();
-                if (!query) return;
-
-                aiProductSearchLoader.classList.remove('hidden');
-                aiProductSearchIcon.classList.add('hidden');
-                aiProductSearchBtn.disabled = true;
-                aiProductSearchResults.innerHTML = `<p class="text-center text-gray-400">Searching for products...</p>`;
-                
-                const systemPrompt = `You are an intelligent shopping assistant. The user will provide a product search query. Use Google Search to find relevant products. Return a list of the top 3-4 most relevant products. For each product, you must provide the product name, an estimated price as a string (e.g., "$29.99"), a direct link to the product page, and a direct URL to a high-quality image of the product. Ensure all fields are filled. Your response must be in the specified JSON format.`;
-                const userQuery = `Find products for: "${query}"`;
-                const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; 
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-                const payload = {
-                    contents: [{ parts: [{ text: userQuery }] }],
-                    tools: [{ "google_search": {} }],
-                    systemInstruction: { parts: [{ text: systemPrompt }] },
-                    generationConfig: {
-                        responseMimeType: "application/json",
-                        responseSchema: {
-                            type: "ARRAY",
-                            items: {
-                                type: "OBJECT",
-                                properties: {
-                                    "product_name": { "type": "STRING" },
-                                    "price": { "type": "STRING" },
-                                    "product_link": { "type": "STRING" },
-                                    "image_url": { "type": "STRING" }
-                                },
-                                required: ["product_name", "price", "product_link", "image_url"]
-                            }
-                        }
-                    }
-                };
-                
-                try {
-                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                    if (!response.ok) throw new Error(`API error: ${response.statusText}`);
-                    const result = await response.json();
-                    const products = JSON.parse(result.candidates[0].content.parts[0].text);
-                    renderProductSearchResults(products);
-                } catch (error) {
-                    console.error("AI Product Search failed:", error);
-                    aiProductSearchResults.innerHTML = `<p class="text-center text-red-400">Sorry, could not find products. Please try a different search.</p>`;
-                } finally {
-                    aiProductSearchLoader.classList.add('hidden');
-                    aiProductSearchIcon.classList.remove('hidden');
-                    aiProductSearchBtn.disabled = false;
-                }
-            }
-
-            function renderProductSearchResults(products) {
-                aiProductSearchResults.innerHTML = '';
-                if (!products || products.length === 0) {
-                    aiProductSearchResults.innerHTML = `<p class="text-center text-gray-400">No products found.</p>`;
-                    return;
-                }
-                products.forEach(product => {
-                    const card = document.createElement('div');
-                    card.className = 'p-2 bg-white/5 rounded-lg flex items-center gap-3';
-                    card.innerHTML = `
-                        <img src="${product.image_url}" alt="${product.product_name}" class="w-16 h-16 rounded-md object-cover flex-shrink-0">
-                        <div class="flex-1 min-w-0">
-                            <p class="font-semibold text-sm truncate">${product.product_name}</p>
-                            <p class="font-bold text-teal-300">${product.price}</p>
-                        </div>
-                        <button class="add-searched-item-btn btn-secondary text-xs font-semibold py-1 px-3 rounded-lg flex-shrink-0">Add to List</button>
-                    `;
-                    card.querySelector('.add-searched-item-btn').addEventListener('click', async () => {
-                        if (!wishesRef) return;
-                        await addDoc(wishesRef, {
-                            item: product.product_name,
-                            category: 'Found Online', // Default category for searched items
-                            price: product.price,
-                            link: product.product_link,
-                            imageUrl: product.image_url,
-                            purchased: false,
-                            createdAt: serverTimestamp()
-                        });
-                        // Optional: show a success message or animation
-                        card.style.transition = 'opacity 0.5s';
-                        card.style.opacity = '0';
-                        setTimeout(() => card.remove(), 500);
-                    });
-                    aiProductSearchResults.appendChild(card);
-                });
-            }
-
-            aiProductSearchBtn.addEventListener('click', handleProductSearch);
-            aiProductSearchPrompt.addEventListener('keyup', (e) => e.key === 'Enter' && handleProductSearch());
 
             // Tiny Reflections Logic
             function loadReflections() {
