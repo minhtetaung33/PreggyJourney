@@ -568,7 +568,6 @@
                                      <option value="Postpartum">Postpartum</option>
                                      <option value="Custom">Custom</option>
                                  </select>
-                                 <input type="text" id="custom-category-input" class="meal-select text-sm hidden" placeholder="Your custom category...">
                                  <div class="flex gap-2">
                                      <input type="text" id="new-wish-price" class="meal-select text-sm w-1/2" placeholder="Price ($)">
                                      <input type="text" id="new-wish-link" class="meal-select text-sm w-1/2" placeholder="Store Link">
@@ -1003,7 +1002,6 @@
         const aiSummaryModal = document.getElementById('ai-summary-modal');
         const aiSummaryContent = document.getElementById('ai-summary-content');
         const aiSummaryCloseBtn = document.getElementById('ai-summary-close-btn');
-        const customCategoryInput = document.getElementById('custom-category-input');
 
 
         // Firebase Setup
@@ -2412,12 +2410,9 @@
                     item.className = `wish-item-card p-3 bg-white/5 rounded-lg border border-transparent ${wish.purchased ? 'purchased opacity-60' : ''}`;
                     item.innerHTML = `
                         <div class="flex items-start justify-between">
-                            <div class="flex items-start flex-1 min-w-0">
-                                ${wish.imageUrl ? `<img src="${wish.imageUrl}" alt="${wish.item}" class="w-12 h-12 rounded-md mr-3 object-cover">` : ''}
-                                <div class="flex-1 min-w-0">
-                                    <p class="font-bold break-words">${wish.item}</p>
-                                    <p class="text-xs text-indigo-300">${wish.category}</p>
-                                </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="font-bold break-words">${wish.item}</p>
+                                <p class="text-xs text-indigo-300">${wish.category}</p>
                             </div>
                             <div class="flex items-center ml-2">
                                 <input type="checkbox" class="h-5 w-5 rounded bg-white/20 text-teal-400 focus:ring-teal-500 border-gray-500 cursor-pointer" ${wish.purchased ? 'checked' : ''}>
@@ -2425,7 +2420,7 @@
                             </div>
                         </div>
                         <div class="flex justify-between items-center mt-2 text-sm">
-                            <span class="font-semibold text-teal-300">${wish.price ? `${wish.price}`: ''}</span>
+                            <span class="font-semibold text-teal-300">${wish.price ? `$${wish.price}`: ''}</span>
                             ${wish.link ? `<a href="${wish.link}" target="_blank" class="text-blue-400 hover:underline">Store Link</a>` : ''}
                         </div>
                     `;
@@ -2447,24 +2442,16 @@
 
             addWishBtn.addEventListener('click', async () => {
                 const item = newWishItem.value.trim();
-                let category = newWishCategory.value;
-                if (category === 'Custom') {
-                    category = customCategoryInput.value.trim();
-                }
-                if (!item || !wishesRef || !category) return;
-                
+                if (!item || !wishesRef) return;
                 await addDoc(wishesRef, {
                     item,
-                    category: category,
+                    category: newWishCategory.value,
                     price: newWishPrice.value.trim(),
                     link: newWishLink.value.trim(),
                     purchased: false,
                     createdAt: serverTimestamp()
                 });
                 newWishItem.value = newWishPrice.value = newWishLink.value = '';
-                customCategoryInput.value = '';
-                newWishCategory.value = 'Baby Care';
-                customCategoryInput.classList.add('hidden');
             });
             
             aiWishForm.addEventListener('submit', async (e) => {
@@ -2487,14 +2474,6 @@
                     }
                     aiWishPrompt.value = '';
                 } catch (error) { console.error("AI Wishlist generation failed:", error); }
-            });
-
-            newWishCategory.addEventListener('change', () => {
-                if (newWishCategory.value === 'Custom') {
-                    customCategoryInput.classList.remove('hidden');
-                } else {
-                    customCategoryInput.classList.add('hidden');
-                }
             });
 
             // Tiny Reflections Logic
