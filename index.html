@@ -1838,6 +1838,274 @@ Respond ONLY with a JSON object containing four arrays of strings as per the sch
                 }
             }
 
+            function calculateSleepHours(sleep, wake) {
+                if (!sleep || !wake) return 0;
+                const sleepDate = new Date(`2000-01-01T${sleep}`);
+                let wakeDate = new Date(`2000-01-01T${wake}`);
+                if (wakeDate < sleepDate) {
+                    wakeDate.setDate(wakeDate.getDate() + 1);
+                }
+                return (wakeDate - sleepDate) / (1000 * 60 * 60);
+            }
+
+            async function generateNutritionInsight(nutrients) {
+                const insightEl = document.getElementById('nutrition-ai-insight');
+                insightEl.textContent = 'Analyzing nutrition...';
+                try {
+                    const systemPrompt = "You are a prenatal nutritionist. Based on the daily nutrient score (0-3 is low, 4-6 is good, 7+ is great), provide one short, encouraging, and actionable tip. Focus on the nutrient that is lowest. Respond ONLY with a JSON object containing a single 'insight' key.";
+                    const userQuery = `Nutrient scores for today: Iron=${nutrients.iron}, Calcium=${nutrients.calcium}, Folate=${nutrients.folate}, Fiber=${nutrients.fiber}.`;
+                    const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+                    const payload = {
+                        contents: [{ parts: [{ text: userQuery }] }],
+                        systemInstruction: { parts: [{ text: systemPrompt }] },
+                        generationConfig: {
+                            responseMimeType: "application/json",
+                            responseSchema: { type: "OBJECT", properties: { "insight": { "type": "STRING" } } }
+                        }
+                    };
+                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!response.ok) throw new Error('API error');
+                    const result = await response.json();
+                    const data = JSON.parse(result.candidates[0].content.parts[0].text);
+                    insightEl.textContent = data.insight;
+                } catch (error) {
+                    console.error("Nutrition insight error:", error);
+                    insightEl.textContent = "Try adding some leafy greens like spinach for a folate boost!";
+                }
+            }
+
+            function updateNutritionTracker() {
+                const todayIndex = new Date().getDay();
+                const dayKey = days[todayIndex === 0 ? 6 : todayIndex - 1];
+                const nutrients = { iron: 0, calcium: 0, folate: 0, fiber: 0 };
+
+                // From meals
+                mealTypes.forEach(mealType => {
+                    const meal = currentMealPlanData[mealType] ? currentMealPlanData[mealType][dayKey] : null;
+                    if (meal) {
+                        const mealNutrientData = mealNutrients[meal] || customMealNutrients[meal];
+                        if (mealNutrientData) {
+                            nutrients.iron += mealNutrientData.iron || 0;
+                            nutrients.calcium += mealNutrientData.calcium || 0;
+                            nutrients.folate += mealNutrientData.folate || 0;
+                            nutrients.fiber += mealNutrientData.fiber || 0;
+                        }
+                    }
+                });
+
+                // From supplements
+                const dailySupps = wellnessData.dailySupplements[dayKey] || [];
+                dailySupps.forEach(supp => {
+                    const suppNutrientData = supplementNutrients[supp];
+                    if(suppNutrientData) {
+                        nutrients.iron += suppNutrientData.iron || 0;
+                        nutrients.calcium += suppNutrientData.calcium || 0;
+                        nutrients.folate += suppNutrientData.folate || 0;
+                    }
+                });
+                
+                dailySupplementsList.innerHTML = '';
+                dailySupps.forEach(supp => {
+                    const suppEl = document.createElement('span');
+                    suppEl.className = 'text-xs bg-green-500/20 text-green-300 px-2 py-1 rounded-full';
+                    suppEl.textContent = supp;
+                    dailySupplementsList.appendChild(suppEl);
+                });
+
+
+                const targets = { iron: 9, calcium: 9, folate: 9, fiber: 9 }; // Arbitrary target, 3 meals * 3 points
+                const statuses = ['Low', 'Good', 'Great', 'Excellent'];
+                const colors = ['bg-red-500', 'bg-yellow-500', 'bg-green-500', 'bg-teal-400'];
+
+                Object.keys(nutrients).forEach(key => {
+                    const container = document.getElementById(`nutrition-${key}`);
+                    if(container) {
+                        const progressBar = container.querySelector('.progress-bar');
+                        const statusText = container.querySelector('.status-text');
+                        const percentage = Math.min((nutrients[key] / targets[key]) * 100, 100);
+                        const statusIndex = Math.min(Math.floor(nutrients[key] / 3), 3);
+                        
+                        progressBar.style.width = `${percentage}%`;
+                        progressBar.className = `progress-bar h-1.5 rounded-full ${colors[statusIndex]}`;
+                        statusText.textContent = statuses[statusIndex];
+                        statusText.className = `status-text font-semibold text-sm ${colors[statusIndex].replace('bg-', 'text-')}`;
+                    }
+                });
+
+                generateNutritionInsight(nutrients);
+            }
+
+            function updateDailySummary() {
+                const todayIndex = new Date().getDay();
+                const dayKey = days[todayIndex === 0 ? 6 : todayIndex - 1];
+                const lastNightKey = days[todayIndex === 0 ? 6 : (todayIndex === 1 ? 0 : todayIndex - 2)]; // Get previous day for sleep
+
+                // Mood
+                document.getElementById('summary-mood').textContent = `${wellnessData.mood.emoji} ${wellnessData.mood.level}`;
+                
+                // Sleep
+                const sleepTime = wellnessData.sleep[lastNightKey]?.sleep;
+                const wakeTime = wellnessData.sleep[dayKey]?.wake;
+                const sleepHours = calculateSleepHours(sleepTime, wakeTime);
+                document.getElementById('summary-sleep').textContent = `${sleepHours.toFixed(1)} hrs`;
+                
+                // Water
+                document.getElementById('summary-water').textContent = `${wellnessData.water.intake} / ${wellnessData.water.goal} glasses`;
+                
+                // Energy
+                document.getElementById('summary-energy').textContent = wellnessData.energy.level;
+
+                // AI Insight
+                document.getElementById('summary-ai-insight').textContent = wellnessData.mood.aiInsight;
+            }
+            
+            function updateHydrationCircle() {
+                const { intake, goal } = wellnessData.water;
+                const percentage = Math.min((intake / goal) * 100, 100);
+                const circumference = 2 * Math.PI * 45; // 2 * pi * r
+                const offset = circumference - (percentage / 100) * circumference;
+                hydrationProgress.style.strokeDashoffset = offset;
+                hydrationText.innerHTML = `${intake}<span class="text-sm">/${goal}</span>`;
+            }
+
+            function updateBabyGrowth() {
+                if (!wellnessData.pregnancyStartDate) return;
+                const startDate = new Date(wellnessData.pregnancyStartDate);
+                const today = new Date();
+                const diffTime = Math.abs(today - startDate);
+                const pregnancyWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) || 1;
+
+                const growthData = {
+                    5: "a sesame seed", 6: "a lentil", 7: "a blueberry", 8: "a kidney bean",
+                    9: "a grape 🍇", 10: "a strawberry 🍓", 11: "a fig", 12: "a lime",
+                    13: "a pea pod", 14: "a lemon 🍋", 15: "an apple 🍎", 16: "an avocado 🥑",
+                    17: "a turnip", 18: "a bell pepper 🫑", 19: "a mango 🥭", 20: "a banana 🍌"
+                };
+
+                babyGrowthSnapshotEl.textContent = `Week ${pregnancyWeek} — baby is the size of ${growthData[pregnancyWeek] || 'a wonderful miracle'}`;
+                document.getElementById('wellness-tip').textContent = wellnessTipsByWeek[pregnancyWeek] || defaultWellnessData.dailyTip;
+            }
+
+            function updateLogButtons() {
+                moodLogButtons.querySelectorAll('.mood-btn').forEach(btn => {
+                    if (btn.dataset.mood === wellnessData.mood.emoji) {
+                        btn.classList.add('selected');
+                    } else {
+                        btn.classList.remove('selected');
+                    }
+                });
+
+                const energyLevels = { 'Low': 1, 'Tired': 2, 'Moderate': 3, 'Good': 4, 'High': 5 };
+                const currentEnergyValue = energyLevels[wellnessData.energy.level] || 3;
+                energyLogButtons.querySelectorAll('.energy-btn').forEach(btn => {
+                    if (parseInt(btn.dataset.energy) === currentEnergyValue) {
+                        btn.classList.add('selected');
+                    } else {
+                        btn.classList.remove('selected');
+                    }
+                });
+            }
+
+            function updateSleepMonitor() {
+                const todayIndex = new Date().getDay();
+                const dayKey = days[todayIndex === 0 ? 6 : todayIndex - 1];
+                const lastNightKey = days[todayIndex === 0 ? 6 : (todayIndex === 1 ? 0 : todayIndex - 2)]; // Get previous day
+                const sleepTime = wellnessData.sleep[lastNightKey]?.sleep;
+                const wakeTime = wellnessData.sleep[dayKey]?.wake;
+                const sleepHours = calculateSleepHours(sleepTime, wakeTime);
+                document.getElementById('sleep-hours').textContent = sleepHours.toFixed(1);
+            }
+
+            function renderWellnessChart() {
+                const ctx = document.getElementById('wellnessChart').getContext('2d');
+                const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+                gradient.addColorStop(0, 'rgba(167, 139, 250, 0.6)');
+                gradient.addColorStop(1, 'rgba(167, 139, 250, 0.1)');
+
+                wellnessChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                        datasets: [
+                            {
+                                label: 'Energy Level',
+                                data: [3, 2, 2, 3, 4, 5, 4],
+                                borderColor: '#a78bfa',
+                                backgroundColor: gradient,
+                                tension: 0.4,
+                                fill: true,
+                                pointBackgroundColor: '#fff',
+                                pointBorderColor: '#a78bfa',
+                                pointHoverBackgroundColor: '#a78bfa',
+                                pointHoverBorderColor: '#fff',
+                            },
+                            {
+                                label: 'Mood',
+                                data: [3, 2, 2, 3, 4, 5, 4], // Same data initially
+                                borderColor: '#60a5fa',
+                                tension: 0.4,
+                                fill: false,
+                                pointBackgroundColor: '#fff',
+                                pointBorderColor: '#60a5fa',
+                                pointHoverBackgroundColor: '#60a5fa',
+                                pointHoverBorderColor: '#fff',
+                                borderDash: [5, 5]
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: '#d1d5db'
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 5.5,
+                                ticks: {
+                                    color: '#9ca3af',
+                                    stepSize: 1,
+                                    callback: function(value) {
+                                        const labels = ['','😣', '😐', '🙂', '😊', '🥰'];
+                                        return labels[value] || '';
+                                    }
+                                },
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    color: '#9ca3af'
+                                },
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            function updateWellnessChartData() {
+                if (!wellnessChart) return;
+                const moodMap = {'😣': 1, '😐': 2, '🙂': 3, '😊': 4, '🥰': 5};
+                const energyMap = { 'Low': 1, 'Tired': 2, 'Moderate': 3, 'Good': 4, 'High': 5 };
+
+                const moodData = days.map(day => moodMap[wellnessData.weeklyLog[day]?.mood] || 0);
+                const energyData = days.map(day => energyMap[wellnessData.weeklyLog[day]?.energyLevel] || wellnessData.weeklyLog[day]?.energy || 0); // support legacy energy format
+                
+                wellnessChart.data.datasets[0].data = energyData;
+                wellnessChart.data.datasets[1].data = moodData;
+                wellnessChart.update();
+            }
+
             function updateDashboardUI() {
                 updateDailySummary();
                 updateHydrationCircle();
