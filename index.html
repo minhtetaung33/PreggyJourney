@@ -264,6 +264,25 @@
         .wish-item-card { transition: all 0.3s ease; }
         .wish-item-card.purchased { box-shadow: 0 0 15px rgba(5, 255, 161, 0.4); border-color: rgba(5, 255, 161, 0.6); }
 
+        /* New styles for AI Wish Suggestions */
+        .ai-suggestion-card {
+            background: rgba(255, 255, 255, 0.07);
+            border-radius: 0.75rem;
+            padding: 0.75rem;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .ai-suggestion-card:hover {
+            background: rgba(167, 139, 250, 0.15);
+        }
+        .ai-suggestion-img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 0.5rem;
+            background-color: rgba(0,0,0,0.2);
+        }
+
         .reflection-note {
             transition: all 0.3s ease;
             box-shadow: 5px 5px 15px rgba(0,0,0,0.2);
@@ -576,18 +595,13 @@
                                  <button id="add-wish-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Add Wish</button>
                             </div>
                              <div class="mt-6 text-center">
-                                <h4 class="text-lg font-bold mb-2 text-indigo-200">✨ Smart Wish Finder</h4>
+                                <p class="mb-2 text-indigo-200">Let AI suggest items!</p>
                                 <form id="ai-wish-form" class="flex gap-2">
-                                    <input type="text" id="ai-wish-prompt" class="meal-select text-sm flex-grow" placeholder="e.g., Hatch Rest sound machine on Amazon">
-                                    <button type="submit" class="btn-secondary font-semibold py-2 px-4 rounded-lg">
-                                        <svg id="ai-wish-search-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                                        <svg id="ai-wish-loader-icon" class="animate-spin h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                    </button>
+                                    <input type="text" id="ai-wish-prompt" class="meal-select text-sm flex-grow" placeholder="e.g., Hospital bag for third trimester">
+                                    <button type="submit" class="btn-secondary font-semibold py-2 px-4 rounded-lg">Go</button>
                                 </form>
-                                <div id="ai-wish-results-container" class="mt-4 space-y-3 max-h-60 overflow-y-auto modal-scroll pr-2 text-left">
-                                    <!-- AI search results will be injected here -->
-                                </div>
                             </div>
+                            <div id="ai-wish-suggestions-container" class="mt-4 space-y-3"></div>
                         </div>
                     </div>
                 </div>
@@ -1010,9 +1024,6 @@
         const aiSummaryContent = document.getElementById('ai-summary-content');
         const aiSummaryCloseBtn = document.getElementById('ai-summary-close-btn');
         const customCategoryInput = document.getElementById('custom-category-input');
-        const aiWishResultsContainer = document.getElementById('ai-wish-results-container');
-        const aiWishSearchIcon = document.getElementById('ai-wish-search-icon');
-        const aiWishLoaderIcon = document.getElementById('ai-wish-loader-icon');
 
 
         // Firebase Setup
@@ -1108,7 +1119,10 @@
                     loadWishes();
                     loadReflections();
 
-                    generateDailyInsights();
+                    updatePartnerTips();
+                    updateHydrationAndSnacks();
+                    updatePartnerAvoidTips();
+                    updateHydrationAvoidTips();
                     
                     if(symptomTrackerContent.classList.contains('active')) {
                          if (!wellnessChart) renderWellnessChart();
@@ -1118,6 +1132,12 @@
                 } else {
                     // User is signed out
                     userId = null;
+                    authButtons.classList.remove('hidden');
+                    userInfo.classList.remove('flex');
+                    userInfo.classList.add('hidden');
+                    mainApp.classList.add('hidden');
+                    heroSection.classList.remove('hidden');
+
                     if (unsubscribeMealPlan) unsubscribeMealPlan();
                     if (unsubscribeMealOptions) unsubscribeMealOptions();
                     if (unsubscribeWellnessData) unsubscribeWellnessData();
@@ -1127,31 +1147,46 @@
                     if (unsubscribeTodos) unsubscribeTodos();
                     if (unsubscribeWishes) unsubscribeWishes();
                     if (unsubscribeReflections) unsubscribeReflections();
-                    
-                    authButtons.classList.remove('hidden');
-                    userInfo.classList.remove('flex');
-                    userInfo.classList.add('hidden');
-                    mainApp.classList.add('hidden');
-                    heroSection.classList.remove('hidden');
                 }
             });
 
-            signUpBtn.addEventListener('click', () => authModal.classList.remove('hidden'));
-            googleSignInBtn.addEventListener('click', () => {
-                signInWithPopup(auth, provider).catch(error => console.error("Google sign-in error", error));
-                authModal.classList.add('hidden');
-            });
-            authModalCloseBtn.addEventListener('click', () => authModal.classList.add('hidden'));
-            signOutBtn.addEventListener('click', () => signOut(auth));
-
-            // --- TAB LOGIC ---
-            const tabs = {
-                meal: { btn: mealPlanTab, content: mealPlanContent },
-                symptom: { btn: symptomTrackerTab, content: symptomTrackerContent },
-                journey: { btn: journeyTab, content: journeyContent }
+            const signInWithGoogle = () => {
+                signInWithPopup(auth, provider).catch(error => {
+                    console.error("Google Sign-In Error:", error);
+                });
             };
 
+            const doSignOut = () => {
+                signOut(auth).catch(error => {
+                    console.error("Sign Out Error:", error);
+                });
+            };
+
+            signUpBtn.addEventListener('click', () => {
+                authModal.classList.remove('hidden');
+                setTimeout(() => authModal.classList.add('active'), 10);
+            });
+            googleSignInBtn.addEventListener('click', () => {
+                signInWithGoogle();
+                closeAuthModal();
+            });
+            signOutBtn.addEventListener('click', doSignOut);
+
+            function closeAuthModal() {
+                authModal.classList.remove('active');
+                setTimeout(() => authModal.classList.add('hidden'), 300);
+            }
+            authModalCloseBtn.addEventListener('click', closeAuthModal);
+            authModal.addEventListener('click', (e) => e.target === authModal && closeAuthModal());
+
+            // --- TAB SWITCHING LOGIC ---
             function switchTab(activeTab) {
+                const tabs = {
+                    meal: { btn: mealPlanTab, content: mealPlanContent },
+                    symptom: { btn: symptomTrackerTab, content: symptomTrackerContent },
+                    journey: { btn: journeyTab, content: journeyContent }
+                };
+
                 Object.keys(tabs).forEach(key => {
                     tabs[key].btn.classList.remove('active');
                     tabs[key].content.classList.remove('active');
@@ -1163,7 +1198,10 @@
                 if (!userId) return;
 
                 if (activeTab === 'meal') {
-                    generateDailyInsights();
+                    updatePartnerTips();
+                    updateHydrationAndSnacks();
+                    updatePartnerAvoidTips();
+                    updateHydrationAvoidTips();
                 } else if (activeTab === 'symptom') {
                     updateDashboardUI();
                     if (!wellnessChart) renderWellnessChart();
@@ -1175,366 +1213,364 @@
             symptomTrackerTab.addEventListener('click', () => switchTab('symptom'));
             journeyTab.addEventListener('click', () => switchTab('journey'));
 
-            // --- MEAL PLANNER LOGIC ---
-            const days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
-            const mealTypes = ["breakfast", "lunch", "snackAM", "snackPM", "dinner"];
-            const mealTypeHeaders = { breakfast: "Breakfast", lunch: "Lunch", snackAM: "AM Snack", snackPM: "PM Snack", dinner: "Dinner" };
 
+            // --- DATA INITIALIZATION & LOADING ---
+            async function initializeMealOptions() {
+                if (!mealOptionsRef) return;
+                const docSnap = await getDoc(mealOptionsRef);
+                if (!docSnap.exists()) await setDoc(mealOptionsRef, defaultMealOptions);
+            }
+            
+            async function initializeCustomMealNutrients() {
+                if (!customMealNutrientsRef) return;
+                const docSnap = await getDoc(customMealNutrientsRef);
+                if (!docSnap.exists()) await setDoc(customMealNutrientsRef, {});
+            }
+
+            async function initializeSupplements() {
+                if (userSupplementsRef && supplementNutrientsRef) {
+                    const listSnap = await getDoc(userSupplementsRef);
+                    if (!listSnap.exists()) await setDoc(userSupplementsRef, { list: [] });
+                    const nutrientsSnap = await getDoc(supplementNutrientsRef);
+                    if (!nutrientsSnap.exists()) await setDoc(supplementNutrientsRef, {});
+                }
+            }
+            
             function loadMealPlan() {
                 if (!mealPlanRef) return;
-                unsubscribeMealPlan = onSnapshot(mealPlanRef, (docSnap) => {
-                    if (docSnap.exists()) {
-                        currentMealPlanData = docSnap.data();
-                    } else {
-                        setDoc(mealPlanRef, defaultMealPlan);
-                        currentMealPlanData = { ...defaultMealPlan };
+                if (unsubscribeMealPlan) unsubscribeMealPlan();
+                unsubscribeMealPlan = onSnapshot(mealPlanRef, async (docSnap) => {
+                    loadingSpinner.style.display = 'none'; mealPlanGrid.style.display = 'grid';
+                    let data = docSnap.exists() ? docSnap.data() : defaultMealPlan;
+                    if (!docSnap.exists()) await setDoc(mealPlanRef, defaultMealPlan);
+                    currentMealPlanData = data;
+                    renderMealPlan(data);
+                    if (symptomTrackerContent.classList.contains('active')) updateDashboardUI();
+                }, (error) => console.error("Error listening to meal plan:", error));
+            }
+
+            function loadMealOptions() {
+                if (!mealOptionsRef) return;
+                if (unsubscribeMealOptions) unsubscribeMealOptions();
+                unsubscribeMealOptions = onSnapshot(mealOptionsRef, (docSnap) => {
+                    dynamicMealOptions = docSnap.exists() ? docSnap.data() : { ...defaultMealOptions };
+                    if (manageMealsModal.classList.contains('active')) populateMealList();
+                }, (error) => console.error("Error listening to meal options:", error));
+            }
+            
+            function loadCustomMealNutrients() {
+                if (!customMealNutrientsRef) return;
+                if (unsubscribeCustomMealNutrients) unsubscribeCustomMealNutrients();
+                unsubscribeCustomMealNutrients = onSnapshot(customMealNutrientsRef, (docSnap) => {
+                    customMealNutrients = docSnap.exists() ? docSnap.data() : {};
+                     if (manageMealsModal.classList.contains('active')) populateMealList();
+                }, (error) => console.error("Error listening to custom meal nutrients:", error));
+            }
+
+            function loadSupplements() {
+                if (userSupplementsRef) {
+                    if (unsubscribeUserSupplements) unsubscribeUserSupplements();
+                    unsubscribeUserSupplements = onSnapshot(userSupplementsRef, (docSnap) => {
+                        userSupplements = docSnap.exists() ? docSnap.data().list || [] : [];
+                        if (manageSupplementsModal.classList.contains('active')) populateSupplementList();
+                    });
+                }
+                if (supplementNutrientsRef) {
+                    if (unsubscribeSupplementNutrients) unsubscribeSupplementNutrients();
+                    unsubscribeSupplementNutrients = onSnapshot(supplementNutrientsRef, (docSnap) => {
+                        supplementNutrients = docSnap.exists() ? docSnap.data() : {};
+                         if (manageSupplementsModal.classList.contains('active')) populateSupplementList();
+                    });
+                }
+            }
+
+            function loadWellnessData() {
+                if (!wellnessDataRef) return;
+                if(unsubscribeWellnessData) unsubscribeWellnessData();
+                unsubscribeWellnessData = onSnapshot(wellnessDataRef, (docSnap) => {
+                    if(docSnap.exists()){
+                        const firestoreData = docSnap.data();
+                        const mergedSleep = { ...defaultWellnessData.sleep, ...firestoreData.sleep };
+                        const mergedWeeklyLog = { ...defaultWellnessData.weeklyLog, ...firestoreData.weeklyLog };
+                        const mergedSupplements = { ...defaultWellnessData.dailySupplements, ...firestoreData.dailySupplements };
+                        wellnessData = {
+                            ...defaultWellnessData,
+                            ...firestoreData,
+                            dailyNutrition: firestoreData.dailyNutrition || {},
+                            dailySupplements: mergedSupplements,
+                            sleep: mergedSleep,
+                            weeklyLog: mergedWeeklyLog,
+                            mood: { ...defaultWellnessData.mood, ...firestoreData.mood },
+                            water: { ...defaultWellnessData.water, ...firestoreData.water },
+                            energy: { ...defaultWellnessData.energy, ...firestoreData.energy },
+                        };
+                        updateDashboardUI();
+                        updateWellnessChartData();
                     }
-                    renderMealPlan();
-                    updateNutritionTracker();
                 });
             }
 
-            function renderMealPlan() {
-                mealPlanGrid.innerHTML = '';
-                loadingSpinner.style.display = 'none';
+            // --- MEAL PLANNER LOGIC ---
+            async function updateMealPlan(meal, day, value) {
+                if (!mealPlanRef) return;
+                await updateDoc(mealPlanRef, { [`${meal}.${day}`]: value });
+            }
+            
+            const mealMap = { breakfast: { title: "Breakfast" }, lunch: { title: "Lunch" }, snackAM: { title: "Snack (AM)", optionsKey: 'snack' }, snackPM: { title: "Snack (PM)", optionsKey: 'snack' }, dinner: { title: "Dinner" } };
+            const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+            const dayTitles = { monday: 'Monday', tuesday: 'Tuesday', wednesday: 'Wednesday', thursday: 'Thursday', friday: 'Friday', saturday: 'Saturday', sunday: 'Sunday' };
 
-                // Add empty header for meal type column
-                mealPlanGrid.appendChild(document.createElement('div'));
-
-                days.forEach(day => {
-                    const dayHeader = document.createElement('div');
-                    dayHeader.className = 'grid-header day-header';
-                    dayHeader.textContent = day.charAt(0).toUpperCase() + day.slice(1);
-                    dayHeader.dataset.day = day;
-                    dayHeader.addEventListener('click', () => openAiMealModal(day));
-                    mealPlanGrid.appendChild(dayHeader);
+            function renderMealPlan(data) {
+                mealPlanGrid.innerHTML = ''; 
+                mealPlanGrid.appendChild(createGridHeader(''));
+                days.forEach(dayKey => {
+                    const header = createGridHeader(dayTitles[dayKey]);
+                    header.classList.add('day-header');
+                    header.addEventListener('click', () => openAiMealPlannerModal(dayKey));
+                    mealPlanGrid.appendChild(header);
                 });
 
-                mealTypes.forEach(mealType => {
-                    const mealTypeHeader = document.createElement('div');
-                    mealTypeHeader.className = 'grid-header';
-                    mealTypeHeader.textContent = mealTypeHeaders[mealType];
-                    mealPlanGrid.appendChild(mealTypeHeader);
-
-                    days.forEach(day => {
-                        const mealSlot = document.createElement('div');
-                        const meal = currentMealPlanData[mealType] ? currentMealPlanData[mealType][day] : '';
-                        mealSlot.textContent = meal || 'Click to set';
-                        mealSlot.className = `meal-slot ${meal ? '' : 'empty'}`;
-                        mealSlot.dataset.day = day;
-                        mealSlot.dataset.mealType = mealType;
-                        mealSlot.addEventListener('click', () => openMealModal(day, mealType));
-                        mealPlanGrid.appendChild(mealSlot);
+                Object.keys(mealMap).forEach(mealKey => {
+                    const mealInfo = mealMap[mealKey];
+                    const mealData = data[mealKey] || {};
+                    mealPlanGrid.appendChild(createGridHeader(mealInfo.title));
+                    days.forEach(dayKey => {
+                        const selectedValue = mealData[dayKey] || '';
+                        const slot = document.createElement('div');
+                        slot.className = 'meal-slot';
+                        slot.textContent = selectedValue || 'Tap to select...';
+                        if (!selectedValue) slot.classList.add('empty');
+                        slot.dataset.meal = mealKey;
+                        slot.dataset.day = dayKey;
+                        slot.addEventListener('click', () => openModal(mealKey, dayKey, selectedValue));
+                        mealPlanGrid.appendChild(slot);
                     });
                 });
             }
 
-            function openMealModal(day, mealType) {
-                modalTitle.textContent = `Set ${mealTypeHeaders[mealType]} for ${day.charAt(0).toUpperCase() + day.slice(1)}`;
-                const mealCategory = (mealType === 'snackAM' || mealType === 'snackPM') ? 'snack' : mealType;
-                populateMealSelect(mealCategory, currentMealPlanData[mealType][day]);
-                modal.dataset.day = day;
-                modal.dataset.mealType = mealType;
+            function createGridHeader(text) {
+                const header = document.createElement('div');
+                header.className = 'grid-header';
+                header.textContent = text;
+                return header;
+            }
+
+            let currentMeal, currentDay, currentMealKeyForManage;
+
+            function openModal(mealKey, dayKey, currentValue) {
+                currentMeal = mealKey;
+                currentDay = dayKey;
+                currentMealKeyForManage = mealMap[mealKey].optionsKey || mealKey;
+                const mealInfo = mealMap[mealKey];
+                modalTitle.textContent = `${mealInfo.title} - ${dayTitles[dayKey]}`;
+                populateMealSelect(currentMealKeyForManage, currentValue);
                 modal.classList.remove('hidden');
                 setTimeout(() => modal.classList.add('active'), 10);
             }
-
-            function populateMealSelect(mealCategory, currentSelection) {
-                modalSelect.innerHTML = '<option value="">-- Select or Clear --</option>';
-                const options = dynamicMealOptions[mealCategory] || [];
-                options.forEach(meal => {
+            function populateMealSelect(mealOptionsKey, currentValue) {
+                modalSelect.innerHTML = '';
+                const defaultOption = document.createElement('option');
+                defaultOption.textContent = 'Select a meal...';
+                defaultOption.value = '';
+                modalSelect.appendChild(defaultOption);
+                const options = dynamicMealOptions[mealOptionsKey] || [];
+                options.forEach(optionText => {
                     const option = document.createElement('option');
-                    option.value = meal;
-                    option.textContent = meal;
-                    if (meal === currentSelection) {
-                        option.selected = true;
-                    }
+                    option.value = optionText;
+                    option.textContent = optionText;
+                    if (optionText === currentValue) option.selected = true;
                     modalSelect.appendChild(option);
                 });
             }
-            
-            modalSelect.addEventListener('change', async (e) => {
-                const day = modal.dataset.day;
-                const mealType = modal.dataset.mealType;
-                const newMeal = e.target.value;
-                currentMealPlanData[mealType][day] = newMeal;
-                await setDoc(mealPlanRef, currentMealPlanData);
-            });
 
-            modalCloseBtn.addEventListener('click', () => {
-                modal.classList.remove('active');
-                setTimeout(() => modal.classList.add('hidden'), 300);
-            });
+            function closeModal() { modal.classList.remove('active'); setTimeout(() => modal.classList.add('hidden'), 300); }
+            function openManageMealsModal() { manageModalTitle.textContent = `Manage ${mealMap[currentMeal].title} Options`; populateMealList(); manageMealsModal.classList.remove('hidden'); setTimeout(() => manageMealsModal.classList.add('active'), 10); }
+            function closeManageMealsModal() { apiFeedback.classList.add('hidden'); newMealInput.value = ''; manageMealsModal.classList.remove('active'); setTimeout(() => manageMealsModal.classList.add('hidden'), 300); }
             
-            // Manage Meals Modal Logic
-            manageMealsBtn.addEventListener('click', () => {
-                const mealType = modal.dataset.mealType;
-                const mealCategory = (mealType === 'snackAM' || mealType === 'snackPM') ? 'snack' : mealType;
-                manageModalTitle.textContent = `Manage ${mealTypeHeaders[mealType]} Meals`;
-                manageModalTitle.dataset.mealCategory = mealCategory;
-                renderMealOptions(mealCategory);
-                manageMealsModal.classList.remove('hidden');
-                setTimeout(() => manageMealsModal.classList.add('active'), 10);
-            });
-            
-            manageModalCloseBtn.addEventListener('click', () => {
-                manageMealsModal.classList.remove('active');
-                setTimeout(() => manageMealsModal.classList.add('hidden'), 300);
-            });
-
-            function renderMealOptions(mealCategory) {
+            function populateMealList() {
                 mealListContainer.innerHTML = '';
-                const options = dynamicMealOptions[mealCategory] || [];
-                if (options.length === 0) {
-                    mealListContainer.innerHTML = `<p class="text-gray-400 text-center">No custom meals added yet.</p>`;
+                const meals = dynamicMealOptions[currentMealKeyForManage] || [];
+                const allNutrients = { ...mealNutrients, ...customMealNutrients };
+
+                if (meals.length === 0) {
+                    mealListContainer.innerHTML = `<p class="text-center text-gray-400">No meals added yet.</p>`;
                     return;
                 }
-                options.forEach(meal => {
-                    const mealDiv = document.createElement('div');
-                    mealDiv.className = 'flex items-center justify-between p-3 bg-white/5 rounded-lg';
-                    mealDiv.innerHTML = `
-                        <span>${meal}</span>
-                        <div>
-                            <button class="edit-meal-btn icon-btn" data-meal="${meal}" data-key="${mealCategory}-${options.indexOf(meal)}"><svg class="w-5 h-5 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
-                            <button class="delete-meal-btn icon-btn" data-meal="${meal}" data-key="${mealCategory}"><svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                meals.forEach(meal => {
+                    const item = document.createElement('div');
+                    item.className = 'flex items-center justify-between p-3 bg-white bg-opacity-5 rounded-lg';
+                    const nutrients = allNutrients[meal] || { iron: '?', calcium: '?', folate: '?', fiber: '?' };
+
+                    item.innerHTML = `
+                        <div class="flex-1 pr-2">
+                            <span class="font-semibold text-white">${meal}</span>
+                            <div class="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs mt-1.5 text-gray-300">
+                                <span class="flex items-center" title="Iron"><svg class="w-3 h-3 mr-1 text-red-300" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path></svg>Iron: ${nutrients.iron}</span>
+                                <span class="flex items-center" title="Calcium"><svg class="w-3 h-3 mr-1 text-blue-300" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.706-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm-.707 7.072l.707-.707a1 1 0 10-1.414-1.414l-.707.707a1 1 0 001.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 100 2h1z"></path></svg>Ca: ${nutrients.calcium}</span>
+                                <span class="flex items-center" title="Folate"><svg class="w-3 h-3 mr-1 text-green-300" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>Folate: ${nutrients.folate}</span>
+                                <span class="flex items-center" title="Fiber"><svg class="w-3 h-3 mr-1 text-yellow-300" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path></svg>Fiber: ${nutrients.fiber}</span>
+                            </div>
                         </div>
-                    `;
-                    mealListContainer.appendChild(mealDiv);
-                });
-                
-                mealListContainer.querySelectorAll('.delete-meal-btn').forEach(btn => {
-                    btn.addEventListener('click', async (e) => {
-                        const meal = e.currentTarget.dataset.meal;
-                        const mealCategory = e.currentTarget.dataset.key;
-                        await deleteMeal(meal, mealCategory);
-                    });
-                });
-
-                mealListContainer.querySelectorAll('.edit-meal-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const meal = e.currentTarget.dataset.meal;
-                        const key = e.currentTarget.dataset.key;
-                        openEditMealModal(key, meal);
-                    });
+                        <div class="flex items-center">
+                            <button class="icon-btn edit-btn" data-meal="${meal}"><svg class="w-5 h-5 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L14.732 3.732z"></path></svg></button>
+                            <button class="icon-btn delete-btn" data-meal="${meal}"><svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                        </div>`;
+                    item.querySelector('.delete-btn').addEventListener('click', () => deleteMeal(currentMealKeyForManage, meal));
+                    item.querySelector('.edit-btn').addEventListener('click', () => openEditModal(currentMealKeyForManage, meal));
+                    mealListContainer.appendChild(item);
                 });
             }
-            
-            async function deleteMeal(meal, mealCategory) {
-                // Remove from meal options
-                const mealIndex = dynamicMealOptions[mealCategory].indexOf(meal);
-                if (mealIndex > -1) {
-                    dynamicMealOptions[mealCategory].splice(mealIndex, 1);
+
+            async function deleteMeal(key, mealToDelete) {
+                const currentMeals = [...(dynamicMealOptions[key] || [])];
+                const newMeals = currentMeals.filter(m => m !== mealToDelete);
+                await updateDoc(mealOptionsRef, { [key]: newMeals });
+                if (customMealNutrientsRef) {
+                    await updateDoc(customMealNutrientsRef, { [mealToDelete]: deleteField() });
                 }
-                await setDoc(mealOptionsRef, dynamicMealOptions, { merge: true });
-
-                // Remove from custom nutrients
-                delete customMealNutrients[meal];
-                await setDoc(customMealNutrientsRef, { nutrients: customMealNutrients });
-
-                // Clear from meal plan
-                Object.keys(currentMealPlanData).forEach(mealType => {
-                    Object.keys(currentMealPlanData[mealType]).forEach(day => {
-                        if (currentMealPlanData[mealType][day] === meal) {
-                            currentMealPlanData[mealType][day] = '';
-                        }
-                    });
-                });
-                await setDoc(mealPlanRef, currentMealPlanData);
-
-                renderMealOptions(mealCategory);
             }
 
-            function openEditMealModal(key, oldMeal) {
+            let saveEditHandler = null; 
+            function openEditModal(key, oldMeal) {
                 editMealInput.value = oldMeal;
                 editApiFeedback.classList.add('hidden');
-                editMealModal.dataset.key = key;
-                editMealModal.dataset.oldMeal = oldMeal;
+                if (saveEditHandler) { editModalSaveBtn.removeEventListener('click', saveEditHandler); }
+                saveEditHandler = () => handleSaveEdit(key, oldMeal);
+                editModalSaveBtn.addEventListener('click', saveEditHandler);
                 editMealModal.classList.remove('hidden');
                 setTimeout(() => editMealModal.classList.add('active'), 10);
             }
-            
-            editModalCancelBtn.addEventListener('click', () => {
+
+            function closeEditModal() {
+                if (saveEditHandler) { editModalSaveBtn.removeEventListener('click', saveEditHandler); saveEditHandler = null; }
                 editMealModal.classList.remove('active');
                 setTimeout(() => editMealModal.classList.add('hidden'), 300);
-            });
-            
-            editModalSaveBtn.addEventListener('click', () => {
-                const key = editMealModal.dataset.key;
-                const oldMeal = editMealModal.dataset.oldMeal;
-                handleSaveEdit(key, oldMeal);
-            });
+            }
 
             async function handleSaveEdit(key, oldMeal) {
                 const newMeal = editMealInput.value.trim();
                 if (!newMeal || newMeal === oldMeal) return;
-                editApiLoader.classList.remove('hidden');
-                editMealText.textContent = 'Checking...';
-                editModalSaveBtn.disabled = true;
-                editApiFeedback.classList.add('hidden');
+                editApiLoader.classList.remove('hidden'); editMealText.textContent = 'Checking...'; editModalSaveBtn.disabled = true; editApiFeedback.classList.add('hidden');
                 const systemPrompt = `You are a helpful and friendly prenatal nutritionist. Your goal is to evaluate if a meal is healthy and suitable for a pregnant woman, especially in the first trimester. If the meal is suitable, provide an estimated nutritional profile with integer values from 0 (none) to 3 (high) for iron, calcium, folate, and fiber. Your response must be in JSON format according to the provided schema. If the meal is not suitable, set isSuitable to false and explain why.`;
                 const userQuery = `Evaluate this meal: "${newMeal}"`;
-                const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
-                const payload = {
-                    contents: [{ parts: [{ text: userQuery }] }],
-                    systemInstruction: { parts: [{ text: systemPrompt }] },
-                    generationConfig: {
-                        responseMimeType: "application/json",
-                        responseSchema: {
-                            type: "OBJECT",
-                            properties: {
-                                "isSuitable": { "type": "BOOLEAN" },
-                                "reason": { "type": "STRING" },
-                                "nutrients": {
-                                    "type": "OBJECT",
-                                    "properties": {
-                                        "iron": { "type": "INTEGER" },
-                                        "calcium": { "type": "INTEGER" },
-                                        "folate": { "type": "INTEGER" },
-                                        "fiber": { "type": "INTEGER" }
-                                    }
+                const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                const payload = { 
+                    contents: [{ parts: [{ text: userQuery }] }], 
+                    systemInstruction: { parts: [{ text: systemPrompt }] }, 
+                    generationConfig: { 
+                        responseMimeType: "application/json", 
+                        responseSchema: { 
+                            type: "OBJECT", 
+                            properties: { 
+                                "isSuitable": { "type": "BOOLEAN" }, 
+                                "mealName": { "type": "STRING" }, 
+                                "reasoning": { "type": "STRING" }, 
+                                "alternatives": { "type": "ARRAY", "items": { "type": "STRING" } },
+                                "nutrients": { 
+                                    "type": "OBJECT", 
+                                    "properties": { "iron": {"type": "NUMBER"}, "calcium": {"type": "NUMBER"}, "folate": {"type": "NUMBER"}, "fiber": {"type": "NUMBER"}}
                                 }
-                            }
-                        }
-                    }
+                            }, 
+                            required: ["isSuitable", "mealName"] 
+                        } 
+                    } 
                 };
                 try {
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                    if (!response.ok) throw new Error('API response not OK');
-                    const result = await response.json();
-                    const aiResponse = JSON.parse(result.candidates[0].content.parts[0].text);
-
-                    if (aiResponse.isSuitable) {
-                        editApiFeedback.classList.remove('hidden', 'bg-red-500');
-                        editApiFeedback.classList.add('bg-green-500');
-                        editApiFeedback.textContent = 'Meal is suitable! Saving...';
-
-                        const mealTypeKey = key.split('-')[0];
-                        const mealCategory = (mealTypeKey === 'snackAM' || mealTypeKey === 'snackPM') ? 'snack' : mealTypeKey;
-                        const oldMealOptions = dynamicMealOptions[mealCategory] || [];
-                        const mealIndex = oldMealOptions.indexOf(oldMeal);
-                        if (mealIndex > -1) {
-                            oldMealOptions[mealIndex] = newMeal;
+                    if (!response.ok) throw new Error(`API error: ${response.statusText}`);
+                    const result = await response.json(); const text = result.candidates[0].content.parts[0].text; const data = JSON.parse(text);
+                    if (data.isSuitable) {
+                        const currentMeals = [...(dynamicMealOptions[key] || [])];
+                        if (currentMeals.includes(data.mealName) && data.mealName !== oldMeal) { showApiFeedback(`"${data.mealName}" is already on the list.`, 'warning', editApiFeedback); return; }
+                        const mealIndex = currentMeals.indexOf(oldMeal);
+                        if (mealIndex > -1) { 
+                            currentMeals[mealIndex] = data.mealName; 
+                            await updateDoc(mealOptionsRef, { [key]: currentMeals }); 
+                            await updateMealPlanGrid(oldMeal, data.mealName);
+                            if (customMealNutrientsRef && data.nutrients) {
+                                let nutrientUpdate = { [data.mealName]: data.nutrients };
+                                if (oldMeal !== data.mealName) nutrientUpdate[oldMeal] = deleteField();
+                                await updateDoc(customMealNutrientsRef, nutrientUpdate);
+                            }
+                            closeEditModal(); 
                         }
-                        await setDoc(mealOptionsRef, dynamicMealOptions, { merge: true });
-
-                        delete customMealNutrients[oldMeal];
-                        customMealNutrients[newMeal] = aiResponse.nutrients;
-                        await setDoc(customMealNutrientsRef, { nutrients: customMealNutrients });
-
-                        Object.keys(currentMealPlanData).forEach(mealType => {
-                            Object.keys(currentMealPlanData[mealType]).forEach(day => {
-                                if (currentMealPlanData[mealType][day] === oldMeal) {
-                                    currentMealPlanData[mealType][day] = newMeal;
-                                }
-                            });
-                        });
-                        await setDoc(mealPlanRef, currentMealPlanData);
-
-                        setTimeout(() => {
-                            editMealModal.classList.add('hidden');
-                            editMealModal.classList.remove('active');
-                            renderMealOptions(mealCategory);
-                        }, 1500);
-
                     } else {
-                        editApiFeedback.classList.remove('hidden', 'bg-green-500');
-                        editApiFeedback.classList.add('bg-red-500');
-                        editApiFeedback.textContent = `Suggestion: ${aiResponse.reason}`;
+                        let feedback = `<strong>That might not be the best choice.</strong><br>${data.reasoning}`;
+                        if (data.alternatives && data.alternatives.length > 0) { feedback += `<br>Maybe try: ${data.alternatives.join(' or ')}.`; }
+                        showApiFeedback(feedback, 'error', editApiFeedback);
                     }
-                } catch (error) {
-                    console.error("Error checking meal:", error);
-                    editApiFeedback.classList.remove('hidden', 'bg-green-500');
-                    editApiFeedback.classList.add('bg-red-500');
-                    editApiFeedback.textContent = 'Could not verify meal. Please try again.';
-                } finally {
-                    editApiLoader.classList.add('hidden');
-                    editMealText.textContent = 'Check & Save';
-                    editModalSaveBtn.disabled = false;
-                }
+                } catch (error) { console.error("Gemini API call failed during edit:", error); showApiFeedback("Sorry, I couldn't verify that meal right now. Please try again.", 'error', editApiFeedback); } finally { editApiLoader.classList.add('hidden'); editMealText.textContent = 'Check & Save'; editModalSaveBtn.disabled = false; }
             }
-            
+
+            async function updateMealPlanGrid(oldMealName, newMealName) {
+                if (!mealPlanRef) return;
+                const mealPlanSnap = await getDoc(mealPlanRef);
+                if (!mealPlanSnap.exists()) return;
+                const currentPlan = mealPlanSnap.data(); const updates = {}; let hasUpdates = false;
+                for (const mealKey in currentPlan) { for (const dayKey in currentPlan[mealKey]) { if (currentPlan[mealKey][dayKey] === oldMealName) { updates[`${mealKey}.${dayKey}`] = newMealName; hasUpdates = true; } } }
+                if (hasUpdates) { await updateDoc(mealPlanRef, updates); }
+            }
+
             async function handleAddMeal() {
-                const userMeal = newMealInput.value.trim();
-                if (!userMeal) return;
-                apiLoader.classList.remove('hidden');
-                addMealText.textContent = 'Checking...';
-                addMealBtn.disabled = true;
-                apiFeedback.classList.add('hidden');
+                const userMeal = newMealInput.value.trim(); if (!userMeal) return;
+                apiLoader.classList.remove('hidden'); addMealText.textContent = 'Checking...'; addMealBtn.disabled = true; apiFeedback.classList.add('hidden');
                 const systemPrompt = `You are a helpful and friendly prenatal nutritionist. Your goal is to evaluate if a meal is healthy and suitable for a pregnant woman, especially in the first trimester. If the meal is suitable, provide an estimated nutritional profile with integer values from 0 (none) to 3 (high) for iron, calcium, folate, and fiber. Your response must be in JSON format according to the provided schema. If the meal is not suitable, set isSuitable to false and explain why.`;
-                const userQuery = `Evaluate this meal: "${userMeal}"`;
-                const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
-                const payload = {
-                    contents: [{ parts: [{ text: userQuery }] }],
-                    systemInstruction: { parts: [{ text: systemPrompt }] },
-                    generationConfig: {
-                        responseMimeType: "application/json",
-                        responseSchema: {
-                            type: "OBJECT",
-                            properties: {
-                                "isSuitable": { "type": "BOOLEAN" },
-                                "reason": { "type": "STRING" },
-                                "nutrients": {
-                                    "type": "OBJECT",
-                                    "properties": {
-                                        "iron": { "type": "INTEGER" },
-                                        "calcium": { "type": "INTEGER" },
-                                        "folate": { "type": "INTEGER" },
-                                        "fiber": { "type": "INTEGER" }
-                                    }
+                const userQuery = `Evaluate this meal: "${userMeal}"`; const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                const payload = { 
+                    contents: [{ parts: [{ text: userQuery }] }], 
+                    systemInstruction: { parts: [{ text: systemPrompt }] }, 
+                    generationConfig: { 
+                        responseMimeType: "application/json", 
+                        responseSchema: { 
+                            type: "OBJECT", 
+                            properties: { 
+                                "isSuitable": { "type": "BOOLEAN" }, 
+                                "mealName": { "type": "STRING" }, 
+                                "reasoning": { "type": "STRING" }, 
+                                "alternatives": { "type": "ARRAY", "items": { "type": "STRING" } },
+                                "nutrients": { 
+                                    "type": "OBJECT", 
+                                    "properties": { "iron": {"type": "NUMBER"}, "calcium": {"type": "NUMBER"}, "folate": {"type": "NUMBER"}, "fiber": {"type": "NUMBER"}}
                                 }
-                            }
-                        }
-                    }
+                            }, 
+                            required: ["isSuitable", "mealName"] 
+                        } 
+                    } 
                 };
                 try {
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                    if (!response.ok) throw new Error('API response not OK');
-                    const result = await response.json();
-                    const aiResponse = JSON.parse(result.candidates[0].content.parts[0].text);
-
-                    if (aiResponse.isSuitable) {
-                        apiFeedback.classList.remove('hidden', 'bg-red-500');
-                        apiFeedback.classList.add('bg-green-500');
-                        apiFeedback.textContent = 'Meal is suitable and has been added!';
-
-                        const mealCategory = manageModalTitle.dataset.mealCategory;
-
-                        if (!dynamicMealOptions[mealCategory]) {
-                            dynamicMealOptions[mealCategory] = [];
-                        }
-                        dynamicMealOptions[mealCategory].push(userMeal);
-                        await setDoc(mealOptionsRef, dynamicMealOptions, { merge: true });
-
-                        customMealNutrients[userMeal] = aiResponse.nutrients;
-                        await setDoc(customMealNutrientsRef, { nutrients: customMealNutrients });
-
-                        newMealInput.value = '';
-                        setTimeout(() => apiFeedback.classList.add('hidden'), 3000);
-                        renderMealOptions(mealCategory);
-
+                    if (!response.ok) throw new Error(`API error: ${response.statusText}`);
+                    const result = await response.json(); const text = result.candidates[0].content.parts[0].text; const data = JSON.parse(text);
+                    if (data.isSuitable) {
+                        const currentMeals = [...(dynamicMealOptions[currentMealKeyForManage] || [])];
+                        if (!currentMeals.includes(data.mealName)) { 
+                            currentMeals.push(data.mealName); 
+                            await updateDoc(mealOptionsRef, { [currentMealKeyForManage]: currentMeals });
+                            if (customMealNutrientsRef && data.nutrients) {
+                                await updateDoc(customMealNutrientsRef, { [data.mealName]: data.nutrients });
+                            }
+                            newMealInput.value = ''; 
+                            showApiFeedback(`Success! "${data.mealName}" was added.`, 'success', apiFeedback);
+                        } else { showApiFeedback(`"${data.mealName}" is already on the list.`, 'warning', apiFeedback); }
                     } else {
-                        apiFeedback.classList.remove('hidden', 'bg-green-500');
-                        apiFeedback.classList.add('bg-red-500');
-                        apiFeedback.textContent = `Suggestion: ${aiResponse.reason}`;
+                        let feedback = `<strong>That might not be the best choice.</strong><br>${data.reasoning}`;
+                        if (data.alternatives && data.alternatives.length > 0) { feedback += `<br>Maybe try: ${data.alternatives.join(' or ')}.`; }
+                        showApiFeedback(feedback, 'error', apiFeedback);
                     }
-                } catch (error) {
-                    console.error("Error checking meal:", error);
-                    apiFeedback.classList.remove('hidden', 'bg-green-500');
-                    apiFeedback.classList.add('bg-red-500');
-                    apiFeedback.textContent = 'Could not verify meal. Please try again.';
-                } finally {
-                    apiLoader.classList.add('hidden');
-                    addMealText.textContent = 'Check & Add Meal';
-                    addMealBtn.disabled = false;
-                }
+                } catch (error) { console.error("Gemini API call failed:", error); showApiFeedback("Sorry, I couldn't verify that meal right now. Please try again.", 'error', apiFeedback); } finally { apiLoader.classList.add('hidden'); addMealText.textContent = 'Check & Add Meal'; addMealBtn.disabled = false; }
             }
-            addMealBtn.addEventListener('click', handleAddMeal);
             
-            function openAiMealModal(day) {
-                currentDayForAI = day;
-                aiModalTitle.textContent = `AI Meal Plan for ${day.charAt(0).toUpperCase() + day.slice(1)}`;
+            function showApiFeedback(message, type, element) {
+                element.innerHTML = message; element.className = 'text-sm p-3 rounded-md bg-opacity-20';
+                if (type === 'success') element.classList.add('bg-green-500', 'text-green-200'); else if (type === 'error') element.classList.add('bg-red-500', 'text-red-200'); else if (type === 'warning') element.classList.add('bg-yellow-500', 'text-yellow-200');
+                element.classList.remove('hidden');
+            }
+
+            // --- AI MEAL PLANNER LOGIC ---
+            function openAiMealPlannerModal(dayKey) {
+                currentDayForAI = dayKey;
+                lastCraving = null;
+                aiModalTitle.textContent = `AI Meal Plan for ${dayTitles[dayKey]}`;
                 aiMealInitialView.classList.remove('hidden');
                 aiMealPlanContainer.classList.add('hidden');
                 aiMealButtons.classList.add('hidden');
@@ -1543,45 +1579,45 @@
                 setTimeout(() => aiMealModal.classList.add('active'), 10);
             }
 
-            aiMealCloseBtn.addEventListener('click', () => {
-                 aiMealModal.classList.remove('active');
-                 setTimeout(() => aiMealModal.classList.add('hidden'), 300);
-            });
-
-            aiSuggestionBtn.addEventListener('click', () => generateAiMealPlan());
-            generateFromCravingBtn.addEventListener('click', () => {
-                const craving = cravingInput.value.trim();
-                generateAiMealPlan(craving || null);
-            });
+            function closeAiMealPlannerModal() {
+                aiMealModal.classList.remove('active');
+                setTimeout(() => aiMealModal.classList.add('hidden'), 300);
+            }
             
-            aiMealRegenerateBtn.addEventListener('click', () => generateAiMealPlan(lastCraving));
-            
-            aiMealSaveBtn.addEventListener('click', async () => {
-                if (!currentGeneratedPlan || !currentDayForAI) return;
-                currentMealPlanData.breakfast[currentDayForAI] = currentGeneratedPlan.breakfast;
-                currentMealPlanData.lunch[currentDayForAI] = currentGeneratedPlan.lunch;
-                currentMealPlanData.snackAM[currentDayForAI] = currentGeneratedPlan.snackAM;
-                currentMealPlanData.snackPM[currentDayForAI] = currentGeneratedPlan.snackPM;
-                currentMealPlanData.dinner[currentDayForAI] = currentGeneratedPlan.dinner;
-                await setDoc(mealPlanRef, currentMealPlanData);
-                aiMealCloseBtn.click();
-            });
-
-            async function generateAiMealPlan(craving = null) {
+            async function generateAiMealPlan(dayKey, craving) {
+                currentGeneratedPlan = null;
+                lastCraving = craving; 
                 aiMealInitialView.classList.add('hidden');
                 aiMealPlanContainer.classList.remove('hidden');
                 aiMealLoader.classList.remove('hidden');
                 aiMealPlanDisplay.classList.add('hidden');
                 aiMealFeedback.classList.add('hidden');
                 aiMealButtons.classList.add('hidden');
-                lastCraving = craving;
-
-                const pregnancyWeek = Math.floor(Math.abs(new Date() - new Date(wellnessData.pregnancyStartDate)) / (1000 * 60 * 60 * 24 * 7));
-                const systemPrompt = `You are a helpful prenatal nutritionist. Generate a balanced, healthy one-day meal plan (breakfast, lunch, snackAM, snackPM, dinner) for a pregnant woman in week ${pregnancyWeek}. The meals should be simple and easy to prepare. If a craving is provided, incorporate it naturally into the plan. Provide a short, one-sentence feedback comment on the overall plan. Respond ONLY in the specified JSON format.`;
-                let userQuery = `Generate a meal plan for one day.`;
-                if (craving) userQuery += ` The user is craving: "${craving}".`
+                const pregnancyStartDate = new Date(wellnessData.pregnancyStartDate);
+                const today = new Date();
+                const diffTime = Math.abs(today - pregnancyStartDate);
+                const pregnancyWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7));
+                const breakfastOpts = dynamicMealOptions.breakfast || [];
+                const lunchOpts = dynamicMealOptions.lunch || [];
+                const snackOpts = dynamicMealOptions.snack || [];
+                const dinnerOpts = dynamicMealOptions.dinner || [];
+                const cravingText = craving ? `The user's specific craving today is "${craving}".` : "The user has not specified a craving, so create a generally balanced and appealing plan.";
+                const systemPrompt = `You are an expert prenatal nutritionist creating a one-day meal plan for a woman in week ${pregnancyWeek} of her pregnancy. This is part of an ongoing session, so each plan you generate must be unique and different from previous suggestions.
+1.  **Primary Goal**: Create a complete, balanced, and varied one-day meal plan. You MUST provide a suggestion for all five meal slots: Breakfast, Snack AM, Lunch, Snack PM, and Dinner.
+2.  **Handle the Craving**: ${cravingText} If there is a craving, you must incorporate it creatively into one of the meal slots.
+3.  **Meal Selection Flexibility**: To build the rest of the plan, you can use a mix of two sources:
+    a) Select suitable meals from the user's provided 'Available meal options' list.
+    b) Invent completely new, healthy, and appropriate meal suggestions that are not on the user's lists.
+    Aim for a good balance between familiar options and new ideas.
+4.  **Nutritional Appropriateness**: Ensure the entire plan is nutritionally sound for week ${pregnancyWeek}.
+5.  **Required Details**: For each of the five meals, provide an estimated calorie count. Also, calculate the total daily calories.
+6.  **Nutritional Summary**: Provide a summary of the day's estimated nutrient levels. For each nutrient (iron, calcium, folate, fiber), classify the total daily intake as "Low", "Okay", or "Good".
+7.  **Feedback**: Provide a brief, one-sentence nutritional feedback about the overall plan or the user's craving.
+8.  **Format**: Your response must be in JSON format according to the schema.`;
+                let userQuery = `Available meal options:\n- Breakfast: [${breakfastOpts.join(', ')}]\n- Lunch: [${lunchOpts.join(', ')}]\n- Snack: [${snackOpts.join(', ')}]\n- Dinner: [${dinnerOpts.join(', ')}]\n\nGenerate a new, unique meal plan for a user in week ${pregnancyWeek}.`;
+                if(craving) userQuery += ` The user is craving: "${craving}".`
                 const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                 const payload = {
                     contents: [{ parts: [{ text: userQuery }] }],
                     systemInstruction: { parts: [{ text: systemPrompt }] },
@@ -1590,137 +1626,83 @@
                         responseSchema: {
                             type: "OBJECT",
                             properties: {
-                                "breakfast": { "type": "STRING" },
-                                "lunch": { "type": "STRING" },
-                                "snackAM": { "type": "STRING" },
-                                "snackPM": { "type": "STRING" },
-                                "dinner": { "type": "STRING" },
-                                "feedback": { "type": "STRING" }
-                            }
-                        }
-                    }
-                };
-
-                try {
-                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                    if (!response.ok) throw new Error('API response not OK');
-                    const result = await response.json();
-                    const aiPlan = JSON.parse(result.candidates[0].content.parts[0].text);
-                    currentGeneratedPlan = aiPlan;
-
-                    aiMealLoader.classList.add('hidden');
-                    aiMealPlanDisplay.classList.remove('hidden');
-                    aiMealFeedback.classList.remove('hidden');
-                    aiMealButtons.classList.remove('hidden');
-                    
-                    aiMealPlanDisplay.innerHTML = `
-                        <p><strong>Breakfast:</strong> ${aiPlan.breakfast}</p>
-                        <p><strong>AM Snack:</strong> ${aiPlan.snackAM}</p>
-                        <p><strong>Lunch:</strong> ${aiPlan.lunch}</p>
-                        <p><strong>PM Snack:</strong> ${aiPlan.snackPM}</p>
-                        <p><strong>Dinner:</strong> ${aiPlan.dinner}</p>
-                    `;
-                    aiMealFeedback.textContent = aiPlan.feedback;
-                } catch (error) {
-                    console.error("Error generating AI meal plan:", error);
-                    aiMealLoader.classList.add('hidden');
-                    aiMealPlanDisplay.innerHTML = `<p class="text-red-400">Sorry, I couldn't generate a meal plan right now. Please try again.</p>`;
-                    aiMealPlanDisplay.classList.remove('hidden');
-                }
-            }
-
-
-            // --- DAILY TIPS ---
-            const moodToValue = {'😣': 1, '😐': 2, '🙂': 3, '😊': 4, '🥰': 5};
-
-            async function generateDailyInsights() {
-                const tips = {
-                    partnerTips: document.getElementById('partner-tips-container'),
-                    partnerAvoid: document.getElementById('partner-avoid-container'),
-                    hydrationSnacks: document.getElementById('hydration-snacks-container'),
-                    hydrationAvoid: document.getElementById('hydration-avoid-container'),
-                };
-                const loaders = {
-                    partnerTips: document.getElementById('partner-tips-loader'),
-                    partnerAvoid: document.getElementById('partner-avoid-loader'),
-                    hydrationSnacks: document.getElementById('hydration-snacks-loader'),
-                    hydrationAvoid: document.getElementById('hydration-avoid-loader'),
-                };
-
-                // Show loaders
-                Object.keys(tips).forEach(key => {
-                    if (tips[key] && loaders[key]) {
-                        loaders[key].style.display = 'block';
-                        tips[key].innerHTML = '';
-                        tips[key].appendChild(loaders[key]);
-                    }
-                });
-                
-                try {
-                    const pregnancyStartDate = new Date(wellnessData.pregnancyStartDate);
-                    const today = new Date();
-                    const diffTime = Math.abs(today - pregnancyStartDate);
-                    const pregnancyWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) || 5;
-                    const systemPrompt = `You are an expert prenatal wellness assistant. Based on the user's context, generate four sets of tips. Each tip should be a short, actionable string.
-1.  **partnerTips**: 3-4 thoughtful tips for the partner (emotional/practical support).
-2.  **partnerAvoid**: 2-3 things the partner should AVOID saying or doing.
-3.  **hydrationSnacks**: 3-4 tips on hydration and healthy snacks.
-4.  **hydrationAvoid**: 2-3 crucial foods/drinks to avoid (e.g., unpasteurized items, high-mercury fish).
-Respond ONLY with a JSON object containing four arrays of strings as per the schema.`;
-                    const userQuery = `Context:\n- Pregnancy Week: ${pregnancyWeek}\n- Mood: ${wellnessData.mood.level}\n- Energy: ${wellnessData.energy.level}`;
-                    const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
-                    const payload = {
-                        contents: [{ parts: [{ text: userQuery }] }],
-                        systemInstruction: { parts: [{ text: systemPrompt }] },
-                        generationConfig: {
-                            responseMimeType: "application/json",
-                            responseSchema: {
-                                type: "OBJECT",
-                                properties: {
-                                    "partnerTips": { "type": "ARRAY", "items": { "type": "STRING" } },
-                                    "partnerAvoid": { "type": "ARRAY", "items": { "type": "STRING" } },
-                                    "hydrationSnacks": { "type": "ARRAY", "items": { "type": "STRING" } },
-                                    "hydrationAvoid": { "type": "ARRAY", "items": { "type": "STRING" } },
+                                "plan": {
+                                    type: "OBJECT",
+                                    properties: {
+                                        "breakfast": { "type": "OBJECT", "properties": { "name": { "type": "STRING" }, "calories": { "type": "NUMBER" } } },
+                                        "lunch": { "type": "OBJECT", "properties": { "name": { "type": "STRING" }, "calories": { "type": "NUMBER" } } },
+                                        "snackAM": { "type": "OBJECT", "properties": { "name": { "type": "STRING" }, "calories": { "type": "NUMBER" } } },
+                                        "snackPM": { "type": "OBJECT", "properties": { "name": { "type": "STRING" }, "calories": { "type": "NUMBER" } } },
+                                        "dinner": { "type": "OBJECT", "properties": { "name": { "type": "STRING" }, "calories": { "type": "NUMBER" } } }
+                                    },
+                                    required: ["breakfast", "snackAM", "lunch", "snackPM", "dinner"]
                                 },
-                                required: ["partnerTips", "partnerAvoid", "hydrationSnacks", "hydrationAvoid"]
-                            }
+                                "nutritionSummary": {
+                                    "type": "OBJECT",
+                                    properties: { "iron": {"type": "STRING"}, "calcium": {"type": "STRING"}, "folate": {"type": "STRING"}, "fiber": {"type": "STRING"} },
+                                    "required": ["iron", "calcium", "folate", "fiber"]
+                                },
+                                "totalCalories": { "type": "NUMBER" },
+                                "feedback": { "type": "STRING" }
+                            },
+                            required: ["plan", "totalCalories", "nutritionSummary"]
                         }
-                    };
-
+                    }
+                };
+                try {
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                    if (!response.ok) throw new Error('API response not OK');
-                    const result = await response.json();
-                    const data = JSON.parse(result.candidates[0].content.parts[0].text);
-
-                    // Render results
-                    Object.keys(data).forEach(key => {
-                        const container = tips[key];
-                        const loader = loaders[key];
-                        if (container && loader) {
-                            loader.style.display = 'none';
-                            container.innerHTML = '';
-                            if (data[key] && data[key].length > 0) {
-                                data[key].forEach(tip => {
-                                    const li = document.createElement('li');
-                                    li.textContent = tip;
-                                    container.appendChild(li);
-                                });
-                            }
-                        }
-                    });
-
+                    if (!response.ok) throw new Error(`API error: ${response.statusText}`);
+                    const result = await response.json(); const text = result.candidates[0].content.parts[0].text; const data = JSON.parse(text);
+                    currentGeneratedPlan = data;
+                    displayAiMealPlan(data);
                 } catch (error) {
-                    console.error("Failed to generate daily insights:", error);
-                     // Populate with default content on error
-                    tips.partnerTips.innerHTML = `<li>Offer a gentle back rub tonight.</li><li>Make sure she has a full water bottle.</li>`;
-                    tips.partnerAvoid.innerHTML = `<li>Avoid commenting on her changing body unless it's a compliment.</li>`;
-                    tips.hydrationSnacks.innerHTML = `<li>Keep a water bottle handy to sip throughout the day.</li><li>A handful of almonds can be a great energy-boosting snack.</li>`;
-                    tips.hydrationAvoid.innerHTML = `<li>Avoid unpasteurized juices or milk.</li><li>Limit caffeine intake.</li>`;
-                    Object.values(loaders).forEach(loader => loader.style.display = 'none');
+                    console.error("AI Meal Plan generation failed:", error);
+                    aiMealPlanDisplay.innerHTML = `<p class="text-center text-red-300">Sorry, something went wrong while generating the meal plan. Please try again.</p>`;
+                } finally {
+                    aiMealLoader.classList.add('hidden');
+                    aiMealPlanDisplay.classList.remove('hidden');
+                    aiMealButtons.classList.remove('hidden');
+                }
+            }
+            
+            function displayAiMealPlan(data) {
+                const { plan, feedback, totalCalories } = data;
+                aiMealPlanDisplay.innerHTML = `
+                    <div class="p-3 bg-white/5 rounded-lg flex justify-between items-center"><span><strong>Breakfast:</strong> ${plan.breakfast?.name || 'N/A'}</span> <span class="text-sm font-semibold text-purple-300">${plan.breakfast?.calories || 0} kcal</span></div>
+                    <div class="p-3 bg-white/5 rounded-lg flex justify-between items-center"><span><strong>Snack (AM):</strong> ${plan.snackAM?.name || 'N/A'}</span> <span class="text-sm font-semibold text-purple-300">${plan.snackAM?.calories || 0} kcal</span></div>
+                    <div class="p-3 bg-white/5 rounded-lg flex justify-between items-center"><span><strong>Lunch:</strong> ${plan.lunch?.name || 'N/A'}</span> <span class="text-sm font-semibold text-purple-300">${plan.lunch?.calories || 0} kcal</span></div>
+                    <div class="p-3 bg-white/5 rounded-lg flex justify-between items-center"><span><strong>Snack (PM):</strong> ${plan.snackPM?.name || 'N/A'}</span> <span class="text-sm font-semibold text-purple-300">${plan.snackPM?.calories || 0} kcal</span></div>
+                    <div class="p-3 bg-white/5 rounded-lg flex justify-between items-center"><span><strong>Dinner:</strong> ${plan.dinner?.name || 'N/A'}</span> <span class="text-sm font-semibold text-purple-300">${plan.dinner?.calories || 0} kcal</span></div>
+                    <div class="mt-4 p-3 bg-white/10 rounded-lg text-center"><strong>Total Estimated Calories:</strong> <span class="font-bold text-lg text-purple-300">${totalCalories || 0} kcal</span></div>
+                `;
+                if(feedback) {
+                    aiMealFeedback.textContent = feedback;
+                    aiMealFeedback.classList.remove('hidden');
                 }
             }
 
+            async function handleSaveAiPlan() {
+                if (!currentGeneratedPlan || !currentDayForAI || !currentGeneratedPlan.plan) return;
+                const updates = {}; const plan = currentGeneratedPlan.plan;
+                if (plan.breakfast?.name) updates[`breakfast.${currentDayForAI}`] = plan.breakfast.name;
+                if (plan.lunch?.name) updates[`lunch.${currentDayForAI}`] = plan.lunch.name;
+                if (plan.snackAM?.name) updates[`snackAM.${currentDayForAI}`] = plan.snackAM.name;
+                if (plan.snackPM?.name) updates[`snackPM.${currentDayForAI}`] = plan.snackPM.name;
+                if (plan.dinner?.name) updates[`dinner.${currentDayForAI}`] = plan.dinner.name;
+                if (Object.keys(updates).length > 0) await updateDoc(mealPlanRef, updates);
+
+                if (currentGeneratedPlan.nutritionSummary) {
+                    const dailyNutritionUpdate = { ...wellnessData.dailyNutrition };
+                    dailyNutritionUpdate[currentDayForAI] = currentGeneratedPlan.nutritionSummary;
+                    await setDoc(wellnessDataRef, { dailyNutrition: dailyNutritionUpdate }, { merge: true });
+                }
+                closeAiMealPlannerModal();
+            }
+
+
+            // --- SYMPTOM TRACKER & DASHBOARD LOGIC ---
+            const sleepDays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+            const moodToValue = {'😣': 1, '😐': 2, '🙂': 3, '😊': 4, '🥰': 5};
 
             async function updateHydrationAndSnacks() {
                 const container = document.getElementById('hydration-snacks-container');
@@ -1739,7 +1721,7 @@ Respond ONLY with a JSON object containing four arrays of strings as per the sch
                     const systemPrompt = `You are a prenatal nutritionist providing daily hydration and snacking tips. Generate 3-4 short, actionable tips based on the user's pregnancy week, mood, and meal plan. The tips should be practical and easy to follow. Respond ONLY with a JSON array of strings.`;
                     const userQuery = `Context for today:\n- Pregnancy Week: ${pregnancyWeek}\n- Today's Meal Plan: ${mealPlanString}\n- Her current mood: ${wellnessData.mood.level}\n- Her current energy level: ${wellnessData.energy.level}\n\nGenerate 3-4 hydration and snack tips.`;
                     const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                     const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json", responseSchema: { type: "ARRAY", items: { type: "STRING" } } } };
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                     if (!response.ok) throw new Error('API response not OK');
@@ -1770,7 +1752,7 @@ Respond ONLY with a JSON object containing four arrays of strings as per the sch
                     const systemPrompt = `You are a supportive, empathetic, and creative assistant for a pregnant woman's partner. Your task is to generate 3-4 short, actionable, and thoughtful tips for the partner based on the provided daily context. The tips should be encouraging and focus on practical help and emotional support. Respond ONLY with a JSON array of strings.`;
                     const userQuery = `Context for today:\n- Pregnancy Week: ${pregnancyWeek}\n- Today's Meal Plan: ${mealPlanString}\n- Her current mood: ${wellnessData.mood.level}\n- Her current energy level: ${wellnessData.energy.level}\n\nGenerate 3-4 tips for the partner.`;
                     const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                     const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json", responseSchema: { type: "ARRAY", items: { type: "STRING" } } } };
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                     if (!response.ok) throw new Error('API response not OK');
@@ -1797,7 +1779,7 @@ Respond ONLY with a JSON object containing four arrays of strings as per the sch
                     const systemPrompt = `You are a prenatal nutritionist providing a list of foods, drinks, or habits to avoid. Generate 2-3 short, critical "to avoid" tips based on the user's pregnancy week. Focus on common, important avoidances like raw fish, unpasteurized products, high-mercury fish, excessive caffeine, etc., relevant to the week. Respond ONLY with a JSON array of strings.`;
                     const userQuery = `Context for today:\n- Pregnancy Week: ${pregnancyWeek}\n\nGenerate 2-3 crucial hydration and snack-related things to avoid.`;
                     const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                     const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json", responseSchema: { type: "ARRAY", items: { type: "STRING" } } } };
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                     if (!response.ok) throw new Error('API response not OK');
@@ -1824,7 +1806,7 @@ Respond ONLY with a JSON object containing four arrays of strings as per the sch
                     const systemPrompt = `You are a supportive, empathetic, and creative assistant for a pregnant woman's partner. Your task is to generate 2-3 short, actionable things the partner should AVOID saying or doing, based on the provided daily context. The tips should focus on avoiding common insensitive comments or unhelpful actions. Respond ONLY with a JSON array of strings.`;
                     const userQuery = `Context for today:\n- Pregnancy Week: ${pregnancyWeek}\n- Her current mood: ${wellnessData.mood.level}\n- Her current energy level: ${wellnessData.energy.level}\n\nGenerate 2-3 things for the partner to avoid.`;
                     const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                     const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json", responseSchema: { type: "ARRAY", items: { type: "STRING" } } } };
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                     if (!response.ok) throw new Error('API response not OK');
@@ -1838,292 +1820,229 @@ Respond ONLY with a JSON object containing four arrays of strings as per the sch
                 }
             }
 
-            function calculateSleepHours(sleep, wake) {
-                if (!sleep || !wake) return 0;
-                const sleepDate = new Date(`2000-01-01T${sleep}`);
-                let wakeDate = new Date(`2000-01-01T${wake}`);
-                if (wakeDate < sleepDate) {
-                    wakeDate.setDate(wakeDate.getDate() + 1);
-                }
-                return (wakeDate - sleepDate) / (1000 * 60 * 60);
+            function updateDashboardUI() {
+                updateDailySummary();
+                updateHydrationCircle();
+                updateNutritionTracker();
+                updateSleepMonitor();
+                updateMoodLog();
+                updateEnergyLog();
+                updateDynamicContent();
             }
-
-            async function generateNutritionInsight(nutrients) {
-                const insightEl = document.getElementById('nutrition-ai-insight');
-                insightEl.textContent = 'Analyzing nutrition...';
-                try {
-                    const systemPrompt = "You are a prenatal nutritionist. Based on the daily nutrient score (0-3 is low, 4-6 is good, 7+ is great), provide one short, encouraging, and actionable tip. Focus on the nutrient that is lowest. Respond ONLY with a JSON object containing a single 'insight' key.";
-                    const userQuery = `Nutrient scores for today: Iron=${nutrients.iron}, Calcium=${nutrients.calcium}, Folate=${nutrients.folate}, Fiber=${nutrients.fiber}.`;
-                    const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
-                    const payload = {
-                        contents: [{ parts: [{ text: userQuery }] }],
-                        systemInstruction: { parts: [{ text: systemPrompt }] },
-                        generationConfig: {
-                            responseMimeType: "application/json",
-                            responseSchema: { type: "OBJECT", properties: { "insight": { "type": "STRING" } } }
-                        }
-                    };
-                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                    if (!response.ok) throw new Error('API error');
-                    const result = await response.json();
-                    const data = JSON.parse(result.candidates[0].content.parts[0].text);
-                    insightEl.textContent = data.insight;
-                } catch (error) {
-                    console.error("Nutrition insight error:", error);
-                    insightEl.textContent = "Try adding some leafy greens like spinach for a folate boost!";
-                }
-            }
-
-            function updateNutritionTracker() {
-                const todayIndex = new Date().getDay();
-                const dayKey = days[todayIndex === 0 ? 6 : todayIndex - 1];
-                const nutrients = { iron: 0, calcium: 0, folate: 0, fiber: 0 };
-
-                // From meals
-                mealTypes.forEach(mealType => {
-                    const meal = currentMealPlanData[mealType] ? currentMealPlanData[mealType][dayKey] : null;
-                    if (meal) {
-                        const mealNutrientData = mealNutrients[meal] || customMealNutrients[meal];
-                        if (mealNutrientData) {
-                            nutrients.iron += mealNutrientData.iron || 0;
-                            nutrients.calcium += mealNutrientData.calcium || 0;
-                            nutrients.folate += mealNutrientData.folate || 0;
-                            nutrients.fiber += mealNutrientData.fiber || 0;
-                        }
-                    }
-                });
-
-                // From supplements
-                const dailySupps = wellnessData.dailySupplements[dayKey] || [];
-                dailySupps.forEach(supp => {
-                    const suppNutrientData = supplementNutrients[supp];
-                    if(suppNutrientData) {
-                        nutrients.iron += suppNutrientData.iron || 0;
-                        nutrients.calcium += suppNutrientData.calcium || 0;
-                        nutrients.folate += suppNutrientData.folate || 0;
-                    }
-                });
-                
-                dailySupplementsList.innerHTML = '';
-                dailySupps.forEach(supp => {
-                    const suppEl = document.createElement('span');
-                    suppEl.className = 'text-xs bg-green-500/20 text-green-300 px-2 py-1 rounded-full';
-                    suppEl.textContent = supp;
-                    dailySupplementsList.appendChild(suppEl);
-                });
-
-
-                const targets = { iron: 9, calcium: 9, folate: 9, fiber: 9 }; // Arbitrary target, 3 meals * 3 points
-                const statuses = ['Low', 'Good', 'Great', 'Excellent'];
-                const colors = ['bg-red-500', 'bg-yellow-500', 'bg-green-500', 'bg-teal-400'];
-
-                Object.keys(nutrients).forEach(key => {
-                    const container = document.getElementById(`nutrition-${key}`);
-                    if(container) {
-                        const progressBar = container.querySelector('.progress-bar');
-                        const statusText = container.querySelector('.status-text');
-                        const percentage = Math.min((nutrients[key] / targets[key]) * 100, 100);
-                        const statusIndex = Math.min(Math.floor(nutrients[key] / 3), 3);
-                        
-                        progressBar.style.width = `${percentage}%`;
-                        progressBar.className = `progress-bar h-1.5 rounded-full ${colors[statusIndex]}`;
-                        statusText.textContent = statuses[statusIndex];
-                        statusText.className = `status-text font-semibold text-sm ${colors[statusIndex].replace('bg-', 'text-')}`;
-                    }
-                });
-
-                generateNutritionInsight(nutrients);
-            }
-
+            
             function updateDailySummary() {
-                const todayIndex = new Date().getDay();
-                const dayKey = days[todayIndex === 0 ? 6 : todayIndex - 1];
-                const lastNightKey = days[todayIndex === 0 ? 6 : (todayIndex === 1 ? 0 : todayIndex - 2)]; // Get previous day for sleep
-
-                // Mood
-                document.getElementById('summary-mood').textContent = `${wellnessData.mood.emoji} ${wellnessData.mood.level}`;
-                
-                // Sleep
-                const sleepTime = wellnessData.sleep[lastNightKey]?.sleep;
-                const wakeTime = wellnessData.sleep[dayKey]?.wake;
-                const sleepHours = calculateSleepHours(sleepTime, wakeTime);
-                document.getElementById('summary-sleep').textContent = `${sleepHours.toFixed(1)} hrs`;
-                
-                // Water
-                document.getElementById('summary-water').textContent = `${wellnessData.water.intake} / ${wellnessData.water.goal} glasses`;
-                
-                // Energy
-                document.getElementById('summary-energy').textContent = wellnessData.energy.level;
-
-                // AI Insight
-                document.getElementById('summary-ai-insight').textContent = wellnessData.mood.aiInsight;
+                const { mood, water, energy } = wellnessData;
+                const lastNightSleep = calculateLastNightSleep();
+                document.getElementById('summary-mood').textContent = mood.emoji;
+                document.getElementById('summary-sleep').textContent = `${lastNightSleep.hours} hours`;
+                document.getElementById('summary-water').textContent = `${water.intake} / ${water.goal} glasses`;
+                const energySpan = document.getElementById('summary-energy');
+                energySpan.textContent = energy.level;
+                energySpan.className = `font-semibold ${energy.color}`;
+                let insight = `You slept ${lastNightSleep.hours} hours and drank ${water.intake} glasses of water. `;
+                if(lastNightSleep.hours < 7) insight += "Try to get a bit more rest tonight. ";
+                if(water.intake < 5) insight += "Don't forget to hydrate! ";
+                if(energy.level === 'Low' || energy.level === 'Very Low') insight += "A short walk might boost your energy."
+                document.getElementById('summary-ai-insight').textContent = insight;
             }
             
             function updateHydrationCircle() {
                 const { intake, goal } = wellnessData.water;
-                const percentage = Math.min((intake / goal) * 100, 100);
-                const circumference = 2 * Math.PI * 45; // 2 * pi * r
-                const offset = circumference - (percentage / 100) * circumference;
-                hydrationProgress.style.strokeDashoffset = offset;
+                const circle = hydrationProgress;
+                const radius = circle.r.baseVal.value;
+                const circumference = 2 * Math.PI * radius;
+                const offset = circumference - (intake / goal) * circumference;
+                circle.style.strokeDasharray = circumference; circle.style.strokeDashoffset = offset;
                 hydrationText.innerHTML = `${intake}<span class="text-sm">/${goal}</span>`;
+                document.getElementById('hydration-ai-insight').textContent = intake < goal ? `You're doing great! Just ${goal - intake} more glasses to go.` : "You've hit your hydration goal for today! 🎉";
             }
+            
+            function updateNutritionTracker() {
+                const todayIndex = new Date().getDay(); const dayIndex = todayIndex === 0 ? 6 : todayIndex - 1; const dayKey = days[dayIndex];
+                const aiSummary = wellnessData.dailyNutrition ? wellnessData.dailyNutrition[dayKey] : null;
+                updateDailySupplementsUI(dayKey);
 
-            function updateBabyGrowth() {
-                if (!wellnessData.pregnancyStartDate) return;
-                const startDate = new Date(wellnessData.pregnancyStartDate);
-                const today = new Date();
-                const diffTime = Math.abs(today - startDate);
-                const pregnancyWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) || 1;
-
-                const growthData = {
-                    5: "a sesame seed", 6: "a lentil", 7: "a blueberry", 8: "a kidney bean",
-                    9: "a grape 🍇", 10: "a strawberry 🍓", 11: "a fig", 12: "a lime",
-                    13: "a pea pod", 14: "a lemon 🍋", 15: "an apple 🍎", 16: "an avocado 🥑",
-                    17: "a turnip", 18: "a bell pepper 🫑", 19: "a mango 🥭", 20: "a banana 🍌"
-                };
-
-                babyGrowthSnapshotEl.textContent = `Week ${pregnancyWeek} — baby is the size of ${growthData[pregnancyWeek] || 'a wonderful miracle'}`;
-                document.getElementById('wellness-tip').textContent = wellnessTipsByWeek[pregnancyWeek] || defaultWellnessData.dailyTip;
-            }
-
-            function updateLogButtons() {
-                moodLogButtons.querySelectorAll('.mood-btn').forEach(btn => {
-                    if (btn.dataset.mood === wellnessData.mood.emoji) {
-                        btn.classList.add('selected');
-                    } else {
-                        btn.classList.remove('selected');
-                    }
-                });
-
-                const energyLevels = { 'Low': 1, 'Tired': 2, 'Moderate': 3, 'Good': 4, 'High': 5 };
-                const currentEnergyValue = energyLevels[wellnessData.energy.level] || 3;
-                energyLogButtons.querySelectorAll('.energy-btn').forEach(btn => {
-                    if (parseInt(btn.dataset.energy) === currentEnergyValue) {
-                        btn.classList.add('selected');
-                    } else {
-                        btn.classList.remove('selected');
-                    }
-                });
-            }
-
-            function updateSleepMonitor() {
-                const todayIndex = new Date().getDay();
-                const dayKey = days[todayIndex === 0 ? 6 : todayIndex - 1];
-                const lastNightKey = days[todayIndex === 0 ? 6 : (todayIndex === 1 ? 0 : todayIndex - 2)]; // Get previous day
-                const sleepTime = wellnessData.sleep[lastNightKey]?.sleep;
-                const wakeTime = wellnessData.sleep[dayKey]?.wake;
-                const sleepHours = calculateSleepHours(sleepTime, wakeTime);
-                document.getElementById('sleep-hours').textContent = sleepHours.toFixed(1);
-            }
-
-            function renderWellnessChart() {
-                const ctx = document.getElementById('wellnessChart').getContext('2d');
-                const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-                gradient.addColorStop(0, 'rgba(167, 139, 250, 0.6)');
-                gradient.addColorStop(1, 'rgba(167, 139, 250, 0.1)');
-
-                wellnessChart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                        datasets: [
-                            {
-                                label: 'Energy Level',
-                                data: [3, 2, 2, 3, 4, 5, 4],
-                                borderColor: '#a78bfa',
-                                backgroundColor: gradient,
-                                tension: 0.4,
-                                fill: true,
-                                pointBackgroundColor: '#fff',
-                                pointBorderColor: '#a78bfa',
-                                pointHoverBackgroundColor: '#a78bfa',
-                                pointHoverBorderColor: '#fff',
-                            },
-                            {
-                                label: 'Mood',
-                                data: [3, 2, 2, 3, 4, 5, 4], // Same data initially
-                                borderColor: '#60a5fa',
-                                tension: 0.4,
-                                fill: false,
-                                pointBackgroundColor: '#fff',
-                                pointBorderColor: '#60a5fa',
-                                pointHoverBackgroundColor: '#60a5fa',
-                                pointHoverBorderColor: '#fff',
-                                borderDash: [5, 5]
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                labels: {
-                                    color: '#d1d5db'
-                                }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                max: 5.5,
-                                ticks: {
-                                    color: '#9ca3af',
-                                    stepSize: 1,
-                                    callback: function(value) {
-                                        const labels = ['','😣', '😐', '🙂', '😊', '🥰'];
-                                        return labels[value] || '';
-                                    }
-                                },
-                                grid: {
-                                    color: 'rgba(255, 255, 255, 0.1)'
-                                }
-                            },
-                            x: {
-                                ticks: {
-                                    color: '#9ca3af'
-                                },
-                                grid: {
-                                    display: false
+                if (aiSummary) {
+                    const nutritionData = { iron: getStatusFromAI(aiSummary.iron), calcium: getStatusFromAI(aiSummary.calcium), folate: getStatusFromAI(aiSummary.folate), fiber: getStatusFromAI(aiSummary.fiber) };
+                    updateNutritionUI(nutritionData);
+                } else {
+                    const dailyGoals = { iron: 8, calcium: 10, folate: 10, fiber: 8 };
+                    const totals = { iron: 0, calcium: 0, folate: 0, fiber: 0 };
+                    const allMealNutrients = { ...mealNutrients, ...customMealNutrients };
+                    
+                    if (currentMealPlanData) {
+                        for (const mealKey in currentMealPlanData) {
+                            if (currentMealPlanData[mealKey] && typeof currentMealPlanData[mealKey] === 'object') {
+                                const mealName = currentMealPlanData[mealKey][dayKey];
+                                if (mealName && allMealNutrients[mealName]) {
+                                    const nutrients = allMealNutrients[mealName];
+                                    totals.iron += nutrients.iron || 0; totals.calcium += nutrients.calcium || 0; totals.folate += nutrients.folate || 0; totals.fiber += nutrients.fiber || 0;
                                 }
                             }
                         }
                     }
+
+                    const todaysSupplements = wellnessData.dailySupplements[dayKey] || [];
+                    todaysSupplements.forEach(suppName => {
+                        if (supplementNutrients[suppName]) {
+                            const nutrients = supplementNutrients[suppName];
+                            totals.iron += nutrients.iron || 0; totals.calcium += nutrients.calcium || 0; totals.folate += nutrients.folate || 0; totals.fiber += nutrients.fiber || 0;
+                        }
+                    });
+
+                    const nutritionData = { iron: calculateNutrientStatus(totals.iron, dailyGoals.iron), calcium: calculateNutrientStatus(totals.calcium, dailyGoals.calcium), folate: calculateNutrientStatus(totals.folate, dailyGoals.folate), fiber: calculateNutrientStatus(totals.fiber, dailyGoals.fiber) };
+                    updateNutritionUI(nutritionData);
+                }
+            }
+            
+            function getStatusFromAI(statusString) {
+                statusString = (statusString || 'low').toLowerCase();
+                 let status, color, bgColor, percentage;
+                if (statusString === 'good') { status = 'Good'; color = 'text-green-400'; bgColor = 'bg-green-500'; percentage = 90; } 
+                else if (statusString === 'okay') { status = 'Okay'; color = 'text-yellow-400'; bgColor = 'bg-yellow-500'; percentage = 60; } 
+                else { status = 'Low'; color = 'text-red-400'; bgColor = 'bg-red-500'; percentage = 25; }
+                return { status, percentage, color, bgColor };
+            }
+
+            function calculateNutrientStatus(total, goal) {
+                const percentage = goal > 0 ? Math.min(Math.round((total / goal) * 100), 100) : 0;
+                let status, color, bgColor;
+                if (percentage >= 80) { status = 'Good'; color = 'text-green-400'; bgColor = 'bg-green-500'; } 
+                else if (percentage >= 40) { status = 'Okay'; color = 'text-yellow-400'; bgColor = 'bg-yellow-500'; } 
+                else { status = 'Low'; color = 'text-red-400'; bgColor = 'bg-red-500'; }
+                return { status, percentage, color, bgColor };
+            }
+
+            function updateNutritionUI(nutrition) {
+                Object.keys(nutrition).forEach(key => {
+                    const nutrient = nutrition[key];
+                    const container = document.getElementById(`nutrition-${key}`);
+                    if(container) {
+                        const statusEl = container.querySelector('.status-text');
+                        const progressEl = container.querySelector('.progress-bar');
+                        statusEl.textContent = nutrient.status;
+                        statusEl.className = `status-text font-semibold ${nutrient.color}`;
+                        progressEl.style.width = `${nutrient.percentage}%`;
+                        progressEl.className = `progress-bar h-1.5 rounded-full ${nutrient.bgColor}`;
+                    }
+                });
+                const lowNutrients = Object.keys(nutrition).filter(k => nutrition[k].status === 'Low');
+                let insight = "Your nutrition looks balanced for today's plan.";
+                 if (lowNutrients.length > 0) {
+                    insight = `Today's plan seems a bit low in ${lowNutrients.join(' and ')}. Consider adding a snack rich in these nutrients.`
+                } else {
+                    const goodNutrients = Object.keys(nutrition).filter(k => nutrition[k].status === 'Good');
+                    if (goodNutrients.length >= 3) {
+                        insight = `Great job with today's meal plan! It looks well-balanced in ${goodNutrients.join(', ')}.`
+                    }
+                }
+                const insightEl = document.getElementById('nutrition-ai-insight');
+                if(insightEl) insightEl.textContent = insight;
+            }
+
+            function calculateSleepDuration(sleepTimeStr, wakeTimeStr) {
+                if (!sleepTimeStr || !wakeTimeStr) return 0;
+                const [sleepH, sleepM] = sleepTimeStr.split(':').map(Number);
+                const [wakeH, wakeM] = wakeTimeStr.split(':').map(Number);
+                let sleepDate = new Date(); sleepDate.setHours(sleepH, sleepM, 0, 0);
+                let wakeDate = new Date(); wakeDate.setHours(wakeH, wakeM, 0, 0);
+                if (wakeDate < sleepDate) wakeDate.setDate(wakeDate.getDate() + 1);
+                const durationMillis = wakeDate - sleepDate;
+                const durationHours = durationMillis / (1000 * 60 * 60);
+                return Math.round(durationHours * 10) / 10;
+            }
+
+            function calculateLastNightSleep() {
+                const todayIndex = new Date().getDay(); const yesterdayIndex = (todayIndex + 6) % 7;
+                const sleepDayKey = sleepDays[yesterdayIndex];
+                const { sleep, wake } = wellnessData.sleep[sleepDayKey] || { sleep: '', wake: '' };
+                const hours = calculateSleepDuration(sleep, wake);
+                return { hours };
+            }
+            
+            function updateSleepMonitor() {
+                const { hours } = calculateLastNightSleep();
+                document.getElementById('sleep-hours').textContent = hours;
+                let insight = "A consistent sleep schedule does wonders. Keep it up!";
+                if (hours < 7) insight = `You slept less than 7 hours. Try relaxing tea or a warm bath before bed.`;
+                else if (hours > 9) insight = `You got plenty of rest! Great job prioritizing sleep.`;
+                document.getElementById('sleep-ai-insight').textContent = insight;
+            }
+            
+            function updateMoodLog() {
+                const { mood } = wellnessData;
+                const buttons = moodLogButtons.querySelectorAll('.mood-btn');
+                buttons.forEach(btn => {
+                    if (btn.dataset.mood === mood.emoji) btn.classList.add('selected');
+                    else btn.classList.remove('selected');
+                });
+                document.getElementById('mood-ai-insight').textContent = mood.aiInsight;
+            }
+
+            function updateEnergyLog() {
+                const todayIndex = new Date().getDay(); const currentDayKey = sleepDays[(todayIndex === 0 ? 7 : todayIndex) -1];
+                const currentEnergy = wellnessData.weeklyLog[currentDayKey]?.energy || 3;
+                const buttons = energyLogButtons.querySelectorAll('.energy-btn');
+                buttons.forEach(btn => {
+                    if (parseInt(btn.dataset.energy) === currentEnergy) btn.classList.add('selected');
+                    else btn.classList.remove('selected');
                 });
             }
 
-            function updateWellnessChartData() {
-                if (!wellnessChart) return;
-                const moodMap = {'😣': 1, '😐': 2, '🙂': 3, '😊': 4, '🥰': 5};
-                const energyMap = { 'Low': 1, 'Tired': 2, 'Moderate': 3, 'Good': 4, 'High': 5 };
+            // --- EVENT LISTENERS & HANDLERS ---
+            hydrationPlusBtn.addEventListener('click', async () => {
+                if (wellnessData.water.intake < wellnessData.water.goal) {
+                    wellnessData.water.intake++;
+                    await setDoc(wellnessDataRef, { water: wellnessData.water }, { merge: true });
+                }
+            });
 
-                const moodData = days.map(day => moodMap[wellnessData.weeklyLog[day]?.mood] || 0);
-                const energyData = days.map(day => energyMap[wellnessData.weeklyLog[day]?.energyLevel] || wellnessData.weeklyLog[day]?.energy || 0); // support legacy energy format
-                
-                wellnessChart.data.datasets[0].data = energyData;
-                wellnessChart.data.datasets[1].data = moodData;
-                wellnessChart.update();
-            }
+            hydrationMinusBtn.addEventListener('click', async () => {
+                if (wellnessData.water.intake > 0) {
+                    wellnessData.water.intake--;
+                    await setDoc(wellnessDataRef, { water: wellnessData.water }, { merge: true });
+                }
+            });
+            
+            moodLogButtons.addEventListener('click', async (e) => {
+                const button = e.target.closest('.mood-btn'); if(!button) return;
+                const todayIndex = new Date().getDay(); const currentDayKey = sleepDays[(todayIndex === 0 ? 7 : todayIndex) - 1];
+                const newMoodEmoji = button.dataset.mood;
+                const moodMessages = {
+                    '😣': { level: "Stressed", aiInsight: "It's okay to have tough days. Try some deep breathing or a short, calming walk." },
+                    '😐': { level: "Neutral", aiInsight: "A neutral day is a good day for rest. What's one small thing that could bring a smile?" },
+                    '🙂': { level: "Okay", aiInsight: "Feeling okay is a great baseline. Keep taking care of yourself." },
+                    '😊': { level: "Happy", aiInsight: "Glad you're feeling happy! Embrace the positive energy today." },
+                    '🥰': { level: "Blissful", aiInsight: "Wonderful! Cherish these blissful moments." }
+                };
+                const newMoodData = { emoji: newMoodEmoji, ...moodMessages[newMoodEmoji] };
+                const newWeeklyLog = { ...wellnessData.weeklyLog };
+                if (!newWeeklyLog[currentDayKey]) newWeeklyLog[currentDayKey] = {};
+                newWeeklyLog[currentDayKey].mood = newMoodEmoji;
+                await setDoc(wellnessDataRef, { mood: newMoodData, weeklyLog: newWeeklyLog }, { merge: true });
+            });
 
-            function updateDashboardUI() {
-                updateDailySummary();
-                updateHydrationCircle();
-                updateBabyGrowth();
-                updateLogButtons();
-                updateNutritionTracker();
-                updateSleepMonitor();
-            }
+            energyLogButtons.addEventListener('click', async (e) => {
+                const button = e.target.closest('.energy-btn'); if(!button) return;
+                const todayIndex = new Date().getDay(); const currentDayKey = sleepDays[(todayIndex === 0 ? 7 : todayIndex) - 1];
+                const newEnergyLevel = parseInt(button.dataset.energy);
+                const energyMap = { 1: { level: 'Very Low', color: 'text-red-400' }, 2: { level: 'Low', color: 'text-yellow-400' }, 3: { level: 'Moderate', color: 'text-green-400' }, 4: { level: 'Good', color: 'text-teal-400' }, 5: { level: 'High', color: 'text-purple-400' } };
+                const newEnergyData = energyMap[newEnergyLevel];
+                const newWeeklyLog = { ...wellnessData.weeklyLog };
+                if (!newWeeklyLog[currentDayKey]) newWeeklyLog[currentDayKey] = {};
+                newWeeklyLog[currentDayKey].energy = newEnergyLevel;
+                await setDoc(wellnessDataRef, { energy: newEnergyData, weeklyLog: newWeeklyLog }, { merge: true });
+            });
 
-            // --- SYMPTOM TRACKER & DASHBOARD LOGIC ---
-            symptomCheckBtn.addEventListener('click', async () => {
+
+            async function handleSymptomCheck() {
                 const symptomText = symptomInput.value.trim();
                 if (!symptomText) return;
                 symptomLoader.classList.remove('hidden'); symptomBtnText.textContent = 'Analyzing...'; symptomCheckBtn.disabled = true; symptomResponseEl.innerHTML = '';
                 const systemPrompt = "You are a caring and gentle wellness assistant for pregnant women. Analyze the user's described symptom. Provide potential non-medical causes and gentle, safe remedies. Crucially, always include a disclaimer that this is not medical advice and they should consult a doctor. Respond in JSON format according to the schema.";
                 const userQuery = `My symptom today: "${symptomText}"`;
                 const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                 const payload = {
                     contents: [{ parts: [{ text: userQuery }] }],
                     systemInstruction: { parts: [{ text: systemPrompt }] },
@@ -2131,234 +2050,345 @@ Respond ONLY with a JSON object containing four arrays of strings as per the sch
                         responseMimeType: "application/json",
                         responseSchema: {
                             type: "OBJECT",
-                            properties: {
-                                "analysis": { "type": "STRING" },
-                                "remedies": { "type": "ARRAY", "items": { "type": "STRING" } }
-                            }
+                            properties: { "possibleCauses": { "type": "ARRAY", "items": { "type": "STRING" } }, "gentleRemedies": { "type": "ARRAY", "items": { "type": "STRING" } }, "disclaimer": { "type": "STRING" } },
+                            required: ["possibleCauses", "gentleRemedies", "disclaimer"]
                         }
                     }
                 };
-
                 try {
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                    if (!response.ok) throw new Error('API response not OK');
-                    const result = await response.json();
-                    const aiResponse = JSON.parse(result.candidates[0].content.parts[0].text);
-                    
-                    symptomResponseEl.innerHTML = `
-                        <div class="bg-white/5 p-4 rounded-lg">
-                            <p class="font-semibold mb-2">Analysis:</p>
-                            <p class="text-gray-300 mb-3">${aiResponse.analysis}</p>
-                            <p class="font-semibold mb-2">Gentle Remedies to Try:</p>
-                            <ul class="list-disc list-inside text-gray-300 space-y-1 mb-4">
-                                ${aiResponse.remedies.map(r => `<li>${r}</li>`).join('')}
-                            </ul>
-                            <p class="text-xs text-yellow-300 p-2 bg-yellow-500/10 rounded-md"><strong>Disclaimer:</strong> This is not medical advice. Please consult your doctor for any health concerns.</p>
-                        </div>
-                    `;
-                    // Log symptom to Firestore
-                    await addDoc(symptomTrackerCollectionRef, {
-                        symptom: symptomText,
-                        response: aiResponse.analysis,
-                        timestamp: serverTimestamp()
-                    });
-
+                    if (!response.ok) throw new Error(`API error: ${response.statusText}`);
+                    const result = await response.json(); const text = result.candidates[0].content.parts[0].text; const data = JSON.parse(text);
+                    displaySymptomResponse(data);
+                    if (symptomTrackerCollectionRef) await addDoc(symptomTrackerCollectionRef, { symptom: symptomText, aiResponse: data, createdAt: serverTimestamp() });
                 } catch (error) {
-                    console.error("Symptom check error:", error);
-                    symptomResponseEl.innerHTML = `<p class="text-red-400">Sorry, I couldn't analyze that right now. Please try again.</p>`;
+                    console.error("Symptom check API call failed:", error);
+                    symptomResponseEl.innerHTML = `<div class="p-3 rounded-md bg-red-500 bg-opacity-30 text-red-200">Sorry, something went wrong. Please try again.</div>`;
                 } finally {
-                    symptomLoader.classList.add('hidden');
-                    symptomBtnText.textContent = 'Get Suggestions';
-                    symptomCheckBtn.disabled = false;
+                    symptomLoader.classList.add('hidden'); symptomBtnText.textContent = 'Get Suggestions'; symptomCheckBtn.disabled = false;
                 }
-            });
+            }
+
+            function displaySymptomResponse(data) {
+                let html = '<div class="space-y-4">';
+                if (data.possibleCauses && data.possibleCauses.length > 0) {
+                    html += `<div><h4 class="font-semibold text-purple-300">Possible Causes:</h4><ul class="list-disc list-inside text-gray-300">`;
+                    data.possibleCauses.forEach(cause => { html += `<li>${cause}</li>`; });
+                    html += `</ul></div>`;
+                }
+                if (data.gentleRemedies && data.gentleRemedies.length > 0) {
+                    html += `<div><h4 class="font-semibold text-green-300">Gentle Suggestions:</h4><ul class="list-disc list-inside text-gray-300">`;
+                    data.gentleRemedies.forEach(remedy => { html += `<li>${remedy}</li>`; });
+                    html += `</ul></div>`;
+                }
+                if (data.disclaimer) {
+                    html += `<div class="p-3 mt-4 text-sm rounded-md bg-yellow-500 bg-opacity-20 text-yellow-200"><strong>Important:</strong> ${data.disclaimer}</div>`;
+                }
+                html += '</div>';
+                symptomResponseEl.innerHTML = html;
+            }
             
-            // --- SUPPLEMENTS ---
-            nutritionTrackerHeader.addEventListener('click', () => {
+            // --- CHARTS & DYNAMIC CONTENT ---
+            function updateWellnessChartData() {
+                if (!wellnessChart || !userId) return;
+                const sleepData = sleepDays.map(day => { const { sleep, wake } = wellnessData.sleep[day] || { sleep: '', wake: '' }; return calculateSleepDuration(sleep, wake); });
+                const energyData = sleepDays.map(day => (wellnessData.weeklyLog[day] || {energy: 0}).energy);
+                const moodData = sleepDays.map(day => moodToValue[(wellnessData.weeklyLog[day] || {mood: '😐'}).mood] || 2);
+                wellnessChart.data.datasets[0].data = energyData; wellnessChart.data.datasets[1].data = moodData; wellnessChart.data.datasets[2].data = sleepData;
+                wellnessChart.update();
+                const avgSleep = sleepData.reduce((a, b) => a + b, 0) / sleepData.length;
+                const avgMood = moodData.reduce((a, b) => a + b, 0) / moodData.length;
+                let insight = `Your average sleep this week is ${avgSleep.toFixed(1)} hours. `;
+                if (avgMood > 3.5) insight += "It seems like you've had a great week overall! ";
+                else if (avgMood < 2.5) insight += "It looks like a tough week. Remember to rest and be kind to yourself. ";
+                document.getElementById('chart-ai-insight').textContent = insight;
+            }
+
+            function renderWellnessChart() {
+                const ctx = document.getElementById('wellnessChart').getContext('2d');
+                const data = {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [
+                        { label: 'Energy (1-5)', data: [], borderColor: '#facc15', backgroundColor: '#facc1533', type: 'line', tension: 0.4, yAxisID: 'y' },
+                        { label: 'Mood (1-5)', data: [], borderColor: '#a78bfa', backgroundColor: '#a78bfa33', type: 'line', tension: 0.4, yAxisID: 'y' },
+                        { label: 'Sleep (hours)', data: [], borderColor: '#60a5fa', backgroundColor: '#60a5fa', type: 'bar', yAxisID: 'y1' }
+                    ]
+                };
+                 wellnessChart = new Chart(ctx, {
+                    type: 'bar', data: data,
+                    options: {
+                        responsive: true, interaction: { mode: 'index', intersect: false },
+                        scales: {
+                            x: { ticks: { color: '#9ca3af' }, grid: { color: '#ffffff1a'} },
+                            y: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'Energy / Mood', color: '#d1d5db' }, ticks: { color: '#d1d5db' }, grid: { color: '#ffffff1a' }, max: 5, min: 0 },
+                            y1: { type: 'linear', display: true, position: 'right', title: { display: true, text: 'Sleep Hours', color: '#60a5fa' }, ticks: { color: '#60a5fa' }, grid: { drawOnChartArea: false } }
+                        },
+                        plugins: { legend: { labels: { color: '#d1d5db' } } }
+                    }
+                });
+                updateWellnessChartData();
+            }
+
+            function updateDynamicContent() {
+                const pregnancyStartDate = new Date(wellnessData.pregnancyStartDate);
+                const today = new Date();
+                const diffTime = Math.abs(today - pregnancyStartDate);
+                const diffWeeks = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7));
+                const babySizes = {
+                    4: {fruit: 'poppy seed', emoji: '🌱'}, 5: {fruit: 'peppercorn', emoji: '🌶️'}, 6: {fruit: 'sweet pea', emoji: '🟢'}, 7: {fruit: 'blueberry', emoji: '🫐'}, 8: {fruit: 'raspberry', emoji: '🍓'}, 9: {fruit: 'cherry', emoji: '🍒'}, 10: {fruit: 'strawberry', emoji: '🍓'}, 11: {fruit: 'lime', emoji: '🍈'}, 12: {fruit: 'plum', emoji: '🍑'}, 13: {fruit: 'peach', emoji: '🍑'}, 14: {fruit: 'lemon', emoji: '🍋'}, 15: {fruit: 'apple', emoji: '🍎'}, 16: {fruit: 'avocado', emoji: '🥑'}, 17: {fruit: 'pear', emoji: '🍐'}, 18: {fruit: 'bell pepper', emoji: '🫑'}, 19: {fruit: 'mango', emoji: '🥭'}, 20: {fruit: 'banana', emoji: '🍌'},
+                };
+                const size = babySizes[diffWeeks] || {fruit: 'a little miracle', emoji: '✨'};
+                babyGrowthSnapshotEl.innerHTML = `Week ${diffWeeks} — baby is the size of a ${size.fruit} ${size.emoji}`;
+                const wellnessTipEl = document.getElementById('wellness-tip');
+                const tip = wellnessTipsByWeek[diffWeeks] || "Stay hydrated and listen to your body's needs today.";
+                wellnessTipEl.textContent = tip; wellnessData.dailyTip = tip;
+            }
+
+            // --- SUPPLEMENTS LOGIC ---
+            function openSupplementModal() {
+                populateSupplementList();
                 manageSupplementsModal.classList.remove('hidden');
                 setTimeout(() => manageSupplementsModal.classList.add('active'), 10);
-            });
-            manageSupplementsCloseBtn.addEventListener('click', () => {
+            }
+            function closeSupplementModal() {
                 manageSupplementsModal.classList.remove('active');
                 setTimeout(() => manageSupplementsModal.classList.add('hidden'), 300);
-            });
-            
-            async function initializeSupplements() {
-                if (!userSupplementsRef || !supplementNutrientsRef) return;
-                const [supplementsSnap, nutrientsSnap] = await Promise.all([getDoc(userSupplementsRef), getDoc(supplementNutrientsRef)]);
-                if (supplementsSnap.exists()) {
-                    userSupplements = supplementsSnap.data().list || [];
-                } else {
-                    await setDoc(userSupplementsRef, { list: [] });
-                }
-                if (nutrientsSnap.exists()) {
-                    supplementNutrients = nutrientsSnap.data().nutrients || {};
-                } else {
-                    await setDoc(supplementNutrientsRef, { nutrients: {} });
-                }
             }
 
-            function loadSupplements() {
-                if (!userSupplementsRef) return;
-                unsubscribeUserSupplements = onSnapshot(userSupplementsRef, (docSnap) => {
-                    if (docSnap.exists()) {
-                        userSupplements = docSnap.data().list || [];
-                        renderSupplementOptions();
-                    }
-                });
-
-                if (!supplementNutrientsRef) return;
-                 unsubscribeSupplementNutrients = onSnapshot(supplementNutrientsRef, (docSnap) => {
-                    if (docSnap.exists()) {
-                        supplementNutrients = docSnap.data().nutrients || {};
-                    }
-                });
-            }
-
-            function renderSupplementOptions() {
+            function populateSupplementList() {
                 supplementListContainer.innerHTML = '';
-                if(userSupplements.length === 0) {
+                if (userSupplements.length === 0) {
                     supplementListContainer.innerHTML = `<p class="text-center text-gray-400">No supplements added yet.</p>`;
                     return;
                 }
                 userSupplements.forEach(supp => {
-                    const suppDiv = document.createElement('div');
-                    suppDiv.className = 'flex items-center justify-between p-3 bg-white/5 rounded-lg';
-                    suppDiv.innerHTML = `
-                        <span class="cursor-pointer hover:text-purple-300" data-supp="${supp}">${supp}</span>
-                        <button class="delete-supplement-btn icon-btn" data-supp="${supp}"><svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
-                    `;
-                    supplementListContainer.appendChild(suppDiv);
-                });
+                    const item = document.createElement('div');
+                    item.className = 'flex items-center justify-between p-3 bg-white bg-opacity-5 rounded-lg hover:bg-opacity-10';
+                    const nutrients = supplementNutrients[supp] || { iron: '?', calcium: '?', folate: '?', fiber: '?' };
 
-                supplementListContainer.querySelectorAll('.delete-supplement-btn').forEach(btn => {
-                    btn.addEventListener('click', async (e) => {
-                        const supp = e.currentTarget.dataset.supp;
-                        await setDoc(userSupplementsRef, { list: arrayRemove(supp) }, { merge: true });
-                        delete supplementNutrients[supp];
-                        await setDoc(supplementNutrientsRef, { nutrients: supplementNutrients });
-                    });
+                    item.innerHTML = `<div class="flex-1 pr-2 cursor-pointer supplement-log-btn" data-supp="${supp}">
+                            <span class="font-semibold text-white">${supp}</span>
+                            <div class="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs mt-1.5 text-gray-300">
+                                <span class="flex items-center" title="Iron">Iron: ${nutrients.iron}</span>
+                                <span class="flex items-center" title="Calcium">Ca: ${nutrients.calcium}</span>
+                                <span class="flex items-center" title="Folate">Folate: ${nutrients.folate}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <button class="icon-btn delete-supp-btn" data-supp="${supp}"><svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                        </div>`;
+                    item.querySelector('.delete-supp-btn').addEventListener('click', (e) => { e.stopPropagation(); deleteSupplement(supp); });
+                    item.querySelector('.supplement-log-btn').addEventListener('click', () => addSupplementToDay(supp));
+                    supplementListContainer.appendChild(item);
                 });
+            }
 
-                supplementListContainer.querySelectorAll('span').forEach(span => {
-                    span.addEventListener('click', async (e) => {
-                         const supp = e.currentTarget.dataset.supp;
-                         const todayIndex = new Date().getDay();
-                         const dayKey = days[todayIndex === 0 ? 6 : todayIndex - 1];
-                         const dailySupps = wellnessData.dailySupplements[dayKey] || [];
-                         if(!dailySupps.includes(supp)) {
-                            dailySupps.push(supp);
-                         } else {
-                            const index = dailySupps.indexOf(supp);
-                            dailySupps.splice(index, 1);
-                         }
-                         wellnessData.dailySupplements[dayKey] = dailySupps;
-                         await updateDoc(wellnessDataRef, { dailySupplements: wellnessData.dailySupplements });
-                         updateNutritionTracker();
-                         manageSupplementsCloseBtn.click();
-                    });
+            async function addSupplementToDay(suppName) {
+                const todayIndex = new Date().getDay(); const dayKey = days[(todayIndex === 0 ? 7 : todayIndex) - 1];
+                await updateDoc(wellnessDataRef, { [`dailySupplements.${dayKey}`]: arrayUnion(suppName) });
+                showApiFeedback(`Logged "${suppName}" for today.`, 'success', supplementApiFeedback);
+            }
+
+             function updateDailySupplementsUI(dayKey) {
+                dailySupplementsList.innerHTML = '';
+                const todaysSupplements = wellnessData.dailySupplements[dayKey] || [];
+                if (todaysSupplements.length === 0) {
+                    dailySupplementsList.innerHTML = `<p class="text-xs text-gray-400 italic">No supplements logged for today.</p>`;
+                    return;
+                }
+                todaysSupplements.forEach(suppName => {
+                    const pill = document.createElement('div');
+                    pill.className = 'flex items-center bg-purple-500 bg-opacity-20 text-purple-200 text-xs font-semibold px-2.5 py-1 rounded-full';
+                    pill.innerHTML = `<span>${suppName}</span>
+                    <button class="ml-2 remove-supp-btn" data-supp="${suppName}">
+                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                    </button>`;
+                    pill.querySelector('.remove-supp-btn').addEventListener('click', () => removeSupplementFromDay(suppName));
+                    dailySupplementsList.appendChild(pill);
                 });
+            }
+
+            async function removeSupplementFromDay(suppName) {
+                 const todayIndex = new Date().getDay(); const dayKey = days[(todayIndex === 0 ? 7 : todayIndex) - 1];
+                 await updateDoc(wellnessDataRef, { [`dailySupplements.${dayKey}`]: arrayRemove(suppName) });
+            }
+
+            async function deleteSupplement(suppToDelete) {
+                await updateDoc(userSupplementsRef, { list: arrayRemove(suppToDelete) });
+                await updateDoc(supplementNutrientsRef, { [suppToDelete]: deleteField() });
             }
 
             async function handleAddSupplement() {
                 const userSupp = newSupplementInput.value.trim(); if (!userSupp) return;
                 supplementApiLoader.classList.remove('hidden'); addSupplementText.textContent = 'Checking...'; addSupplementBtn.disabled = true; supplementApiFeedback.classList.add('hidden');
                 const systemPrompt = "You are a prenatal nutritionist. Evaluate if the given supplement is generally safe and common for pregnancy. Provide an estimated nutritional profile (integers 0-3 for high) for iron, calcium, and folate. Fiber is not needed. Respond in JSON format per the schema.";
-                const userQuery = `Evaluate this supplement for pregnancy: "${userSupp}"`; const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+                const userQuery = `Evaluate this supplement for pregnancy: "${userSupp}"`; const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                 const payload = {
                     contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] },
                     generationConfig: {
                         responseMimeType: "application/json",
                         responseSchema: {
-                            type: "OBJECT", properties: {
-                                "isSuitable": { "type": "BOOLEAN" }, "reason": { "type": "STRING" }, "nutrients": {
-                                    "type": "OBJECT", "properties": {
-                                        "iron": { "type": "INTEGER" }, "calcium": { "type": "INTEGER" }, "folate": { "type": "INTEGER" }
-                                    }
-                                }
-                            }
+                            type: "OBJECT", properties: { "isSuitable": { "type": "BOOLEAN" }, "supplementName": { "type": "STRING" }, "reasoning": { "type": "STRING" }, "nutrients": { "type": "OBJECT", "properties": { "iron": {"type": "NUMBER"}, "calcium": {"type": "NUMBER"}, "folate": {"type": "NUMBER"} } } },
+                            required: ["isSuitable", "supplementName"]
                         }
                     }
                 };
                  try {
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                    if (!response.ok) throw new Error('API response not OK');
-                    const result = await response.json(); const aiResponse = JSON.parse(result.candidates[0].content.parts[0].text);
-                    if (aiResponse.isSuitable) {
-                        supplementApiFeedback.classList.remove('hidden', 'bg-red-500'); supplementApiFeedback.classList.add('bg-green-500');
-                        supplementApiFeedback.textContent = 'Supplement is suitable and has been added!';
-                        
-                        await setDoc(userSupplementsRef, { list: arrayUnion(userSupp) }, { merge: true });
-                        supplementNutrients[userSupp] = aiResponse.nutrients;
-                        await setDoc(supplementNutrientsRef, { nutrients: supplementNutrients });
-
-                        newSupplementInput.value = '';
-                        setTimeout(() => supplementApiFeedback.classList.add('hidden'), 3000);
+                    if (!response.ok) throw new Error(`API error: ${response.statusText}`);
+                    const result = await response.json(); const text = result.candidates[0].content.parts[0].text; const data = JSON.parse(text);
+                    if (data.isSuitable) {
+                        if (!userSupplements.includes(data.supplementName)) {
+                            await updateDoc(userSupplementsRef, { list: arrayUnion(data.supplementName) });
+                            if (supplementNutrientsRef && data.nutrients) {
+                                await updateDoc(supplementNutrientsRef, { [data.supplementName]: {...data.nutrients, fiber: 0} });
+                            }
+                            newSupplementInput.value = ''; showApiFeedback(`Success! "${data.supplementName}" was added.`, 'success', supplementApiFeedback);
+                        } else { showApiFeedback(`"${data.supplementName}" is already on the list.`, 'warning', supplementApiFeedback); }
                     } else {
-                        supplementApiFeedback.classList.remove('hidden', 'bg-green-500'); supplementApiFeedback.classList.add('bg-red-500');
-                        supplementApiFeedback.textContent = `Suggestion: ${aiResponse.reason}`;
+                        showApiFeedback(`<strong>Caution:</strong><br>${data.reasoning}`, 'error', supplementApiFeedback);
                     }
-                } catch (error) {
-                    console.error("Error checking supplement:", error);
-                    supplementApiFeedback.classList.remove('hidden', 'bg-green-500'); supplementApiFeedback.classList.add('bg-red-500');
-                    supplementApiFeedback.textContent = 'Could not verify. Please try again.';
-                } finally {
-                    supplementApiLoader.classList.add('hidden'); addSupplementText.textContent = 'Check & Add Supplement'; addSupplementBtn.disabled = false;
-                }
+                } catch (error) { console.error("Gemini API call failed for supplement:", error); showApiFeedback("Sorry, I couldn't verify that right now.", 'error', supplementApiFeedback); } 
+                finally { supplementApiLoader.classList.add('hidden'); addSupplementText.textContent = 'Check & Add Supplement'; addSupplementBtn.disabled = false; }
             }
-            addSupplementBtn.addEventListener('click', handleAddSupplement);
-
             
-            // -- JOURNEY TAB LOGIC ---
-            // To-Do List
-            let currentTodos = [];
+            // --- MODALS & OTHER UI ---
+            function closeStartDateModal() { startDateModal.classList.remove('active'); setTimeout(() => startDateModal.classList.add('hidden'), 300); }
+            function populateSleepModal() {
+                sleepScheduleContainer.innerHTML = '';
+                sleepDays.forEach(day => {
+                    const dayData = wellnessData.sleep[day] || { sleep: '', wake: '' };
+                    const item = document.createElement('div');
+                    item.className = 'grid grid-cols-3 items-center gap-2';
+                    item.innerHTML = `<label class="font-semibold capitalize">${day}</label><input type="time" id="sleep-time-${day}" class="date-input" value="${dayData.sleep}"><input type="time" id="wake-time-${day}" class="date-input" value="${dayData.wake}">`;
+                    sleepScheduleContainer.appendChild(item);
+                });
+            }
+            function closeSleepModal() { sleepModal.classList.remove('active'); setTimeout(() => sleepModal.classList.add('hidden'), 300); }
+
+            // General Event Listeners
+            modalCloseBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => e.target === modal && closeModal());
+            modalSelect.addEventListener('change', (e) => { if (currentMeal && currentDay) { updateMealPlan(currentMeal, currentDay, e.target.value); } });
+            manageMealsBtn.addEventListener('click', openManageMealsModal);
+            manageModalCloseBtn.addEventListener('click', closeManageMealsModal);
+            manageMealsModal.addEventListener('click', (e) => e.target === manageMealsModal && closeManageMealsModal());
+            addMealBtn.addEventListener('click', handleAddMeal);
+            newMealInput.addEventListener('keyup', (e) => e.key === 'Enter' && handleAddMeal());
+            editModalCancelBtn.addEventListener('click', closeEditModal);
+            editMealModal.addEventListener('click', (e) => e.target === editMealModal && closeEditModal());
+            symptomCheckBtn.addEventListener('click', handleSymptomCheck);
+            babyGrowthCard.addEventListener('click', () => {
+                startDateInput.value = wellnessData.pregnancyStartDate; endDateInput.value = wellnessData.pregnancyEndDate || '';
+                startDateModal.classList.remove('hidden'); setTimeout(() => startDateModal.classList.add('active'), 10);
+            });
+            startDateModalCancelBtn.addEventListener('click', closeStartDateModal);
+            startDateModal.addEventListener('click', (e) => e.target === startDateModal && closeStartDateModal());
+            startDateModalSaveBtn.addEventListener('click', async () => {
+                const newStartDate = startDateInput.value; let newEndDate = endDateInput.value;
+                if (newStartDate) {
+                    if (!newEndDate) { const startDate = new Date(newStartDate); startDate.setDate(startDate.getDate() + (40 * 7)); newEndDate = startDate.toISOString().split('T')[0]; }
+                    if (newStartDate !== wellnessData.pregnancyStartDate || newEndDate !== wellnessData.pregnancyEndDate) await setDoc(wellnessDataRef, { pregnancyStartDate: newStartDate, pregnancyEndDate: newEndDate }, { merge: true });
+                }
+                closeStartDateModal();
+            });
+            sleepMonitorCard.addEventListener('click', () => {
+                populateSleepModal(); sleepModal.classList.remove('hidden');
+                setTimeout(() => sleepModal.classList.add('active'), 10);
+            });
+            sleepModalCancelBtn.addEventListener('click', closeSleepModal);
+            sleepModal.addEventListener('click', (e) => e.target === sleepModal && closeSleepModal());
+            sleepModalSaveBtn.addEventListener('click', async () => {
+                const newSleepData = {}; let hasChanged = false;
+                sleepDays.forEach(day => {
+                    const sleepInput = document.getElementById(`sleep-time-${day}`); const wakeInput = document.getElementById(`wake-time-${day}`);
+                    newSleepData[day] = { sleep: sleepInput.value, wake: wakeInput.value };
+                    if (newSleepData[day].sleep !== (wellnessData.sleep[day] || {}).sleep || newSleepData[day].wake !== (wellnessData.sleep[day] || {}).wake) hasChanged = true;
+                });
+                if (hasChanged) await setDoc(wellnessDataRef, { sleep: newSleepData }, { merge: true });
+                closeSleepModal();
+            });
+            aiMealCloseBtn.addEventListener('click', closeAiMealPlannerModal);
+            aiMealModal.addEventListener('click', (e) => e.target === aiMealModal && closeAiMealPlannerModal());
+            aiMealRegenerateBtn.addEventListener('click', () => generateAiMealPlan(currentDayForAI, lastCraving));
+            aiMealSaveBtn.addEventListener('click', handleSaveAiPlan);
+            generateFromCravingBtn.addEventListener('click', () => { const cravingText = cravingInput.value.trim(); if(cravingText) generateAiMealPlan(currentDayForAI, cravingText); });
+            aiSuggestionBtn.addEventListener('click', () => generateAiMealPlan(currentDayForAI, null));
+            
+            // Supplement Listeners
+            nutritionTrackerHeader.addEventListener('click', openSupplementModal);
+            manageSupplementsCloseBtn.addEventListener('click', closeSupplementModal);
+            manageSupplementsModal.addEventListener('click', e => e.target === manageSupplementsModal && closeSupplementModal());
+            addSupplementBtn.addEventListener('click', handleAddSupplement);
+            newSupplementInput.addEventListener('keyup', e => e.key === 'Enter' && handleAddSupplement());
+            
+            // --- JOURNEY TAB LOGIC ---
+            let currentTodos = [], currentWishes = [], currentReflections = [];
+
+            // To-Do List Logic
             function loadTodos() {
-                if(!todosRef) return;
+                if (!todosRef) return;
+                if(unsubscribeTodos) unsubscribeTodos();
                 const q = query(todosRef, orderBy("createdAt", "desc"));
                 unsubscribeTodos = onSnapshot(q, (snapshot) => {
-                    currentTodos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    renderTodos();
+                    currentTodos = [];
+                    snapshot.forEach(doc => currentTodos.push({ id: doc.id, ...doc.data() }));
+                    renderTodos(currentTodos);
                 });
             }
 
-            function renderTodos() {
+            function renderTodos(todos) {
                 todoListContainer.innerHTML = '';
-                if(currentTodos.length === 0) {
+                if (todos.length === 0) {
                     todoListContainer.innerHTML = `<p class="text-center text-gray-400">No tasks yet. Add one below!</p>`;
                     return;
                 }
-
-                const categoryMap = { 'Health': '🧘‍♀️', 'Baby': '🍼', 'Home': '🏡', 'Reminder': '💬' };
-                currentTodos.forEach(todo => {
-                    const todoEl = document.createElement('div');
-                    todoEl.className = `todo-item flex items-center p-3 bg-white/5 rounded-lg ${todo.completed ? 'completed' : ''}`;
-                    todoEl.innerHTML = `
-                        <input type="checkbox" class="todo-checkbox h-5 w-5 rounded bg-gray-700 border-gray-600 text-purple-500 focus:ring-purple-600 mr-3" ${todo.completed ? 'checked' : ''}>
-                        <div class="flex-grow">
-                            <span class="font-medium">${todo.task}</span>
-                            <span class="text-xs text-gray-400 ml-2">${categoryMap[todo.category] || ''} ${todo.category}</span>
+                const categoryIcons = { Health: '🧘‍♀️', Baby: '🍼', Home: '🏡', Reminder: '💬' };
+                todos.forEach(todo => {
+                    const item = document.createElement('div');
+                    item.className = `todo-item flex items-center justify-between p-3 bg-white/5 rounded-lg ${todo.completed ? 'completed' : ''}`;
+                    item.innerHTML = `
+                        <div class="flex items-center flex-1 min-w-0">
+                            <label for="todo-${todo.id}" class="flex items-center cursor-pointer">
+                                <input type="checkbox" id="todo-${todo.id}" class="hidden todo-checkbox">
+                                <div class="w-6 h-6 border-2 border-purple-400 rounded-md mr-3 flex-shrink-0 flex items-center justify-center check-label">
+                                    ${todo.completed ? '<svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>' : ''}
+                                </div>
+                                <div>
+                                    <span class="font-semibold break-words">${todo.text}</span>
+                                    <span class="text-xs text-gray-400 ml-2 whitespace-nowrap">${categoryIcons[todo.category] || ''} ${todo.category}</span>
+                                </div>
+                            </label>
                         </div>
-                        <svg class="w-6 h-6 text-green-400 ${todo.completed ? '' : 'hidden'}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <button class="delete-todo-btn icon-btn ml-2"><svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                        <button class="icon-btn delete-todo-btn ml-2 flex-shrink-0"><svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
                     `;
-                    todoListContainer.appendChild(todoEl);
+                    
+                    const toggleTodo = async () => {
+                         if (!todosRef) return;
+                         const todoDocRef = doc(db, `users/${userId}/todos`, todo.id);
+                         await updateDoc(todoDocRef, { completed: !todo.completed });
+                    };
+                    
+                    item.querySelector('label').addEventListener('click', (e) => {
+                        e.preventDefault();
+                        toggleTodo();
+                    });
 
-                    todoEl.querySelector('.todo-checkbox').addEventListener('change', async (e) => {
-                        const todoRef = doc(db, `users/${userId}/todos`, todo.id);
-                        await updateDoc(todoRef, { completed: e.target.checked });
+                    item.querySelector('.delete-todo-btn').addEventListener('click', async () => {
+                        if (!todosRef) return;
+                        const todoDocRef = doc(db, `users/${userId}/todos`, todo.id);
+                        await deleteDoc(todoDocRef);
                     });
-                    todoEl.querySelector('.delete-todo-btn').addEventListener('click', async () => {
-                         const todoRef = doc(db, `users/${userId}/todos`, todo.id);
-                         await deleteDoc(todoRef);
-                    });
+
+                    todoListContainer.appendChild(item);
                 });
             }
 
             addTodoBtn.addEventListener('click', async () => {
-                const task = newTodoInput.value.trim();
+                const text = newTodoInput.value.trim();
                 const category = newTodoCategory.value;
-                if(!task) return;
-                await addDoc(todosRef, { task, category, completed: false, createdAt: serverTimestamp() });
+                if (!text || !todosRef) return;
+                await addDoc(todosRef, { text, category, completed: false, createdAt: serverTimestamp() });
                 newTodoInput.value = '';
             });
 
@@ -2366,248 +2396,166 @@ Respond ONLY with a JSON object containing four arrays of strings as per the sch
                 const pregnancyWeek = Math.floor(Math.abs(new Date() - new Date(wellnessData.pregnancyStartDate)) / (1000 * 60 * 60 * 24 * 7));
                 const systemPrompt = `You are a helpful assistant for a pregnant woman. Generate a concise to-do list of 4-5 important, actionable tasks for week ${pregnancyWeek} of pregnancy. Categorize each task as 'Health', 'Baby', 'Home', or 'Reminder'. Provide the response ONLY in a JSON array format.`;
                 const userQuery = `Generate a weekly to-do list for week ${pregnancyWeek}.`;
-                const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+                const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                 const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json", responseSchema: { type: "ARRAY", items: { type: "OBJECT", properties: { "task": { "type": "STRING" }, "category": { "type": "STRING" } } } } } };
                 try {
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                    if (!response.ok) throw new Error('API error');
-                    const result = await response.json();
-                    const todos = JSON.parse(result.candidates[0].content.parts[0].text);
-                    for (const todo of todos) {
-                        await addDoc(todosRef, { ...todo, completed: false, createdAt: serverTimestamp() });
+                    if (!response.ok) throw new Error(`API error: ${response.statusText}`);
+                    const result = await response.json(); const data = JSON.parse(result.candidates[0].content.parts[0].text);
+                    for (const item of data) {
+                        if (item.task && item.category && todosRef) {
+                            await addDoc(todosRef, { text: item.task, category: item.category, completed: false, createdAt: serverTimestamp() });
+                        }
                     }
-                } catch(error) {
-                    console.error("AI To-do generation failed:", error);
-                    // Add a default task on error
-                    await addDoc(todosRef, { task: "Schedule next prenatal check-up", category: "Health", completed: false, createdAt: serverTimestamp() });
-                }
+                } catch (error) { console.error("AI To-do generation failed:", error); }
             });
 
-            // Wish List
-            let currentWishes = [];
+            // Little Wishes List Logic
             function loadWishes() {
-                if(!wishesRef) return;
+                if (!wishesRef) return;
+                if(unsubscribeWishes) unsubscribeWishes();
                 const q = query(wishesRef, orderBy("createdAt", "desc"));
                 unsubscribeWishes = onSnapshot(q, (snapshot) => {
-                    currentWishes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    renderWishes();
+                    currentWishes = [];
+                    snapshot.forEach(doc => currentWishes.push({ id: doc.id, ...doc.data() }));
+                    renderWishes(currentWishes);
                 });
             }
 
-            function renderWishes() {
+            function renderWishes(wishes) {
                 wishlistContainer.innerHTML = '';
-                 if(currentWishes.length === 0) {
-                    wishlistContainer.innerHTML = `<p class="text-center text-gray-400">Add items to your baby wishlist!</p>`;
-                    updateWishlistProgress();
-                    return;
+                if (wishes.length === 0) {
+                    wishlistContainer.innerHTML = `<p class="text-center text-gray-400">No wishes yet. Add one below!</p>`;
                 }
-                currentWishes.forEach(wish => {
-                    const wishEl = document.createElement('div');
-                    wishEl.className = `wish-item-card p-3 bg-white/5 rounded-lg border border-transparent ${wish.purchased ? 'purchased' : ''}`;
-                    wishEl.innerHTML = `
-                        <div class="flex items-start gap-3">
-                           <input type="checkbox" class="wish-checkbox mt-1.5 h-5 w-5 rounded bg-gray-700 border-gray-600 text-teal-500 focus:ring-teal-600" ${wish.purchased ? 'checked' : ''}>
-                           <div class="flex-grow">
-                                <p class="font-semibold leading-tight">${wish.item}</p>
-                                <div class="flex items-center text-xs text-gray-400 mt-1">
-                                    <span class="bg-gray-700 rounded-full px-2 py-0.5">${wish.category}</span>
-                                    ${wish.price ? `<span class="mx-2">|</span><span>$${wish.price}</span>` : ''}
-                                </div>
-                           </div>
-                           ${wish.link ? `<a href="${wish.link}" target="_blank" class="icon-btn"><svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>` : ''}
-                           <button class="delete-wish-btn icon-btn"><svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                wishes.forEach(wish => {
+                    const item = document.createElement('div');
+                    item.className = `wish-item-card p-3 bg-white/5 rounded-lg border border-transparent ${wish.purchased ? 'purchased opacity-60' : ''}`;
+                    item.innerHTML = `
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1 min-w-0">
+                                <p class="font-bold break-words">${wish.item}</p>
+                                <p class="text-xs text-indigo-300">${wish.category}</p>
+                            </div>
+                            <div class="flex items-center ml-2">
+                                <input type="checkbox" class="h-5 w-5 rounded bg-white/20 text-teal-400 focus:ring-teal-500 border-gray-500 cursor-pointer" ${wish.purchased ? 'checked' : ''}>
+                                <button class="icon-btn delete-wish-btn ml-1"><svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center mt-2 text-sm">
+                            <span class="font-semibold text-teal-300">${wish.price ? `$${wish.price}`: ''}</span>
+                            ${wish.link ? `<a href="${wish.link}" target="_blank" class="text-blue-400 hover:underline">Store Link</a>` : ''}
                         </div>
                     `;
-                    wishlistContainer.appendChild(wishEl);
-                    wishEl.querySelector('.wish-checkbox').addEventListener('change', async (e) => {
-                        const wishRef = doc(db, `users/${userId}/wishes`, wish.id);
-                        await updateDoc(wishRef, { purchased: e.target.checked });
+                    item.querySelector('input[type="checkbox"]').addEventListener('change', async (e) => {
+                        const wishDocRef = doc(db, `users/${userId}/wishes`, wish.id);
+                        await updateDoc(wishDocRef, { purchased: e.target.checked });
                     });
-                    wishEl.querySelector('.delete-wish-btn').addEventListener('click', async () => {
-                        const wishRef = doc(db, `users/${userId}/wishes`, wish.id);
-                        await deleteDoc(wishRef);
+                    item.querySelector('.delete-wish-btn').addEventListener('click', async () => {
+                        const wishDocRef = doc(db, `users/${userId}/wishes`, wish.id);
+                        await deleteDoc(wishDocRef);
                     });
+                    wishlistContainer.appendChild(item);
                 });
-                updateWishlistProgress();
+                
+                const purchasedCount = wishes.filter(w => w.purchased).length;
+                wishlistProgressText.textContent = `${purchasedCount}/${wishes.length} Items`;
+                wishlistProgressBar.style.width = wishes.length > 0 ? `${(purchasedCount / wishes.length) * 100}%` : '0%';
             }
-            
-            function updateWishlistProgress() {
-                const total = currentWishes.length;
-                const purchased = currentWishes.filter(w => w.purchased).length;
-                wishlistProgressText.textContent = `${purchased}/${total} Items`;
-                const percentage = total > 0 ? (purchased / total) * 100 : 0;
-                wishlistProgressBar.style.width = `${percentage}%`;
+
+            function renderAiWishSuggestions(suggestions) {
+                const container = document.getElementById('ai-wish-suggestions-container');
+                container.innerHTML = ''; // Clear loading spinner or old results
+
+                if (suggestions.length === 0) {
+                    container.innerHTML = `<p class="text-center text-gray-400 p-2">No suggestions found.</p>`;
+                    return;
+                }
+                
+                // Add a header with a clear button
+                const header = document.createElement('div');
+                header.className = 'flex justify-between items-center mb-2 px-1';
+                header.innerHTML = `<h4 class="font-semibold text-sm text-indigo-200">AI Suggestions</h4>
+                                    <button id="clear-suggestions-btn" class="text-xs text-gray-400 hover:text-white">Clear</button>`;
+                container.appendChild(header);
+                
+                header.querySelector('#clear-suggestions-btn').addEventListener('click', () => {
+                    container.innerHTML = '';
+                });
+
+                suggestions.forEach(suggestion => {
+                    const card = document.createElement('div');
+                    card.className = 'ai-suggestion-card flex items-center gap-3';
+                    card.innerHTML = `
+                        <img src="${suggestion.imageUrl}" alt="${suggestion.itemName}" class="ai-suggestion-img flex-shrink-0" onerror="this.onerror=null;this.src='https://placehold.co/100x100/3730a3/e0e7ff?text=Item';">
+                        <div class="flex-grow min-w-0">
+                            <p class="font-bold text-sm truncate">${suggestion.itemName}</p>
+                            <p class="text-xs text-gray-400">${suggestion.category} - ~\$${suggestion.estimatedPrice}</p>
+                        </div>
+                        <button class="btn-secondary text-xs font-semibold py-1.5 px-3 rounded-md add-suggestion-btn flex-shrink-0">Add</button>
+                    `;
+                    card.querySelector('.add-suggestion-btn').addEventListener('click', () => {
+                        newWishItem.value = suggestion.itemName;
+                        newWishPrice.value = suggestion.estimatedPrice;
+                        newWishLink.value = suggestion.storeLink;
+
+                        // Set category dropdown
+                        const categoryOption = Array.from(newWishCategory.options).find(opt => opt.value === suggestion.category);
+                        if (categoryOption) {
+                            newWishCategory.value = suggestion.category;
+                            customCategoryInput.classList.add('hidden');
+                        } else {
+                            newWishCategory.value = 'Custom';
+                            customCategoryInput.classList.remove('hidden');
+                            customCategoryInput.value = suggestion.category;
+                        }
+                         // Optional: Scroll to the add form
+                        newWishItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        newWishItem.focus();
+                    });
+                    container.appendChild(card);
+                });
             }
 
             addWishBtn.addEventListener('click', async () => {
                 const item = newWishItem.value.trim();
                 let category = newWishCategory.value;
-                const price = newWishPrice.value.trim();
-                const link = newWishLink.value.trim();
-                if(!item) return;
-                if(category === 'Custom') {
-                    category = customCategoryInput.value.trim() || 'Custom';
+                if (category === 'Custom') {
+                    category = customCategoryInput.value.trim();
                 }
-                await addDoc(wishesRef, { item, category, price, link, purchased: false, createdAt: serverTimestamp() });
-                newWishItem.value = ''; newWishPrice.value = ''; newWishLink.value = ''; newWishCategory.value = 'Baby Care'; customCategoryInput.classList.add('hidden');
-            });
-            
-            newWishCategory.addEventListener('change', (e) => {
-                if(e.target.value === 'Custom') {
-                    customCategoryInput.classList.remove('hidden');
-                } else {
-                    customCategoryInput.classList.add('hidden');
-                }
-            });
-            
-             // Reflections
-            let currentReflections = [];
-            let editingReflectionId = null;
-            function loadReflections() {
-                if(!reflectionsRef) return;
-                const q = query(reflectionsRef, orderBy("createdAt", "desc"));
-                unsubscribeReflections = onSnapshot(q, (snapshot) => {
-                    currentReflections = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    renderReflections();
-                });
-            }
-
-            function renderReflections() {
-                reflectionsContainer.innerHTML = '';
-                if(currentReflections.length === 0) {
-                    reflectionsContainer.innerHTML = `<p class="text-center text-gray-400 sm:col-span-2 md:col-span-3">No notes yet. Add one to start reflecting!</p>`;
-                    return;
-                }
-                currentReflections.forEach(note => {
-                    const noteEl = document.createElement('div');
-                    noteEl.className = `reflection-note glass-card no-hover p-4 border-l-4 note-color-${note.color || 'pink'}`;
-                    noteEl.innerHTML = `
-                        <h4 class="font-bold mb-2">${note.title}</h4>
-                        <p class="text-sm text-gray-300 mb-3">${note.content.substring(0, 100)}${note.content.length > 100 ? '...' : ''}</p>
-                        <div class="flex justify-between items-center text-xs text-gray-400">
-                            <span>${new Date(note.createdAt?.toDate()).toLocaleDateString()}</span>
-                            <div>
-                               <button class="edit-reflection-btn icon-btn"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"></path><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd"></path></svg></button>
-                               <button class="delete-reflection-btn icon-btn"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg></button>
-                            </div>
-                        </div>
-                    `;
-                    reflectionsContainer.appendChild(noteEl);
-
-                    noteEl.querySelector('.edit-reflection-btn').addEventListener('click', () => openReflectionModal(note));
-                    noteEl.querySelector('.delete-reflection-btn').addEventListener('click', async () => {
-                         const noteRef = doc(db, `users/${userId}/reflections`, note.id);
-                         await deleteDoc(noteRef);
-                    });
-                });
-            }
-            
-            function openReflectionModal(note = null) {
-                if (note) {
-                    editingReflectionId = note.id;
-                    reflectionModalTitle.textContent = "Edit Reflection";
-                    reflectionTitleInput.value = note.title;
-                    reflectionContentInput.value = note.content;
-                    reflectionColorTags.querySelector(`[data-color="${note.color}"]`).classList.add('border-white');
-                } else {
-                    editingReflectionId = null;
-                    reflectionModalTitle.textContent = "New Reflection";
-                    reflectionTitleInput.value = '';
-                    reflectionContentInput.value = '';
-                }
-                reflectionModal.classList.remove('hidden');
-                setTimeout(() => reflectionModal.classList.add('active'), 10);
-            }
-            addReflectionBtn.addEventListener('click', () => openReflectionModal());
-            reflectionModalCancelBtn.addEventListener('click', () => {
-                 reflectionModal.classList.remove('active');
-                 setTimeout(() => reflectionModal.classList.add('hidden'), 300);
-            });
-            
-            reflectionColorTags.addEventListener('click', (e) => {
-                if(e.target.tagName === 'BUTTON') {
-                    reflectionColorTags.querySelectorAll('button').forEach(btn => btn.classList.remove('border-white'));
-                    e.target.classList.add('border-white');
-                }
-            });
-
-            reflectionModalSaveBtn.addEventListener('click', async () => {
-                const title = reflectionTitleInput.value.trim();
-                const content = reflectionContentInput.value.trim();
-                const color = reflectionColorTags.querySelector('.border-white')?.dataset.color || 'pink';
-                if(!title || !content) return;
+                if (!item || !wishesRef || !category) return;
                 
-                const data = { title, content, color, createdAt: serverTimestamp() };
-                if(editingReflectionId) {
-                    const noteRef = doc(db, `users/${userId}/reflections`, editingReflectionId);
-                    await setDoc(noteRef, data, { merge: true });
-                } else {
-                    await addDoc(reflectionsRef, data);
-                }
-                reflectionModalCancelBtn.click();
-            });
-
-            aiSummarizeReflectionsBtn.addEventListener('click', async () => {
-                 if (currentReflections.length < 1) {
-                    aiSummaryContent.textContent = "You need at least one reflection to get a summary.";
-                    aiSummaryModal.classList.remove('hidden');
-                    return;
-                }
-                const notesToSummarize = currentReflections.slice(0, 3).map(n => `Title: ${n.title}\nContent: ${n.content}`).join('\n\n---\n\n');
-                const systemPrompt = "You are an empathetic assistant. Summarize the user's reflection notes into one short, insightful, and emotional paragraph. Focus on the underlying feelings and themes.";
-                const userQuery = `Here are my last few notes:\n${notesToSummarize}`;
-                const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
-                const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }};
-
-                aiSummaryContent.textContent = "Summarizing your thoughts...";
-                aiSummaryModal.classList.remove('hidden');
-                setTimeout(() => aiSummaryModal.classList.add('active'), 10);
-                
-                try {
-                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                     if (!response.ok) throw new Error('API error');
-                    const result = await response.json();
-                    aiSummaryContent.textContent = result.candidates[0].content.parts[0].text;
-                } catch(error) {
-                    console.error("AI Summary failed:", error);
-                    aiSummaryContent.textContent = "Sorry, couldn't generate a summary right now.";
-                }
-            });
-            aiSummaryCloseBtn.addEventListener('click', () => {
-                 aiSummaryModal.classList.remove('active');
-                 setTimeout(() => aiSummaryModal.classList.add('hidden'), 300);
+                await addDoc(wishesRef, {
+                    item,
+                    category: category,
+                    price: newWishPrice.value.trim(),
+                    link: newWishLink.value.trim(),
+                    purchased: false,
+                    createdAt: serverTimestamp()
+                });
+                newWishItem.value = newWishPrice.value = newWishLink.value = '';
+                customCategoryInput.value = '';
+                newWishCategory.value = 'Baby Care';
+                customCategoryInput.classList.add('hidden');
             });
             
-            // Smart Wish Finder
-            aiWishForm.addEventListener('submit', (e) => {
+            aiWishForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                handleSmartWishSearch();
-            });
-            async function handleSmartWishSearch() {
                 const prompt = aiWishPrompt.value.trim();
                 if(!prompt) return;
 
-                aiWishSearchIcon.classList.add('hidden');
-                aiWishLoaderIcon.classList.remove('hidden');
-                aiWishResultsContainer.innerHTML = `<p class="text-center text-gray-400">Searching for products...</p>`;
+                const suggestionsContainer = document.getElementById('ai-wish-suggestions-container');
+                suggestionsContainer.innerHTML = `<div class="text-center p-4">
+                    <svg class="animate-spin mx-auto h-6 w-6 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <p class="mt-2 text-sm text-gray-300">Finding suggestions...</p>
+                </div>`;
 
                 const pregnancyWeek = Math.floor(Math.abs(new Date() - new Date(wellnessData.pregnancyStartDate)) / (1000 * 60 * 60 * 24 * 7));
-                
-                const systemPrompt = `You are a helpful shopping assistant for a pregnant woman in week ${pregnancyWeek}. The user will provide a natural language query for a product.
-1.  Use the Google Search tool to find the product at the specified store (or a major retailer if none is specified).
-2.  Return up to 3 top results.
-3.  For each result, extract the product name, price (as a string, e.g., "29.99"), a direct image URL, and the product page URL.
-4.  Assign a relevant category for each item from this list: 'Baby Care', 'Nursery', 'Hospital Bag', 'Health', 'Postpartum'. If it doesn't fit, use 'Custom'.
-5.  Respond ONLY in the specified JSON format. If no relevant products are found, return an empty array.`;
-
-                const userQuery = `Find this product: "${prompt}".`;
-                const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; 
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
-
+                const systemPrompt = `You are a helpful shopping assistant for a pregnant woman. Based on the user's request and their pregnancy week (${pregnancyWeek}), generate a list of 3-4 relevant product ideas. For each item, provide a plausible-looking (but not necessarily real) name, category, price, store link, and an image URL. Use placehold.co for image URLs. Respond ONLY in JSON format.`;
+                const userQuery = `My request: "${prompt}". I am in week ${pregnancyWeek} of pregnancy.`;
+                const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                 const payload = {
                     contents: [{ parts: [{ text: userQuery }] }],
                     systemInstruction: { parts: [{ text: systemPrompt }] },
-                    tools: [{ "google_search": {} }],
                     generationConfig: {
                         responseMimeType: "application/json",
                         responseSchema: {
@@ -2615,141 +2563,164 @@ Respond ONLY with a JSON object containing four arrays of strings as per the sch
                             items: {
                                 type: "OBJECT",
                                 properties: {
-                                    "name": { "type": "STRING" },
-                                    "price": { "type": "STRING" },
-                                    "imageUrl": { "type": "STRING" },
-                                    "link": { "type": "STRING" },
-                                    "category": { "type": "STRING" }
-                                }
+                                    "itemName": { "type": "STRING" },
+                                    "category": { "type": "STRING", "enum": ["Baby Care", "Nursery", "Hospital Bag", "Health", "Postpartum", "Custom"] },
+                                    "estimatedPrice": { "type": "STRING" },
+                                    "storeLink": { "type": "STRING" },
+                                    "imageUrl": { "type": "STRING" }
+                                },
+                                required: ["itemName", "category", "estimatedPrice", "storeLink", "imageUrl"]
                             }
                         }
                     }
                 };
+                try {
+                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!response.ok) throw new Error(`API error: ${response.statusText}`);
+                    const result = await response.json();
+                    const data = JSON.parse(result.candidates[0].content.parts[0].text);
+                    renderAiWishSuggestions(data);
+                } catch (error) {
+                    console.error("AI Wishlist generation failed:", error);
+                    suggestionsContainer.innerHTML = `<p class="text-center text-red-300 p-4">Sorry, couldn't generate suggestions right now.</p>`;
+                }
+            });
+
+            newWishCategory.addEventListener('change', () => {
+                if (newWishCategory.value === 'Custom') {
+                    customCategoryInput.classList.remove('hidden');
+                } else {
+                    customCategoryInput.classList.add('hidden');
+                }
+            });
+
+            // Tiny Reflections Logic
+            function loadReflections() {
+                if (!reflectionsRef) return;
+                if(unsubscribeReflections) unsubscribeReflections();
+                const q = query(reflectionsRef, orderBy("createdAt", "desc"));
+                unsubscribeReflections = onSnapshot(q, (snapshot) => {
+                    currentReflections = [];
+                    snapshot.forEach(doc => currentReflections.push({ id: doc.id, ...doc.data() }));
+                    renderReflections(currentReflections);
+                });
+            }
+
+            function renderReflections(reflections) {
+                reflectionsContainer.innerHTML = '';
+                 if (reflections.length === 0) {
+                    reflectionsContainer.innerHTML = `<p class="text-center text-gray-400 col-span-full">No reflections yet. Add a new note to begin!</p>`;
+                    return;
+                }
+                reflections.forEach(note => {
+                    const item = document.createElement('div');
+                    item.className = `reflection-note p-4 rounded-lg border-l-4 note-color-${note.color}`;
+                    item.innerHTML = `
+                        <h4 class="font-bold break-words">${note.title}</h4>
+                        <p class="text-sm text-gray-300 mt-2 break-words">${note.content.substring(0, 100)}${note.content.length > 100 ? '...' : ''}</p>
+                        <p class="text-xs text-gray-500 mt-3">${new Date(note.createdAt?.toDate()).toLocaleDateString()}</p>
+                    `;
+                    item.addEventListener('click', () => openReflectionModal(note));
+                    reflectionsContainer.appendChild(item);
+                });
+            }
+
+            let activeReflectionId = null;
+            let activeColor = 'pink';
+
+            function openReflectionModal(note = null) {
+                if (note) {
+                    activeReflectionId = note.id;
+                    reflectionModalTitle.textContent = "Edit Reflection";
+                    reflectionTitleInput.value = note.title;
+                    reflectionContentInput.value = note.content;
+                    activeColor = note.color;
+                } else {
+                    activeReflectionId = null;
+                    reflectionModalTitle.textContent = "New Reflection";
+                    reflectionTitleInput.value = '';
+                    reflectionContentInput.value = '';
+                    activeColor = 'pink';
+                }
+                updateColorTags();
+                reflectionModal.classList.remove('hidden');
+                setTimeout(() => reflectionModal.classList.add('active'), 10);
+            }
+            
+            function closeReflectionModal() {
+                reflectionModal.classList.remove('active');
+                setTimeout(() => reflectionModal.classList.add('hidden'), 300);
+            }
+
+            function updateColorTags() {
+                reflectionColorTags.querySelectorAll('button').forEach(btn => {
+                    if (btn.dataset.color === activeColor) {
+                        btn.classList.add('border-white');
+                    } else {
+                        btn.classList.remove('border-white');
+                    }
+                });
+            }
+
+            addReflectionBtn.addEventListener('click', () => openReflectionModal());
+            reflectionModalCancelBtn.addEventListener('click', closeReflectionModal);
+            reflectionModal.addEventListener('click', e => e.target === reflectionModal && closeReflectionModal());
+
+            reflectionColorTags.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON') {
+                    activeColor = e.target.dataset.color;
+                    updateColorTags();
+                }
+            });
+
+            reflectionModalSaveBtn.addEventListener('click', async () => {
+                const title = reflectionTitleInput.value.trim();
+                const content = reflectionContentInput.value.trim();
+                if (!title || !content) return;
+
+                if (activeReflectionId) {
+                    const noteDocRef = doc(db, `users/${userId}/reflections`, activeReflectionId);
+                    await updateDoc(noteDocRef, { title, content, color: activeColor });
+                } else {
+                    await addDoc(reflectionsRef, { title, content, color: activeColor, createdAt: serverTimestamp() });
+                }
+                closeReflectionModal();
+            });
+
+            aiSummarizeReflectionsBtn.addEventListener('click', async () => {
+                if (currentReflections.length < 2) {
+                    aiSummaryContent.textContent = "You need at least two notes for a summary.";
+                    aiSummaryModal.classList.remove('hidden');
+                    setTimeout(() => aiSummaryModal.classList.add('active'), 10);
+                    return;
+                }
+                const notesToSummarize = currentReflections.slice(0, 3).map(n => `Title: ${n.title}\nContent: ${n.content}`).join('\n\n---\n\n');
+                const systemPrompt = "You are an empathetic assistant. Summarize the user's reflection notes into one short, insightful, and emotional paragraph. Focus on the underlying feelings and themes.";
+                const userQuery = `Here are my last few notes:\n${notesToSummarize}`;
+                const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }};
+
+                aiSummaryContent.textContent = "Summarizing your thoughts...";
+                aiSummaryModal.classList.remove('hidden');
+                setTimeout(() => aiSummaryModal.classList.add('active'), 10);
 
                 try {
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                    if (!response.ok) throw new Error('API error');
+                    if (!response.ok) throw new Error(`API error: ${response.statusText}`);
                     const result = await response.json();
-                    
-                    if (!result.candidates || !result.candidates[0].content.parts[0].text) {
-                        throw new Error("Invalid API response structure");
-                    }
-                    const products = JSON.parse(result.candidates[0].content.parts[0].text);
-                    renderSmartWishResults(products);
-                } catch(error) {
-                    console.error("AI Smart Wish Finder failed:", error);
-                    aiWishResultsContainer.innerHTML = `<p class="text-center text-red-400">Search failed. Please try a different query.</p>`;
-                } finally {
-                    aiWishSearchIcon.classList.remove('hidden');
-                    aiWishLoaderIcon.classList.add('hidden');
+                    aiSummaryContent.textContent = result.candidates[0].content.parts[0].text;
+                } catch (error) { 
+                    console.error("AI Summary failed:", error); 
+                    aiSummaryContent.textContent = "Sorry, I couldn't generate a summary right now.";
                 }
-            }
-            
-            function renderSmartWishResults(products) {
-                aiWishResultsContainer.innerHTML = '';
-                if(products.length === 0) {
-                     aiWishResultsContainer.innerHTML = `<p class="text-center text-gray-400">No products found. Try being more specific!</p>`;
-                     return;
-                }
-                products.forEach(product => {
-                    const card = document.createElement('div');
-                    card.className = 'glass-card p-3 flex items-center gap-3';
-                    card.innerHTML = `
-                        <img src="${product.imageUrl}" alt="${product.name}" class="w-16 h-16 object-cover rounded-md" onerror="this.src='https://placehold.co/64x64/374151/9CA3AF?text=N/A'">
-                        <div class="flex-grow">
-                            <p class="font-semibold text-sm leading-tight">${product.name}</p>
-                            <p class="text-xs text-green-400">$${product.price}</p>
-                        </div>
-                        <button class="add-from-search-btn bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-3 rounded-lg text-xs">Add</button>
-                    `;
-                    aiWishResultsContainer.appendChild(card);
-                    card.querySelector('.add-from-search-btn').addEventListener('click', () => {
-                        newWishItem.value = product.name;
-                        newWishPrice.value = product.price;
-                        newWishLink.value = product.link;
-                        
-                        // Check if the category exists in the dropdown
-                        const categoryExists = [...newWishCategory.options].some(option => option.value === product.category);
-                        if (categoryExists) {
-                            newWishCategory.value = product.category;
-                            customCategoryInput.classList.add('hidden');
-                        } else {
-                            newWishCategory.value = 'Custom';
-                            customCategoryInput.classList.remove('hidden');
-                            customCategoryInput.value = product.category;
-                        }
-                        
-                        addWishBtn.click();
-                        aiWishResultsContainer.innerHTML = '';
-                        aiWishPrompt.value = '';
-                    });
-                });
-            }
+            });
 
+            aiSummaryCloseBtn.addEventListener('click', () => {
+                aiSummaryModal.classList.remove('active');
+                setTimeout(() => aiSummaryModal.classList.add('hidden'), 300);
+            });
 
-            // --- DATA INITIALIZATION AND LOADING ---
-            async function initializeMealOptions() {
-                if (!mealOptionsRef) return;
-                const docSnap = await getDoc(mealOptionsRef);
-                if (!docSnap.exists()) {
-                    await setDoc(mealOptionsRef, defaultMealOptions);
-                    dynamicMealOptions = { ...defaultMealOptions };
-                } else {
-                    dynamicMealOptions = { ...defaultMealOptions, ...docSnap.data() };
-                }
-            }
-            function loadMealOptions() {
-                if (!mealOptionsRef) return;
-                unsubscribeMealOptions = onSnapshot(mealOptionsRef, (docSnap) => {
-                    if (docSnap.exists()) {
-                         dynamicMealOptions = { ...defaultMealOptions, ...docSnap.data() };
-                    }
-                });
-            }
-             async function initializeCustomMealNutrients() {
-                if (!customMealNutrientsRef) return;
-                const docSnap = await getDoc(customMealNutrientsRef);
-                if (!docSnap.exists()) {
-                    await setDoc(customMealNutrientsRef, { nutrients: {} });
-                    customMealNutrients = {};
-                } else {
-                    customMealNutrients = docSnap.data().nutrients || {};
-                }
-            }
-             function loadCustomMealNutrients() {
-                 if (!customMealNutrientsRef) return;
-                 unsubscribeCustomMealNutrients = onSnapshot(customMealNutrientsRef, (docSnap) => {
-                    if (docSnap.exists()) {
-                        customMealNutrients = docSnap.data().nutrients || {};
-                    }
-                });
-            }
-            function loadWellnessData() {
-                if (!wellnessDataRef) return;
-                unsubscribeWellnessData = onSnapshot(wellnessDataRef, (docSnap) => {
-                     if (docSnap.exists()) {
-                        const firestoreData = docSnap.data();
-                        const mergedSleep = { ...defaultWellnessData.sleep, ...firestoreData.sleep };
-                        const mergedWeeklyLog = { ...defaultWellnessData.weeklyLog, ...firestoreData.weeklyLog };
-                        const mergedSupplements = { ...defaultWellnessData.dailySupplements, ...firestoreData.dailySupplements };
-                        wellnessData = {
-                            ...defaultWellnessData,
-                            ...firestoreData,
-                            dailyNutrition: firestoreData.dailyNutrition || {},
-                            dailySupplements: mergedSupplements,
-                            sleep: mergedSleep,
-                            weeklyLog: mergedWeeklyLog,
-                            mood: { ...defaultWellnessData.mood, ...firestoreData.mood },
-                            water: { ...defaultWellnessData.water, ...firestoreData.water },
-                            energy: { ...defaultWellnessData.energy, ...firestoreData.energy },
-                        };
-                        if(symptomTrackerContent.classList.contains('active')) {
-                           updateDashboardUI();
-                           updateWellnessChartData();
-                        }
-                    }
-                });
-            }
+            document.addEventListener('DOMContentLoaded', () => { mainApp.classList.add('hidden'); });
         }
     </script>
 </body>
