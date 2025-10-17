@@ -2552,7 +2552,7 @@
                 const pregnancyWeek = Math.floor(Math.abs(new Date() - new Date(wellnessData.pregnancyStartDate)) / (1000 * 60 * 60 * 24 * 7));
                 const systemPrompt = `You are a helpful shopping assistant for a pregnant woman. Based on the user's request and their pregnancy week (${pregnancyWeek}), use the Google Search tool to find 3-4 real, relevant products. For each item, you MUST extract the actual product name, category, price, a working URL to the product page, and a direct image URL. Respond ONLY in the requested JSON format.`;
                 const userQuery = `My request: "${prompt}". I am in week ${pregnancyWeek} of pregnancy.`;
-                const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
                 const payload = {
                     contents: [{ parts: [{ text: userQuery }] }],
                     tools: [{ "google_search": {} }],
