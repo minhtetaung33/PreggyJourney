@@ -2376,40 +2376,16 @@
                 wishlistProgressBar.style.width = wishes.length > 0 ? `${(purchasedCount / wishes.length) * 100}%` : '0%';
             }
 
-            async function generateImageForItem(productName) {
-                const prompt = `A clear, professional, photorealistic product shot of '${productName}' on a clean, white background.`;
-                const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
-                const payload = { instances: [{ prompt: prompt }], parameters: { "sampleCount": 1 } };
-
-                try {
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                    if (!response.ok) throw new Error('Image generation API response not OK');
-                    const result = await response.json();
-                    if (result.predictions && result.predictions.length > 0 && result.predictions[0].bytesBase64Encoded) {
-                        return `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
-                    }
-                } catch (error) {
-                    console.error(`Failed to generate image for "${productName}":`, error);
-                }
-                // Fallback placeholder if generation fails
-                const placeholderText = encodeURIComponent(productName.split(' ').slice(0, 3).join(' '));
-                return `https://placehold.co/100x100/4f46e5/ffffff?text=${placeholderText}`;
-            }
-
             function renderAiWishSuggestions(suggestions) {
                 const container = document.getElementById('ai-wish-suggestions-container');
                 container.innerHTML = ''; // Clear loading spinner or old results
 
-                if (!suggestions || suggestions.length === 0) {
+                if (suggestions.length === 0) {
                     container.innerHTML = `<p class="text-center text-gray-400 p-2">No suggestions found.</p>`;
                     return;
                 }
                 
+                // Add a header with a clear button
                 const header = document.createElement('div');
                 header.className = 'flex justify-between items-center mb-2 px-1';
                 header.innerHTML = `<h4 class="font-semibold text-sm text-indigo-200">AI Suggestions</h4>
@@ -2423,7 +2399,6 @@
                 suggestions.forEach(suggestion => {
                     const card = document.createElement('div');
                     card.className = 'ai-suggestion-card flex items-center gap-3';
-                    
                     card.innerHTML = `
                         <img src="${suggestion.imageUrl}" alt="${suggestion.productName}" class="ai-suggestion-img flex-shrink-0" onerror="this.onerror=null;this.src='https://placehold.co/100x100/3730a3/e0e7ff?text=Item';">
                         <div class="flex-grow min-w-0">
@@ -2437,6 +2412,7 @@
                         newWishPrice.value = suggestion.price;
                         newWishLink.value = suggestion.productUrl;
 
+                        // Set category dropdown
                         const categoryOption = Array.from(newWishCategory.options).find(opt => opt.value === suggestion.category);
                         if (categoryOption) {
                             newWishCategory.value = suggestion.category;
@@ -2446,6 +2422,7 @@
                             customCategoryInput.classList.remove('hidden');
                             customCategoryInput.value = suggestion.category;
                         }
+                         // Optional: Scroll to the add form
                         newWishItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         newWishItem.focus();
                     });
@@ -2487,7 +2464,7 @@
                 </div>`;
 
                 const pregnancyWeek = Math.floor(Math.abs(new Date() - new Date(wellnessData.pregnancyStartDate)) / (1000 * 60 * 60 * 24 * 7));
-                const systemPrompt = `You are a helpful shopping assistant for a pregnant woman. Based on the user's request and their pregnancy week (${pregnancyWeek}), use the Google Search tool to find 3-4 real, relevant products. For each item, you MUST extract the actual product name, a relevant category (from "Baby Care", "Nursery", "Hospital Bag", "Health", "Postpartum"), price, and a working URL to the product page. Your response MUST be ONLY a valid JSON array of objects, with no other text or formatting. Each object must have these keys: "productName", "category", "price", "productUrl".`;
+                const systemPrompt = `You are a helpful shopping assistant for a pregnant woman. Based on the user's request and their pregnancy week (${pregnancyWeek}), use the Google Search tool to find 3-4 real, relevant products. For each item, you MUST extract the actual product name, a relevant category (from "Baby Care", "Nursery", "Hospital Bag", "Health", "Postpartum"), price, a working URL to the product page, and a direct image URL. Your response MUST be ONLY a valid JSON array of objects, with no other text or formatting. Each object must have these keys: "productName", "category", "price", "productUrl", "imageUrl".`;
                 const userQuery = `My request: "${prompt}". I am in week ${pregnancyWeek} of pregnancy.`;
                 const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
                 const payload = {
@@ -2501,19 +2478,8 @@
                     const result = await response.json();
                     let jsonString = result.candidates[0].content.parts[0].text;
                     jsonString = jsonString.replace(/```json/g, '').replace(/```/g, '').trim();
-                    const productData = JSON.parse(jsonString);
-
-                    // Now, generate an image for each product suggestion
-                    const imagePromises = productData.map(suggestion => generateImageForItem(suggestion.productName));
-                    const imageUrls = await Promise.all(imagePromises);
-
-                    const suggestionsWithImages = productData.map((suggestion, index) => ({
-                        ...suggestion,
-                        imageUrl: imageUrls[index]
-                    }));
-
-                    renderAiWishSuggestions(suggestionsWithImages);
-
+                    const data = JSON.parse(jsonString);
+                    renderAiWishSuggestions(data);
                 } catch (error) {
                     console.error("AI Wishlist generation failed:", error);
                     suggestionsContainer.innerHTML = `<p class="text-center text-red-300 p-4">Sorry, couldn't generate suggestions right now.</p>`;
