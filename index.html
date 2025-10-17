@@ -2486,17 +2486,17 @@
                     const card = document.createElement('div');
                     card.className = 'ai-suggestion-card flex items-center gap-3';
                     card.innerHTML = `
-                        <img src="${suggestion.imageUrl}" alt="${suggestion.itemName}" class="ai-suggestion-img flex-shrink-0" onerror="this.onerror=null;this.src='https://placehold.co/100x100/3730a3/e0e7ff?text=Item';">
+                        <img src="${suggestion.imageUrl}" alt="${suggestion.productName}" class="ai-suggestion-img flex-shrink-0" onerror="this.onerror=null;this.src='https://placehold.co/100x100/3730a3/e0e7ff?text=Item';">
                         <div class="flex-grow min-w-0">
-                            <p class="font-bold text-sm truncate">${suggestion.itemName}</p>
-                            <p class="text-xs text-gray-400">${suggestion.category} - ~\$${suggestion.estimatedPrice}</p>
+                            <p class="font-bold text-sm truncate">${suggestion.productName}</p>
+                            <p class="text-xs text-gray-400">${suggestion.category} - ~\$${suggestion.price}</p>
                         </div>
                         <button class="btn-secondary text-xs font-semibold py-1.5 px-3 rounded-md add-suggestion-btn flex-shrink-0">Add</button>
                     `;
                     card.querySelector('.add-suggestion-btn').addEventListener('click', () => {
-                        newWishItem.value = suggestion.itemName;
-                        newWishPrice.value = suggestion.estimatedPrice;
-                        newWishLink.value = suggestion.storeLink;
+                        newWishItem.value = suggestion.productName;
+                        newWishPrice.value = suggestion.price;
+                        newWishLink.value = suggestion.productUrl;
 
                         // Set category dropdown
                         const categoryOption = Array.from(newWishCategory.options).find(opt => opt.value === suggestion.category);
@@ -2550,11 +2550,12 @@
                 </div>`;
 
                 const pregnancyWeek = Math.floor(Math.abs(new Date() - new Date(wellnessData.pregnancyStartDate)) / (1000 * 60 * 60 * 24 * 7));
-                const systemPrompt = `You are a helpful shopping assistant for a pregnant woman. Based on the user's request and their pregnancy week (${pregnancyWeek}), generate a list of 3-4 relevant product ideas. For each item, provide a plausible-looking (but not necessarily real) name, category, price, store link, and an image URL. Use placehold.co for image URLs. Respond ONLY in JSON format.`;
+                const systemPrompt = `You are a helpful shopping assistant for a pregnant woman. Based on the user's request and their pregnancy week (${pregnancyWeek}), use the Google Search tool to find 3-4 real, relevant products. For each item, you MUST extract the actual product name, category, price, a working URL to the product page, and a direct image URL. Respond ONLY in the requested JSON format.`;
                 const userQuery = `My request: "${prompt}". I am in week ${pregnancyWeek} of pregnancy.`;
                 const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                 const payload = {
                     contents: [{ parts: [{ text: userQuery }] }],
+                    tools: [{ "google_search": {} }],
                     systemInstruction: { parts: [{ text: systemPrompt }] },
                     generationConfig: {
                         responseMimeType: "application/json",
@@ -2563,13 +2564,13 @@
                             items: {
                                 type: "OBJECT",
                                 properties: {
-                                    "itemName": { "type": "STRING" },
+                                    "productName": { "type": "STRING" },
                                     "category": { "type": "STRING", "enum": ["Baby Care", "Nursery", "Hospital Bag", "Health", "Postpartum", "Custom"] },
-                                    "estimatedPrice": { "type": "STRING" },
-                                    "storeLink": { "type": "STRING" },
+                                    "price": { "type": "STRING" },
+                                    "productUrl": { "type": "STRING" },
                                     "imageUrl": { "type": "STRING" }
                                 },
-                                required: ["itemName", "category", "estimatedPrice", "storeLink", "imageUrl"]
+                                required: ["productName", "category", "price", "productUrl", "imageUrl"]
                             }
                         }
                     }
