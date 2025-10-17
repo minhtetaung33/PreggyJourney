@@ -2380,7 +2380,7 @@
                 const container = document.getElementById('ai-wish-suggestions-container');
                 container.innerHTML = ''; // Clear loading spinner or old results
 
-                if (suggestions.length === 0) {
+                if (!suggestions || suggestions.length === 0) {
                     container.innerHTML = `<p class="text-center text-gray-400 p-2">No suggestions found.</p>`;
                     return;
                 }
@@ -2399,8 +2399,11 @@
                 suggestions.forEach(suggestion => {
                     const card = document.createElement('div');
                     card.className = 'ai-suggestion-card flex items-center gap-3';
+                    const placeholderText = encodeURIComponent(suggestion.productName.split(' ').slice(0, 3).join(' '));
+                    const imageUrl = `https://placehold.co/100x100/4f46e5/ffffff?text=${placeholderText}`;
+                    
                     card.innerHTML = `
-                        <img src="${suggestion.imageUrl}" alt="${suggestion.productName}" class="ai-suggestion-img flex-shrink-0" onerror="this.onerror=null;this.src='https://placehold.co/100x100/3730a3/e0e7ff?text=Item';">
+                        <img src="${imageUrl}" alt="${suggestion.productName}" class="ai-suggestion-img flex-shrink-0">
                         <div class="flex-grow min-w-0">
                             <p class="font-bold text-sm truncate">${suggestion.productName}</p>
                             <p class="text-xs text-gray-400">${suggestion.category} - ~\$${suggestion.price}</p>
@@ -2464,7 +2467,7 @@
                 </div>`;
 
                 const pregnancyWeek = Math.floor(Math.abs(new Date() - new Date(wellnessData.pregnancyStartDate)) / (1000 * 60 * 60 * 24 * 7));
-                const systemPrompt = `You are a helpful shopping assistant for a pregnant woman. Based on the user's request and their pregnancy week (${pregnancyWeek}), use the Google Search tool to find 3-4 real, relevant products. For each item, you MUST extract the actual product name, a relevant category (from "Baby Care", "Nursery", "Hospital Bag", "Health", "Postpartum"), price, a working URL to the product page, and a direct image URL. Your response MUST be ONLY a valid JSON array of objects, with no other text or formatting. Each object must have these keys: "productName", "category", "price", "productUrl", "imageUrl".`;
+                const systemPrompt = `You are a helpful shopping assistant for a pregnant woman. Based on the user's request and their pregnancy week (${pregnancyWeek}), use the Google Search tool to find 3-4 real, relevant products. For each item, you MUST extract the actual product name, a relevant category (from "Baby Care", "Nursery", "Hospital Bag", "Health", "Postpartum"), price, and a working URL to the product page. Your response MUST be ONLY a valid JSON array of objects, with no other text or formatting. Each object must have these keys: "productName", "category", "price", "productUrl".`;
                 const userQuery = `My request: "${prompt}". I am in week ${pregnancyWeek} of pregnancy.`;
                 const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
                 const payload = {
