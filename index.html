@@ -148,6 +148,7 @@
         #auth-modal.active #auth-modal-content,
         #manage-supplements-modal.active #manage-supplements-content,
         #reflection-modal.active #reflection-modal-content,
+        #edit-todo-modal.active #edit-todo-modal-content,
         #ai-summary-modal.active #ai-summary-modal-content {
             transform: scale(1);
             opacity: 1;
@@ -257,7 +258,7 @@
         /* Journey Tab Styles */
         .todo-item { transition: all 0.3s ease; }
         .todo-item.completed { opacity: 0.5; }
-        .todo-item.completed span { text-decoration: line-through; }
+        .todo-item.completed p { text-decoration: line-through; }
         @keyframes check-anim { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         .todo-checkbox:checked + div svg { animation: check-anim 0.3s ease-out forwards; }
         
@@ -533,18 +534,29 @@
                         <div class="lg:col-span-2 space-y-8">
                             <!-- To-Do List -->
                             <div class="glass-card p-4 md:p-6">
-                                <h3 class="text-2xl font-bold mb-4">✅ To-Do List</h3>
-                                <div id="todo-list-container" class="space-y-3 max-h-72 overflow-y-auto modal-scroll pr-2 mb-4"></div>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-white/10">
-                                    <input type="text" id="new-todo-input" class="meal-select" placeholder="New task...">
-                                    <select id="new-todo-category" class="meal-select">
+                                <div id="todo-header" class="flex justify-between items-center mb-4 cursor-pointer">
+                                    <h3 class="text-2xl font-bold">✅ To-Do List</h3>
+                                    <svg id="todo-toggle-icon" class="w-6 h-6 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </div>
+                                <div id="collapsible-todo-content" class="hidden">
+                                    <div id="todo-list-container" class="space-y-3 max-h-72 overflow-y-auto modal-scroll pr-2 mb-4"></div>
+                                </div>
+                                <div class="pt-4 border-t border-white/10 space-y-3">
+                                    <textarea id="new-todo-input" class="symptom-input text-sm min-h-[60px]" placeholder="New task or note..."></textarea>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        <input type="date" id="new-todo-date" class="date-input text-sm">
+                                        <input type="time" id="new-todo-time" class="date-input text-sm">
+                                    </div>
+                                    <select id="new-todo-category" class="meal-select text-sm">
                                         <option value="Health">🧘‍♀️ Health</option>
                                         <option value="Baby">🍼 Baby Prep</option>
                                         <option value="Home">🏡 Home</option>
                                         <option value="Reminder">💬 Reminder</option>
+                                        <option value="Custom">✨ Custom</option>
                                     </select>
+                                    <input type="text" id="custom-todo-category-input" class="meal-select text-sm hidden" placeholder="Your custom category...">
+                                    <button id="add-todo-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Add Task</button>
                                 </div>
-                                <button id="add-todo-btn" class="w-full mt-4 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Add Task</button>
                                 <div class="mt-6 text-center">
                                     <p class="mb-2 text-indigo-200">Need ideas? Let AI help!</p>
                                     <button id="ai-generate-todos-btn" class="btn-secondary font-semibold py-2 px-5 rounded-lg">Generate Weekly To-Do List</button>
@@ -566,17 +578,24 @@
 
                         <!-- Right Column: Little Wishes -->
                         <div class="glass-card p-4 md:p-6">
-                            <h3 class="text-2xl font-bold mb-4">🎁 Little Wishes</h3>
-                            <div class="mb-4">
-                                <div class="flex justify-between text-sm mb-1">
-                                    <span>Purchased</span>
-                                    <span id="wishlist-progress-text">0/0 Items</span>
-                                </div>
-                                <div class="w-full bg-gray-700 rounded-full h-2.5">
-                                    <div id="wishlist-progress-bar" class="bg-gradient-to-r from-teal-400 to-blue-500 h-2.5 rounded-full" style="width: 0%; transition: width 0.5s ease;"></div>
-                                </div>
+                            <div id="wishlist-header" class="flex justify-between items-center mb-4 cursor-pointer">
+                                <h3 class="text-2xl font-bold">🎁 Little Wishes</h3>
+                                <svg id="wishlist-toggle-icon" class="w-6 h-6 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </div>
-                            <div id="wishlist-container" class="space-y-3 max-h-[28rem] overflow-y-auto modal-scroll pr-2 mb-4"></div>
+
+                            <div id="collapsible-wishlist-content" class="hidden">
+                                <div class="mb-4">
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span>Purchased</span>
+                                        <span id="wishlist-progress-text">0/0 Items</span>
+                                    </div>
+                                    <div class="w-full bg-gray-700 rounded-full h-2.5">
+                                        <div id="wishlist-progress-bar" class="bg-gradient-to-r from-teal-400 to-blue-500 h-2.5 rounded-full" style="width: 0%; transition: width 0.5s ease;"></div>
+                                    </div>
+                                </div>
+                                <div id="wishlist-container" class="space-y-3 max-h-[28rem] overflow-y-auto modal-scroll pr-2 mb-4"></div>
+                            </div>
+                            
                             <div class="pt-4 border-t border-white/10 space-y-3">
                                  <input type="text" id="new-wish-item" class="meal-select text-sm" placeholder="Item name (e.g., Baby Monitor)">
                                  <select id="new-wish-category" class="meal-select text-sm">
@@ -766,7 +785,33 @@
             </div>
         </div>
     </div>
-    
+
+    <!-- Edit To-Do Modal -->
+    <div id="edit-todo-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
+        <div id="edit-todo-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
+            <h3 id="edit-todo-modal-title" class="text-2xl font-bold mb-4 text-center">Edit Task</h3>
+            <div class="space-y-3">
+                <textarea id="edit-todo-input" class="symptom-input text-sm min-h-[80px]" placeholder="Task or note..."></textarea>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <input type="date" id="edit-todo-date" class="date-input text-sm">
+                    <input type="time" id="edit-todo-time" class="date-input text-sm">
+                </div>
+                <select id="edit-todo-category" class="meal-select text-sm">
+                    <option value="Health">🧘‍♀️ Health</option>
+                    <option value="Baby">🍼 Baby Prep</option>
+                    <option value="Home">🏡 Home</option>
+                    <option value="Reminder">💬 Reminder</option>
+                    <option value="Custom">✨ Custom</option>
+                </select>
+                <input type="text" id="edit-custom-todo-category-input" class="meal-select text-sm hidden" placeholder="Your custom category...">
+            </div>
+            <div class="flex gap-4 mt-6">
+                <button id="edit-todo-modal-cancel-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg">Cancel</button>
+                <button id="edit-todo-modal-save-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
     <!-- AI Summary Modal -->
     <div id="ai-summary-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
         <div id="ai-summary-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-md transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
@@ -1024,6 +1069,23 @@
         const aiSummaryContent = document.getElementById('ai-summary-content');
         const aiSummaryCloseBtn = document.getElementById('ai-summary-close-btn');
         const customCategoryInput = document.getElementById('custom-category-input');
+        const todoHeader = document.getElementById('todo-header');
+        const collapsibleTodoContent = document.getElementById('collapsible-todo-content');
+        const todoToggleIcon = document.getElementById('todo-toggle-icon');
+        const wishlistHeader = document.getElementById('wishlist-header');
+        const collapsibleWishlistContent = document.getElementById('collapsible-wishlist-content');
+        const wishlistToggleIcon = document.getElementById('wishlist-toggle-icon');
+        const newTodoDate = document.getElementById('new-todo-date');
+        const newTodoTime = document.getElementById('new-todo-time');
+        const customTodoCategoryInput = document.getElementById('custom-todo-category-input');
+        const editTodoModal = document.getElementById('edit-todo-modal');
+        const editTodoInput = document.getElementById('edit-todo-input');
+        const editTodoDate = document.getElementById('edit-todo-date');
+        const editTodoTime = document.getElementById('edit-todo-time');
+        const editTodoCategory = document.getElementById('edit-todo-category');
+        const editCustomTodoCategoryInput = document.getElementById('edit-custom-todo-category-input');
+        const editTodoModalCancelBtn = document.getElementById('edit-todo-modal-cancel-btn');
+        const editTodoModalSaveBtn = document.getElementById('edit-todo-modal-save-btn');
 
 
         // Firebase Setup
@@ -2251,6 +2313,20 @@
                 });
             }
 
+            const formatDate = (dateString) => {
+                if (!dateString) return '';
+                const date = new Date(dateString + 'T00:00:00'); // Adjust for timezone issues
+                return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+            };
+
+            const formatTime = (timeString) => {
+                if (!timeString) return '';
+                const [hours, minutes] = timeString.split(':');
+                const date = new Date();
+                date.setHours(hours, minutes);
+                return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', hour12: true });
+            };
+
             function renderTodos(todos) {
                 todoListContainer.innerHTML = '';
                 if (todos.length === 0) {
@@ -2260,21 +2336,32 @@
                 const categoryIcons = { Health: '🧘‍♀️', Baby: '🍼', Home: '🏡', Reminder: '💬' };
                 todos.forEach(todo => {
                     const item = document.createElement('div');
-                    item.className = `todo-item flex items-center justify-between p-3 bg-white/5 rounded-lg ${todo.completed ? 'completed' : ''}`;
+                    item.className = `todo-item flex items-start justify-between p-3 bg-white/5 rounded-lg ${todo.completed ? 'completed' : ''}`;
+                    
+                    const displayDate = formatDate(todo.date);
+                    const displayTime = formatTime(todo.time);
+
                     item.innerHTML = `
-                        <div class="flex items-center flex-1 min-w-0">
-                            <label for="todo-${todo.id}" class="flex items-center cursor-pointer">
+                        <div class="flex items-start flex-1 min-w-0">
+                             <label for="todo-${todo.id}" class="flex items-center cursor-pointer pt-1">
                                 <input type="checkbox" id="todo-${todo.id}" class="hidden todo-checkbox">
                                 <div class="w-6 h-6 border-2 border-purple-400 rounded-md mr-3 flex-shrink-0 flex items-center justify-center check-label">
                                     ${todo.completed ? '<svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>' : ''}
                                 </div>
-                                <div>
-                                    <span class="font-semibold break-words">${todo.text}</span>
-                                    <span class="text-xs text-gray-400 ml-2 whitespace-nowrap">${categoryIcons[todo.category] || ''} ${todo.category}</span>
-                                </div>
                             </label>
+                            <div class="flex-1">
+                                <p class="font-semibold break-words">${todo.text}</p>
+                                <div class="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs text-gray-400 mt-1">
+                                    <span>${categoryIcons[todo.category] || '✨'} ${todo.category}</span>
+                                    ${displayDate ? `<span>🗓️ ${displayDate}</span>` : ''}
+                                    ${displayTime ? `<span>⏰ ${displayTime}</span>` : ''}
+                                </div>
+                            </div>
                         </div>
-                        <button class="icon-btn delete-todo-btn ml-2 flex-shrink-0"><svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                        <div class="flex items-center flex-shrink-0">
+                            <button class="icon-btn edit-todo-btn"><svg class="w-5 h-5 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L14.732 3.732z"></path></svg></button>
+                            <button class="icon-btn delete-todo-btn ml-1"><svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                        </div>
                     `;
                     
                     const toggleTodo = async () => {
@@ -2288,6 +2375,8 @@
                         toggleTodo();
                     });
 
+                    item.querySelector('.edit-todo-btn').addEventListener('click', () => openEditTodoModal(todo));
+
                     item.querySelector('.delete-todo-btn').addEventListener('click', async () => {
                         if (!todosRef) return;
                         const todoDocRef = doc(db, `users/${userId}/todos`, todo.id);
@@ -2300,10 +2389,27 @@
 
             addTodoBtn.addEventListener('click', async () => {
                 const text = newTodoInput.value.trim();
-                const category = newTodoCategory.value;
-                if (!text || !todosRef) return;
-                await addDoc(todosRef, { text, category, completed: false, createdAt: serverTimestamp() });
+                let category = newTodoCategory.value;
+                if (category === 'Custom') {
+                    category = customTodoCategoryInput.value.trim();
+                }
+
+                if (!text || !category || !todosRef) return;
+
+                await addDoc(todosRef, {
+                    text,
+                    category,
+                    date: newTodoDate.value,
+                    time: newTodoTime.value,
+                    completed: false,
+                    createdAt: serverTimestamp()
+                });
                 newTodoInput.value = '';
+                newTodoDate.value = '';
+                newTodoTime.value = '';
+                newTodoCategory.value = 'Health';
+                customTodoCategoryInput.value = '';
+                customTodoCategoryInput.classList.add('hidden');
             });
 
             aiGenerateTodosBtn.addEventListener('click', async () => {
@@ -2495,6 +2601,32 @@
                 }
             });
 
+            newTodoCategory.addEventListener('change', () => {
+                if (newTodoCategory.value === 'Custom') {
+                    customTodoCategoryInput.classList.remove('hidden');
+                } else {
+                    customTodoCategoryInput.classList.add('hidden');
+                }
+            });
+
+            editTodoCategory.addEventListener('change', () => {
+                if (editTodoCategory.value === 'Custom') {
+                    editCustomTodoCategoryInput.classList.remove('hidden');
+                } else {
+                    editCustomTodoCategoryInput.classList.add('hidden');
+                }
+            });
+
+            wishlistHeader.addEventListener('click', () => {
+                collapsibleWishlistContent.classList.toggle('hidden');
+                wishlistToggleIcon.classList.toggle('rotate-180');
+            });
+
+            todoHeader.addEventListener('click', () => {
+                collapsibleTodoContent.classList.toggle('hidden');
+                todoToggleIcon.classList.toggle('rotate-180');
+            });
+
             // Tiny Reflections Logic
             function loadReflections() {
                 if (!reflectionsRef) return;
@@ -2507,6 +2639,69 @@
                 });
             }
 
+            async function deleteReflection(noteId) {
+                if (!reflectionsRef) return;
+                const noteDocRef = doc(db, `users/${userId}/reflections`, noteId);
+                await deleteDoc(noteDocRef);
+            }
+
+            let activeTodoId = null;
+
+            function openEditTodoModal(todo) {
+                activeTodoId = todo.id;
+                editTodoInput.value = todo.text;
+                editTodoDate.value = todo.date || '';
+                editTodoTime.value = todo.time || '';
+
+                const standardCategories = ['Health', 'Baby', 'Home', 'Reminder'];
+                if (standardCategories.includes(todo.category)) {
+                    editTodoCategory.value = todo.category;
+                    editCustomTodoCategoryInput.classList.add('hidden');
+                    editCustomTodoCategoryInput.value = '';
+                } else {
+                    editTodoCategory.value = 'Custom';
+                    editCustomTodoCategoryInput.classList.remove('hidden');
+                    editCustomTodoCategoryInput.value = todo.category;
+                }
+
+                editTodoModal.classList.remove('hidden');
+                setTimeout(() => editTodoModal.classList.add('active'), 10);
+            }
+
+            function closeEditTodoModal() {
+                editTodoModal.classList.remove('active');
+                setTimeout(() => editTodoModal.classList.add('hidden'), 300);
+            }
+
+            async function handleSaveTodo() {
+                if (!activeTodoId) return;
+
+                const text = editTodoInput.value.trim();
+                let category = editTodoCategory.value;
+                if (category === 'Custom') {
+                    category = editCustomTodoCategoryInput.value.trim();
+                }
+
+                if (!text || !category) {
+                    // Using a simple browser alert for now, can be replaced with a custom modal
+                    console.error('Task and category cannot be empty.'); 
+                    return;
+                }
+
+                const todoDocRef = doc(db, `users/${userId}/todos`, activeTodoId);
+                await updateDoc(todoDocRef, {
+                    text: text,
+                    category: category,
+                    date: editTodoDate.value,
+                    time: editTodoTime.value
+                });
+                closeEditTodoModal();
+            }
+
+            editTodoModalSaveBtn.addEventListener('click', handleSaveTodo);
+            editTodoModalCancelBtn.addEventListener('click', closeEditTodoModal);
+            editTodoModal.addEventListener('click', e => e.target === editTodoModal && closeEditTodoModal());
+
             function renderReflections(reflections) {
                 reflectionsContainer.innerHTML = '';
                  if (reflections.length === 0) {
@@ -2515,13 +2710,21 @@
                 }
                 reflections.forEach(note => {
                     const item = document.createElement('div');
-                    item.className = `reflection-note p-4 rounded-lg border-l-4 note-color-${note.color}`;
+                    item.className = `reflection-note relative p-4 rounded-lg border-l-4 note-color-${note.color} cursor-pointer`;
                     item.innerHTML = `
-                        <h4 class="font-bold break-words">${note.title}</h4>
-                        <p class="text-sm text-gray-300 mt-2 break-words">${note.content.substring(0, 100)}${note.content.length > 100 ? '...' : ''}</p>
+                        <h4 class="font-bold break-words pr-6">${note.title}</h4>
                         <p class="text-xs text-gray-500 mt-3">${new Date(note.createdAt?.toDate()).toLocaleDateString()}</p>
+                        <button class="delete-reflection-btn icon-btn absolute top-1 right-1 opacity-50 hover:opacity-100 focus:opacity-100 transition-opacity">
+                            <svg class="w-4 h-4 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
                     `;
                     item.addEventListener('click', () => openReflectionModal(note));
+                    
+                    item.querySelector('.delete-reflection-btn').addEventListener('click', (e) => {
+                        e.stopPropagation(); // Prevents the edit modal from opening when deleting
+                        deleteReflection(note.id);
+                    });
+
                     reflectionsContainer.appendChild(item);
                 });
             }
