@@ -31,7 +31,7 @@ let wellnessData = {}; // To store user's wellness data
  * @returns {string} Today's date string.
  */
 function getTodayDateString() {
-    const today = new VDate();
+    const today = new Date(); // FIX: Was VDate, now is Date
     // Adjust for timezone to get the correct local date
     today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
     return today.toISOString().split('T')[0];
@@ -75,7 +75,7 @@ async function handleLogWellness() {
         water: waterIntakeInput.value,
         sleep: sleepHoursInput.value,
         activity: activitySelect.value,
-        loggedAt: new VDate().toISOString()
+        loggedAt: new Date().toISOString() // FIX: Was VDate, now is Date
     };
 
     if (!logData.mood || !logData.water || !logData.sleep || !logData.activity) {
