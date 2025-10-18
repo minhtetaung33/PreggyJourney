@@ -1,126 +1,76 @@
-// This is your API key for the Gemini AI
-const API_KEY = "YOUR_API_KEY_HERE"; // IMPORTANT: Replace with your actual API key
-const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${API_KEY}`;
+import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
+
+// --- AI Configuration ---
+// IMPORTANT: Replace with your actual API key or use environment variables.
+const API_KEY = "YOUR_API_KEY";
+const genAI = new GoogleGenerativeAI(API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
 /**
- * A robust function to call the Gemini API with error handling and retries.
- * @param {object} payload - The data to send to the API.
- * @param {number} retries - The number of times to retry on failure.
- * @param {number} delay - The initial delay between retries in ms.
- * @returns {Promise<string>} - The text content from the AI's response.
+ * A generic function to call the AI model with a given prompt.
+ * This is an internal helper function and is not exported.
+ * @param {string} prompt - The prompt to send to the AI.
+ * @returns {Promise<string>} The generated text.
  */
-async function callGeminiAPI(payload, retries = 3, delay = 1000) {
-    for (let i = 0; i < retries; i++) {
-        try {
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            if (!response.ok) {
-                throw new Error(`API request failed with status ${response.status}`);
-            }
-
-            const result = await response.json();
-            
-            if (result.candidates && result.candidates.length > 0 && result.candidates[0].content.parts.length > 0) {
-                return result.candidates[0].content.parts[0].text;
-            } else {
-                 // Handle cases where the response structure is unexpected or content is missing
-                console.error("Invalid response structure from API:", result);
-                throw new Error("Invalid response structure from API.");
-            }
-
-        } catch (error) {
-            console.error(`API call attempt ${i + 1} failed:`, error);
-            if (i < retries - 1) {
-                await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, i))); // Exponential backoff
-            } else {
-                throw error; // Rethrow the error after the last retry
-            }
-        }
+async function generateText(prompt) {
+    try {
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
+        return text;
+    } catch (error) {
+        console.error("Error generating text with AI:", error);
+        throw new Error("Failed to communicate with the AI service.");
     }
-    // This part should ideally not be reached, but it's a fallback.
-    throw new Error("API call failed after all retries.");
 }
 
 
+// --- EXPORTED API Functions ---
+// These functions are made available to other parts of the application.
+
 /**
- * Generates a structured meal plan using the AI.
- * @param {string} userPrompt - The user's preferences for the meal plan.
- * @returns {Promise<string>} - A JSON string of the meal plan.
+ * Generates a 7-day meal plan using the AI.
+ * @param {object} userPreferences - User's dietary preferences.
+ * @returns {Promise<string>} The AI-generated meal plan text.
  */
-export async function generateAiMealPlan(userPrompt) {
-    const systemPrompt = `You are a pregnancy nutrition expert. Generate a 7-day meal plan based on the user's request. 
-    The output MUST be a valid JSON object. Do not include any text before or after the JSON.
-    The JSON object should have keys "monday", "tuesday", ..., "sunday". 
-    Each day should be an object with keys "breakfast", "lunch", "dinner", and "snacks". 
-    The value for each meal should be a short, healthy, and appealing meal description string.
-    Example: { "monday": { "breakfast": "Oatmeal with berries", "lunch": "Grilled chicken salad", "dinner": "Salmon with quinoa", "snacks": "Apple slices with almond butter" } ... }`;
-    
-    const payload = {
-        contents: [{ parts: [{ text: userPrompt }] }],
-        systemInstruction: { parts: [{ text: systemPrompt }] },
-         generationConfig: {
-            responseMimeType: "application/json",
-        }
-    };
-    return callGeminiAPI(payload);
+export async function generateAiMealPlan(userPreferences) {
+    const prompt = `Create a 7-day healthy meal plan for a pregnant person.
+    Preferences:
+    - Due Date: ${userPreferences.dueDate || 'Not specified'}
+    - Dietary Restrictions: ${userPreferences.restrictions || 'None'}
+    - Cravings: ${userPreferences.cravings || 'None'}
+    Format the response as a clear, day-by-day list. For each day, list Breakfast, Lunch, Dinner, and one Snack.`;
+    return await generateText(prompt);
 }
 
 /**
- * Gets wellness suggestions for a given pregnancy symptom.
- * @param {string} symptom - The symptom the user is experiencing.
- * @returns {Promise<string>} - AI-generated suggestions as a string.
+ * Gets AI-powered suggestions for a pregnancy-related symptom.
+ * @param {string} symptom - The symptom described by the user.
+ * @returns {Promise<string>} The AI-generated suggestions.
  */
 export async function getSymptomSuggestions(symptom) {
-    const prompt = `I'm pregnant and experiencing "${symptom}". Give me 3-4 concise, safe, and practical wellness tips to help manage this. Focus on natural remedies, comfort measures, and when to consult a doctor. Format as a simple list.`;
-    const payload = { contents: [{ parts: [{ text: prompt }] }] };
-    return callGeminiAPI(payload);
+    const prompt = `I am pregnant and experiencing "${symptom}". What are some common, safe, non-medical remedies or comfort measures I can try? Provide a few bullet points.`;
+    return await generateText(prompt);
 }
 
 /**
- * Generates a weekly wellness summary and outlook.
- * @param {object} weekData - An object containing the user's logged data for the week.
- * @returns {Promise<string>} - A summary and encouraging message from the AI.
+ * Generates an AI summary of the user's weekly wellness logs.
+ * @param {object} wellnessData - The user's logged wellness data.
+ * @returns {Promise<string>} The AI-generated summary.
  */
-export async function generateAiSummary(weekData) {
-    const prompt = `Based on my pregnancy wellness data this week, provide a short, encouraging summary and one positive tip for the week ahead.
-    My data: ${JSON.stringify(weekData)}.
-    Keep the tone gentle, positive, and supportive. Address me directly as "you".`;
-    const payload = { contents: [{ parts: [{ text: prompt }] }] };
-    return callGeminiAPI(payload);
+export async function generateAiSummary(wellnessData) {
+    const prompt = `Based on the following weekly wellness log for a pregnant person, provide a brief, encouraging summary and identify any patterns.
+    Data: ${JSON.stringify(wellnessData)}
+    Focus on positive reinforcement.`;
+    return await generateText(prompt);
 }
 
 /**
- * Generates baby wishlist/registry suggestions.
- * @param {string} trimester - The current trimester (e.g., "first", "second", "third").
- * @returns {Promise<string>} - A JSON string of wishlist items.
+ * Fetches information about a specific week of pregnancy.
+ * @param {number} week - The week of pregnancy.
+ * @returns {Promise<string>} The AI-generated information.
  */
-export async function getWishlistSuggestions(trimester) {
-    const systemPrompt = `You are a helpful assistant creating a baby registry list. Generate 5 creative and useful baby wishlist items suitable for the ${trimester} trimester of pregnancy.
-    The output MUST be a valid JSON array of objects. Do not include any text before or after the JSON.
-    Each object should have three keys: "name" (string), "reason" (string, a brief explanation of why it's useful), and "category" (string, e.g., "Nursery", "Feeding", "Travel", "Clothing").
-    Example: [{"name": "Baby Carrier/Sling", "reason": "For hands-free bonding and carrying the baby.", "category": "Travel"}]`;
-
-    const payload = {
-        contents: [{ parts: [{ text: `Generate items for the ${trimester} trimester.` }] }],
-        systemInstruction: { parts: [{ text: systemPrompt }] },
-         generationConfig: {
-            responseMimeType: "application/json",
-        }
-    };
-    return callGeminiAPI(payload);
-}
-
-
-/**
- * Generates a thoughtful reflection prompt for the user's journal.
- * @returns {Promise<string>} - A single, engaging question.
- */
-export async function generateReflectionPrompt() {
-    const prompt = "Generate one single, thoughtful, and positive journal prompt for an expecting mother. Frame it as a gentle question.";
-    const payload = { contents: [{ parts: [{ text: prompt }] }] };
-    return callGeminiAPI(payload);
+export async function getJourneyInfoForWeek(week) {
+    const prompt = `Provide helpful and comforting information for week ${week} of pregnancy. Include baby's development, common symptoms for the mother, and a helpful tip. Format it nicely.`;
+    return await generateText(prompt);
 }
