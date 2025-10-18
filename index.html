@@ -811,7 +811,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- AI Summary Modal -->
     <div id="ai-summary-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
         <div id="ai-summary-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-md transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
@@ -2639,6 +2639,12 @@
                 });
             }
 
+            async function deleteReflection(noteId) {
+                if (!reflectionsRef) return;
+                const noteDocRef = doc(db, `users/${userId}/reflections`, noteId);
+                await deleteDoc(noteDocRef);
+            }
+
             let activeTodoId = null;
 
             function openEditTodoModal(todo) {
@@ -2704,13 +2710,21 @@
                 }
                 reflections.forEach(note => {
                     const item = document.createElement('div');
-                    item.className = `reflection-note p-4 rounded-lg border-l-4 note-color-${note.color}`;
+                    item.className = `reflection-note relative p-4 rounded-lg border-l-4 note-color-${note.color} cursor-pointer`;
                     item.innerHTML = `
-                        <h4 class="font-bold break-words">${note.title}</h4>
-                        <p class="text-sm text-gray-300 mt-2 break-words">${note.content.substring(0, 100)}${note.content.length > 100 ? '...' : ''}</p>
+                        <h4 class="font-bold break-words pr-6">${note.title}</h4>
                         <p class="text-xs text-gray-500 mt-3">${new Date(note.createdAt?.toDate()).toLocaleDateString()}</p>
+                        <button class="delete-reflection-btn icon-btn absolute top-1 right-1 opacity-50 hover:opacity-100 focus:opacity-100 transition-opacity">
+                            <svg class="w-4 h-4 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
                     `;
                     item.addEventListener('click', () => openReflectionModal(note));
+                    
+                    item.querySelector('.delete-reflection-btn').addEventListener('click', (e) => {
+                        e.stopPropagation(); // Prevents the edit modal from opening when deleting
+                        deleteReflection(note.id);
+                    });
+
                     reflectionsContainer.appendChild(item);
                 });
             }
