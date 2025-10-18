@@ -478,26 +478,16 @@
                                 
                                 <!-- Weekly Wellness Chart -->
                                 <div class="bg-white/5 rounded-xl p-4 md:col-span-2 lg:col-span-3">
-                                    <div class="flex justify-between items-center mb-2">
-                                        <h4 class="font-bold text-lg">📊 Weekly Wellness</h4>
-                                        <button id="wellness-history-btn" title="View History" class="icon-btn">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                        </button>
-                                    </div>
+                                    <h4 class="font-bold text-lg mb-2">📊 Weekly Wellness</h4>
                                     <canvas id="wellnessChart"></canvas>
                                     <div id="chart-ai-insight" class="ai-insight mt-3"></div>
                                 </div>
 
                                 <!-- Nutrition Tracker -->
                                 <div class="bg-white/5 rounded-xl p-4 lg:col-span-2">
-                                    <div class="flex justify-between items-center mb-3">
-                                        <div id="nutrition-tracker-header" class="clickable-header flex items-center flex-grow">
-                                            <h4 class="font-bold text-lg flex-grow">🍽️ Nutrition Tracker</h4>
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"></path></svg>
-                                        </div>
-                                        <button id="nutrition-history-btn" title="View History" class="icon-btn ml-2">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                        </button>
+                                    <div id="nutrition-tracker-header" class="clickable-header mb-3">
+                                        <h4 class="font-bold text-lg flex-grow">🍽️ Nutrition Tracker</h4>
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
                                     </div>
                                     <p class="text-xs text-gray-400 mb-2">Based on today's scheduled meals & supplements.</p>
                                     <div id="daily-supplements-list" class="flex flex-wrap gap-2 mb-3"></div>
@@ -831,20 +821,6 @@
         </div>
     </div>
 
-    <!-- History Modal -->
-    <div id="history-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
-        <div id="history-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-2xl transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
-             <h3 id="history-modal-title" class="text-2xl font-bold mb-4 text-center">History</h3>
-             <div class="flex items-center gap-4 mb-4">
-                <label for="history-week-select" class="font-semibold">Select Week:</label>
-                <select id="history-week-select" class="meal-select flex-grow"></select>
-             </div>
-             <div id="history-modal-body" class="bg-white/5 p-4 rounded-lg min-h-[200px] max-h-80 overflow-y-auto modal-scroll">
-                <!-- History content goes here -->
-             </div>
-             <button id="history-modal-close-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors mt-6">Close</button>
-        </div>
-    </div>
 
 
     <script type="module">
@@ -858,7 +834,7 @@
             pregnancyStartDate: '2025-08-01',
             pregnancyEndDate: '',
             dailyTip: "Stretch your legs for 5 minutes every hour to reduce swelling.",
-            nutritionLogs: {},
+            dailyNutrition: {},
             dailySupplements: { monday: [], tuesday: [], wednesday: [], thursday: [], friday: [], saturday: [], sunday: [] },
             mood: {
                 emoji: "😊",
@@ -882,7 +858,15 @@
                 level: 'Moderate',
                 color: 'text-green-400'
             },
-            weeklyLogs: {}
+            weeklyLog: {
+                monday: { mood: '🙂', energy: 3 },
+                tuesday: { mood: '😐', energy: 2 },
+                wednesday: { mood: '😐', energy: 2 },
+                thursday: { mood: '🙂', energy: 3 },
+                friday: { mood: '😊', energy: 4 },
+                saturday: { mood: '🥰', energy: 5 },
+                sunday: { mood: '😊', energy: 4 }
+            }
         };
 
         const wellnessTipsByWeek = {
@@ -942,16 +926,15 @@
             } else {
                 const firestoreData = docSnap.data();
                 const mergedSleep = { ...defaultWellnessData.sleep, ...firestoreData.sleep };
-                const mergedWeeklyLogs = { ...defaultWellnessData.weeklyLogs, ...firestoreData.weeklyLogs };
-                const mergedNutritionLogs = { ...defaultWellnessData.nutritionLogs, ...firestoreData.nutritionLogs };
+                const mergedWeeklyLog = { ...defaultWellnessData.weeklyLog, ...firestoreData.weeklyLog };
                 const mergedSupplements = { ...defaultWellnessData.dailySupplements, ...firestoreData.dailySupplements };
                 wellnessData = {
                     ...defaultWellnessData,
                     ...firestoreData,
-                    nutritionLogs: mergedNutritionLogs,
+                    dailyNutrition: firestoreData.dailyNutrition || {},
                     dailySupplements: mergedSupplements,
                     sleep: mergedSleep,
-                    weeklyLogs: mergedWeeklyLogs,
+                    weeklyLog: mergedWeeklyLog,
                     mood: { ...defaultWellnessData.mood, ...firestoreData.mood },
                     water: { ...defaultWellnessData.water, ...firestoreData.water },
                     energy: { ...defaultWellnessData.energy, ...firestoreData.energy },
@@ -1030,13 +1013,6 @@
         const sleepScheduleContainer = document.getElementById('sleep-schedule-container');
         const sleepModalCancelBtn = document.getElementById('sleep-modal-cancel-btn');
         const sleepModalSaveBtn = document.getElementById('sleep-modal-save-btn');
-        const wellnessHistoryBtn = document.getElementById('wellness-history-btn');
-        const nutritionHistoryBtn = document.getElementById('nutrition-history-btn');
-        const historyModal = document.getElementById('history-modal');
-        const historyModalTitle = document.getElementById('history-modal-title');
-        const historyWeekSelect = document.getElementById('history-week-select');
-        const historyModalBody = document.getElementById('history-modal-body');
-        const historyModalCloseBtn = document.getElementById('history-modal-close-btn');
         // AI Meal Planner
         const aiMealModal = document.getElementById('ai-meal-modal');
         const aiModalTitle = document.getElementById('ai-modal-title');
@@ -1377,16 +1353,15 @@
                     if(docSnap.exists()){
                         const firestoreData = docSnap.data();
                         const mergedSleep = { ...defaultWellnessData.sleep, ...firestoreData.sleep };
-                        const mergedWeeklyLogs = { ...defaultWellnessData.weeklyLogs, ...firestoreData.weeklyLogs };
-                        const mergedNutritionLogs = { ...defaultWellnessData.nutritionLogs, ...firestoreData.nutritionLogs };
+                        const mergedWeeklyLog = { ...defaultWellnessData.weeklyLog, ...firestoreData.weeklyLog };
                         const mergedSupplements = { ...defaultWellnessData.dailySupplements, ...firestoreData.dailySupplements };
                         wellnessData = {
                             ...defaultWellnessData,
                             ...firestoreData,
-                            nutritionLogs: mergedNutritionLogs,
+                            dailyNutrition: firestoreData.dailyNutrition || {},
                             dailySupplements: mergedSupplements,
                             sleep: mergedSleep,
-                            weeklyLogs: mergedWeeklyLogs,
+                            weeklyLog: mergedWeeklyLog,
                             mood: { ...defaultWellnessData.mood, ...firestoreData.mood },
                             water: { ...defaultWellnessData.water, ...firestoreData.water },
                             energy: { ...defaultWellnessData.energy, ...firestoreData.energy },
@@ -1714,15 +1689,6 @@
                     dailyNutritionUpdate[currentDayForAI] = currentGeneratedPlan.nutritionSummary;
                     await setDoc(wellnessDataRef, { dailyNutrition: dailyNutritionUpdate }, { merge: true });
                 }
-
-                const week = getCurrentPregnancyWeek();
-                if (week !== null && currentGeneratedPlan.nutritionSummary) {
-                    const nutritionLogs = { ...wellnessData.nutritionLogs };
-                    if (!nutritionLogs[week]) nutritionLogs[week] = {};
-                    nutritionLogs[week][currentDayForAI] = currentGeneratedPlan.nutritionSummary;
-                    await setDoc(wellnessDataRef, { nutritionLogs: nutritionLogs }, { merge: true });
-                }
-
                 closeAiMealPlannerModal();
             }
 
@@ -1882,8 +1848,7 @@
             
             function updateNutritionTracker() {
                 const todayIndex = new Date().getDay(); const dayIndex = todayIndex === 0 ? 6 : todayIndex - 1; const dayKey = days[dayIndex];
-                const week = getCurrentPregnancyWeek();
-                const aiSummary = (week !== null && wellnessData.nutritionLogs && wellnessData.nutritionLogs[week]) ? wellnessData.nutritionLogs[week][dayKey] : null;
+                const aiSummary = wellnessData.dailyNutrition ? wellnessData.dailyNutrition[dayKey] : null;
                 updateDailySupplementsUI(dayKey);
 
                 if (aiSummary) {
@@ -2003,22 +1968,9 @@
                 document.getElementById('mood-ai-insight').textContent = mood.aiInsight;
             }
 
-            function getCurrentPregnancyWeek() {
-                if (!wellnessData.pregnancyStartDate) return null;
-                const startDate = new Date(wellnessData.pregnancyStartDate);
-                const today = new Date();
-                const diffTime = Math.abs(today - startDate);
-                const week = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7));
-                return week > 0 ? week : 1; // Return at least week 1
-            }
-
             function updateEnergyLog() {
                 const todayIndex = new Date().getDay(); const currentDayKey = sleepDays[(todayIndex === 0 ? 7 : todayIndex) -1];
-                const week = getCurrentPregnancyWeek();
-                if (week === null) return;
-                const weeklyLog = wellnessData.weeklyLogs[week];
-                const currentEnergy = weeklyLog ? (weeklyLog[currentDayKey]?.energy || 3) : 3;
-                
+                const currentEnergy = wellnessData.weeklyLog[currentDayKey]?.energy || 3;
                 const buttons = energyLogButtons.querySelectorAll('.energy-btn');
                 buttons.forEach(btn => {
                     if (parseInt(btn.dataset.energy) === currentEnergy) btn.classList.add('selected');
@@ -2053,19 +2005,10 @@
                     '🥰': { level: "Blissful", aiInsight: "Wonderful! Cherish these blissful moments." }
                 };
                 const newMoodData = { emoji: newMoodEmoji, ...moodMessages[newMoodEmoji] };
-                
-                const week = getCurrentPregnancyWeek();
-                if (week === null) return;
-                
-                const weeklyLogs = { ...wellnessData.weeklyLogs };
-                if (!weeklyLogs[week]) {
-                    // Create a default log for the new week
-                    weeklyLogs[week] = { monday:{}, tuesday:{}, wednesday:{}, thursday:{}, friday:{}, saturday:{}, sunday:{} };
-                }
-                if (!weeklyLogs[week][currentDayKey]) weeklyLogs[week][currentDayKey] = {};
-                weeklyLogs[week][currentDayKey].mood = newMoodEmoji;
-
-                await setDoc(wellnessDataRef, { mood: newMoodData, weeklyLogs: weeklyLogs }, { merge: true });
+                const newWeeklyLog = { ...wellnessData.weeklyLog };
+                if (!newWeeklyLog[currentDayKey]) newWeeklyLog[currentDayKey] = {};
+                newWeeklyLog[currentDayKey].mood = newMoodEmoji;
+                await setDoc(wellnessDataRef, { mood: newMoodData, weeklyLog: newWeeklyLog }, { merge: true });
             });
 
             energyLogButtons.addEventListener('click', async (e) => {
@@ -2074,19 +2017,10 @@
                 const newEnergyLevel = parseInt(button.dataset.energy);
                 const energyMap = { 1: { level: 'Very Low', color: 'text-red-400' }, 2: { level: 'Low', color: 'text-yellow-400' }, 3: { level: 'Moderate', color: 'text-green-400' }, 4: { level: 'Good', color: 'text-teal-400' }, 5: { level: 'High', color: 'text-purple-400' } };
                 const newEnergyData = energyMap[newEnergyLevel];
-                
-                const week = getCurrentPregnancyWeek();
-                if (week === null) return;
-                
-                const weeklyLogs = { ...wellnessData.weeklyLogs };
-                if (!weeklyLogs[week]) {
-                    // Create a default log for the new week
-                    weeklyLogs[week] = { monday:{}, tuesday:{}, wednesday:{}, thursday:{}, friday:{}, saturday:{}, sunday:{} };
-                }
-                if (!weeklyLogs[week][currentDayKey]) weeklyLogs[week][currentDayKey] = {};
-                weeklyLogs[week][currentDayKey].energy = newEnergyLevel;
-
-                await setDoc(wellnessDataRef, { energy: newEnergyData, weeklyLogs: weeklyLogs }, { merge: true });
+                const newWeeklyLog = { ...wellnessData.weeklyLog };
+                if (!newWeeklyLog[currentDayKey]) newWeeklyLog[currentDayKey] = {};
+                newWeeklyLog[currentDayKey].energy = newEnergyLevel;
+                await setDoc(wellnessDataRef, { energy: newEnergyData, weeklyLog: newWeeklyLog }, { merge: true });
             });
 
 
@@ -2139,14 +2073,9 @@
             // --- CHARTS & DYNAMIC CONTENT ---
             function updateWellnessChartData() {
                 if (!wellnessChart || !userId) return;
-                const week = getCurrentPregnancyWeek();
-                if (week === null) return;
-
-                const currentWeekLog = wellnessData.weeklyLogs[week] || {};
-
                 const sleepData = sleepDays.map(day => { const { sleep, wake } = wellnessData.sleep[day] || { sleep: '', wake: '' }; return calculateSleepDuration(sleep, wake); });
-                const energyData = sleepDays.map(day => (currentWeekLog[day] || {energy: 0}).energy);
-                const moodData = sleepDays.map(day => moodToValue[(currentWeekLog[day] || {mood: '😐'}).mood] || 2);
+                const energyData = sleepDays.map(day => (wellnessData.weeklyLog[day] || {energy: 0}).energy);
+                const moodData = sleepDays.map(day => moodToValue[(wellnessData.weeklyLog[day] || {mood: '😐'}).mood] || 2);
                 wellnessChart.data.datasets[0].data = energyData; wellnessChart.data.datasets[1].data = moodData; wellnessChart.data.datasets[2].data = sleepData;
                 wellnessChart.update();
                 const avgSleep = sleepData.reduce((a, b) => a + b, 0) / sleepData.length;
@@ -2775,21 +2704,13 @@
                 }
                 reflections.forEach(note => {
                     const item = document.createElement('div');
-                    item.className = `reflection-note relative p-4 rounded-lg border-l-4 note-color-${note.color} cursor-pointer`;
+                    item.className = `reflection-note p-4 rounded-lg border-l-4 note-color-${note.color}`;
                     item.innerHTML = `
-                        <h4 class="font-bold break-words pr-6">${note.title}</h4>
+                        <h4 class="font-bold break-words">${note.title}</h4>
+                        <p class="text-sm text-gray-300 mt-2 break-words">${note.content.substring(0, 100)}${note.content.length > 100 ? '...' : ''}</p>
                         <p class="text-xs text-gray-500 mt-3">${new Date(note.createdAt?.toDate()).toLocaleDateString()}</p>
-                        <button class="delete-reflection-btn icon-btn absolute top-1 right-1 opacity-50 hover:opacity-100 focus:opacity-100 transition-opacity">
-                            <svg class="w-4 h-4 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                        </button>
                     `;
                     item.addEventListener('click', () => openReflectionModal(note));
-                    
-                    item.querySelector('.delete-reflection-btn').addEventListener('click', (e) => {
-                        e.stopPropagation(); // Prevents the edit modal from opening when deleting
-                        deleteReflection(note.id);
-                    });
-
                     reflectionsContainer.appendChild(item);
                 });
             }
@@ -2872,102 +2793,22 @@
                 aiSummaryContent.textContent = "Summarizing your thoughts...";
                 aiSummaryModal.classList.remove('hidden');
                 setTimeout(() => aiSummaryModal.classList.add('active'), 10);
+
+                try {
+                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!response.ok) throw new Error(`API error: ${response.statusText}`);
+                    const result = await response.json();
+                    aiSummaryContent.textContent = result.candidates[0].content.parts[0].text;
+                } catch (error) { 
+                    console.error("AI Summary failed:", error); 
+                    aiSummaryContent.textContent = "Sorry, I couldn't generate a summary right now.";
+                }
             });
 
             aiSummaryCloseBtn.addEventListener('click', () => {
                 aiSummaryModal.classList.remove('active');
                 setTimeout(() => aiSummaryModal.classList.add('hidden'), 300);
             });
-
-            // History Modal Logic
-            function openHistoryModal(type) {
-                historyModal.classList.remove('hidden');
-                setTimeout(() => historyModal.classList.add('active'), 10);
-                
-                historyModalTitle.textContent = type === 'wellness' ? 'Weekly Wellness History' : 'Nutrition History';
-                
-                const dataLogs = type === 'wellness' ? wellnessData.weeklyLogs : wellnessData.nutritionLogs;
-                const weeks = Object.keys(dataLogs).sort((a,b) => b - a); // Sort descending
-
-                historyWeekSelect.innerHTML = '';
-                if(weeks.length === 0) {
-                    historyWeekSelect.innerHTML = '<option>No history available</option>';
-                    historyModalBody.innerHTML = '<p class="text-center text-gray-400">No history has been recorded yet.</p>';
-                    return;
-                }
-
-                weeks.forEach(week => {
-                    const option = document.createElement('option');
-                    option.value = week;
-                    option.textContent = `Week ${week}`;
-                    historyWeekSelect.appendChild(option);
-                });
-
-                // Load the most recent week by default
-                renderHistoryContent(type, weeks[0]);
-
-                historyWeekSelect.onchange = () => {
-                    renderHistoryContent(type, historyWeekSelect.value);
-                }
-            }
-
-            function closeHistoryModal() {
-                 historyModal.classList.remove('active');
-                setTimeout(() => historyModal.classList.add('hidden'), 300);
-            }
-
-            function renderHistoryContent(type, week) {
-                historyModalBody.innerHTML = '';
-                const dataLogs = type === 'wellness' ? wellnessData.weeklyLogs : wellnessData.nutritionLogs;
-                const weekData = dataLogs[week];
-                
-                if (!weekData) {
-                    historyModalBody.innerHTML = `<p class="text-center text-gray-400">No data for Week ${week}.</p>`;
-                    return;
-                }
-
-                if (type === 'wellness') {
-                    const container = document.createElement('div');
-                    container.className = 'space-y-2';
-                    sleepDays.forEach(day => {
-                        const dayData = weekData[day] || {};
-                        const mood = dayData.mood || 'N/A';
-                        const energy = dayData.energy || 'N/A';
-                        const item = document.createElement('div');
-                        item.className = 'grid grid-cols-3 gap-4 text-sm p-2 bg-white/5 rounded';
-                        item.innerHTML = `<span class="font-semibold capitalize">${day}</span><span>Mood: ${mood}</span><span>Energy: ${energy}/5</span>`;
-                        container.appendChild(item);
-                    });
-                    historyModalBody.appendChild(container);
-                } else { // Nutrition
-                     const container = document.createElement('div');
-                    container.className = 'space-y-2';
-                    days.forEach(day => {
-                        const dayData = weekData[day] || {};
-                        const iron = dayData.iron || 'N/A';
-                        const calcium = dayData.calcium || 'N/A';
-                        const folate = dayData.folate || 'N/A';
-                        const fiber = dayData.fiber || 'N/A';
-                        const item = document.createElement('div');
-                        item.className = 'p-2 bg-white/5 rounded';
-                        item.innerHTML = `<p class="font-semibold capitalize mb-1">${dayTitles[day]}</p>
-                                          <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-                                              <span>Iron: ${iron}</span>
-                                              <span>Calcium: ${calcium}</span>
-                                              <span>Folate: ${folate}</span>
-                                              <span>Fiber: ${fiber}</span>
-                                          </div>`;
-                        container.appendChild(item);
-                    });
-                    historyModalBody.appendChild(container);
-                }
-            }
-            
-            wellnessHistoryBtn.addEventListener('click', () => openHistoryModal('wellness'));
-            nutritionHistoryBtn.addEventListener('click', () => openHistoryModal('nutrition'));
-            historyModalCloseBtn.addEventListener('click', closeHistoryModal);
-            historyModal.addEventListener('click', e => e.target === historyModal && closeHistoryModal());
-
 
             document.addEventListener('DOMContentLoaded', () => { mainApp.classList.add('hidden'); });
         }
