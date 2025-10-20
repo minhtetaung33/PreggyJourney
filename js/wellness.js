@@ -46,12 +46,14 @@ const manageSupplementsCloseBtn = document.getElementById('manage-supplements-cl
 const dailySupplementsList = document.getElementById('daily-supplements-list');
 
 let wellnessDataRef, symptomTrackerCollectionRef, userSupplementsRef, supplementNutrientsRef;
-let unsubscribeWellnessData, unsubscribeUserSupplements, unsubscribeSupplementNutrients;
+let unsubscribeWellnessData, unsubscribeUserSupplements, unsubscribeSupplementNutrients, unsubscribeSupplementLog;
 let wellnessData = {};
 export let wellnessChart = null; // Export the chart instance
 let userSupplements = [];
 let supplementNutrients = {};
 let nutritionHistoryCurrentDate = new Date();
+let supplementLogDate = new Date();
+
 
 const defaultWellnessData = {
     pregnancyStartDate: '2025-08-01',
@@ -147,7 +149,8 @@ function formatWeekDisplay(d) {
 }
 
 export async function initializeWellness(userId, onWellnessDataUpdate) {
-    wellnessDataRef = doc(db, `users/${userId}/wellness`, 'daily');
+    // This ref now points to the CURRENT week's wellness data
+    wellnessDataRef = doc(db, `users/${userId}/wellness`, getWeekId(new Date()));
     symptomTrackerCollectionRef = collection(db, `users/${userId}/symptomLogs`);
     userSupplementsRef = doc(db, `users/${userId}/supplements`, 'list-v1');
     supplementNutrientsRef = doc(db, `users/${userId}/supplements`, 'nutrients-v1');
@@ -196,8 +199,12 @@ async function initializeSupplements() {
 }
 
 function loadWellnessData(onWellnessDataUpdate) {
-    if (!wellnessDataRef) return;
     if(unsubscribeWellnessData) unsubscribeWellnessData();
+    // Re-point to the current week's document every time we load
+    wellnessDataRef = doc(db, `users/${getCurrentUserId()}/wellness`, getWeekId(new Date()));
+
+    if (!wellnessDataRef) return;
+
     unsubscribeWellnessData = onSnapshot(wellnessDataRef, (docSnap) => {
         if(docSnap.exists()){
             const firestoreData = docSnap.data();
@@ -218,6 +225,9 @@ function loadWellnessData(onWellnessDataUpdate) {
             updateDashboardUI();
             updateWellnessChartData();
             onWellnessDataUpdate(wellnessData);
+        } else {
+            // If the doc for the current week doesn't exist, create it.
+            setDoc(wellnessDataRef, defaultWellnessData);
         }
     });
 }
@@ -256,7 +266,7 @@ function setupEventListeners() {
     
     moodLogButtons.addEventListener('click', async (e) => {
         const button = e.target.closest('.mood-btn'); if(!button) return;
-        const todayIndex = new Date().getDay(); const currentDayKey = sleepDays[(todayIndex === 0 ? 7 : todayIndex) - 1];
+        const todayIndex = new Date().getDay(); const currentDayKey = sleepDays[(todayIndex === 0 ? 6 : todayIndex - 1)];
         const newMoodEmoji = button.dataset.mood;
         const moodMessages = {
             '😣': { level: "Stressed", aiInsight: "It's okay to have tough days. Try some deep breathing or a short, calming walk." },
@@ -274,7 +284,7 @@ function setupEventListeners() {
 
     energyLogButtons.addEventListener('click', async (e) => {
         const button = e.target.closest('.energy-btn'); if(!button) return;
-        const todayIndex = new Date().getDay(); const currentDayKey = sleepDays[(todayIndex === 0 ? 7 : todayIndex) - 1];
+        const todayIndex = new Date().getDay(); const currentDayKey = sleepDays[(todayIndex === 0 ? 6 : todayIndex - 1)];
         const newEnergyLevel = parseInt(button.dataset.energy);
         const energyMap = { 1: { level: 'Very Low', color: 'text-red-400' }, 2: { level: 'Low', color: 'text-yellow-400' }, 3: { level: 'Moderate', color: 'text-green-400' }, 4: { level: 'Good', color: 'text-teal-400' }, 5: { level: 'High', color: 'text-purple-400' } };
         const newEnergyData = energyMap[newEnergyLevel];
@@ -316,7 +326,7 @@ function setupEventListeners() {
         closeSleepModal();
     });
     
-    manageSupplementsBtnHeader.addEventListener('click', openSupplementModal);
+    manageSupplementsBtnHeader.addEventListener('click', () => openSupplementModal(new Date()));
     nutritionHistoryBtn.addEventListener('click', openNutritionHistoryModal);
     nutritionHistoryCloseBtn.addEventListener('click', closeNutritionHistoryModal);
     nutritionHistoryModal.addEventListener('click', e => e.target === nutritionHistoryModal && closeNutritionHistoryModal());
@@ -499,7 +509,7 @@ function updateMoodLog() {
 }
 
 function updateEnergyLog() {
-    const todayIndex = new Date().getDay(); const currentDayKey = sleepDays[(todayIndex === 0 ? 7 : todayIndex) -1];
+    const todayIndex = new Date().getDay(); const currentDayKey = sleepDays[(todayIndex === 0 ? 6 : todayIndex - 1)];
     const currentEnergy = wellnessData.weeklyLog[currentDayKey]?.energy || 3;
     const buttons = energyLogButtons.querySelectorAll('.energy-btn');
     buttons.forEach(btn => {
@@ -613,48 +623,89 @@ function updateDynamicContent() {
     wellnessTipEl.textContent = tip; wellnessData.dailyTip = tip;
 }
 
-function openSupplementModal() {
+function openSupplementModal(date = new Date()) {
+    supplementLogDate = date;
+    const dateString = date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+    manageSupplementsModal.querySelector('h3').textContent = `Log Supplements for ${dateString}`;
+
     populateSupplementList();
     manageSupplementsModal.classList.remove('hidden');
     setTimeout(() => manageSupplementsModal.classList.add('active'), 10);
 }
+
 function closeSupplementModal() {
+    if (unsubscribeSupplementLog) unsubscribeSupplementLog();
     manageSupplementsModal.classList.remove('active');
     setTimeout(() => manageSupplementsModal.classList.add('hidden'), 300);
 }
 
-function populateSupplementList() {
-    supplementListContainer.innerHTML = '';
-    if (userSupplements.length === 0) {
-        supplementListContainer.innerHTML = `<p class="text-center text-gray-400">No supplements added yet.</p>`;
-        return;
-    }
-    userSupplements.forEach(supp => {
-        const item = document.createElement('div');
-        item.className = 'flex items-center justify-between p-3 bg-white bg-opacity-5 rounded-lg hover:bg-opacity-10';
-        const nutrients = supplementNutrients[supp] || { iron: '?', calcium: '?', folate: '?', fiber: '?' };
+async function populateSupplementList() {
+    supplementListContainer.innerHTML = `<p class="text-center text-gray-400">Loading supplements...</p>`;
+    
+    const weekId = getWeekId(supplementLogDate);
+    const dayIndex = (supplementLogDate.getDay() + 6) % 7; // Monday is 0
+    const dayKey = days[dayIndex];
+    const userId = getCurrentUserId();
+    const wellnessDocRefForLog = doc(db, `users/${userId}/wellness`, weekId);
 
-        item.innerHTML = `<div class="flex-1 pr-2 cursor-pointer supplement-log-btn" data-supp="${supp}">
-                <span class="font-semibold text-white">${supp}</span>
-                <div class="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs mt-1.5 text-gray-300">
-                    <span class="flex items-center" title="Iron">Iron: ${nutrients.iron}</span>
-                    <span class="flex items-center" title="Calcium">Ca: ${nutrients.calcium}</span>
-                    <span class="flex items-center" title="Folate">Folate: ${nutrients.folate}</span>
+    if (unsubscribeSupplementLog) unsubscribeSupplementLog();
+
+    unsubscribeSupplementLog = onSnapshot(wellnessDocRefForLog, (docSnap) => {
+        const wellnessDataForLog = docSnap.exists() ? docSnap.data() : defaultWellnessData;
+        const loggedSupplements = wellnessDataForLog.dailySupplements[dayKey] || [];
+        
+        supplementListContainer.innerHTML = '';
+        if (userSupplements.length === 0) {
+            supplementListContainer.innerHTML = `<p class="text-center text-gray-400">No supplements added yet.</p>`;
+            return;
+        }
+
+        userSupplements.forEach(supp => {
+            const item = document.createElement('div');
+            const isLogged = loggedSupplements.includes(supp);
+            item.className = `flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer`;
+            if (isLogged) {
+                item.classList.add('bg-purple-500/20');
+            }
+            const nutrients = supplementNutrients[supp] || { iron: '?', calcium: '?', folate: '?' };
+
+            item.innerHTML = `
+                <div class="flex-1 pr-2">
+                    <span class="font-semibold text-white">${supp}</span>
+                    <div class="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs mt-1.5 text-gray-300">
+                        <span>Iron: ${nutrients.iron}</span>
+                        <span>Ca: ${nutrients.calcium}</span>
+                        <span>Folate: ${nutrients.folate}</span>
+                    </div>
                 </div>
-            </div>
-            <div class="flex items-center">
-                <button class="icon-btn delete-supp-btn" data-supp="${supp}"><svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
-            </div>`;
-        item.querySelector('.delete-supp-btn').addEventListener('click', (e) => { e.stopPropagation(); deleteSupplement(supp); });
-        item.querySelector('.supplement-log-btn').addEventListener('click', () => addSupplementToDay(supp));
-        supplementListContainer.appendChild(item);
+                <div class="flex items-center">
+                    ${isLogged ? '<svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>' : '<svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'}
+                </div>`;
+            item.addEventListener('click', () => toggleSupplementForDay(supp));
+            supplementListContainer.appendChild(item);
+        });
     });
 }
 
-async function addSupplementToDay(suppName) {
-    const todayIndex = new Date().getDay(); const dayKey = days[(todayIndex === 0 ? 7 : todayIndex) - 1];
-    await updateDoc(wellnessDataRef, { [`dailySupplements.${dayKey}`]: arrayUnion(suppName) });
-    showApiFeedback(`Logged "${suppName}" for today.`, 'success', supplementApiFeedback);
+async function toggleSupplementForDay(suppName) {
+    const dayIndex = (supplementLogDate.getDay() + 6) % 7; // Monday is 0
+    const dayKey = days[dayIndex];
+    const weekId = getWeekId(supplementLogDate);
+    const userId = getCurrentUserId();
+    const wellnessDocRefForLog = doc(db, `users/${userId}/wellness`, weekId);
+
+    const docSnap = await getDoc(wellnessDocRefForLog);
+    const wellnessDataForLog = docSnap.exists() ? docSnap.data() : defaultWellnessData;
+    const loggedSupplements = wellnessDataForLog.dailySupplements[dayKey] || [];
+
+    const isLogged = loggedSupplements.includes(suppName);
+    const updateOperation = isLogged ? arrayRemove(suppName) : arrayUnion(suppName);
+
+    await setDoc(wellnessDocRefForLog, {
+        dailySupplements: {
+            [dayKey]: updateOperation
+        }
+    }, { merge: true });
 }
 
 function updateDailySupplementsUI(dayKey) {
@@ -677,8 +728,8 @@ function updateDailySupplementsUI(dayKey) {
 }
 
 async function removeSupplementFromDay(suppName) {
-     const todayIndex = new Date().getDay(); const dayKey = days[(todayIndex === 0 ? 7 : todayIndex) - 1];
-     await updateDoc(wellnessDataRef, { [`dailySupplements.${dayKey}`]: arrayRemove(suppName) });
+    const todayIndex = new Date().getDay(); const dayKey = days[(todayIndex === 0 ? 6 : todayIndex - 1)];
+    await updateDoc(wellnessDataRef, { [`dailySupplements.${dayKey}`]: arrayRemove(suppName) });
 }
 
 async function deleteSupplement(suppToDelete) {
@@ -741,11 +792,17 @@ async function populateNutritionHistory(date) {
     const weekMealPlanSnap = await getDoc(weekMealPlanRef);
     const mealPlanForWeek = weekMealPlanSnap.exists() ? weekMealPlanSnap.data() : defaultMealPlan;
 
+    // Fetch the corresponding wellness data for the same week
+    const weekWellnessRef = doc(db, `users/${userId}/wellness`, weekId);
+    const weekWellnessSnap = await getDoc(weekWellnessRef);
+    const wellnessForWeek = weekWellnessSnap.exists() ? weekWellnessSnap.data() : defaultWellnessData;
+
+
     nutritionHistoryContainer.innerHTML = '';
     const allMealNutrients = getMealNutrients();
     const dailyGoals = { iron: 8, calcium: 10, folate: 10, fiber: 8 };
 
-    days.forEach(dayKey => {
+    days.forEach((dayKey, index) => {
         const dayTitle = dayTitles[dayKey];
         const totals = { iron: 0, calcium: 0, folate: 0, fiber: 0 };
         for (const mealKey in mealPlanForWeek) {
@@ -761,6 +818,17 @@ async function populateNutritionHistory(date) {
             }
         }
         
+        // Use supplements from the specific week's wellness data
+        const daySupplements = wellnessForWeek.dailySupplements[dayKey] || [];
+        daySupplements.forEach(suppName => {
+            if (supplementNutrients[suppName]) {
+                const nutrients = supplementNutrients[suppName];
+                totals.iron += nutrients.iron || 0;
+                totals.calcium += nutrients.calcium || 0;
+                totals.folate += nutrients.folate || 0;
+            }
+        });
+        
         const nutritionData = {
             iron: calculateNutrientStatus(totals.iron, dailyGoals.iron),
             calcium: calculateNutrientStatus(totals.calcium, dailyGoals.calcium),
@@ -769,7 +837,7 @@ async function populateNutritionHistory(date) {
         };
 
         const item = document.createElement('div');
-        item.className = 'p-3 bg-white/5 rounded-lg';
+        item.className = 'p-3 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors';
         item.innerHTML = `
             <h4 class="font-bold text-lg text-purple-300 mb-2">${dayTitle}</h4>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2 text-sm">
@@ -779,6 +847,11 @@ async function populateNutritionHistory(date) {
                 <div>Fiber: <span class="font-semibold ${nutritionData.fiber.color}">${nutritionData.fiber.status} (${nutritionData.fiber.percentage}%)</span></div>
             </div>
         `;
+        const mondayOfRelevantWeek = new Date(getWeekId(date) + 'T00:00:00Z');
+        const dayDate = new Date(mondayOfRelevantWeek);
+        dayDate.setDate(mondayOfRelevantWeek.getDate() + index);
+
+        item.addEventListener('click', () => openSupplementModal(dayDate));
         nutritionHistoryContainer.appendChild(item);
     });
 }
@@ -955,6 +1028,7 @@ export function unloadWellness() {
     if (unsubscribeWellnessData) unsubscribeWellnessData();
     if (unsubscribeUserSupplements) unsubscribeUserSupplements();
     if (unsubscribeSupplementNutrients) unsubscribeSupplementNutrients();
+    if (unsubscribeSupplementLog) unsubscribeSupplementLog();
     if (wellnessChart) {
         wellnessChart.destroy();
         wellnessChart = null;
