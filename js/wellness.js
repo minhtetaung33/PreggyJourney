@@ -1,6 +1,6 @@
 import { doc, onSnapshot, setDoc, getDoc, updateDoc, collection, addDoc, serverTimestamp, arrayUnion, arrayRemove, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { db } from './firebase.js';
-import { getCurrentMealPlan, getMealNutrients } from './meal-planner.js';
+import { getCurrentMealPlan, getMealNutrients, getCurrentMealPlanDate } from './meal-planner.js';
 import { getCurrentUserId } from "./auth.js";
 
 // DOM Elements
@@ -41,6 +41,10 @@ const supplementApiLoader = document.getElementById('supplement-api-loader');
 const supplementApiFeedback = document.getElementById('supplement-api-feedback');
 const manageSupplementsCloseBtn = document.getElementById('manage-supplements-close-btn');
 const dailySupplementsList = document.getElementById('daily-supplements-list');
+const nutritionHistoryPrevWeekBtn = document.getElementById('nutrition-history-prev-week-btn');
+const nutritionHistoryNextWeekBtn = document.getElementById('nutrition-history-next-week-btn');
+const nutritionHistoryWeekDisplay = document.getElementById('nutrition-history-week-display');
+
 
 let wellnessDataRef, symptomTrackerCollectionRef, userSupplementsRef, supplementNutrientsRef;
 let unsubscribeWellnessData, unsubscribeUserSupplements, unsubscribeSupplementNutrients;
@@ -48,6 +52,7 @@ let wellnessData = {};
 export let wellnessChart = null; // Export the chart instance
 let userSupplements = [];
 let supplementNutrients = {};
+let nutritionHistoryDate;
 
 const defaultWellnessData = {
     pregnancyStartDate: '2025-08-01',
@@ -86,6 +91,14 @@ const defaultWellnessData = {
         saturday: { mood: '🥰', energy: 5 },
         sunday: { mood: '😊', energy: 4 }
     }
+};
+
+const defaultMealPlan = { // Keep a local copy for fallbacks
+    breakfast: { monday: "", tuesday: "", wednesday: "", thursday: "", friday: "", saturday: "", sunday: "" },
+    lunch: { monday: "", tuesday: "", wednesday: "", thursday: "", friday: "", saturday: "", sunday: "" },
+    snackAM: { monday: "", tuesday: "", wednesday: "", thursday: "", friday: "", saturday: "", sunday: "" },
+    snackPM: { monday: "", tuesday: "", wednesday: "", thursday: "", friday: "", saturday: "", sunday: "" },
+    dinner: { monday: "", tuesday: "", wednesday: "", thursday: "", friday: "", saturday: "", sunday: "" }
 };
 
 const wellnessTipsByWeek = {
@@ -291,6 +304,20 @@ function setupEventListeners() {
     manageSupplementsModal.addEventListener('click', e => e.target === manageSupplementsModal && closeSupplementModal());
     addSupplementBtn.addEventListener('click', handleAddSupplement);
     newSupplementInput.addEventListener('keyup', e => e.key === 'Enter' && handleAddSupplement());
+    
+    nutritionHistoryPrevWeekBtn.addEventListener('click', () => {
+        if (nutritionHistoryDate) {
+            nutritionHistoryDate.setDate(nutritionHistoryDate.getDate() - 7);
+            populateNutritionHistory(nutritionHistoryDate);
+        }
+    });
+
+    nutritionHistoryNextWeekBtn.addEventListener('click', () => {
+        if (nutritionHistoryDate) {
+            nutritionHistoryDate.setDate(nutritionHistoryDate.getDate() + 7);
+            populateNutritionHistory(nutritionHistoryDate);
+        }
+    });
 }
 
 export function updateDashboardUI() {
@@ -672,7 +699,8 @@ async function handleAddSupplement() {
 }
 
 function openNutritionHistoryModal() {
-    populateNutritionHistory();
+    nutritionHistoryDate = new Date(getCurrentMealPlanDate()); // Create a copy
+    populateNutritionHistory(nutritionHistoryDate);
     nutritionHistoryModal.classList.remove('hidden');
     setTimeout(() => nutritionHistoryModal.classList.add('active'), 10);
 }
@@ -682,15 +710,29 @@ function closeNutritionHistoryModal() {
     setTimeout(() => nutritionHistoryModal.classList.add('hidden'), 300);
 }
 
-function populateNutritionHistory() {
-    nutritionHistoryContainer.innerHTML = '';
+async function populateNutritionHistory(date) {
+    nutritionHistoryWeekDisplay.textContent = formatWeekDisplay(date);
+    nutritionHistoryContainer.innerHTML = `<div class="text-center p-4">Loading history...</div>`;
+
     const allMealNutrients = getMealNutrients();
-    const currentMealPlanData = getCurrentMealPlan();
     const dailyGoals = { iron: 8, calcium: 10, folate: 10, fiber: 8 };
+    const userId = getCurrentUserId();
+    if (!userId) {
+        nutritionHistoryContainer.innerHTML = `<div class="text-center p-4 text-red-300">Could not load data. Not signed in.</div>`;
+        return;
+    }
+
+    const weekId = getWeekId(date);
+    const mealPlanRef = doc(db, `users/${userId}/mealPlans`, weekId);
+    const mealPlanSnap = await getDoc(mealPlanRef);
+    const mealPlanData = mealPlanSnap.exists() ? mealPlanSnap.data() : defaultMealPlan;
+    
+    nutritionHistoryContainer.innerHTML = '';
 
     days.forEach(dayKey => {
         const dayTitle = dayTitles[dayKey];
-        const aiSummary = wellnessData.dailyNutrition ? wellnessData.dailyNutrition[dayKey] : null;
+        // Note: AI summary is tied to current wellnessData, not historical weeks. This is a limitation of the current data structure.
+        const aiSummary = wellnessData.dailyNutrition ? wellnessData.dailyNutrition[dayKey] : null; 
         let nutritionData;
 
         if (aiSummary) {
@@ -702,9 +744,9 @@ function populateNutritionHistory() {
             };
         } else {
             const totals = { iron: 0, calcium: 0, folate: 0, fiber: 0 };
-            for (const mealKey in currentMealPlanData) {
-                if (currentMealPlanData[mealKey] && typeof currentMealPlanData[mealKey] === 'object') {
-                    const mealName = currentMealPlanData[mealKey][dayKey];
+            for (const mealKey in mealPlanData) {
+                if (mealPlanData[mealKey] && typeof mealPlanData[mealKey] === 'object') {
+                    const mealName = mealPlanData[mealKey][dayKey];
                     if (mealName && allMealNutrients[mealName]) {
                         const nutrients = allMealNutrients[mealName];
                         totals.iron += nutrients.iron || 0;
@@ -736,15 +778,39 @@ function populateNutritionHistory() {
         item.innerHTML = `
             <h4 class="font-bold text-lg text-purple-300 mb-2">${dayTitle}</h4>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2 text-sm">
-                <div>Iron: <span class="font-semibold ${nutritionData.iron.color}">${nutritionData.iron.status}</span></div>
-                <div>Calcium: <span class="font-semibold ${nutritionData.calcium.color}">${nutritionData.calcium.status}</span></div>
-                <div>Folate: <span class="font-semibold ${nutritionData.folate.color}">${nutritionData.folate.status}</span></div>
-                <div>Fiber: <span class="font-semibold ${nutritionData.fiber.color}">${nutritionData.fiber.status}</span></div>
+                <div>Iron: <span class="font-semibold ${nutritionData.iron.color}">${nutritionData.iron.status} (${nutritionData.iron.percentage}%)</span></div>
+                <div>Calcium: <span class="font-semibold ${nutritionData.calcium.color}">${nutritionData.calcium.status} (${nutritionData.calcium.percentage}%)</span></div>
+                <div>Folate: <span class="font-semibold ${nutritionData.folate.color}">${nutritionData.folate.status} (${nutritionData.folate.percentage}%)</span></div>
+                <div>Fiber: <span class="font-semibold ${nutritionData.fiber.color}">${nutritionData.fiber.status} (${nutritionData.fiber.percentage}%)</span></div>
             </div>
         `;
         nutritionHistoryContainer.appendChild(item);
     });
 }
+
+
+// --- DATE HELPER FUNCTIONS (Copied from meal-planner) ---
+function getWeekId(d) {
+    d = new Date(d);
+    d.setHours(0, 0, 0, 0); // Normalize time
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+    const monday = new Date(d.setDate(diff));
+    return monday.toISOString().split('T')[0]; // 'YYYY-MM-DD'
+}
+
+function formatWeekDisplay(d) {
+    const monday = new Date(getWeekId(d) + 'T00:00:00Z');
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    
+    const options = { month: 'short', day: 'numeric', timeZone: 'UTC' };
+    const mondayStr = monday.toLocaleDateString('en-US', options);
+    const sundayStr = sunday.toLocaleDateString('en-US', options);
+
+    return `${mondayStr} - ${sundayStr}`;
+}
+
 
 function closeStartDateModal() { startDateModal.classList.remove('active'); setTimeout(() => startDateModal.classList.add('hidden'), 300); }
 function populateSleepModal() {
