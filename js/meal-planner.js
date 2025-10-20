@@ -586,3 +586,7 @@ export function getCurrentMealPlan() {
 export function getMealNutrients() {
     return { ...mealNutrients, ...customMealNutrients };
 }
+
+export function getCurrentMealPlanDate() {
+    return currentDate;
+}
