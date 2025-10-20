@@ -49,6 +49,11 @@ const editTodoCategory = document.getElementById('edit-todo-category');
 const editCustomTodoCategoryInput = document.getElementById('edit-custom-todo-category-input');
 const editTodoModalCancelBtn = document.getElementById('edit-todo-modal-cancel-btn');
 const editTodoModalSaveBtn = document.getElementById('edit-todo-modal-save-btn');
+const reflectionHeader = document.getElementById('reflection-header');
+const collapsibleReflectionContent = document.getElementById('collapsible-reflection-content');
+const reflectionToggleIcon = document.getElementById('reflection-toggle-icon');
+const toggleReflectionsContainer = document.getElementById('toggle-reflections-container');
+const toggleReflectionsBtn = document.getElementById('toggle-reflections-btn');
 
 
 let todosRef, wishesRef, reflectionsRef;
@@ -58,6 +63,7 @@ let wellnessDataForJourney = {};
 let activeReflectionId = null;
 let activeColor = 'pink';
 let activeTodoId = null;
+let showAllReflections = false;
 
 
 export function initializeJourney(userId, initialWellnessData) {
@@ -192,11 +198,19 @@ function renderWishes(wishes) {
 
 function renderReflections(reflections) {
     reflectionsContainer.innerHTML = '';
-     if (reflections.length === 0) {
+    const notesToRender = showAllReflections ? reflections : reflections.slice(0, 3);
+
+    if (reflections.length === 0) {
         reflectionsContainer.innerHTML = `<p class="text-center text-gray-400 col-span-full">No reflections yet. Add a new note to begin!</p>`;
+        toggleReflectionsContainer.classList.add('hidden');
         return;
     }
-    reflections.forEach(note => {
+
+    if (notesToRender.length === 0 && reflections.length > 0) {
+        reflectionsContainer.innerHTML = `<p class="text-center text-gray-400 col-span-full">All notes are hidden. Click "Show All" to see them.</p>`;
+    }
+    
+    notesToRender.forEach(note => {
         const item = document.createElement('div');
         item.className = `reflection-note relative p-4 rounded-lg border-l-4 note-color-${note.color} cursor-pointer`;
         item.innerHTML = `
@@ -209,12 +223,19 @@ function renderReflections(reflections) {
         item.addEventListener('click', () => openReflectionModal(note));
         
         item.querySelector('.delete-reflection-btn').addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevents the edit modal from opening when deleting
+            e.stopPropagation();
             deleteReflection(note.id);
         });
 
         reflectionsContainer.appendChild(item);
     });
+
+    if (reflections.length > 3) {
+        toggleReflectionsContainer.classList.remove('hidden');
+        toggleReflectionsBtn.textContent = showAllReflections ? 'Show Less' : `Show All (${reflections.length})`;
+    } else {
+        toggleReflectionsContainer.classList.add('hidden');
+    }
 }
 
 function renderAiWishSuggestions(suggestions) {
@@ -434,6 +455,16 @@ function setupEventListeners() {
     todoHeader.addEventListener('click', () => {
         collapsibleTodoContent.classList.toggle('hidden');
         todoToggleIcon.classList.toggle('rotate-180');
+    });
+
+    reflectionHeader.addEventListener('click', () => {
+        collapsibleReflectionContent.classList.toggle('hidden');
+        reflectionToggleIcon.classList.toggle('rotate-180');
+    });
+
+    toggleReflectionsBtn.addEventListener('click', () => {
+        showAllReflections = !showAllReflections;
+        renderReflections(currentReflections);
     });
 
     addReflectionBtn.addEventListener('click', () => openReflectionModal());
