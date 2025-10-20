@@ -1,6 +1,6 @@
 import { doc, onSnapshot, setDoc, getDoc, updateDoc, collection, addDoc, serverTimestamp, arrayUnion, arrayRemove, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { db } from './firebase.js';
-import { getCurrentMealPlan, getMealNutrients, getCurrentMealPlanDate } from './meal-planner.js';
+import { getCurrentMealPlan, getMealNutrients } from './meal-planner.js';
 import { getCurrentUserId } from "./auth.js";
 
 // DOM Elements
@@ -32,6 +32,9 @@ const nutritionHistoryBtn = document.getElementById('nutrition-history-btn');
 const nutritionHistoryModal = document.getElementById('nutrition-history-modal');
 const nutritionHistoryContainer = document.getElementById('nutrition-history-container');
 const nutritionHistoryCloseBtn = document.getElementById('nutrition-history-close-btn');
+const nutritionHistoryWeekDisplay = document.getElementById('nutrition-history-week-display');
+const nutritionHistoryPrevBtn = document.getElementById('nutrition-history-prev-week-btn');
+const nutritionHistoryNextBtn = document.getElementById('nutrition-history-next-week-btn');
 const manageSupplementsModal = document.getElementById('manage-supplements-modal');
 const supplementListContainer = document.getElementById('supplement-list-container');
 const newSupplementInput = document.getElementById('new-supplement-input');
@@ -41,10 +44,6 @@ const supplementApiLoader = document.getElementById('supplement-api-loader');
 const supplementApiFeedback = document.getElementById('supplement-api-feedback');
 const manageSupplementsCloseBtn = document.getElementById('manage-supplements-close-btn');
 const dailySupplementsList = document.getElementById('daily-supplements-list');
-const nutritionHistoryPrevWeekBtn = document.getElementById('nutrition-history-prev-week-btn');
-const nutritionHistoryNextWeekBtn = document.getElementById('nutrition-history-next-week-btn');
-const nutritionHistoryWeekDisplay = document.getElementById('nutrition-history-week-display');
-
 
 let wellnessDataRef, symptomTrackerCollectionRef, userSupplementsRef, supplementNutrientsRef;
 let unsubscribeWellnessData, unsubscribeUserSupplements, unsubscribeSupplementNutrients;
@@ -52,7 +51,7 @@ let wellnessData = {};
 export let wellnessChart = null; // Export the chart instance
 let userSupplements = [];
 let supplementNutrients = {};
-let nutritionHistoryDate;
+let nutritionHistoryCurrentDate = new Date();
 
 const defaultWellnessData = {
     pregnancyStartDate: '2025-08-01',
@@ -93,7 +92,7 @@ const defaultWellnessData = {
     }
 };
 
-const defaultMealPlan = { // Keep a local copy for fallbacks
+const defaultMealPlan = {
     breakfast: { monday: "", tuesday: "", wednesday: "", thursday: "", friday: "", saturday: "", sunday: "" },
     lunch: { monday: "", tuesday: "", wednesday: "", thursday: "", friday: "", saturday: "", sunday: "" },
     snackAM: { monday: "", tuesday: "", wednesday: "", thursday: "", friday: "", saturday: "", sunday: "" },
@@ -125,6 +124,27 @@ const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'
 const dayTitles = { monday: 'Monday', tuesday: 'Tuesday', wednesday: 'Wednesday', thursday: 'Thursday', friday: 'Friday', saturday: 'Saturday', sunday: 'Sunday' };
 const moodToValue = {'😣': 1, '😐': 2, '🙂': 3, '😊': 4, '🥰': 5};
 
+// --- DATE HELPER FUNCTIONS ---
+function getWeekId(d) {
+    d = new Date(d);
+    d.setHours(0, 0, 0, 0); // Normalize time
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+    const monday = new Date(d.setDate(diff));
+    return monday.toISOString().split('T')[0]; // 'YYYY-MM-DD'
+}
+
+function formatWeekDisplay(d) {
+    const monday = new Date(getWeekId(d) + 'T00:00:00Z');
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    
+    const options = { month: 'short', day: 'numeric', timeZone: 'UTC' };
+    const mondayStr = monday.toLocaleDateString('en-US', options);
+    const sundayStr = sunday.toLocaleDateString('en-US', options);
+
+    return `${mondayStr} - ${sundayStr}`;
+}
 
 export async function initializeWellness(userId, onWellnessDataUpdate) {
     wellnessDataRef = doc(db, `users/${userId}/wellness`, 'daily');
@@ -305,18 +325,14 @@ function setupEventListeners() {
     addSupplementBtn.addEventListener('click', handleAddSupplement);
     newSupplementInput.addEventListener('keyup', e => e.key === 'Enter' && handleAddSupplement());
     
-    nutritionHistoryPrevWeekBtn.addEventListener('click', () => {
-        if (nutritionHistoryDate) {
-            nutritionHistoryDate.setDate(nutritionHistoryDate.getDate() - 7);
-            populateNutritionHistory(nutritionHistoryDate);
-        }
+    nutritionHistoryPrevBtn.addEventListener('click', () => {
+        nutritionHistoryCurrentDate.setDate(nutritionHistoryCurrentDate.getDate() - 7);
+        populateNutritionHistory(nutritionHistoryCurrentDate);
     });
 
-    nutritionHistoryNextWeekBtn.addEventListener('click', () => {
-        if (nutritionHistoryDate) {
-            nutritionHistoryDate.setDate(nutritionHistoryDate.getDate() + 7);
-            populateNutritionHistory(nutritionHistoryDate);
-        }
+    nutritionHistoryNextBtn.addEventListener('click', () => {
+        nutritionHistoryCurrentDate.setDate(nutritionHistoryCurrentDate.getDate() + 7);
+        populateNutritionHistory(nutritionHistoryCurrentDate);
     });
 }
 
@@ -699,8 +715,8 @@ async function handleAddSupplement() {
 }
 
 function openNutritionHistoryModal() {
-    nutritionHistoryDate = new Date(getCurrentMealPlanDate()); // Create a copy
-    populateNutritionHistory(nutritionHistoryDate);
+    nutritionHistoryCurrentDate = new Date(); // Reset to current week
+    populateNutritionHistory(nutritionHistoryCurrentDate);
     nutritionHistoryModal.classList.remove('hidden');
     setTimeout(() => nutritionHistoryModal.classList.add('active'), 10);
 }
@@ -711,67 +727,46 @@ function closeNutritionHistoryModal() {
 }
 
 async function populateNutritionHistory(date) {
+    nutritionHistoryContainer.innerHTML = '<p class="text-center text-gray-400">Loading history...</p>';
     nutritionHistoryWeekDisplay.textContent = formatWeekDisplay(date);
-    nutritionHistoryContainer.innerHTML = `<div class="text-center p-4">Loading history...</div>`;
 
-    const allMealNutrients = getMealNutrients();
-    const dailyGoals = { iron: 8, calcium: 10, folate: 10, fiber: 8 };
+    const weekId = getWeekId(date);
     const userId = getCurrentUserId();
     if (!userId) {
-        nutritionHistoryContainer.innerHTML = `<div class="text-center p-4 text-red-300">Could not load data. Not signed in.</div>`;
+        nutritionHistoryContainer.innerHTML = '<p class="text-center text-red-400">Could not load data. User not found.</p>';
         return;
     }
 
-    const weekId = getWeekId(date);
-    const mealPlanRef = doc(db, `users/${userId}/mealPlans`, weekId);
-    const mealPlanSnap = await getDoc(mealPlanRef);
-    const mealPlanData = mealPlanSnap.exists() ? mealPlanSnap.data() : defaultMealPlan;
-    
+    const weekMealPlanRef = doc(db, `users/${userId}/mealPlans`, weekId);
+    const weekMealPlanSnap = await getDoc(weekMealPlanRef);
+    const mealPlanForWeek = weekMealPlanSnap.exists() ? weekMealPlanSnap.data() : defaultMealPlan;
+
     nutritionHistoryContainer.innerHTML = '';
+    const allMealNutrients = getMealNutrients();
+    const dailyGoals = { iron: 8, calcium: 10, folate: 10, fiber: 8 };
 
     days.forEach(dayKey => {
         const dayTitle = dayTitles[dayKey];
-        // Note: AI summary is tied to current wellnessData, not historical weeks. This is a limitation of the current data structure.
-        const aiSummary = wellnessData.dailyNutrition ? wellnessData.dailyNutrition[dayKey] : null; 
-        let nutritionData;
-
-        if (aiSummary) {
-            nutritionData = {
-                iron: getStatusFromAI(aiSummary.iron),
-                calcium: getStatusFromAI(aiSummary.calcium),
-                folate: getStatusFromAI(aiSummary.folate),
-                fiber: getStatusFromAI(aiSummary.fiber)
-            };
-        } else {
-            const totals = { iron: 0, calcium: 0, folate: 0, fiber: 0 };
-            for (const mealKey in mealPlanData) {
-                if (mealPlanData[mealKey] && typeof mealPlanData[mealKey] === 'object') {
-                    const mealName = mealPlanData[mealKey][dayKey];
-                    if (mealName && allMealNutrients[mealName]) {
-                        const nutrients = allMealNutrients[mealName];
-                        totals.iron += nutrients.iron || 0;
-                        totals.calcium += nutrients.calcium || 0;
-                        totals.folate += nutrients.folate || 0;
-                        totals.fiber += nutrients.fiber || 0;
-                    }
-                }
-            }
-            const daySupplements = wellnessData.dailySupplements[dayKey] || [];
-            daySupplements.forEach(suppName => {
-                if (supplementNutrients[suppName]) {
-                    const nutrients = supplementNutrients[suppName];
+        const totals = { iron: 0, calcium: 0, folate: 0, fiber: 0 };
+        for (const mealKey in mealPlanForWeek) {
+            if (mealPlanForWeek[mealKey] && typeof mealPlanForWeek[mealKey] === 'object') {
+                const mealName = mealPlanForWeek[mealKey][dayKey];
+                if (mealName && allMealNutrients[mealName]) {
+                    const nutrients = allMealNutrients[mealName];
                     totals.iron += nutrients.iron || 0;
                     totals.calcium += nutrients.calcium || 0;
                     totals.folate += nutrients.folate || 0;
+                    totals.fiber += nutrients.fiber || 0;
                 }
-            });
-            nutritionData = {
-                iron: calculateNutrientStatus(totals.iron, dailyGoals.iron),
-                calcium: calculateNutrientStatus(totals.calcium, dailyGoals.calcium),
-                folate: calculateNutrientStatus(totals.folate, dailyGoals.folate),
-                fiber: calculateNutrientStatus(totals.fiber, dailyGoals.fiber)
-            };
+            }
         }
+        
+        const nutritionData = {
+            iron: calculateNutrientStatus(totals.iron, dailyGoals.iron),
+            calcium: calculateNutrientStatus(totals.calcium, dailyGoals.calcium),
+            folate: calculateNutrientStatus(totals.folate, dailyGoals.folate),
+            fiber: calculateNutrientStatus(totals.fiber, dailyGoals.fiber)
+        };
 
         const item = document.createElement('div');
         item.className = 'p-3 bg-white/5 rounded-lg';
@@ -786,29 +781,6 @@ async function populateNutritionHistory(date) {
         `;
         nutritionHistoryContainer.appendChild(item);
     });
-}
-
-
-// --- DATE HELPER FUNCTIONS (Copied from meal-planner) ---
-function getWeekId(d) {
-    d = new Date(d);
-    d.setHours(0, 0, 0, 0); // Normalize time
-    const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
-    const monday = new Date(d.setDate(diff));
-    return monday.toISOString().split('T')[0]; // 'YYYY-MM-DD'
-}
-
-function formatWeekDisplay(d) {
-    const monday = new Date(getWeekId(d) + 'T00:00:00Z');
-    const sunday = new Date(monday);
-    sunday.setDate(monday.getDate() + 6);
-    
-    const options = { month: 'short', day: 'numeric', timeZone: 'UTC' };
-    const mondayStr = monday.toLocaleDateString('en-US', options);
-    const sundayStr = sunday.toLocaleDateString('en-US', options);
-
-    return `${mondayStr} - ${sundayStr}`;
 }
 
 
