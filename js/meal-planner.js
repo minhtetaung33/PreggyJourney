@@ -99,6 +99,7 @@ const mealNutrients = {
 // --- DATE HELPER FUNCTIONS ---
 function getWeekId(d) {
     d = new Date(d);
+    d.setHours(0, 0, 0, 0); // Normalize time
     const day = d.getDay();
     const diff = d.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
     const monday = new Date(d.setDate(diff));
@@ -106,13 +107,11 @@ function getWeekId(d) {
 }
 
 function formatWeekDisplay(d) {
-    d = new Date(d);
-    const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-    const monday = new Date(new Date(d).setDate(diff));
-    const sunday = new Date(new Date(monday).setDate(monday.getDate() + 6));
+    const monday = new Date(getWeekId(d) + 'T00:00:00Z');
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
     
-    const options = { month: 'short', day: 'numeric' };
+    const options = { month: 'short', day: 'numeric', timeZone: 'UTC' };
     const mondayStr = monday.toLocaleDateString('en-US', options);
     const sundayStr = sunday.toLocaleDateString('en-US', options);
 
@@ -245,11 +244,11 @@ function renderMealPlan(data) {
     const weekDates = [];
     for (let i = 0; i < 7; i++) {
         const date = new Date(monday);
-        date.setDate(monday.getDate() + i);
-        weekDates.push(date.getDate()); // Get the day number (e.g., 20)
+        date.setUTCDate(monday.getUTCDate() + i);
+        weekDates.push(date.getUTCDate()); // Get the day number (e.g., 20)
     }
 
-    days.forEach(dayKey => {
+    days.forEach((dayKey, index) => {
         const header = createGridHeader(dayTitles[dayKey]);
         header.classList.add('day-header');
         header.addEventListener('click', () => openAiMealPlannerModal(dayKey));
