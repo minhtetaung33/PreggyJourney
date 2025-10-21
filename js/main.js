@@ -5,14 +5,11 @@ import { initializeMealPlanner, unloadMealPlanner, updateWellnessDataForMealPlan
 import { 
     initializeWellness, 
     unloadWellness, 
-    updatePartnerTips, 
-    updateHydrationAndSnacks, 
-    updatePartnerAvoidTips, 
-    updateHydrationAvoidTips, 
+    generateAllWellnessTips, // Import the new combined function
     renderWellnessChart, 
     updateWellnessChartData, 
     updateDashboardUI,
-    wellnessChart // Import the chart instance
+    wellnessChart 
 } from './wellness.js';
 import { initializeJourney, unloadJourney, updateWellnessDataForJourney } from './journey.js';
 
@@ -26,9 +23,9 @@ function onWellnessDataUpdate(newData) {
     updateWellnessDataForMealPlanner(newData);
     updateWellnessDataForJourney(newData);
     
-    // The main data is ready, if tips haven't been generated yet, generate them now.
-    if (!tipsHaveBeenGenerated && Object.keys(currentMealPlan).length > 0) {
-        updateAllMealPlannerTips();
+    // Check if both data sources are ready, and if tips haven't been generated yet.
+    if (!tipsHaveBeenGenerated && Object.keys(currentMealPlan).length > 0 && Object.keys(wellnessData).length > 0) {
+        generateAllWellnessTips(); // Call the single, combined function
         tipsHaveBeenGenerated = true; // Mark as generated to prevent re-triggering
     }
 
@@ -41,9 +38,9 @@ function onWellnessDataUpdate(newData) {
 function onMealPlanUpdate(newPlan) {
     currentMealPlan = newPlan;
     
-    // The meal plan data is ready, if tips haven't been generated yet, generate them now.
-    if (!tipsHaveBeenGenerated && Object.keys(wellnessData).length > 0) {
-        updateAllMealPlannerTips();
+    // Check if both data sources are ready, and if tips haven't been generated yet.
+    if (!tipsHaveBeenGenerated && Object.keys(wellnessData).length > 0 && Object.keys(currentMealPlan).length > 0) {
+        generateAllWellnessTips(); // Call the single, combined function
         tipsHaveBeenGenerated = true; // Mark as generated to prevent re-triggering
     }
 
@@ -90,13 +87,4 @@ function handleTabSwitch(activeTab) {
         updateWellnessChartData();
         updateDashboardUI();
     }
-}
-
-// A helper function to call all four tip generation functions at once.
-function updateAllMealPlannerTips(){
-    console.log("Generating AI tips on page load...");
-    updatePartnerTips();
-    updateHydrationAndSnacks();
-    updatePartnerAvoidTips();
-    updateHydrationAvoidTips();
 }
