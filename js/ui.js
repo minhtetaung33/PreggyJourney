@@ -49,17 +49,17 @@ export function closeAuthModal() {
 }
 
 export function setupTabs(onTabSwitch) {
-    elements.mealPlanTab.addEventListener('click', () => {
+    elements.mealPlanTab.addEventListener('click', async () => {
         switchTab('meal');
-        onTabSwitch('meal');
+        await onTabSwitch('meal');
     });
-    elements.symptomTrackerTab.addEventListener('click', () => {
+    elements.symptomTrackerTab.addEventListener('click', async () => {
         switchTab('symptom');
-        onTabSwitch('symptom');
+        await onTabSwitch('symptom');
     });
-    elements.journeyTab.addEventListener('click', () => {
+    elements.journeyTab.addEventListener('click', async () => {
         switchTab('journey');
-        onTabSwitch('journey');
+        await onTabSwitch('journey');
     });
 }
 
