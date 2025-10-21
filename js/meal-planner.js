@@ -411,9 +411,7 @@ async function handleSaveEdit(key, oldMeal) {
     const userQuery = `Evaluate this meal: "${newMeal}"`;
     const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
     const payload = { 
-        contents: [{ parts: [{ text: userQuery }] }], 
-        systemInstruction: { parts: [{ text: systemPrompt }] }, 
-        generationConfig: { responseMimeType: "application/json" } 
+        contents: [{ parts: [{ text: `json\n${JSON.stringify({query: userQuery})}` }] }]
     };
     try {
         const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -457,9 +455,7 @@ async function handleAddMeal() {
     const systemPrompt = `You are a helpful and friendly prenatal nutritionist. Your goal is to evaluate if a meal is healthy and suitable for a pregnant woman. If the meal is suitable, provide an estimated nutritional profile with integer values from 0 (none) to 3 (high) for iron, calcium, folate, and fiber. Your response must be ONLY a valid JSON object matching this structure: { "isSuitable": boolean, "mealName": string, "reasoning": string, "alternatives": string[], "nutrients": { "iron": number, "calcium": number, "folate": number, "fiber": number } }. If the meal is not suitable, set isSuitable to false and explain why.`;
     const userQuery = `Evaluate this meal: "${userMeal}"`; const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
     const payload = { 
-        contents: [{ parts: [{ text: userQuery }] }], 
-        systemInstruction: { parts: [{ text: systemPrompt }] }, 
-        generationConfig: { responseMimeType: "application/json" } 
+        contents: [{ parts: [{ text: `json\n${JSON.stringify({query: userQuery})}` }] }]
     };
     try {
         const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -532,9 +528,7 @@ async function generateAiMealPlan(dayKey, craving) {
     const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
     const payload = {
-        contents: [{ parts: [{ text: userQuery }] }],
-        systemInstruction: { parts: [{ text: systemPrompt }] },
-        generationConfig: { responseMimeType: "application/json" }
+        contents: [{ parts: [{ text: `json\n${JSON.stringify({query: userQuery})}` }] }]
     };
     try {
         const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
