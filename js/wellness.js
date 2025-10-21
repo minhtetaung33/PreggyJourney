@@ -144,6 +144,14 @@ const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'
 const dayTitles = { monday: 'Monday', tuesday: 'Tuesday', wednesday: 'Wednesday', thursday: 'Thursday', friday: 'Friday', saturday: 'Saturday', sunday: 'Sunday' };
 const moodToValue = {'😣': 1, '😐': 2, '🙂': 3, '😊': 4, '🥰': 5};
 
+// --- HELPER FUNCTIONS ---
+function formatList(items) {
+    if (!items || items.length === 0) return '';
+    if (items.length === 1) return items[0];
+    if (items.length === 2) return items.join(' and ');
+    return items.slice(0, -1).join(', ') + ', and ' + items.slice(-1);
+}
+
 // --- DATE HELPER FUNCTIONS ---
 function getWeekId(d) {
     d = new Date(d);
@@ -407,6 +415,7 @@ export function updateDashboardUI() {
     updateSleepMonitor();
     updateMoodLog(mood);
     updateEnergyLog(energy);
+    updateMoodAndEnergyInsight();
     updateDynamicContent();
     
     hydrationPlusBtn.disabled = isHistoryView;
@@ -425,6 +434,19 @@ function updateDailySummary(mood, energy, waterIntake) {
     const energySpan = document.getElementById('summary-energy');
     energySpan.textContent = energyMap[energy].level;
     energySpan.className = `font-semibold ${energyMap[energy].color}`;
+
+    const summaryInsightEl = document.getElementById('summary-ai-insight');
+    let summaryInsight = '';
+    if (energy <= 2 && lastNightSleep.hours < 7) {
+        summaryInsight = "It looks like a tough night's sleep is affecting your energy. Try to find a moment for a short rest today.";
+    } else if (moodToValue[mood] >= 4 && energy >= 4) {
+        summaryInsight = "Feeling good and energetic is a wonderful sign! Keep up the great self-care.";
+    } else if (waterIntake < wellnessData.waterGoal / 2) {
+        summaryInsight = "You're a bit behind on water. Keeping a water bottle nearby can be a good reminder to sip frequently.";
+    } else {
+        summaryInsight = "You're doing a great job balancing your wellness today. Keep listening to your body.";
+    }
+    if (summaryInsightEl) summaryInsightEl.textContent = summaryInsight;
 }
 
 function updateHydrationCircle(waterIntake) {
@@ -435,6 +457,20 @@ function updateHydrationCircle(waterIntake) {
     const offset = circumference - (waterIntake / goal) * circumference;
     circle.style.strokeDasharray = circumference; circle.style.strokeDashoffset = offset;
     hydrationText.innerHTML = `${waterIntake}<span class="text-sm">/${goal}</span>`;
+
+    const hydrationInsightEl = document.getElementById('hydration-ai-insight');
+    let hydrationInsight = '';
+    const percentage = (waterIntake / goal) * 100;
+    if (percentage >= 100) {
+        hydrationInsight = "Excellent work! You've met your hydration goal for the day.";
+    } else if (percentage >= 75) {
+        hydrationInsight = "You're so close! Just a few more glasses to go.";
+    } else if (percentage >= 50) {
+        hydrationInsight = "You're halfway there. Keep sipping throughout the afternoon!";
+    } else {
+        hydrationInsight = "Don't forget to drink up! Consistent hydration is key.";
+    }
+    if(hydrationInsightEl) hydrationInsightEl.textContent = hydrationInsight;
 }
 
 function updateNutritionTracker() {
@@ -504,11 +540,11 @@ function updateNutritionUI(nutrition) {
     const lowNutrients = Object.keys(nutrition).filter(k => nutrition[k].status === 'Low');
     let insight = "Your nutrition looks balanced for today's plan.";
      if (lowNutrients.length > 0) {
-        insight = `Today's plan seems a bit low in ${lowNutrients.join(' and ')}. Consider adding a snack rich in these nutrients.`
+        insight = `Today's plan seems a bit low in ${formatList(lowNutrients)}. Consider adding a snack rich in these nutrients.`
     } else {
         const goodNutrients = Object.keys(nutrition).filter(k => nutrition[k].status === 'Good');
         if (goodNutrients.length >= 3) {
-            insight = `Great job with today's meal plan! It looks well-balanced in ${goodNutrients.join(', ')}.`
+            insight = `Great job with today's meal plan! It looks well-balanced in ${formatList(goodNutrients)}.`
         }
     }
     const insightEl = document.getElementById('nutrition-ai-insight');
@@ -559,6 +595,30 @@ function updateEnergyLog(energy) {
         if (parseInt(btn.dataset.energy) === energy) btn.classList.add('selected');
         else btn.classList.remove('selected');
     });
+}
+
+function updateMoodAndEnergyInsight() {
+    const dayData = wellnessData.weeklyLog[selectedDayKey] || {};
+    const mood = dayData.mood || '😐';
+    const energy = dayData.energy || 3;
+    const moodValue = moodToValue[mood] || 3;
+
+    const insightEl = document.getElementById('mood-ai-insight');
+    let insight = '';
+
+    if (energy <= 2 && moodValue <= 2) {
+        insight = "Feeling low on energy and mood can be tough. Be extra gentle with yourself today.";
+    } else if (energy >= 4 && moodValue >= 4) {
+        insight = "It's a high-energy, positive day! Great to see you're feeling so well.";
+    } else if (energy <= 2) {
+        insight = "Energy levels seem low. Make sure you're eating enough and resting when needed.";
+    } else if (moodValue <= 2) {
+        insight = "If you're feeling down, a short walk or talking to someone you trust might help lift your spirits.";
+    } else {
+        insight = "A steady mood and energy level is a great sign of balance. Keep it up!";
+    }
+    
+    if (insightEl) insightEl.textContent = insight;
 }
 
 async function handleSymptomCheck() {
