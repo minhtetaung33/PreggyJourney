@@ -5,7 +5,7 @@ import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase
 
 // Firebase Setup
 const firebaseConfig = {
-    apiKey: "AIzaSyAdVV6m_OlSaXYwO7TH8EJANSJfTBhUtD0",
+    apiKey: "",
     authDomain: "preggyjourney-505cc.firebaseapp.com",
     projectId: "preggyjourney-505cc",
     storageBucket: "preggyjourney-505cc.firebasestorage.app",
