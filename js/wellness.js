@@ -143,9 +143,6 @@ const sleepDays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'frid
 const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 const dayTitles = { monday: 'Monday', tuesday: 'Tuesday', wednesday: 'Wednesday', thursday: 'Thursday', friday: 'Friday', saturday: 'Saturday', sunday: 'Sunday' };
 const moodToValue = {'😣': 1, '😐': 2, '🙂': 3, '😊': 4, '🥰': 5};
-const moodMap = { '😣': 'Upset', '😐': 'Neutral', '🙂': 'Okay', '😊': 'Happy', '🥰': 'Great' };
-const energyMapText = { 1: 'Very Low', 2: 'Low', 3: 'Moderate', 4: 'Good', 5: 'High' };
-
 
 // --- HELPER FUNCTIONS ---
 function formatList(items) {
@@ -1095,12 +1092,14 @@ export async function updateHydrationAndSnacks() {
         const pregnancyWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) || 5;
         const todayIndex = new Date().getDay();
         const dayKey = days[todayIndex === 0 ? 6 : todayIndex - 1];
+        
+        const dayData = wellnessData.weeklyLog[dayKey] || {};
+        const mood = dayData.mood || 'neutral';
+        const energy = dayData.energy || 3;
+
         const currentMealPlanData = getCurrentMealPlan();
         const todaysMeals = { breakfast: currentMealPlanData.breakfast[dayKey], lunch: currentMealPlanData.lunch[dayKey], snackAM: currentMealPlanData.snackAM[dayKey], snackPM: currentMealPlanData.snackPM[dayKey], dinner: currentMealPlanData.dinner[dayKey] };
         const mealPlanString = Object.entries(todaysMeals).map(([key, value]) => `${key}: ${value || 'Not set'}`).join(', ');
-        const dayData = wellnessData.weeklyLog[dayKey] || {};
-        const mood = moodMap[dayData.mood] || 'Neutral';
-        const energy = energyMapText[dayData.energy] || 'Moderate';
         const systemPrompt = `You are a prenatal nutritionist. Generate 3-4 short, actionable hydration and snacking tips based on the user's pregnancy week, mood, and meal plan. Your response MUST be ONLY a valid JSON array of strings, like ["Tip 1", "Tip 2"].`;
         const userQuery = `Context:\n- Week: ${pregnancyWeek}\n- Meals: ${mealPlanString}\n- Mood: ${mood}\n- Energy: ${energy}\n\nGenerate tips.`;
         const apiKey = "";
@@ -1130,10 +1129,13 @@ export async function updatePartnerTips() {
         const today = new Date();
         const diffTime = Math.abs(today - pregnancyStartDate);
         const pregnancyWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) || 5;
-        const dayKey = days[(new Date().getDay() + 6) % 7];
+
+        const todayIndex = new Date().getDay();
+        const dayKey = days[todayIndex === 0 ? 6 : todayIndex - 1];
         const dayData = wellnessData.weeklyLog[dayKey] || {};
-        const mood = moodMap[dayData.mood] || 'Neutral';
-        const energy = energyMapText[dayData.energy] || 'Moderate';
+        const mood = dayData.mood || 'neutral';
+        const energy = dayData.energy || 3;
+
         const systemPrompt = `You are a supportive assistant for a pregnant woman's partner. Generate 3-4 short, actionable tips for the partner based on the context. Focus on practical help and emotional support. Your response MUST be ONLY a valid JSON array of strings, like ["Tip 1", "Tip 2"].`;
         const userQuery = `Context:\n- Pregnancy Week: ${pregnancyWeek}\n- Her mood: ${mood}\n- Her energy: ${energy}\n\nGenerate tips.`;
         const apiKey = "";
@@ -1192,10 +1194,13 @@ export async function updatePartnerAvoidTips() {
         const today = new Date();
         const diffTime = Math.abs(today - pregnancyStartDate);
         const pregnancyWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) || 5;
-        const dayKey = days[(new Date().getDay() + 6) % 7];
+
+        const todayIndex = new Date().getDay();
+        const dayKey = days[todayIndex === 0 ? 6 : todayIndex - 1];
         const dayData = wellnessData.weeklyLog[dayKey] || {};
-        const mood = moodMap[dayData.mood] || 'Neutral';
-        const energy = energyMapText[dayData.energy] || 'Moderate';
+        const mood = dayData.mood || 'neutral';
+        const energy = dayData.energy || 3;
+
         const systemPrompt = `You are a supportive assistant for a pregnant woman's partner. Generate 2-3 short things the partner should AVOID saying or doing, based on the context. Your response MUST be ONLY a valid JSON array of strings, like ["Tip 1", "Tip 2"].`;
         const userQuery = `Context:\n- Pregnancy Week: ${pregnancyWeek}\n- Her mood: ${mood}\n- Her energy: ${energy}\n\nGenerate things to avoid.`;
         const apiKey = "";
