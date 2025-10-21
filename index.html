@@ -446,19 +446,6 @@
              </div>
         </div>
     </div>
-    <div id="sleep-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
-        <div id="sleep-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
-             <h3 class="text-2xl font-bold mb-4 text-center">Update Weekly Sleep Schedule</h3>
-             <p class="text-gray-300 mb-4 text-center">Log your sleep and wake up times for each day.</p>
-             <div id="sleep-schedule-container" class="space-y-3 max-h-60 overflow-y-auto modal-scroll pr-2 my-4">
-                <!-- JS will populate this -->
-             </div>
-             <div class="flex gap-4 mt-6">
-                <button id="sleep-modal-cancel-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg transition-colors">Cancel</button>
-                <button id="sleep-modal-save-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Save Schedule</button>
-             </div>
-        </div>
-    </div>
     <div id="ai-meal-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
         <div id="ai-meal-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300 modal-scroll">
              <h3 id="ai-modal-title" class="text-2xl font-bold mb-4 text-center">AI Meal Plan for Monday</h3>
@@ -579,8 +566,34 @@
              <button id="nutrition-history-close-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors mt-6">Close</button>
         </div>
     </div>
+    
+    <!-- Sleep Modal -->
+    <div id="sleep-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
+        <div id="sleep-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
+             <div class="flex items-center justify-between mb-4">
+                <button id="sleep-prev-week-btn" class="icon-btn p-2 rounded-full hover:bg-white/20 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                </button>
+                <div class="text-center">
+                    <h3 class="text-2xl font-bold">Update Weekly Sleep</h3>
+                    <p id="sleep-week-display" class="text-sm text-indigo-200"></p>
+                </div>
+                <button id="sleep-next-week-btn" class="icon-btn p-2 rounded-full hover:bg-white/20 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </button>
+            </div>
+             <p class="text-gray-300 mb-4 text-center">Log your sleep and wake up times for each night.</p>
+             <div id="sleep-schedule-container" class="space-y-3 max-h-60 overflow-y-auto modal-scroll pr-2 my-4">
+                <!-- JS will populate this -->
+             </div>
+             <div class="flex gap-4 mt-6">
+                <button id="sleep-modal-cancel-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg transition-colors">Cancel</button>
+                <button id="sleep-modal-save-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Save Schedule</button>
+             </div>
+        </div>
+    </div>
 
-    <!-- Edit Wellness Day Modal -->
+    <!-- Edit Wellness Day Modal - Moved to the end of the body for stacking order -->
     <div id="edit-day-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
         <div id="edit-day-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
             <h3 id="edit-day-modal-title" class="text-2xl font-bold mb-6 text-center">Edit Log for Wednesday</h3>
