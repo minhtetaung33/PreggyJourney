@@ -45,6 +45,23 @@ const supplementApiFeedback = document.getElementById('supplement-api-feedback')
 const manageSupplementsCloseBtn = document.getElementById('manage-supplements-close-btn');
 const dailySupplementsList = document.getElementById('daily-supplements-list');
 
+// Wellness History Navigation
+const wellnessPrevWeekBtn = document.getElementById('wellness-prev-week-btn');
+const wellnessNextWeekBtn = document.getElementById('wellness-next-week-btn');
+const wellnessWeekDisplay = document.getElementById('wellness-week-display');
+
+// Edit Day Modal Elements
+const editDayModal = document.getElementById('edit-day-modal');
+const editDayModalTitle = document.getElementById('edit-day-modal-title');
+const editMoodLogButtons = document.getElementById('edit-mood-log-buttons');
+const editEnergyLogButtons = document.getElementById('edit-energy-log-buttons');
+const editHydrationMinus = document.getElementById('edit-hydration-minus');
+const editHydrationPlus = document.getElementById('edit-hydration-plus');
+const editHydrationText = document.getElementById('edit-hydration-text');
+const editDayModalCancelBtn = document.getElementById('edit-day-modal-cancel-btn');
+const editDayModalSaveBtn = document.getElementById('edit-day-modal-save-btn');
+
+
 let wellnessDataRef, symptomTrackerCollectionRef, userSupplementsRef, supplementNutrientsRef;
 let unsubscribeWellnessData, unsubscribeUserSupplements, unsubscribeSupplementNutrients, unsubscribeSupplementLog;
 let wellnessData = {};
@@ -54,6 +71,12 @@ let supplementNutrients = {};
 let nutritionHistoryCurrentDate = new Date();
 let supplementLogDate = new Date();
 
+// New state for wellness history
+let wellnessHistoryCurrentDate = new Date();
+let isHistoryView = false;
+let selectedDayKey = 'monday'; // The day being shown in the dashboard (e.g., 'monday')
+let editDayData = {}; // Temp storage for editing a day's data
+
 
 const defaultWellnessData = {
     pregnancyStartDate: '2025-08-01',
@@ -61,11 +84,6 @@ const defaultWellnessData = {
     dailyTip: "Stretch your legs for 5 minutes every hour to reduce swelling.",
     dailyNutrition: {},
     dailySupplements: { monday: [], tuesday: [], wednesday: [], thursday: [], friday: [], saturday: [], sunday: [] },
-    mood: {
-        emoji: "😊",
-        level: "Happy",
-        aiInsight: "Glad you're feeling happy! Embrace the positive energy today."
-    },
     sleep: {
         monday: { sleep: '22:00', wake: '06:30' },
         tuesday: { sleep: '22:00', wake: '06:30' },
@@ -75,23 +93,16 @@ const defaultWellnessData = {
         saturday: { sleep: '23:00', wake: '07:30' },
         sunday: { sleep: '22:30', wake: '07:30' }
     },
-    water: {
-        intake: 6,
-        goal: 10
-    },
-    energy: {
-        level: 'Moderate',
-        color: 'text-green-400'
-    },
     weeklyLog: {
-        monday: { mood: '🙂', energy: 3 },
-        tuesday: { mood: '😐', energy: 2 },
-        wednesday: { mood: '😐', energy: 2 },
-        thursday: { mood: '🙂', energy: 3 },
-        friday: { mood: '😊', energy: 4 },
-        saturday: { mood: '🥰', energy: 5 },
-        sunday: { mood: '😊', energy: 4 }
-    }
+        monday: { mood: '🙂', energy: 3, waterIntake: 6 },
+        tuesday: { mood: '😐', energy: 2, waterIntake: 5 },
+        wednesday: { mood: '😐', energy: 2, waterIntake: 7 },
+        thursday: { mood: '🙂', energy: 3, waterIntake: 8 },
+        friday: { mood: '😊', energy: 4, waterIntake: 9 },
+        saturday: { mood: '🥰', energy: 5, waterIntake: 10 },
+        sunday: { mood: '😊', energy: 4, waterIntake: 8 }
+    },
+    waterGoal: 10,
 };
 
 const defaultMealPlan = {
@@ -149,15 +160,12 @@ function formatWeekDisplay(d) {
 }
 
 export async function initializeWellness(userId, onWellnessDataUpdate) {
-    // This ref now points to the CURRENT week's wellness data
-    wellnessDataRef = doc(db, `users/${userId}/wellness`, getWeekId(new Date()));
     symptomTrackerCollectionRef = collection(db, `users/${userId}/symptomLogs`);
     userSupplementsRef = doc(db, `users/${userId}/supplements`, 'list-v1');
     supplementNutrientsRef = doc(db, `users/${userId}/supplements`, 'nutrients-v1');
 
-    await initializeWellnessData(wellnessDataRef, onWellnessDataUpdate);
+    await loadWellnessForDate(new Date(), onWellnessDataUpdate);
     await initializeSupplements();
-    loadWellnessData(onWellnessDataUpdate);
     loadSupplements();
     setupEventListeners();
 }
@@ -167,25 +175,7 @@ async function initializeWellnessData(docRef, onWellnessDataUpdate) {
     const docSnap = await getDoc(docRef);
     if (!docSnap.exists()) {
         await setDoc(docRef, defaultWellnessData);
-        wellnessData = { ...defaultWellnessData };
-    } else {
-        const firestoreData = docSnap.data();
-        const mergedSleep = { ...defaultWellnessData.sleep, ...firestoreData.sleep };
-        const mergedWeeklyLog = { ...defaultWellnessData.weeklyLog, ...firestoreData.weeklyLog };
-        const mergedSupplements = { ...defaultWellnessData.dailySupplements, ...firestoreData.dailySupplements };
-        wellnessData = {
-            ...defaultWellnessData,
-            ...firestoreData,
-            dailyNutrition: firestoreData.dailyNutrition || {},
-            dailySupplements: mergedSupplements,
-            sleep: mergedSleep,
-            weeklyLog: mergedWeeklyLog,
-            mood: { ...defaultWellnessData.mood, ...firestoreData.mood },
-            water: { ...defaultWellnessData.water, ...firestoreData.water },
-            energy: { ...defaultWellnessData.energy, ...firestoreData.energy },
-        };
     }
-    onWellnessDataUpdate(wellnessData);
 }
 
 
@@ -198,37 +188,38 @@ async function initializeSupplements() {
     }
 }
 
-function loadWellnessData(onWellnessDataUpdate) {
-    if(unsubscribeWellnessData) unsubscribeWellnessData();
-    // Re-point to the current week's document every time we load
-    wellnessDataRef = doc(db, `users/${getCurrentUserId()}/wellness`, getWeekId(new Date()));
+async function loadWellnessForDate(date, onWellnessDataUpdate) {
+    if (unsubscribeWellnessData) unsubscribeWellnessData();
 
-    if (!wellnessDataRef) return;
+    wellnessHistoryCurrentDate = date;
+    const weekId = getWeekId(date);
+    const currentWeekId = getWeekId(new Date());
+    isHistoryView = (weekId !== currentWeekId);
+    
+    wellnessWeekDisplay.textContent = formatWeekDisplay(date);
+
+    const userId = getCurrentUserId();
+    wellnessDataRef = doc(db, `users/${userId}/wellness`, weekId);
+    
+    await initializeWellnessData(wellnessDataRef); // Ensure doc exists before listening
 
     unsubscribeWellnessData = onSnapshot(wellnessDataRef, (docSnap) => {
-        if(docSnap.exists()){
-            const firestoreData = docSnap.data();
-            const mergedSleep = { ...defaultWellnessData.sleep, ...firestoreData.sleep };
-            const mergedWeeklyLog = { ...defaultWellnessData.weeklyLog, ...firestoreData.weeklyLog };
-            const mergedSupplements = { ...defaultWellnessData.dailySupplements, ...firestoreData.dailySupplements };
-            wellnessData = {
-                ...defaultWellnessData,
-                ...firestoreData,
-                dailyNutrition: firestoreData.dailyNutrition || {},
-                dailySupplements: mergedSupplements,
-                sleep: mergedSleep,
-                weeklyLog: mergedWeeklyLog,
-                mood: { ...defaultWellnessData.mood, ...firestoreData.mood },
-                water: { ...defaultWellnessData.water, ...firestoreData.water },
-                energy: { ...defaultWellnessData.energy, ...firestoreData.energy },
-            };
-            updateDashboardUI();
-            updateWellnessChartData();
-            onWellnessDataUpdate(wellnessData);
+        const firestoreData = docSnap.exists() ? docSnap.data() : defaultWellnessData;
+        
+        wellnessData = { ...defaultWellnessData, ...firestoreData };
+
+        if (!isHistoryView) {
+            const todayIndex = new Date().getDay();
+            selectedDayKey = days[todayIndex === 0 ? 6 : todayIndex - 1];
         } else {
-            // If the doc for the current week doesn't exist, create it.
-            setDoc(wellnessDataRef, defaultWellnessData);
+            selectedDayKey = 'monday'; // Default to Monday for past weeks
         }
+
+        updateDashboardUI();
+        if (wellnessChart) {
+            updateWellnessChartData();
+        }
+        onWellnessDataUpdate(wellnessData);
     });
 }
 
@@ -251,47 +242,33 @@ function loadSupplements() {
 
 function setupEventListeners() {
     hydrationPlusBtn.addEventListener('click', async () => {
-        if (wellnessData.water.intake < wellnessData.water.goal) {
-            wellnessData.water.intake++;
-            await setDoc(wellnessDataRef, { water: wellnessData.water }, { merge: true });
+        const dayData = wellnessData.weeklyLog[selectedDayKey] || {};
+        const newIntake = (dayData.waterIntake || 0) + 1;
+        if(newIntake <= wellnessData.waterGoal) {
+            await updateDoc(wellnessDataRef, { [`weeklyLog.${selectedDayKey}.waterIntake`]: newIntake });
         }
     });
 
     hydrationMinusBtn.addEventListener('click', async () => {
-        if (wellnessData.water.intake > 0) {
-            wellnessData.water.intake--;
-            await setDoc(wellnessDataRef, { water: wellnessData.water }, { merge: true });
+        const dayData = wellnessData.weeklyLog[selectedDayKey] || {};
+        const newIntake = (dayData.waterIntake || 0) - 1;
+        if(newIntake >= 0) {
+            await updateDoc(wellnessDataRef, { [`weeklyLog.${selectedDayKey}.waterIntake`]: newIntake });
         }
     });
     
     moodLogButtons.addEventListener('click', async (e) => {
+        if (isHistoryView) return;
         const button = e.target.closest('.mood-btn'); if(!button) return;
-        const todayIndex = new Date().getDay(); const currentDayKey = sleepDays[(todayIndex === 0 ? 6 : todayIndex - 1)];
         const newMoodEmoji = button.dataset.mood;
-        const moodMessages = {
-            '😣': { level: "Stressed", aiInsight: "It's okay to have tough days. Try some deep breathing or a short, calming walk." },
-            '😐': { level: "Neutral", aiInsight: "A neutral day is a good day for rest. What's one small thing that could bring a smile?" },
-            '🙂': { level: "Okay", aiInsight: "Feeling okay is a great baseline. Keep taking care of yourself." },
-            '😊': { level: "Happy", aiInsight: "Glad you're feeling happy! Embrace the positive energy today." },
-            '🥰': { level: "Blissful", aiInsight: "Wonderful! Cherish these blissful moments." }
-        };
-        const newMoodData = { emoji: newMoodEmoji, ...moodMessages[newMoodEmoji] };
-        const newWeeklyLog = { ...wellnessData.weeklyLog };
-        if (!newWeeklyLog[currentDayKey]) newWeeklyLog[currentDayKey] = {};
-        newWeeklyLog[currentDayKey].mood = newMoodEmoji;
-        await setDoc(wellnessDataRef, { mood: newMoodData, weeklyLog: newWeeklyLog }, { merge: true });
+        await updateDoc(wellnessDataRef, { [`weeklyLog.${selectedDayKey}.mood`]: newMoodEmoji });
     });
 
     energyLogButtons.addEventListener('click', async (e) => {
+        if (isHistoryView) return;
         const button = e.target.closest('.energy-btn'); if(!button) return;
-        const todayIndex = new Date().getDay(); const currentDayKey = sleepDays[(todayIndex === 0 ? 6 : todayIndex - 1)];
         const newEnergyLevel = parseInt(button.dataset.energy);
-        const energyMap = { 1: { level: 'Very Low', color: 'text-red-400' }, 2: { level: 'Low', color: 'text-yellow-400' }, 3: { level: 'Moderate', color: 'text-green-400' }, 4: { level: 'Good', color: 'text-teal-400' }, 5: { level: 'High', color: 'text-purple-400' } };
-        const newEnergyData = energyMap[newEnergyLevel];
-        const newWeeklyLog = { ...wellnessData.weeklyLog };
-        if (!newWeeklyLog[currentDayKey]) newWeeklyLog[currentDayKey] = {};
-        newWeeklyLog[currentDayKey].energy = newEnergyLevel;
-        await setDoc(wellnessDataRef, { energy: newEnergyData, weeklyLog: newWeeklyLog }, { merge: true });
+        await updateDoc(wellnessDataRef, { [`weeklyLog.${selectedDayKey}.energy`]: newEnergyLevel });
     });
 
     symptomCheckBtn.addEventListener('click', handleSymptomCheck);
@@ -305,7 +282,10 @@ function setupEventListeners() {
         const newStartDate = startDateInput.value; let newEndDate = endDateInput.value;
         if (newStartDate) {
             if (!newEndDate) { const startDate = new Date(newStartDate); startDate.setDate(startDate.getDate() + (40 * 7)); newEndDate = startDate.toISOString().split('T')[0]; }
-            if (newStartDate !== wellnessData.pregnancyStartDate || newEndDate !== wellnessData.pregnancyEndDate) await setDoc(wellnessDataRef, { pregnancyStartDate: newStartDate, pregnancyEndDate: newEndDate }, { merge: true });
+            
+            // This needs to update the top-level user doc, not the weekly wellness
+            const userDocRef = doc(db, `users/${getCurrentUserId()}/wellness`, 'daily'); // Assuming 'daily' holds profile info
+            await setDoc(userDocRef, { pregnancyStartDate: newStartDate, pregnancyEndDate: newEndDate }, { merge: true });
         }
         closeStartDateModal();
     });
@@ -344,84 +324,102 @@ function setupEventListeners() {
         nutritionHistoryCurrentDate.setDate(nutritionHistoryCurrentDate.getDate() + 7);
         populateNutritionHistory(nutritionHistoryCurrentDate);
     });
+    
+    wellnessPrevWeekBtn.addEventListener('click', () => {
+        const newDate = new Date(wellnessHistoryCurrentDate);
+        newDate.setDate(newDate.getDate() - 7);
+        loadWellnessForDate(newDate, () => {});
+    });
+
+    wellnessNextWeekBtn.addEventListener('click', () => {
+        const newDate = new Date(wellnessHistoryCurrentDate);
+        newDate.setDate(newDate.getDate() + 7);
+        loadWellnessForDate(newDate, () => {});
+    });
+    
+    editDayModalCancelBtn.addEventListener('click', closeEditDayModal);
+    editDayModal.addEventListener('click', e => e.target === editDayModal && closeEditDayModal());
+    editDayModalSaveBtn.addEventListener('click', handleSaveEditDay);
 }
 
 export function updateDashboardUI() {
     if (!wellnessData || Object.keys(wellnessData).length === 0) return;
-    updateDailySummary();
-    updateHydrationCircle();
-    updateNutritionTracker();
+    
+    const dayData = wellnessData.weeklyLog[selectedDayKey] || {};
+    const mood = dayData.mood || '😐';
+    const energy = dayData.energy || 3;
+    const waterIntake = dayData.waterIntake || 0;
+
+    updateDailySummary(mood, energy, waterIntake);
+    updateHydrationCircle(waterIntake);
+    updateNutritionTracker(); // This needs to know the selected day
     updateSleepMonitor();
-    updateMoodLog();
-    updateEnergyLog();
+    updateMoodLog(mood);
+    updateEnergyLog(energy);
     updateDynamicContent();
+    
+    // Enable/disable controls based on history view
+    const isToday = !isHistoryView;
+    hydrationPlusBtn.disabled = !isToday;
+    hydrationMinusBtn.disabled = !isToday;
+    moodLogButtons.querySelectorAll('button').forEach(b => b.disabled = !isToday);
+    energyLogButtons.querySelectorAll('button').forEach(b => b.disabled = !isToday);
 }
 
-function updateDailySummary() {
-    const { mood, water, energy } = wellnessData;
-    const lastNightSleep = calculateLastNightSleep();
-    document.getElementById('summary-mood').textContent = mood.emoji;
+function updateDailySummary(mood, energy, waterIntake) {
+    const lastNightSleep = calculateLastNightSleep(); // This should be for the selected day too
+    const energyMap = { 1: { level: 'Very Low', color: 'text-red-400' }, 2: { level: 'Low', color: 'text-yellow-400' }, 3: { level: 'Moderate', color: 'text-green-400' }, 4: { level: 'Good', color: 'text-teal-400' }, 5: { level: 'High', color: 'text-purple-400' } };
+
+    document.getElementById('summary-mood').textContent = mood;
     document.getElementById('summary-sleep').textContent = `${lastNightSleep.hours} hours`;
-    document.getElementById('summary-water').textContent = `${water.intake} / ${water.goal} glasses`;
+    document.getElementById('summary-water').textContent = `${waterIntake} / ${wellnessData.waterGoal} glasses`;
     const energySpan = document.getElementById('summary-energy');
-    energySpan.textContent = energy.level;
-    energySpan.className = `font-semibold ${energy.color}`;
-    let insight = `You slept ${lastNightSleep.hours} hours and drank ${water.intake} glasses of water. `;
-    if(lastNightSleep.hours < 7) insight += "Try to get a bit more rest tonight. ";
-    if(water.intake < 5) insight += "Don't forget to hydrate! ";
-    if(energy.level === 'Low' || energy.level === 'Very Low') insight += "A short walk might boost your energy."
-    document.getElementById('summary-ai-insight').textContent = insight;
+    energySpan.textContent = energyMap[energy].level;
+    energySpan.className = `font-semibold ${energyMap[energy].color}`;
 }
 
-function updateHydrationCircle() {
-    const { intake, goal } = wellnessData.water;
+function updateHydrationCircle(waterIntake) {
+    const goal = wellnessData.waterGoal || 10;
     const circle = hydrationProgress;
     const radius = circle.r.baseVal.value;
     const circumference = 2 * Math.PI * radius;
-    const offset = circumference - (intake / goal) * circumference;
+    const offset = circumference - (waterIntake / goal) * circumference;
     circle.style.strokeDasharray = circumference; circle.style.strokeDashoffset = offset;
-    hydrationText.innerHTML = `${intake}<span class="text-sm">/${goal}</span>`;
-    document.getElementById('hydration-ai-insight').textContent = intake < goal ? `You're doing great! Just ${goal - intake} more glasses to go.` : "You've hit your hydration goal for today! 🎉";
+    hydrationText.innerHTML = `${waterIntake}<span class="text-sm">/${goal}</span>`;
 }
 
 function updateNutritionTracker() {
-    const todayIndex = new Date().getDay(); const dayIndex = todayIndex === 0 ? 6 : todayIndex - 1; const dayKey = days[dayIndex];
-    const aiSummary = wellnessData.dailyNutrition ? wellnessData.dailyNutrition[dayKey] : null;
-    updateDailySupplementsUI(dayKey);
+    // This function already works day-by-day, just needs to know which day
+    updateDailySupplementsUI(selectedDayKey);
 
     const allMealNutrients = getMealNutrients();
     const currentMealPlanData = getCurrentMealPlan();
-
-    if (aiSummary) {
-        const nutritionData = { iron: getStatusFromAI(aiSummary.iron), calcium: getStatusFromAI(aiSummary.calcium), folate: getStatusFromAI(aiSummary.folate), fiber: getStatusFromAI(aiSummary.fiber) };
-        updateNutritionUI(nutritionData);
-    } else {
-        const dailyGoals = { iron: 8, calcium: 10, folate: 10, fiber: 8 };
-        const totals = { iron: 0, calcium: 0, folate: 0, fiber: 0 };
-        
-        if (currentMealPlanData) {
-            for (const mealKey in currentMealPlanData) {
-                if (currentMealPlanData[mealKey] && typeof currentMealPlanData[mealKey] === 'object') {
-                    const mealName = currentMealPlanData[mealKey][dayKey];
-                    if (mealName && allMealNutrients[mealName]) {
-                        const nutrients = allMealNutrients[mealName];
-                        totals.iron += nutrients.iron || 0; totals.calcium += nutrients.calcium || 0; totals.folate += nutrients.folate || 0; totals.fiber += nutrients.fiber || 0;
-                    }
+    
+    const dailyGoals = { iron: 8, calcium: 10, folate: 10, fiber: 8 };
+    const totals = { iron: 0, calcium: 0, folate: 0, fiber: 0 };
+    
+    if (currentMealPlanData) {
+        for (const mealKey in currentMealPlanData) {
+            if (currentMealPlanData[mealKey] && typeof currentMealPlanData[mealKey] === 'object') {
+                const mealName = currentMealPlanData[mealKey][selectedDayKey];
+                if (mealName && allMealNutrients[mealName]) {
+                    const nutrients = allMealNutrients[mealName];
+                    totals.iron += nutrients.iron || 0; totals.calcium += nutrients.calcium || 0; totals.folate += nutrients.folate || 0; totals.fiber += nutrients.fiber || 0;
                 }
             }
         }
-
-        const todaysSupplements = wellnessData.dailySupplements[dayKey] || [];
-        todaysSupplements.forEach(suppName => {
-            if (supplementNutrients[suppName]) {
-                const nutrients = supplementNutrients[suppName];
-                totals.iron += nutrients.iron || 0; totals.calcium += nutrients.calcium || 0; totals.folate += nutrients.folate || 0; totals.fiber += nutrients.fiber || 0;
-            }
-        });
-
-        const nutritionData = { iron: calculateNutrientStatus(totals.iron, dailyGoals.iron), calcium: calculateNutrientStatus(totals.calcium, dailyGoals.calcium), folate: calculateNutrientStatus(totals.folate, dailyGoals.folate), fiber: calculateNutrientStatus(totals.fiber, dailyGoals.fiber) };
-        updateNutritionUI(nutritionData);
     }
+
+    const daySupplements = wellnessData.dailySupplements[selectedDayKey] || [];
+    daySupplements.forEach(suppName => {
+        if (supplementNutrients[suppName]) {
+            const nutrients = supplementNutrients[suppName];
+            totals.iron += nutrients.iron || 0; totals.calcium += nutrients.calcium || 0; totals.folate += nutrients.folate || 0; totals.fiber += nutrients.fiber || 0;
+        }
+    });
+
+    const nutritionData = { iron: calculateNutrientStatus(totals.iron, dailyGoals.iron), calcium: calculateNutrientStatus(totals.calcium, dailyGoals.calcium), folate: calculateNutrientStatus(totals.folate, dailyGoals.folate), fiber: calculateNutrientStatus(totals.fiber, dailyGoals.fiber) };
+    updateNutritionUI(nutritionData);
 }
 
 function getStatusFromAI(statusString) {
@@ -482,8 +480,9 @@ function calculateSleepDuration(sleepTimeStr, wakeTimeStr) {
 }
 
 function calculateLastNightSleep() {
-    const todayIndex = new Date().getDay(); const yesterdayIndex = (todayIndex + 6) % 7;
-    const sleepDayKey = sleepDays[yesterdayIndex];
+    const dayIndex = days.indexOf(selectedDayKey);
+    const yesterdayIndex = (dayIndex + 6) % 7;
+    const sleepDayKey = days[yesterdayIndex];
     const { sleep, wake } = wellnessData.sleep[sleepDayKey] || { sleep: '', wake: '' };
     const hours = calculateSleepDuration(sleep, wake);
     return { hours };
@@ -498,22 +497,18 @@ function updateSleepMonitor() {
     document.getElementById('sleep-ai-insight').textContent = insight;
 }
 
-function updateMoodLog() {
-    const { mood } = wellnessData;
+function updateMoodLog(mood) {
     const buttons = moodLogButtons.querySelectorAll('.mood-btn');
     buttons.forEach(btn => {
-        if (btn.dataset.mood === mood.emoji) btn.classList.add('selected');
+        if (btn.dataset.mood === mood) btn.classList.add('selected');
         else btn.classList.remove('selected');
     });
-    document.getElementById('mood-ai-insight').textContent = mood.aiInsight;
 }
 
-function updateEnergyLog() {
-    const todayIndex = new Date().getDay(); const currentDayKey = sleepDays[(todayIndex === 0 ? 6 : todayIndex - 1)];
-    const currentEnergy = wellnessData.weeklyLog[currentDayKey]?.energy || 3;
+function updateEnergyLog(energy) {
     const buttons = energyLogButtons.querySelectorAll('.energy-btn');
     buttons.forEach(btn => {
-        if (parseInt(btn.dataset.energy) === currentEnergy) btn.classList.add('selected');
+        if (parseInt(btn.dataset.energy) === energy) btn.classList.add('selected');
         else btn.classList.remove('selected');
     });
 }
@@ -565,25 +560,31 @@ function displaySymptomResponse(data) {
 }
 
 export function updateWellnessChartData() {
-    if (!wellnessChart || !getCurrentUserId() || !wellnessData.sleep) return;
-    const sleepData = sleepDays.map(day => { const { sleep, wake } = wellnessData.sleep[day] || { sleep: '', wake: '' }; return calculateSleepDuration(sleep, wake); });
-    const energyData = sleepDays.map(day => (wellnessData.weeklyLog[day] || {energy: 0}).energy);
-    const moodData = sleepDays.map(day => moodToValue[(wellnessData.weeklyLog[day] || {mood: '😐'}).mood] || 2);
-    wellnessChart.data.datasets[0].data = energyData; wellnessChart.data.datasets[1].data = moodData; wellnessChart.data.datasets[2].data = sleepData;
+    if (!wellnessChart || !wellnessData.weeklyLog) return;
+    
+    const energyData = days.map(day => (wellnessData.weeklyLog[day] || {}).energy || 0);
+    const moodData = days.map(day => moodToValue[(wellnessData.weeklyLog[day] || {}).mood] || 0);
+    const sleepData = days.map(day => { 
+        const dayIndex = days.indexOf(day);
+        const yesterdayIndex = (dayIndex + 6) % 7;
+        const sleepDayKey = days[yesterdayIndex];
+        const { sleep, wake } = wellnessData.sleep[sleepDayKey] || {};
+        return calculateSleepDuration(sleep, wake);
+    });
+    
+    wellnessChart.data.datasets[0].data = energyData;
+    wellnessChart.data.datasets[1].data = moodData;
+    wellnessChart.data.datasets[2].data = sleepData;
     wellnessChart.update();
-    const avgSleep = sleepData.reduce((a, b) => a + b, 0) / sleepData.length;
-    const avgMood = moodData.reduce((a, b) => a + b, 0) / moodData.length;
-    let insight = `Your average sleep this week is ${avgSleep.toFixed(1)} hours. `;
-    if (avgMood > 3.5) insight += "It seems like you've had a great week overall! ";
-    else if (avgMood < 2.5) insight += "It looks like a tough week. Remember to rest and be kind to yourself. ";
-    document.getElementById('chart-ai-insight').textContent = insight;
 }
 
 export function renderWellnessChart() {
     if (wellnessChart) {
         wellnessChart.destroy();
     }
-    const ctx = document.getElementById('wellnessChart').getContext('2d');
+    const canvas = document.getElementById('wellnessChart');
+    const ctx = canvas.getContext('2d');
+    
     const data = {
         labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
         datasets: [
@@ -596,6 +597,19 @@ export function renderWellnessChart() {
         type: 'bar', data: data,
         options: {
             responsive: true, interaction: { mode: 'index', intersect: false },
+            onClick: (e) => {
+                if (!isHistoryView) return;
+                const activePoints = wellnessChart.getElementsAtEventForMode(e, 'index', { intersect: true }, true);
+                if (activePoints.length > 0) {
+                    const dataIndex = activePoints[0].index;
+                    const dayKey = days[dataIndex];
+                    openEditDayModal(dayKey);
+                }
+            },
+            onHover: (event, chartElement) => {
+                const canvas = wellnessChart.canvas;
+                canvas.style.cursor = chartElement[0] && isHistoryView ? 'pointer' : 'default';
+            },
             scales: {
                 x: { ticks: { color: '#9ca3af' }, grid: { color: '#ffffff1a'} },
                 y: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'Energy / Mood', color: '#d1d5db' }, ticks: { color: '#d1d5db' }, grid: { color: '#ffffff1a' }, max: 5, min: 0 },
@@ -620,7 +634,7 @@ function updateDynamicContent() {
     babyGrowthSnapshotEl.innerHTML = `Week ${diffWeeks} — baby is the size of a ${size.fruit} ${size.emoji}`;
     const wellnessTipEl = document.getElementById('wellness-tip');
     const tip = wellnessTipsByWeek[diffWeeks] || "Stay hydrated and listen to your body's needs today.";
-    wellnessTipEl.textContent = tip; wellnessData.dailyTip = tip;
+    wellnessTipEl.textContent = tip;
 }
 
 function openSupplementModal(date = new Date()) {
@@ -632,7 +646,6 @@ function openSupplementModal(date = new Date()) {
     manageSupplementsModal.classList.remove('hidden');
     setTimeout(() => manageSupplementsModal.classList.add('active'), 10);
 }
-
 function closeSupplementModal() {
     if (unsubscribeSupplementLog) unsubscribeSupplementLog();
     manageSupplementsModal.classList.remove('active');
@@ -728,8 +741,8 @@ function updateDailySupplementsUI(dayKey) {
 }
 
 async function removeSupplementFromDay(suppName) {
-    const todayIndex = new Date().getDay(); const dayKey = days[(todayIndex === 0 ? 6 : todayIndex - 1)];
-    await updateDoc(wellnessDataRef, { [`dailySupplements.${dayKey}`]: arrayRemove(suppName) });
+     const todayIndex = new Date().getDay(); const dayKey = days[(todayIndex === 0 ? 6 : todayIndex - 1)];
+     await updateDoc(wellnessDataRef, { [`dailySupplements.${dayKey}`]: arrayRemove(suppName) });
 }
 
 async function deleteSupplement(suppToDelete) {
@@ -882,23 +895,20 @@ async function fetchWithBackoff(url, payload, maxRetries = 5) {
             });
 
             if (response.status === 429) {
-                // If we get a 429, wait and then continue to the next iteration to retry
                 console.warn(`Rate limited. Retrying in ${delay / 1000}s...`);
                 await new Promise(resolve => setTimeout(resolve, delay));
-                delay *= 2; // Double the delay for the next potential retry
+                delay *= 2; 
                 continue;
             }
             
-            return response; // If the response is not 429, return it
+            return response;
         } catch (error) {
-            // This catches network errors, etc.
             console.error('Fetch failed:', error);
-            if (i === maxRetries - 1) throw error; // If it's the last retry, rethrow the error
+            if (i === maxRetries - 1) throw error;
             await new Promise(resolve => setTimeout(resolve, delay));
             delay *= 2;
         }
     }
-    // If all retries fail, throw an error
     throw new Error('API request failed after multiple retries.');
 }
 
@@ -1023,6 +1033,79 @@ export async function updatePartnerAvoidTips() {
         loader.style.display = 'none'; container.innerHTML = `<li>Avoid commenting on her changing body unless it's a compliment.</li><li>Don't dismiss her feelings or symptoms, even if they seem minor.</li>`;
     }
 }
+
+
+function openEditDayModal(dayKey) {
+    editDayData.dayKey = dayKey;
+    const dayData = wellnessData.weeklyLog[dayKey] || {};
+    
+    // Set initial values for editing
+    editDayData.mood = dayData.mood || '😐';
+    editDayData.energy = dayData.energy || 3;
+    editDayData.waterIntake = dayData.waterIntake || 0;
+
+    const mondayOfRelevantWeek = new Date(getWeekId(wellnessHistoryCurrentDate) + 'T00:00:00Z');
+    const dayDate = new Date(mondayOfRelevantWeek);
+    dayDate.setDate(mondayOfRelevantWeek.getDate() + days.indexOf(dayKey));
+    editDayModalTitle.textContent = `Edit Log for ${dayDate.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}`;
+
+    // Update modal UI
+    editMoodLogButtons.querySelectorAll('button').forEach(btn => {
+        btn.classList.toggle('selected', btn.dataset.mood === editDayData.mood);
+    });
+    editEnergyLogButtons.querySelectorAll('button').forEach(btn => {
+        btn.classList.toggle('selected', parseInt(btn.dataset.energy) === editDayData.energy);
+    });
+    editHydrationText.textContent = editDayData.waterIntake;
+
+    // Add event listeners for modal controls
+    editMoodLogButtons.onclick = (e) => {
+        const button = e.target.closest('.mood-btn');
+        if (button) {
+            editDayData.mood = button.dataset.mood;
+            editMoodLogButtons.querySelectorAll('button').forEach(btn => btn.classList.toggle('selected', btn === button));
+        }
+    };
+    editEnergyLogButtons.onclick = (e) => {
+        const button = e.target.closest('.energy-btn');
+        if (button) {
+            editDayData.energy = parseInt(button.dataset.energy);
+            editEnergyLogButtons.querySelectorAll('button').forEach(btn => btn.classList.toggle('selected', btn === button));
+        }
+    };
+    editHydrationPlus.onclick = () => {
+        if (editDayData.waterIntake < wellnessData.waterGoal) {
+            editDayData.waterIntake++;
+            editHydrationText.textContent = editDayData.waterIntake;
+        }
+    };
+    editHydrationMinus.onclick = () => {
+        if (editDayData.waterIntake > 0) {
+            editDayData.waterIntake--;
+            editHydrationText.textContent = editDayData.waterIntake;
+        }
+    };
+    
+    editDayModal.classList.remove('hidden');
+    setTimeout(() => editDayModal.classList.add('active'), 10);
+}
+
+function closeEditDayModal() {
+    editDayModal.classList.remove('active');
+    setTimeout(() => editDayModal.classList.add('hidden'), 300);
+}
+
+async function handleSaveEditDay() {
+    const { dayKey, mood, energy, waterIntake } = editDayData;
+    const updates = {
+        [`weeklyLog.${dayKey}.mood`]: mood,
+        [`weeklyLog.${dayKey}.energy`]: energy,
+        [`weeklyLog.${dayKey}.waterIntake`]: waterIntake
+    };
+    await updateDoc(wellnessDataRef, updates);
+    closeEditDayModal();
+}
+
 
 export function unloadWellness() {
     if (unsubscribeWellnessData) unsubscribeWellnessData();
