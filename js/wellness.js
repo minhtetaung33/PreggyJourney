@@ -630,9 +630,7 @@ async function handleSymptomCheck() {
     const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
     const payload = {
-        contents: [{ parts: [{ text: userQuery }] }],
-        systemInstruction: { parts: [{ text: systemPrompt }] },
-        generationConfig: { responseMimeType: "application/json" }
+        contents: [{ parts: [{ text: `json\n${JSON.stringify({query: userQuery})}` }] }]
     };
     try {
         const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -906,8 +904,7 @@ async function handleAddSupplement() {
     const systemPrompt = "You are a prenatal nutritionist. Evaluate if a supplement is generally safe for pregnancy. Provide an estimated nutritional profile (integers 0-3) for iron, calcium, and folate. Your response MUST be ONLY a valid JSON object matching this structure: { \"isSuitable\": boolean, \"supplementName\": string, \"reasoning\": string, \"nutrients\": { \"iron\": number, \"calcium\": number, \"folate\": number } }.";
     const userQuery = `Evaluate this supplement for pregnancy: "${userSupp}"`; const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
     const payload = {
-        contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] },
-        generationConfig: { responseMimeType: "application/json" }
+        contents: [{ parts: [{ text: `json\n${JSON.stringify({query: userQuery})}` }] }]
     };
      try {
         const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -1102,7 +1099,7 @@ export async function updateHydrationAndSnacks() {
         const userQuery = `Context:\n- Week: ${pregnancyWeek}\n- Meals: ${mealPlanString}\n- Mood: ${mood}\n- Energy: ${energy}\n\nGenerate tips.`;
         const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
-        const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json" } };
+        const payload = { contents: [{ parts: [{ text: `json\n${JSON.stringify({query: userQuery})}` }] }] };
         
         const response = await fetchWithBackoff(apiUrl, payload);
 
@@ -1136,7 +1133,7 @@ export async function updatePartnerTips() {
         const userQuery = `Context:\n- Pregnancy Week: ${pregnancyWeek}\n- Her mood: ${mood}\n- Her energy: ${energy}\n\nGenerate tips.`;
         const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
-        const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json" } };
+        const payload = { contents: [{ parts: [{ text: `json\n${JSON.stringify({query: userQuery})}` }] }] };
         
         const response = await fetchWithBackoff(apiUrl, payload);
         
@@ -1165,7 +1162,7 @@ export async function updateHydrationAvoidTips() {
         const userQuery = `Pregnancy Week: ${pregnancyWeek}. Generate things to avoid.`;
         const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
-        const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json" } };
+        const payload = { contents: [{ parts: [{ text: `json\n${JSON.stringify({query: userQuery})}` }] }] };
 
         const response = await fetchWithBackoff(apiUrl, payload);
 
@@ -1199,7 +1196,7 @@ export async function updatePartnerAvoidTips() {
         const userQuery = `Context:\n- Pregnancy Week: ${pregnancyWeek}\n- Her mood: ${mood}\n- Her energy: ${energy}\n\nGenerate things to avoid.`;
         const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
-        const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json" } };
+        const payload = { contents: [{ parts: [{ text: `json\n${JSON.stringify({query: userQuery})}` }] }] };
         
         const response = await fetchWithBackoff(apiUrl, payload);
 
