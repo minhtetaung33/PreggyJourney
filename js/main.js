@@ -59,12 +59,12 @@ document.addEventListener('DOMContentLoaded', () => {
     setupTabs(handleTabSwitch);
 });
 
-function handleTabSwitch(activeTab) {
+async function handleTabSwitch(activeTab) {
     const userId = getCurrentUserId();
     if (!userId) return;
 
     if (activeTab === 'meal') {
-        updateAllMealPlannerTips();
+        await updateAllMealPlannerTips();
     } else if (activeTab === 'symptom') {
         // If the chart instance doesn't exist yet, render it.
         if (!wellnessChart) { 
@@ -76,9 +76,9 @@ function handleTabSwitch(activeTab) {
     }
 }
 
-function updateAllMealPlannerTips(){
-    updatePartnerTips();
-    updateHydrationAndSnacks();
-    updatePartnerAvoidTips();
-    updateHydrationAvoidTips();
+async function updateAllMealPlannerTips(){
+    await updatePartnerTips();
+    await updateHydrationAndSnacks();
+    await updatePartnerAvoidTips();
+    await updateHydrationAvoidTips();
 }
