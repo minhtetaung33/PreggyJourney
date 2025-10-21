@@ -132,7 +132,7 @@ const wellnessTipsByWeek = {
     20: "You're halfway there! Celebrate this milestone and continue to nourish your body."
 };
 
-const sleepDays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+const sleepDays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 const dayTitles = { monday: 'Monday', tuesday: 'Tuesday', wednesday: 'Wednesday', thursday: 'Thursday', friday: 'Friday', saturday: 'Saturday', sunday: 'Sunday' };
 const moodToValue = {'😣': 1, '😐': 2, '🙂': 3, '😊': 4, '🥰': 5};
@@ -297,7 +297,7 @@ function setupEventListeners() {
     sleepModal.addEventListener('click', (e) => e.target === sleepModal && closeSleepModal());
     sleepModalSaveBtn.addEventListener('click', async () => {
         const newSleepData = {}; let hasChanged = false;
-        sleepDays.forEach(day => {
+        days.forEach(day => {
             const sleepInput = document.getElementById(`sleep-time-${day}`); const wakeInput = document.getElementById(`wake-time-${day}`);
             newSleepData[day] = { sleep: sleepInput.value, wake: wakeInput.value };
             if (newSleepData[day].sleep !== (wellnessData.sleep[day] || {}).sleep || newSleepData[day].wake !== (wellnessData.sleep[day] || {}).wake) hasChanged = true;
@@ -360,10 +360,10 @@ export function updateDashboardUI() {
     
     // Enable/disable controls based on history view
     const isToday = !isHistoryView;
-    hydrationPlusBtn.disabled = !isToday;
-    hydrationMinusBtn.disabled = !isToday;
-    moodLogButtons.querySelectorAll('button').forEach(b => b.disabled = !isToday);
-    energyLogButtons.querySelectorAll('button').forEach(b => b.disabled = !isToday);
+    hydrationPlusBtn.disabled = isHistoryView;
+    hydrationMinusBtn.disabled = isHistoryView;
+    moodLogButtons.querySelectorAll('button').forEach(b => b.disabled = isHistoryView);
+    energyLogButtons.querySelectorAll('button').forEach(b => b.disabled = isHistoryView);
 }
 
 function updateDailySummary(mood, energy, waterIntake) {
@@ -873,7 +873,7 @@ async function populateNutritionHistory(date) {
 function closeStartDateModal() { startDateModal.classList.remove('active'); setTimeout(() => startDateModal.classList.add('hidden'), 300); }
 function populateSleepModal() {
     sleepScheduleContainer.innerHTML = '';
-    sleepDays.forEach(day => {
+    days.forEach(day => {
         const dayData = wellnessData.sleep[day] || { sleep: '', wake: '' };
         const item = document.createElement('div');
         item.className = 'grid grid-cols-3 items-center gap-2';
