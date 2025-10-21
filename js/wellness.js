@@ -1090,13 +1090,20 @@ export async function updateHydrationAndSnacks() {
         const today = new Date();
         const diffTime = Math.abs(today - pregnancyStartDate);
         const pregnancyWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) || 5;
-        const todayIndex = new Date().getDay();
-        const dayKey = days[todayIndex === 0 ? 6 : todayIndex - 1];
+        
+        const dayData = wellnessData.weeklyLog[selectedDayKey] || {};
         const currentMealPlanData = getCurrentMealPlan();
-        const todaysMeals = { breakfast: currentMealPlanData.breakfast[dayKey], lunch: currentMealPlanData.lunch[dayKey], snackAM: currentMealPlanData.snackAM[dayKey], snackPM: currentMealPlanData.snackPM[dayKey], dinner: currentMealPlanData.dinner[dayKey] };
+        const todaysMeals = { 
+            breakfast: currentMealPlanData.breakfast[selectedDayKey], 
+            lunch: currentMealPlanData.lunch[selectedDayKey], 
+            snackAM: currentMealPlanData.snackAM[selectedDayKey], 
+            snackPM: currentMealPlanData.snackPM[selectedDayKey], 
+            dinner: currentMealPlanData.dinner[selectedDayKey] 
+        };
         const mealPlanString = Object.entries(todaysMeals).map(([key, value]) => `${key}: ${value || 'Not set'}`).join(', ');
+        
         const systemPrompt = `You are a prenatal nutritionist. Generate 3-4 short, actionable hydration and snacking tips based on the user's pregnancy week, mood, and meal plan. Your response MUST be ONLY a valid JSON array of strings, like ["Tip 1", "Tip 2"].`;
-        const userQuery = `Context:\n- Week: ${pregnancyWeek}\n- Meals: ${mealPlanString}\n- Mood: ${wellnessData.mood.level}\n- Energy: ${wellnessData.energy.level}\n\nGenerate tips.`;
+        const userQuery = `Context:\n- Week: ${pregnancyWeek}\n- Meals: ${mealPlanString}\n- Mood: ${dayData.mood}\n- Energy: ${dayData.energy}\n\nGenerate tips.`;
         const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
         const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json" } };
@@ -1124,8 +1131,9 @@ export async function updatePartnerTips() {
         const today = new Date();
         const diffTime = Math.abs(today - pregnancyStartDate);
         const pregnancyWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) || 5;
+        const dayData = wellnessData.weeklyLog[selectedDayKey] || {};
         const systemPrompt = `You are a supportive assistant for a pregnant woman's partner. Generate 3-4 short, actionable tips for the partner based on the context. Focus on practical help and emotional support. Your response MUST be ONLY a valid JSON array of strings, like ["Tip 1", "Tip 2"].`;
-        const userQuery = `Context:\n- Pregnancy Week: ${pregnancyWeek}\n- Her mood: ${wellnessData.mood.level}\n- Her energy: ${wellnessData.energy.level}\n\nGenerate tips.`;
+        const userQuery = `Context:\n- Pregnancy Week: ${pregnancyWeek}\n- Her mood: ${dayData.mood}\n- Her energy: ${dayData.energy}\n\nGenerate tips.`;
         const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
         const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json" } };
@@ -1153,37 +1161,9 @@ export async function updateHydrationAvoidTips() {
         const today = new Date();
         const diffTime = Math.abs(today - pregnancyStartDate);
         const pregnancyWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) || 5;
-        const systemPrompt = `You are a prenatal nutritionist. Generate 2-3 short, critical "to avoid" tips about food/drink for the user's pregnancy week. Your response MUST be ONLY a valid JSON array of strings, like ["Tip 1", "Tip 2"].`;
-        const userQuery = `Pregnancy Week: ${pregnancyWeek}. Generate things to avoid.`;
-        const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-        const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json" } };
-
-        const response = await fetchWithBackoff(apiUrl, payload);
-
-        if (!response.ok) throw new Error('API response not OK');
-        const result = await response.json(); const tips = JSON.parse(result.candidates[0].content.parts[0].text);
-        loader.style.display = 'none';
-        if (tips && tips.length > 0) { container.innerHTML = ''; tips.forEach(tip => { const li = document.createElement('li'); li.textContent = tip; container.appendChild(li); }); } 
-        else { container.innerHTML = `<p>Could not generate tips at the moment.</p>`; }
-    } catch (error) {
-        console.error("Failed to generate hydration/snack avoid tips:", error);
-        loader.style.display = 'none'; container.innerHTML = `<li>Avoid unpasteurized juices or milk.</li><li>Limit caffeine intake.</li><li>Stay away from high-mercury fish like shark or swordfish.</li>`;
-    }
-}
-
-export async function updatePartnerAvoidTips() {
-    const container = document.getElementById('partner-avoid-container');
-    const loader = document.getElementById('partner-avoid-loader');
-    if (!container || !loader) return;
-    loader.style.display = 'block'; container.innerHTML = ''; container.appendChild(loader);
-    try {
-        const pregnancyStartDate = new Date(wellnessData.pregnancyStartDate);
-        const today = new Date();
-        const diffTime = Math.abs(today - pregnancyStartDate);
-        const pregnancyWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) || 5;
+        const dayData = wellnessData.weeklyLog[selectedDayKey] || {};
         const systemPrompt = `You are a supportive assistant for a pregnant woman's partner. Generate 2-3 short things the partner should AVOID saying or doing, based on the context. Your response MUST be ONLY a valid JSON array of strings, like ["Tip 1", "Tip 2"].`;
-        const userQuery = `Context:\n- Pregnancy Week: ${pregnancyWeek}\n- Her mood: ${wellnessData.mood.level}\n- Her energy: ${wellnessData.energy.level}\n\nGenerate things to avoid.`;
+        const userQuery = `Context:\n- Pregnancy Week: ${pregnancyWeek}\n- Her mood: ${dayData.mood}\n- Her energy: ${dayData.energy}\n\nGenerate things to avoid.`;
         const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
         const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json" } };
