@@ -68,8 +68,9 @@ const editDayModalSaveBtn = document.getElementById('edit-day-modal-save-btn');
 
 
 let wellnessDataRef, symptomTrackerCollectionRef, userSupplementsRef, supplementNutrientsRef;
-let unsubscribeWellnessData, unsubscribeUserSupplements, unsubscribeSupplementNutrients, unsubscribeSupplementLog;
+let unsubscribeWellnessData, unsubscribeUserSupplements, unsubscribeSupplementNutrients, unsubscribeSupplementLog, unsubscribeDailyWellness;
 let wellnessData = {};
+let dailyWellnessData = {}; // To store data from the 'daily' doc (e.g., pregnancy start date)
 export let wellnessChart = null; // Export the chart instance
 let userSupplements = [];
 let supplementNutrients = {};
@@ -178,6 +179,24 @@ export async function initializeWellness(userId, onWellnessDataUpdate) {
     symptomTrackerCollectionRef = collection(db, `users/${userId}/symptomLogs`);
     userSupplementsRef = doc(db, `users/${userId}/supplements`, 'list-v1');
     supplementNutrientsRef = doc(db, `users/${userId}/supplements`, 'nutrients-v1');
+    const dailyWellnessRef = doc(db, `users/${userId}/wellness`, 'daily');
+
+    // Listener for daily data like start date. Triggers a full reload on change.
+    if (unsubscribeDailyWellness) unsubscribeDailyWellness();
+    unsubscribeDailyWellness = onSnapshot(dailyWellnessRef, (docSnap) => {
+        if (docSnap.exists()) {
+            dailyWellnessData = docSnap.data();
+            // Reload weekly data to merge the new daily data (like a changed start date).
+            // This triggers the main onSnapshot and the full update chain.
+            loadWellnessForDate(wellnessHistoryCurrentDate, onWellnessDataUpdate);
+        } else {
+            // If it doesn't exist, create it with the start date from the default object
+            setDoc(dailyWellnessRef, { 
+                pregnancyStartDate: defaultWellnessData.pregnancyStartDate, 
+                pregnancyEndDate: defaultWellnessData.pregnancyEndDate 
+            });
+        }
+    });
 
     await loadWellnessForDate(new Date(), onWellnessDataUpdate);
     await initializeSupplements();
@@ -221,7 +240,8 @@ async function loadWellnessForDate(date, onWellnessDataUpdate) {
     unsubscribeWellnessData = onSnapshot(wellnessDataRef, (docSnap) => {
         const firestoreData = docSnap.exists() ? docSnap.data() : defaultWellnessData;
         
-        wellnessData = { ...defaultWellnessData, ...firestoreData };
+        // Merge daily data (like start date) with the weekly log data.
+        wellnessData = { ...defaultWellnessData, ...dailyWellnessData, ...firestoreData };
 
         if (!isHistoryView) {
             const todayIndex = new Date().getDay();
@@ -298,6 +318,7 @@ function setupEventListeners() {
         if (newStartDate) {
             if (!newEndDate) { const startDate = new Date(newStartDate); startDate.setDate(startDate.getDate() + (40 * 7)); newEndDate = startDate.toISOString().split('T')[0]; }
             
+            // Save to the 'daily' document. The onSnapshot listener will handle the UI updates.
             const userDocRef = doc(db, `users/${getCurrentUserId()}/wellness`, 'daily'); 
             await setDoc(userDocRef, { pregnancyStartDate: newStartDate, pregnancyEndDate: newEndDate }, { merge: true });
         }
@@ -1083,7 +1104,7 @@ async function fetchWithBackoff(url, payload, maxRetries = 5) {
 export async function updateHydrationAndSnacks() {
     const container = document.getElementById('hydration-snacks-container');
     const loader = document.getElementById('hydration-snacks-loader');
-    if (!container || !loader) return;
+    if (!container || !loader || !wellnessData.pregnancyStartDate) return;
     loader.style.display = 'block'; container.innerHTML = ''; container.appendChild(loader);
     try {
         const pregnancyStartDate = new Date(wellnessData.pregnancyStartDate);
@@ -1095,8 +1116,11 @@ export async function updateHydrationAndSnacks() {
         const currentMealPlanData = getCurrentMealPlan();
         const todaysMeals = { breakfast: currentMealPlanData.breakfast[dayKey], lunch: currentMealPlanData.lunch[dayKey], snackAM: currentMealPlanData.snackAM[dayKey], snackPM: currentMealPlanData.snackPM[dayKey], dinner: currentMealPlanData.dinner[dayKey] };
         const mealPlanString = Object.entries(todaysMeals).map(([key, value]) => `${key}: ${value || 'Not set'}`).join(', ');
-        const systemPrompt = `You are a prenatal nutritionist. Generate 3-4 short, actionable hydration and snacking tips based on the user's pregnancy week, mood, and meal plan. Your response MUST be ONLY a valid JSON array of strings, like ["Tip 1", "Tip 2"].`;
-        const userQuery = `Context:\n- Week: ${pregnancyWeek}\n- Meals: ${mealPlanString}\n- Mood: ${wellnessData.mood.level}\n- Energy: ${wellnessData.energy.level}\n\nGenerate tips.`;
+        const dayData = wellnessData.weeklyLog[dayKey] || {};
+        const mood = dayData.mood || '😐';
+        const energy = dayData.energy || 3;
+        const systemPrompt = `You are a prenatal nutritionist. Generate 3-4 short, actionable hydration and snacking tips based on the user's pregnancy week, mood, energy, and meal plan. Your response MUST be ONLY a valid JSON array of strings, like ["Tip 1", "Tip 2"].`;
+        const userQuery = `Context:\n- Week: ${pregnancyWeek}\n- Meals: ${mealPlanString}\n- Mood: ${mood}\n- Energy Level (1-5): ${energy}\n\nGenerate tips.`;
         const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
         const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json" } };
@@ -1117,15 +1141,20 @@ export async function updateHydrationAndSnacks() {
 export async function updatePartnerTips() {
     const container = document.getElementById('partner-tips-container');
     const loader = document.getElementById('partner-tips-loader');
-    if (!container || !loader) return;
+    if (!container || !loader || !wellnessData.pregnancyStartDate) return;
     loader.style.display = 'block'; container.innerHTML = ''; container.appendChild(loader);
     try {
         const pregnancyStartDate = new Date(wellnessData.pregnancyStartDate);
         const today = new Date();
         const diffTime = Math.abs(today - pregnancyStartDate);
         const pregnancyWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) || 5;
+        const todayIndex = new Date().getDay();
+        const dayKey = days[todayIndex === 0 ? 6 : todayIndex - 1];
+        const dayData = wellnessData.weeklyLog[dayKey] || {};
+        const mood = dayData.mood || '😐';
+        const energy = dayData.energy || 3;
         const systemPrompt = `You are a supportive assistant for a pregnant woman's partner. Generate 3-4 short, actionable tips for the partner based on the context. Focus on practical help and emotional support. Your response MUST be ONLY a valid JSON array of strings, like ["Tip 1", "Tip 2"].`;
-        const userQuery = `Context:\n- Pregnancy Week: ${pregnancyWeek}\n- Her mood: ${wellnessData.mood.level}\n- Her energy: ${wellnessData.energy.level}\n\nGenerate tips.`;
+        const userQuery = `Context:\n- Pregnancy Week: ${pregnancyWeek}\n- Her mood today: ${mood}\n- Her energy level (1-5): ${energy}\n\nGenerate tips.`;
         const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
         const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json" } };
@@ -1146,7 +1175,7 @@ export async function updatePartnerTips() {
 export async function updateHydrationAvoidTips() {
     const container = document.getElementById('hydration-avoid-container');
     const loader = document.getElementById('hydration-avoid-loader');
-    if (!container || !loader) return;
+    if (!container || !loader || !wellnessData.pregnancyStartDate) return;
     loader.style.display = 'block'; container.innerHTML = ''; container.appendChild(loader);
     try {
         const pregnancyStartDate = new Date(wellnessData.pregnancyStartDate);
@@ -1175,15 +1204,20 @@ export async function updateHydrationAvoidTips() {
 export async function updatePartnerAvoidTips() {
     const container = document.getElementById('partner-avoid-container');
     const loader = document.getElementById('partner-avoid-loader');
-    if (!container || !loader) return;
+    if (!container || !loader || !wellnessData.pregnancyStartDate) return;
     loader.style.display = 'block'; container.innerHTML = ''; container.appendChild(loader);
     try {
         const pregnancyStartDate = new Date(wellnessData.pregnancyStartDate);
         const today = new Date();
         const diffTime = Math.abs(today - pregnancyStartDate);
         const pregnancyWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) || 5;
+        const todayIndex = new Date().getDay();
+        const dayKey = days[todayIndex === 0 ? 6 : todayIndex - 1];
+        const dayData = wellnessData.weeklyLog[dayKey] || {};
+        const mood = dayData.mood || '😐';
+        const energy = dayData.energy || 3;
         const systemPrompt = `You are a supportive assistant for a pregnant woman's partner. Generate 2-3 short things the partner should AVOID saying or doing, based on the context. Your response MUST be ONLY a valid JSON array of strings, like ["Tip 1", "Tip 2"].`;
-        const userQuery = `Context:\n- Pregnancy Week: ${pregnancyWeek}\n- Her mood: ${wellnessData.mood.level}\n- Her energy: ${wellnessData.energy.level}\n\nGenerate things to avoid.`;
+        const userQuery = `Context:\n- Pregnancy Week: ${pregnancyWeek}\n- Her mood today: ${mood}\n- Her energy level (1-5): ${energy}\n\nGenerate things to avoid.`;
         const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
         const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json" } };
@@ -1262,6 +1296,7 @@ async function handleSaveEditDay() {
 
 export function unloadWellness() {
     if (unsubscribeWellnessData) unsubscribeWellnessData();
+    if (unsubscribeDailyWellness) unsubscribeDailyWellness(); // Unsubscribe from the daily doc
     if (unsubscribeUserSupplements) unsubscribeUserSupplements();
     if (unsubscribeSupplementNutrients) unsubscribeSupplementNutrients();
     if (unsubscribeSupplementLog) unsubscribeSupplementLog();
