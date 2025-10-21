@@ -76,9 +76,10 @@ function handleTabSwitch(activeTab) {
     }
 }
 
-function updateAllMealPlannerTips(){
-    updatePartnerTips();
-    updateHydrationAndSnacks();
-    updatePartnerAvoidTips();
-    updateHydrationAvoidTips();
+async function updateAllMealPlannerTips() {
+    // Awaiting each function ensures they run one after the other.
+    await updatePartnerTips();
+    await updateHydrationAndSnacks();
+    await updatePartnerAvoidTips();
+    await updateHydrationAvoidTips();
 }
