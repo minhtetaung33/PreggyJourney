@@ -50,6 +50,11 @@ const wellnessPrevWeekBtn = document.getElementById('wellness-prev-week-btn');
 const wellnessNextWeekBtn = document.getElementById('wellness-next-week-btn');
 const wellnessWeekDisplay = document.getElementById('wellness-week-display');
 
+// Sleep Modal Navigation
+const sleepPrevWeekBtn = document.getElementById('sleep-prev-week-btn');
+const sleepNextWeekBtn = document.getElementById('sleep-next-week-btn');
+const sleepWeekDisplay = document.getElementById('sleep-week-display');
+
 // Edit Day Modal Elements
 const editDayModal = document.getElementById('edit-day-modal');
 const editDayModalTitle = document.getElementById('edit-day-modal-title');
@@ -70,6 +75,8 @@ let userSupplements = [];
 let supplementNutrients = {};
 let nutritionHistoryCurrentDate = new Date();
 let supplementLogDate = new Date();
+let sleepModalCurrentDate = new Date();
+
 
 // New state for wellness history
 let wellnessHistoryCurrentDate = new Date();
@@ -290,19 +297,22 @@ function setupEventListeners() {
         closeStartDateModal();
     });
     sleepMonitorCard.addEventListener('click', () => {
-        populateSleepModal(); sleepModal.classList.remove('hidden');
-        setTimeout(() => sleepModal.classList.add('active'), 10);
+        openSleepModal(wellnessHistoryCurrentDate);
     });
     sleepModalCancelBtn.addEventListener('click', closeSleepModal);
     sleepModal.addEventListener('click', (e) => e.target === sleepModal && closeSleepModal());
     sleepModalSaveBtn.addEventListener('click', async () => {
-        const newSleepData = {}; let hasChanged = false;
-        days.forEach(day => {
-            const sleepInput = document.getElementById(`sleep-time-${day}`); const wakeInput = document.getElementById(`wake-time-${day}`);
+        const newSleepData = {};
+        sleepDays.forEach(day => {
+            const sleepInput = document.getElementById(`sleep-time-${day}`);
+            const wakeInput = document.getElementById(`wake-time-${day}`);
             newSleepData[day] = { sleep: sleepInput.value, wake: wakeInput.value };
-            if (newSleepData[day].sleep !== (wellnessData.sleep[day] || {}).sleep || newSleepData[day].wake !== (wellnessData.sleep[day] || {}).wake) hasChanged = true;
         });
-        if (hasChanged) await setDoc(wellnessDataRef, { sleep: newSleepData }, { merge: true });
+
+        const weekId = getWeekId(sleepModalCurrentDate);
+        const sleepDocRef = doc(db, `users/${getCurrentUserId()}/wellness`, weekId);
+        await setDoc(sleepDocRef, { sleep: newSleepData }, { merge: true });
+        
         closeSleepModal();
     });
     
@@ -337,6 +347,16 @@ function setupEventListeners() {
         loadWellnessForDate(newDate, () => {});
     });
     
+    sleepPrevWeekBtn.addEventListener('click', () => {
+        sleepModalCurrentDate.setDate(sleepModalCurrentDate.getDate() - 7);
+        populateSleepModal(sleepModalCurrentDate);
+    });
+
+    sleepNextWeekBtn.addEventListener('click', () => {
+        sleepModalCurrentDate.setDate(sleepModalCurrentDate.getDate() + 7);
+        populateSleepModal(sleepModalCurrentDate);
+    });
+
     editDayModalCancelBtn.addEventListener('click', closeEditDayModal);
     editDayModal.addEventListener('click', e => e.target === editDayModal && closeEditDayModal());
     editDayModalSaveBtn.addEventListener('click', handleSaveEditDay);
@@ -359,7 +379,6 @@ export function updateDashboardUI() {
     updateDynamicContent();
     
     // Enable/disable controls based on history view
-    const isToday = !isHistoryView;
     hydrationPlusBtn.disabled = isHistoryView;
     hydrationMinusBtn.disabled = isHistoryView;
     moodLogButtons.querySelectorAll('button').forEach(b => b.disabled = isHistoryView);
@@ -481,8 +500,8 @@ function calculateSleepDuration(sleepTimeStr, wakeTimeStr) {
 
 function calculateLastNightSleep() {
     const dayIndex = days.indexOf(selectedDayKey);
-    const yesterdayIndex = (dayIndex + 6) % 7;
-    const sleepDayKey = days[yesterdayIndex];
+    const sleepDayIndex = dayIndex === 0 ? 6 : dayIndex - 1; // Sleep for Monday is on Sunday night
+    const sleepDayKey = days[sleepDayIndex];
     const { sleep, wake } = wellnessData.sleep[sleepDayKey] || { sleep: '', wake: '' };
     const hours = calculateSleepDuration(sleep, wake);
     return { hours };
@@ -564,10 +583,10 @@ export function updateWellnessChartData() {
     
     const energyData = days.map(day => (wellnessData.weeklyLog[day] || {}).energy || 0);
     const moodData = days.map(day => moodToValue[(wellnessData.weeklyLog[day] || {}).mood] || 0);
-    const sleepData = days.map(day => { 
+    const sleepData = days.map(day => {
         const dayIndex = days.indexOf(day);
-        const yesterdayIndex = (dayIndex + 6) % 7;
-        const sleepDayKey = days[yesterdayIndex];
+        const sleepDayIndex = dayIndex === 0 ? 6 : dayIndex - 1; // Sleep for Monday is on Sunday night
+        const sleepDayKey = days[sleepDayIndex];
         const { sleep, wake } = wellnessData.sleep[sleepDayKey] || {};
         return calculateSleepDuration(sleep, wake);
     });
@@ -871,16 +890,35 @@ async function populateNutritionHistory(date) {
 
 
 function closeStartDateModal() { startDateModal.classList.remove('active'); setTimeout(() => startDateModal.classList.add('hidden'), 300); }
-function populateSleepModal() {
+
+async function openSleepModal(date) {
+    sleepModalCurrentDate = new Date(date);
+    await populateSleepModal(sleepModalCurrentDate);
+    sleepModal.classList.remove('hidden');
+    setTimeout(() => sleepModal.classList.add('active'), 10);
+}
+
+async function populateSleepModal(date) {
+    sleepWeekDisplay.textContent = formatWeekDisplay(date);
+    const weekId = getWeekId(date);
+    const sleepDocRef = doc(db, `users/${getCurrentUserId()}/wellness`, weekId);
+    const docSnap = await getDoc(sleepDocRef);
+    const sleepDataForWeek = docSnap.exists() ? (docSnap.data().sleep || defaultWellnessData.sleep) : defaultWellnessData.sleep;
+
     sleepScheduleContainer.innerHTML = '';
-    days.forEach(day => {
-        const dayData = wellnessData.sleep[day] || { sleep: '', wake: '' };
+    const nightLabels = ["Sun/Mon", "Mon/Tue", "Tue/Wed", "Wed/Thu", "Thu/Fri", "Fri/Sat", "Sat/Sun"];
+    
+    sleepDays.forEach((day, index) => {
+        const dayData = sleepDataForWeek[day] || { sleep: '', wake: '' };
         const item = document.createElement('div');
         item.className = 'grid grid-cols-3 items-center gap-2';
-        item.innerHTML = `<label class="font-semibold capitalize">${day}</label><input type="time" id="sleep-time-${day}" class="date-input" value="${dayData.sleep}"><input type="time" id="wake-time-${day}" class="date-input" value="${dayData.wake}">`;
+        item.innerHTML = `<label class="font-semibold capitalize">${nightLabels[index]}</label>
+                          <input type="time" id="sleep-time-${day}" class="date-input" value="${dayData.sleep}">
+                          <input type="time" id="wake-time-${day}" class="date-input" value="${dayData.wake}">`;
         sleepScheduleContainer.appendChild(item);
     });
 }
+
 function closeSleepModal() { sleepModal.classList.remove('active'); setTimeout(() => sleepModal.classList.add('hidden'), 300); }
 
 
