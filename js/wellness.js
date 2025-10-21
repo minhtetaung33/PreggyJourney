@@ -290,8 +290,7 @@ function setupEventListeners() {
         if (newStartDate) {
             if (!newEndDate) { const startDate = new Date(newStartDate); startDate.setDate(startDate.getDate() + (40 * 7)); newEndDate = startDate.toISOString().split('T')[0]; }
             
-            // This needs to update the top-level user doc, not the weekly wellness
-            const userDocRef = doc(db, `users/${getCurrentUserId()}/wellness`, 'daily'); // Assuming 'daily' holds profile info
+            const userDocRef = doc(db, `users/${getCurrentUserId()}/wellness`, 'daily'); 
             await setDoc(userDocRef, { pregnancyStartDate: newStartDate, pregnancyEndDate: newEndDate }, { merge: true });
         }
         closeStartDateModal();
@@ -357,9 +356,41 @@ function setupEventListeners() {
         populateSleepModal(sleepModalCurrentDate);
     });
 
+    // START: Fix for Edit Day Modal
     editDayModalCancelBtn.addEventListener('click', closeEditDayModal);
     editDayModal.addEventListener('click', e => e.target === editDayModal && closeEditDayModal());
     editDayModalSaveBtn.addEventListener('click', handleSaveEditDay);
+
+    editMoodLogButtons.addEventListener('click', (e) => {
+        const button = e.target.closest('.mood-btn');
+        if (button && editDayData) {
+            editDayData.mood = button.dataset.mood;
+            editMoodLogButtons.querySelectorAll('button').forEach(btn => btn.classList.toggle('selected', btn === button));
+        }
+    });
+
+    editEnergyLogButtons.addEventListener('click', (e) => {
+        const button = e.target.closest('.energy-btn');
+        if (button && editDayData) {
+            editDayData.energy = parseInt(button.dataset.energy, 10);
+            editEnergyLogButtons.querySelectorAll('button').forEach(btn => btn.classList.toggle('selected', btn === button));
+        }
+    });
+
+    editHydrationPlus.addEventListener('click', () => {
+        if (editDayData && editDayData.waterIntake < wellnessData.waterGoal) {
+            editDayData.waterIntake++;
+            editHydrationText.textContent = editDayData.waterIntake;
+        }
+    });
+
+    editHydrationMinus.addEventListener('click', () => {
+        if (editDayData && editDayData.waterIntake > 0) {
+            editDayData.waterIntake--;
+            editHydrationText.textContent = editDayData.waterIntake;
+        }
+    });
+    // END: Fix for Edit Day Modal
 }
 
 export function updateDashboardUI() {
@@ -372,13 +403,12 @@ export function updateDashboardUI() {
 
     updateDailySummary(mood, energy, waterIntake);
     updateHydrationCircle(waterIntake);
-    updateNutritionTracker(); // This needs to know the selected day
+    updateNutritionTracker(); 
     updateSleepMonitor();
     updateMoodLog(mood);
     updateEnergyLog(energy);
     updateDynamicContent();
     
-    // Enable/disable controls based on history view
     hydrationPlusBtn.disabled = isHistoryView;
     hydrationMinusBtn.disabled = isHistoryView;
     moodLogButtons.querySelectorAll('button').forEach(b => b.disabled = isHistoryView);
@@ -386,7 +416,7 @@ export function updateDashboardUI() {
 }
 
 function updateDailySummary(mood, energy, waterIntake) {
-    const lastNightSleep = calculateLastNightSleep(); // This should be for the selected day too
+    const lastNightSleep = calculateLastNightSleep(); 
     const energyMap = { 1: { level: 'Very Low', color: 'text-red-400' }, 2: { level: 'Low', color: 'text-yellow-400' }, 3: { level: 'Moderate', color: 'text-green-400' }, 4: { level: 'Good', color: 'text-teal-400' }, 5: { level: 'High', color: 'text-purple-400' } };
 
     document.getElementById('summary-mood').textContent = mood;
@@ -408,7 +438,6 @@ function updateHydrationCircle(waterIntake) {
 }
 
 function updateNutritionTracker() {
-    // This function already works day-by-day, just needs to know which day
     updateDailySupplementsUI(selectedDayKey);
 
     const allMealNutrients = getMealNutrients();
@@ -500,7 +529,7 @@ function calculateSleepDuration(sleepTimeStr, wakeTimeStr) {
 
 function calculateLastNightSleep() {
     const dayIndex = days.indexOf(selectedDayKey);
-    const sleepDayIndex = dayIndex === 0 ? 6 : dayIndex - 1; // Sleep for Monday is on Sunday night
+    const sleepDayIndex = dayIndex === 0 ? 6 : dayIndex - 1; 
     const sleepDayKey = days[sleepDayIndex];
     const { sleep, wake } = wellnessData.sleep[sleepDayKey] || { sleep: '', wake: '' };
     const hours = calculateSleepDuration(sleep, wake);
@@ -585,7 +614,7 @@ export function updateWellnessChartData() {
     const moodData = days.map(day => moodToValue[(wellnessData.weeklyLog[day] || {}).mood] || 0);
     const sleepData = days.map(day => {
         const dayIndex = days.indexOf(day);
-        const sleepDayIndex = dayIndex === 0 ? 6 : dayIndex - 1; // Sleep for Monday is on Sunday night
+        const sleepDayIndex = dayIndex === 0 ? 6 : dayIndex - 1;
         const sleepDayKey = days[sleepDayIndex];
         const { sleep, wake } = wellnessData.sleep[sleepDayKey] || {};
         return calculateSleepDuration(sleep, wake);
@@ -675,7 +704,7 @@ async function populateSupplementList() {
     supplementListContainer.innerHTML = `<p class="text-center text-gray-400">Loading supplements...</p>`;
     
     const weekId = getWeekId(supplementLogDate);
-    const dayIndex = (supplementLogDate.getDay() + 6) % 7; // Monday is 0
+    const dayIndex = (supplementLogDate.getDay() + 6) % 7; 
     const dayKey = days[dayIndex];
     const userId = getCurrentUserId();
     const wellnessDocRefForLog = doc(db, `users/${userId}/wellness`, weekId);
@@ -720,7 +749,7 @@ async function populateSupplementList() {
 }
 
 async function toggleSupplementForDay(suppName) {
-    const dayIndex = (supplementLogDate.getDay() + 6) % 7; // Monday is 0
+    const dayIndex = (supplementLogDate.getDay() + 6) % 7; 
     const dayKey = days[dayIndex];
     const weekId = getWeekId(supplementLogDate);
     const userId = getCurrentUserId();
@@ -824,7 +853,6 @@ async function populateNutritionHistory(date) {
     const weekMealPlanSnap = await getDoc(weekMealPlanRef);
     const mealPlanForWeek = weekMealPlanSnap.exists() ? weekMealPlanSnap.data() : defaultMealPlan;
 
-    // Fetch the corresponding wellness data for the same week
     const weekWellnessRef = doc(db, `users/${userId}/wellness`, weekId);
     const weekWellnessSnap = await getDoc(weekWellnessRef);
     const wellnessForWeek = weekWellnessSnap.exists() ? weekWellnessSnap.data() : defaultWellnessData;
@@ -850,7 +878,6 @@ async function populateNutritionHistory(date) {
             }
         }
         
-        // Use supplements from the specific week's wellness data
         const daySupplements = wellnessForWeek.dailySupplements[dayKey] || [];
         daySupplements.forEach(suppName => {
             if (supplementNutrients[suppName]) {
@@ -923,7 +950,7 @@ function closeSleepModal() { sleepModal.classList.remove('active'); setTimeout((
 
 
 async function fetchWithBackoff(url, payload, maxRetries = 5) {
-    let delay = 1000; // Initial delay of 1 second
+    let delay = 1000; 
     for (let i = 0; i < maxRetries; i++) {
         try {
             const response = await fetch(url, {
@@ -1074,6 +1101,7 @@ export async function updatePartnerAvoidTips() {
 
 
 function openEditDayModal(dayKey) {
+    editDayData = {}; // Clear previous data
     editDayData.dayKey = dayKey;
     const dayData = wellnessData.weeklyLog[dayKey] || {};
     
@@ -1095,45 +1123,30 @@ function openEditDayModal(dayKey) {
         btn.classList.toggle('selected', parseInt(btn.dataset.energy) === editDayData.energy);
     });
     editHydrationText.textContent = editDayData.waterIntake;
-
-    // Add event listeners for modal controls
-    editMoodLogButtons.onclick = (e) => {
-        const button = e.target.closest('.mood-btn');
-        if (button) {
-            editDayData.mood = button.dataset.mood;
-            editMoodLogButtons.querySelectorAll('button').forEach(btn => btn.classList.toggle('selected', btn === button));
-        }
-    };
-    editEnergyLogButtons.onclick = (e) => {
-        const button = e.target.closest('.energy-btn');
-        if (button) {
-            editDayData.energy = parseInt(button.dataset.energy);
-            editEnergyLogButtons.querySelectorAll('button').forEach(btn => btn.classList.toggle('selected', btn === button));
-        }
-    };
-    editHydrationPlus.onclick = () => {
-        if (editDayData.waterIntake < wellnessData.waterGoal) {
-            editDayData.waterIntake++;
-            editHydrationText.textContent = editDayData.waterIntake;
-        }
-    };
-    editHydrationMinus.onclick = () => {
-        if (editDayData.waterIntake > 0) {
-            editDayData.waterIntake--;
-            editHydrationText.textContent = editDayData.waterIntake;
-        }
-    };
     
     editDayModal.classList.remove('hidden');
-    setTimeout(() => editDayModal.classList.add('active'), 10);
+    setTimeout(() => {
+        const content = editDayModal.querySelector('#edit-day-modal-content');
+        if (content) {
+            content.parentElement.classList.add('active');
+        } else {
+            editDayModal.classList.add('active');
+        }
+    }, 10);
 }
 
 function closeEditDayModal() {
-    editDayModal.classList.remove('active');
+    const content = editDayModal.querySelector('#edit-day-modal-content');
+    if (content) {
+        content.parentElement.classList.remove('active');
+    } else {
+        editDayModal.classList.remove('active');
+    }
     setTimeout(() => editDayModal.classList.add('hidden'), 300);
 }
 
 async function handleSaveEditDay() {
+    if (!editDayData.dayKey) return;
     const { dayKey, mood, energy, waterIntake } = editDayData;
     const updates = {
         [`weeklyLog.${dayKey}.mood`]: mood,
