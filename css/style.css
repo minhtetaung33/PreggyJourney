@@ -142,6 +142,7 @@ h1, h2, h3 {
 #ai-summary-modal.active #ai-summary-modal-content,
 #nutrition-history-modal.active #nutrition-history-modal-content,
 #edit-day-modal.active #edit-day-modal-content,
+#image-link-modal.active #image-link-modal-content,
 #ai-meal-modal.active #ai-meal-modal-content {
     transform: scale(1);
     opacity: 1;
@@ -281,4 +282,3 @@ h1, h2, h3 {
 .note-color-pink { background-color: rgba(236, 72, 153, 0.2); border-left-color: #ec4899; }
 .note-color-teal { background-color: rgba(20, 184, 166, 0.2); border-left-color: #14b8a6; }
 .note-color-yellow { background-color: rgba(234, 179, 8, 0.2); border-left-color: #eab308; }
-
