@@ -1101,137 +1101,107 @@ async function fetchWithBackoff(url, payload, maxRetries = 5) {
 }
 
 
-export async function updateHydrationAndSnacks() {
-    const container = document.getElementById('hydration-snacks-container');
-    const loader = document.getElementById('hydration-snacks-loader');
-    if (!container || !loader || !wellnessData.pregnancyStartDate) return;
-    loader.style.display = 'block'; container.innerHTML = ''; container.appendChild(loader);
+export async function generateAllWellnessTips() {
+    // Get references to all containers and loaders
+    const partnerTipsContainer = document.getElementById('partner-tips-container');
+    const partnerTipsLoader = document.getElementById('partner-tips-loader');
+    const hydrationSnacksContainer = document.getElementById('hydration-snacks-container');
+    const hydrationSnacksLoader = document.getElementById('hydration-snacks-loader');
+    const partnerAvoidContainer = document.getElementById('partner-avoid-container');
+    const partnerAvoidLoader = document.getElementById('partner-avoid-loader');
+    const hydrationAvoidContainer = document.getElementById('hydration-avoid-container');
+    const hydrationAvoidLoader = document.getElementById('hydration-avoid-loader');
+
+    // Show loaders and clear previous content
+    const allContainers = [partnerTipsContainer, hydrationSnacksContainer, partnerAvoidContainer, hydrationAvoidContainer];
+    const allLoaders = [partnerTipsLoader, hydrationSnacksLoader, partnerAvoidLoader, hydrationAvoidLoader];
+    
+    allLoaders.forEach(loader => loader.style.display = 'block');
+    allContainers.forEach(container => {
+        container.innerHTML = '';
+        const loader = container.nextElementSibling; // Assumes loader is the next sibling
+        if(loader && loader.tagName === 'P') container.appendChild(loader);
+    });
+
     try {
+        if (!wellnessData.pregnancyStartDate) {
+            throw new Error("Pregnancy start date is not set.");
+        }
+
+        // --- 1. Gather all context ---
         const pregnancyStartDate = new Date(wellnessData.pregnancyStartDate);
         const today = new Date();
         const diffTime = Math.abs(today - pregnancyStartDate);
-        const pregnancyWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) || 5;
-        const todayIndex = new Date().getDay();
+        const pregnancyWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) || 5; // Default to 5 if calculation is 0
+        const todayIndex = today.getDay();
         const dayKey = days[todayIndex === 0 ? 6 : todayIndex - 1];
         const currentMealPlanData = getCurrentMealPlan();
-        const todaysMeals = { breakfast: currentMealPlanData.breakfast[dayKey], lunch: currentMealPlanData.lunch[dayKey], snackAM: currentMealPlanData.snackAM[dayKey], snackPM: currentMealPlanData.snackPM[dayKey], dinner: currentMealPlanData.dinner[dayKey] };
+        const todaysMeals = {
+            breakfast: currentMealPlanData?.breakfast?.[dayKey],
+            lunch: currentMealPlanData?.lunch?.[dayKey],
+            snackAM: currentMealPlanData?.snackAM?.[dayKey],
+            snackPM: currentMealPlanData?.snackPM?.[dayKey],
+            dinner: currentMealPlanData?.dinner?.[dayKey]
+        };
         const mealPlanString = Object.entries(todaysMeals).map(([key, value]) => `${key}: ${value || 'Not set'}`).join(', ');
-        const dayData = wellnessData.weeklyLog[dayKey] || {};
+        const dayData = wellnessData.weeklyLog?.[dayKey] || {};
         const mood = dayData.mood || '😐';
         const energy = dayData.energy || 3;
-        const systemPrompt = `You are a prenatal nutritionist. Generate 3-4 short, actionable hydration and snacking tips based on the user's pregnancy week, mood, energy, and meal plan. Your response MUST be ONLY a valid JSON array of strings, like ["Tip 1", "Tip 2"].`;
-        const userQuery = `Context:\n- Week: ${pregnancyWeek}\n- Meals: ${mealPlanString}\n- Mood: ${mood}\n- Energy Level (1-5): ${energy}\n\nGenerate tips.`;
+
+        // --- 2. Construct the single, combined prompt ---
+        const systemPrompt = `You are an expert prenatal wellness assistant. Your task is to generate four distinct sets of tips based on the user's data.
+        Your response MUST be ONLY a valid JSON object with the following four keys: "partnerTips", "hydrationSnacks", "partnerAvoid", "hydrationAvoid".
+        Each key must contain an array of 2-3 short, actionable string tips.
+        - partnerTips: Supportive tips for the partner.
+        - hydrationSnacks: Hydration and snacking tips for the user.
+        - partnerAvoid: Things the partner should avoid saying or doing.
+        - hydrationAvoid: Foods or drinks the user should avoid.`;
+        
+        const userQuery = `Context for today:\n- Pregnancy Week: ${pregnancyWeek}\n- Today's Meal Plan: ${mealPlanString}\n- Her Mood: ${mood}\n- Her Energy Level (1-5): ${energy}\n\nGenerate all four sets of tips.`;
+        
         const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-        const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json" } };
-        
+        const payload = {
+            contents: [{ parts: [{ text: userQuery }] }],
+            systemInstruction: { parts: [{ text: systemPrompt }] },
+            generationConfig: { responseMimeType: "application/json" }
+        };
+
+        // --- 3. Make the single API call ---
         const response = await fetchWithBackoff(apiUrl, payload);
-
         if (!response.ok) throw new Error('API response not OK');
-        const result = await response.json(); const tips = JSON.parse(result.candidates[0].content.parts[0].text);
-        loader.style.display = 'none';
-        if (tips && tips.length > 0) { container.innerHTML = ''; tips.forEach(tip => { const li = document.createElement('li'); li.textContent = tip; container.appendChild(li); }); } 
-        else { container.innerHTML = `<p>Could not generate tips at the moment.</p>`; }
-    } catch (error) {
-        console.error("Failed to generate hydration/snack tips:", error);
-        loader.style.display = 'none'; container.innerHTML = `<li>Keep a water bottle handy to sip throughout the day.</li><li>A handful of almonds can be a great energy-boosting snack.</li><li>Try adding a slice of lemon or cucumber to your water for a refreshing change.</li>`;
-    }
-}
-
-export async function updatePartnerTips() {
-    const container = document.getElementById('partner-tips-container');
-    const loader = document.getElementById('partner-tips-loader');
-    if (!container || !loader || !wellnessData.pregnancyStartDate) return;
-    loader.style.display = 'block'; container.innerHTML = ''; container.appendChild(loader);
-    try {
-        const pregnancyStartDate = new Date(wellnessData.pregnancyStartDate);
-        const today = new Date();
-        const diffTime = Math.abs(today - pregnancyStartDate);
-        const pregnancyWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) || 5;
-        const todayIndex = new Date().getDay();
-        const dayKey = days[todayIndex === 0 ? 6 : todayIndex - 1];
-        const dayData = wellnessData.weeklyLog[dayKey] || {};
-        const mood = dayData.mood || '😐';
-        const energy = dayData.energy || 3;
-        const systemPrompt = `You are a supportive assistant for a pregnant woman's partner. Generate 3-4 short, actionable tips for the partner based on the context. Focus on practical help and emotional support. Your response MUST be ONLY a valid JSON array of strings, like ["Tip 1", "Tip 2"].`;
-        const userQuery = `Context:\n- Pregnancy Week: ${pregnancyWeek}\n- Her mood today: ${mood}\n- Her energy level (1-5): ${energy}\n\nGenerate tips.`;
-        const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-        const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json" } };
         
-        const response = await fetchWithBackoff(apiUrl, payload);
-        
-        if (!response.ok) throw new Error('API response not OK');
-        const result = await response.json(); const tips = JSON.parse(result.candidates[0].content.parts[0].text);
-        loader.style.display = 'none';
-        if (tips && tips.length > 0) { container.innerHTML = ''; tips.forEach(tip => { const li = document.createElement('li'); li.textContent = tip; container.appendChild(li); }); } 
-        else { container.innerHTML = `<p>Could not generate tips at the moment.</p>`; }
+        const result = await response.json();
+        const allTips = JSON.parse(result.candidates[0].content.parts[0].text);
+
+        // --- 4. Distribute the tips to the UI ---
+        const renderTips = (container, tips) => {
+            container.innerHTML = '';
+            if (tips && tips.length > 0) {
+                tips.forEach(tip => {
+                    const li = document.createElement('li');
+                    li.textContent = tip;
+                    container.appendChild(li);
+                });
+            } else {
+                container.innerHTML = `<p>Could not generate tips at the moment.</p>`;
+            }
+        };
+
+        renderTips(partnerTipsContainer, allTips.partnerTips);
+        renderTips(hydrationSnacksContainer, allTips.hydrationSnacks);
+        renderTips(partnerAvoidContainer, allTips.partnerAvoid);
+        renderTips(hydrationAvoidContainer, allTips.hydrationAvoid);
+
     } catch (error) {
-        console.error("Failed to generate partner tips:", error);
-        loader.style.display = 'none'; container.innerHTML = `<li>Offer a gentle back rub tonight.</li><li>Make sure she has a full water bottle.</li><li>Ask if there's anything you can do to make her more comfortable.</li>`;
-    }
-}
-
-export async function updateHydrationAvoidTips() {
-    const container = document.getElementById('hydration-avoid-container');
-    const loader = document.getElementById('hydration-avoid-loader');
-    if (!container || !loader || !wellnessData.pregnancyStartDate) return;
-    loader.style.display = 'block'; container.innerHTML = ''; container.appendChild(loader);
-    try {
-        const pregnancyStartDate = new Date(wellnessData.pregnancyStartDate);
-        const today = new Date();
-        const diffTime = Math.abs(today - pregnancyStartDate);
-        const pregnancyWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) || 5;
-        const systemPrompt = `You are a prenatal nutritionist. Generate 2-3 short, critical "to avoid" tips about food/drink for the user's pregnancy week. Your response MUST be ONLY a valid JSON array of strings, like ["Tip 1", "Tip 2"].`;
-        const userQuery = `Pregnancy Week: ${pregnancyWeek}. Generate things to avoid.`;
-        const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-        const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json" } };
-
-        const response = await fetchWithBackoff(apiUrl, payload);
-
-        if (!response.ok) throw new Error('API response not OK');
-        const result = await response.json(); const tips = JSON.parse(result.candidates[0].content.parts[0].text);
-        loader.style.display = 'none';
-        if (tips && tips.length > 0) { container.innerHTML = ''; tips.forEach(tip => { const li = document.createElement('li'); li.textContent = tip; container.appendChild(li); }); } 
-        else { container.innerHTML = `<p>Could not generate tips at the moment.</p>`; }
-    } catch (error) {
-        console.error("Failed to generate hydration/snack avoid tips:", error);
-        loader.style.display = 'none'; container.innerHTML = `<li>Avoid unpasteurized juices or milk.</li><li>Limit caffeine intake.</li><li>Stay away from high-mercury fish like shark or swordfish.</li>`;
-    }
-}
-
-export async function updatePartnerAvoidTips() {
-    const container = document.getElementById('partner-avoid-container');
-    const loader = document.getElementById('partner-avoid-loader');
-    if (!container || !loader || !wellnessData.pregnancyStartDate) return;
-    loader.style.display = 'block'; container.innerHTML = ''; container.appendChild(loader);
-    try {
-        const pregnancyStartDate = new Date(wellnessData.pregnancyStartDate);
-        const today = new Date();
-        const diffTime = Math.abs(today - pregnancyStartDate);
-        const pregnancyWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) || 5;
-        const todayIndex = new Date().getDay();
-        const dayKey = days[todayIndex === 0 ? 6 : todayIndex - 1];
-        const dayData = wellnessData.weeklyLog[dayKey] || {};
-        const mood = dayData.mood || '😐';
-        const energy = dayData.energy || 3;
-        const systemPrompt = `You are a supportive assistant for a pregnant woman's partner. Generate 2-3 short things the partner should AVOID saying or doing, based on the context. Your response MUST be ONLY a valid JSON array of strings, like ["Tip 1", "Tip 2"].`;
-        const userQuery = `Context:\n- Pregnancy Week: ${pregnancyWeek}\n- Her mood today: ${mood}\n- Her energy level (1-5): ${energy}\n\nGenerate things to avoid.`;
-        const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-        const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json" } };
-        
-        const response = await fetchWithBackoff(apiUrl, payload);
-
-        if (!response.ok) throw new Error('API response not OK');
-        const result = await response.json(); const tips = JSON.parse(result.candidates[0].content.parts[0].text);
-        loader.style.display = 'none';
-        if (tips && tips.length > 0) { container.innerHTML = ''; tips.forEach(tip => { const li = document.createElement('li'); li.textContent = tip; container.appendChild(li); }); } 
-        else { container.innerHTML = `<p>Could not generate tips at the moment.</p>`; }
-    } catch (error) {
-        console.error("Failed to generate partner avoid tips:", error);
-        loader.style.display = 'none'; container.innerHTML = `<li>Avoid commenting on her changing body unless it's a compliment.</li><li>Don't dismiss her feelings or symptoms, even if they seem minor.</li>`;
+        console.error("Failed to generate combined wellness tips:", error);
+        // Set default tips on error
+        partnerTipsContainer.innerHTML = `<li>Offer a gentle back rub tonight.</li><li>Make sure she has a full water bottle.</li>`;
+        hydrationSnacksContainer.innerHTML = `<li>Keep a water bottle handy to sip throughout the day.</li><li>A handful of almonds can be a great energy-boosting snack.</li>`;
+        partnerAvoidContainer.innerHTML = `<li>Avoid commenting on her changing body unless it's a compliment.</li>`;
+        hydrationAvoidContainer.innerHTML = `<li>Avoid unpasteurized juices or milk.</li><li>Limit caffeine intake.</li>`;
+    } finally {
+        allLoaders.forEach(loader => loader.style.display = 'none');
     }
 }
 
