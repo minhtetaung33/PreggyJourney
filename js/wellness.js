@@ -684,7 +684,49 @@ export function updateWellnessChartData() {
     wellnessChart.data.datasets[1].data = moodData;
     wellnessChart.data.datasets[2].data = sleepData;
     wellnessChart.update();
+
+    updateWeeklyWellnessInsight(energyData, moodData, sleepData);
 }
+
+function updateWeeklyWellnessInsight(energyData, moodData, sleepData) {
+    const insightEl = document.getElementById('chart-ai-insight');
+    if (!insightEl) return;
+
+    const validEnergy = energyData.filter(e => e > 0);
+    const validMood = moodData.filter(m => m > 0);
+    const validSleep = sleepData.filter(s => s > 0);
+
+    if (validEnergy.length < 3 || validMood.length < 3) {
+        insightEl.textContent = "Keep logging your mood and energy daily to see your weekly trends emerge!";
+        return;
+    }
+
+    const avgEnergy = validEnergy.reduce((a, b) => a + b, 0) / validEnergy.length;
+    const avgMood = validMood.reduce((a, b) => a + b, 0) / validMood.length;
+    const avgSleep = validSleep.length > 0 ? validSleep.reduce((a, b) => a + b, 0) / validSleep.length : 0;
+
+    let insight = '';
+
+    const energyDipIndex = energyData.findIndex((e, i) => i > 0 && e < energyData[i-1] - 1);
+    const moodDipIndex = moodData.findIndex((m, i) => i > 0 && m < moodData[i-1] - 1);
+
+    if (avgEnergy < 2.5 && avgSleep > 0 && avgSleep < 7) {
+        insight = "There seems to be a connection between lower sleep hours and your energy levels this week. Prioritizing rest might help.";
+    } else if (energyDipIndex !== -1) {
+        insight = `Your energy saw a dip around ${dayTitles[days[energyDipIndex]]}. Reflect on what might have happened that day.`;
+    } else if (moodDipIndex !== -1) {
+        insight = `It looks like you had a tougher day around ${dayTitles[days[moodDipIndex]]}. Remember that it's okay to have ups and downs.`;
+    } else if (avgMood >= 4) {
+        insight = "It's been a week of great moods! Whatever you're doing, it's working wonders.";
+    } else if (avgEnergy > 3.5) {
+        insight = "You've had a high-energy week. Fantastic job fueling your body and resting well!";
+    } else {
+        insight = "You've been consistent with your tracking. This weekly view is great for spotting patterns over time.";
+    }
+    
+    insightEl.textContent = insight;
+}
+
 
 export function renderWellnessChart() {
     if (wellnessChart) {
