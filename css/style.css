@@ -141,6 +141,7 @@ h1, h2, h3 {
 #edit-todo-modal.active #edit-todo-modal-content,
 #ai-summary-modal.active #ai-summary-modal-content,
 #nutrition-history-modal.active #nutrition-history-modal-content,
+#edit-day-modal.active #edit-day-modal-content,
 #ai-meal-modal.active #ai-meal-modal-content {
     transform: scale(1);
     opacity: 1;
@@ -205,11 +206,13 @@ h1, h2, h3 {
     color: #d8cfff;
 }
 
-.mood-btn.selected {
+.mood-btn.selected,
+#edit-mood-log-buttons .mood-btn.selected {
     transform: scale(1.25);
     filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
 }
-.energy-btn.selected {
+.energy-btn.selected,
+#edit-energy-log-buttons .energy-btn.selected {
     transform: scale(1.25);
     background-color: rgba(255, 255, 255, 0.2);
 }
