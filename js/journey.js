@@ -55,6 +55,15 @@ const reflectionToggleIcon = document.getElementById('reflection-toggle-icon');
 const toggleReflectionsContainer = document.getElementById('toggle-reflections-container');
 const toggleReflectionsBtn = document.getElementById('toggle-reflections-btn');
 
+// New DOM Elements for Reflection Image Feature
+const addReflectionImageBtn = document.getElementById('add-reflection-image-btn');
+const imageLinkModal = document.getElementById('image-link-modal');
+const imageLinkInput = document.getElementById('image-link-input');
+const imageLinkCancelBtn = document.getElementById('image-link-cancel-btn');
+const imageLinkSaveBtn = document.getElementById('image-link-save-btn');
+const reflectionImagePreviewContainer = document.getElementById('reflection-image-preview-container');
+const reflectionImagePreview = document.getElementById('reflection-image-preview');
+
 
 let todosRef, wishesRef, reflectionsRef;
 let unsubscribeTodos, unsubscribeWishes, unsubscribeReflections;
@@ -64,6 +73,7 @@ let activeReflectionId = null;
 let activeColor = 'pink';
 let activeTodoId = null;
 let showAllReflections = false;
+let activeReflectionImageUrl = null; // Variable to hold the image URL for the current reflection
 
 
 export function initializeJourney(userId, initialWellnessData) {
@@ -212,9 +222,17 @@ function renderReflections(reflections) {
     
     notesToRender.forEach(note => {
         const item = document.createElement('div');
-        item.className = `reflection-note relative p-4 rounded-lg border-l-4 note-color-${note.color} cursor-pointer`;
+        item.className = `reflection-note relative p-4 rounded-lg border-l-4 note-color-${note.color} cursor-pointer flex flex-col`;
+        
+        // Conditionally add image
+        const imageHtml = note.imageUrl ? 
+            `<img src="${note.imageUrl}" alt="Reflection image" class="mb-3 rounded-md object-cover h-40 w-full">` : '';
+
         item.innerHTML = `
-            <h4 class="font-bold break-words pr-6">${note.title}</h4>
+            ${imageHtml}
+            <div class="flex-grow">
+                <h4 class="font-bold break-words pr-6">${note.title}</h4>
+            </div>
             <p class="text-xs text-gray-500 mt-3">${new Date(note.createdAt?.toDate()).toLocaleDateString()}</p>
             <button class="delete-reflection-btn icon-btn absolute top-1 right-1 opacity-50 hover:opacity-100 focus:opacity-100 transition-opacity">
                 <svg class="w-4 h-4 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -237,6 +255,7 @@ function renderReflections(reflections) {
         toggleReflectionsContainer.classList.add('hidden');
     }
 }
+
 
 function renderAiWishSuggestions(suggestions) {
     const container = document.getElementById('ai-wish-suggestions-container');
@@ -483,11 +502,19 @@ function setupEventListeners() {
         const content = reflectionContentInput.value.trim();
         if (!title || !content) return;
 
+        const reflectionData = {
+            title,
+            content,
+            color: activeColor,
+            imageUrl: activeReflectionImageUrl // Add the image URL
+        };
+
         if (activeReflectionId) {
             const noteDocRef = doc(db, `users/${getCurrentUserId()}/reflections`, activeReflectionId);
-            await updateDoc(noteDocRef, { title, content, color: activeColor });
+            await updateDoc(noteDocRef, reflectionData);
         } else {
-            await addDoc(reflectionsRef, { title, content, color: activeColor, createdAt: serverTimestamp() });
+            reflectionData.createdAt = serverTimestamp();
+            await addDoc(reflectionsRef, reflectionData);
         }
         closeReflectionModal();
     });
@@ -528,6 +555,30 @@ function setupEventListeners() {
     editTodoModalSaveBtn.addEventListener('click', handleSaveTodo);
     editTodoModalCancelBtn.addEventListener('click', closeEditTodoModal);
     editTodoModal.addEventListener('click', e => e.target === editTodoModal && closeEditTodoModal());
+
+    // --- New Event Listeners for Image Link Modal ---
+    const openImageLinkModal = () => {
+        imageLinkModal.classList.remove('hidden');
+        setTimeout(() => imageLinkModal.classList.add('active'), 10);
+    };
+    const closeImageLinkModal = () => {
+        imageLinkModal.classList.remove('active');
+        setTimeout(() => imageLinkModal.classList.add('hidden'), 300);
+    };
+
+    addReflectionImageBtn.addEventListener('click', openImageLinkModal);
+    imageLinkCancelBtn.addEventListener('click', closeImageLinkModal);
+    imageLinkModal.addEventListener('click', e => e.target === imageLinkModal && closeImageLinkModal());
+
+    imageLinkSaveBtn.addEventListener('click', () => {
+        const url = imageLinkInput.value.trim();
+        if (url) {
+            activeReflectionImageUrl = url;
+            reflectionImagePreview.src = url;
+            reflectionImagePreviewContainer.classList.remove('hidden');
+        }
+        closeImageLinkModal();
+    });
 }
 
 function openEditTodoModal(todo) {
@@ -593,12 +644,29 @@ function openReflectionModal(note = null) {
         reflectionTitleInput.value = note.title;
         reflectionContentInput.value = note.content;
         activeColor = note.color;
+        // Handle image
+        if (note.imageUrl) {
+            activeReflectionImageUrl = note.imageUrl;
+            reflectionImagePreview.src = note.imageUrl;
+            reflectionImagePreviewContainer.classList.remove('hidden');
+            imageLinkInput.value = note.imageUrl;
+        } else {
+            activeReflectionImageUrl = null;
+            reflectionImagePreviewContainer.classList.add('hidden');
+            reflectionImagePreview.src = '';
+            imageLinkInput.value = '';
+        }
     } else {
         activeReflectionId = null;
         reflectionModalTitle.textContent = "New Reflection";
         reflectionTitleInput.value = '';
         reflectionContentInput.value = '';
         activeColor = 'pink';
+        // Reset image for new note
+        activeReflectionImageUrl = null;
+        reflectionImagePreviewContainer.classList.add('hidden');
+        reflectionImagePreview.src = '';
+        imageLinkInput.value = ''; // Also clear the input for next time
     }
     updateColorTags();
     reflectionModal.classList.remove('hidden');
@@ -607,7 +675,14 @@ function openReflectionModal(note = null) {
 
 function closeReflectionModal() {
     reflectionModal.classList.remove('active');
-    setTimeout(() => reflectionModal.classList.add('hidden'), 300);
+    setTimeout(() => {
+        reflectionModal.classList.add('hidden');
+        // Also reset image state when modal is fully closed
+        activeReflectionImageUrl = null;
+        reflectionImagePreviewContainer.classList.add('hidden');
+        reflectionImagePreview.src = '';
+        imageLinkInput.value = '';
+    }, 300);
 }
 
 function updateColorTags() {
