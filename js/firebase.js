@@ -5,7 +5,7 @@ import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase
 
 // Firebase Setup
 const firebaseConfig = {
-    apiKey: "",
+    apiKey: "AIzaSyAdVV6m_OlSaXYwO7TH8EJANSJfTBhUtD0", 
     authDomain: "preggyjourney-505cc.firebaseapp.com",
     projectId: "preggyjourney-505cc",
     storageBucket: "preggyjourney-505cc.firebasestorage.app",
@@ -16,10 +16,11 @@ const firebaseConfig = {
 
 let configError = false;
 
-if (!firebaseConfig) {
-    console.error("Error: Firebase configuration is missing.");
+if (!firebaseConfig || !firebaseConfig.apiKey || firebaseConfig.apiKey === "YOUR_API_KEY_HERE") {
+    console.error("Error: Firebase configuration is missing or incomplete. Please add your API Key.");
     configError = true;
 }
+
 
 let app, auth, db;
 
@@ -30,3 +31,4 @@ if (!configError) {
 }
 
 export { auth, db, configError };
+
