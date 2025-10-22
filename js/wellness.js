@@ -279,7 +279,7 @@ function formatWeekDisplay(d) {
     const monday = new Date(getWeekId(d) + 'T00:00:00Z');
     const sunday = new Date(monday);
     sunday.setDate(monday.getDate() + 6);
-    
+
     const options = { month: 'short', day: 'numeric', timeZone: 'UTC' };
     const mondayStr = monday.toLocaleDateString('en-US', options);
     const sundayStr = sunday.toLocaleDateString('en-US', options);
@@ -303,9 +303,9 @@ export async function initializeWellness(userId, onWellnessDataUpdate) {
             loadWellnessForDate(wellnessHistoryCurrentDate, onWellnessDataUpdate);
         } else {
             // If it doesn't exist, create it with the start date from the default object
-            setDoc(dailyWellnessRef, { 
-                pregnancyStartDate: defaultWellnessData.pregnancyStartDate, 
-                pregnancyEndDate: defaultWellnessData.pregnancyEndDate 
+            setDoc(dailyWellnessRef, {
+                pregnancyStartDate: defaultWellnessData.pregnancyStartDate,
+                pregnancyEndDate: defaultWellnessData.pregnancyEndDate
             });
         }
     });
@@ -341,17 +341,17 @@ async function loadWellnessForDate(date, onWellnessDataUpdate) {
     const weekId = getWeekId(date);
     const currentWeekId = getWeekId(new Date());
     isHistoryView = (weekId !== currentWeekId);
-    
+
     wellnessWeekDisplay.textContent = formatWeekDisplay(date);
 
     const userId = getCurrentUserId();
     wellnessDataRef = doc(db, `users/${userId}/wellness`, weekId);
-    
+
     await initializeWellnessData(wellnessDataRef); // Ensure doc exists before listening
 
     unsubscribeWellnessData = onSnapshot(wellnessDataRef, (docSnap) => {
         const firestoreData = docSnap.exists() ? docSnap.data() : defaultWellnessData;
-        
+
         // Merge daily data (like start date) with the weekly log data.
         wellnessData = { ...defaultWellnessData, ...dailyWellnessData, ...firestoreData };
 
@@ -405,7 +405,7 @@ function setupEventListeners() {
             await updateDoc(wellnessDataRef, { [`weeklyLog.${selectedDayKey}.waterIntake`]: newIntake });
         }
     });
-    
+
     moodLogButtons.addEventListener('click', async (e) => {
         const button = e.target.closest('.mood-btn');
         if(!button || button.disabled) return;
@@ -431,9 +431,9 @@ function setupEventListeners() {
         const newStartDate = startDateInput.value; let newEndDate = endDateInput.value;
         if (newStartDate) {
             if (!newEndDate) { const startDate = new Date(newStartDate); startDate.setDate(startDate.getDate() + (40 * 7)); newEndDate = startDate.toISOString().split('T')[0]; }
-            
+
             // Save to the 'daily' document. The onSnapshot listener will handle the UI updates.
-            const userDocRef = doc(db, `users/${getCurrentUserId()}/wellness`, 'daily'); 
+            const userDocRef = doc(db, `users/${getCurrentUserId()}/wellness`, 'daily');
             await setDoc(userDocRef, { pregnancyStartDate: newStartDate, pregnancyEndDate: newEndDate }, { merge: true });
         }
         closeStartDateModal();
@@ -454,10 +454,10 @@ function setupEventListeners() {
         const weekId = getWeekId(sleepModalCurrentDate);
         const sleepDocRef = doc(db, `users/${getCurrentUserId()}/wellness`, weekId);
         await setDoc(sleepDocRef, { sleep: newSleepData }, { merge: true });
-        
+
         closeSleepModal();
     });
-    
+
     manageSupplementsBtnHeader.addEventListener('click', () => openSupplementModal(new Date()));
     nutritionHistoryBtn.addEventListener('click', openNutritionHistoryModal);
     nutritionHistoryCloseBtn.addEventListener('click', closeNutritionHistoryModal);
@@ -466,7 +466,7 @@ function setupEventListeners() {
     manageSupplementsModal.addEventListener('click', e => e.target === manageSupplementsModal && closeSupplementModal());
     addSupplementBtn.addEventListener('click', handleAddSupplement);
     newSupplementInput.addEventListener('keyup', e => e.key === 'Enter' && handleAddSupplement());
-    
+
     nutritionHistoryPrevBtn.addEventListener('click', () => {
         nutritionHistoryCurrentDate.setDate(nutritionHistoryCurrentDate.getDate() - 7);
         populateNutritionHistory(nutritionHistoryCurrentDate);
@@ -476,7 +476,7 @@ function setupEventListeners() {
         nutritionHistoryCurrentDate.setDate(nutritionHistoryCurrentDate.getDate() + 7);
         populateNutritionHistory(nutritionHistoryCurrentDate);
     });
-    
+
     wellnessPrevWeekBtn.addEventListener('click', () => {
         const newDate = new Date(wellnessHistoryCurrentDate);
         newDate.setDate(newDate.getDate() - 7);
@@ -488,7 +488,7 @@ function setupEventListeners() {
         newDate.setDate(newDate.getDate() + 7);
         loadWellnessForDate(newDate, () => {});
     });
-    
+
     sleepPrevWeekBtn.addEventListener('click', () => {
         sleepModalCurrentDate.setDate(sleepModalCurrentDate.getDate() - 7);
         populateSleepModal(sleepModalCurrentDate);
@@ -562,7 +562,7 @@ function setupEventListeners() {
 
 export function updateDashboardUI() {
     if (!wellnessData || Object.keys(wellnessData).length === 0) return;
-    
+
     const dayData = wellnessData.weeklyLog[selectedDayKey] || {};
     const mood = dayData.mood || '😐';
     const energy = dayData.energy || 3;
@@ -570,20 +570,20 @@ export function updateDashboardUI() {
 
     updateDailySummary(mood, energy, waterIntake);
     updateHydrationCircle(waterIntake);
-    updateNutritionTracker(); 
+    updateNutritionTracker();
     updateSleepMonitor();
     updateMoodLog(mood);
     updateEnergyLog(energy);
     updateMoodAndEnergyInsight();
     updateDynamicContent();
-    
+
     // --- NEW LOGIC FOR DISABLING CONTROLS ---
 
     // 1. Get today's details
     const todayDate = new Date();
     const todayDayIndex = (todayDate.getDay() + 6) % 7; // Today's index (Mon=0...Sun=6)
     const todayKey = days[todayDayIndex];
-    
+
     // 2. Check if we are viewing the current week
     const currentWeekId = getWeekId(todayDate);
     const chartWeekId = getWeekId(wellnessHistoryCurrentDate);
@@ -601,7 +601,7 @@ export function updateDashboardUI() {
 }
 
 function updateDailySummary(mood, energy, waterIntake) {
-    const lastNightSleep = calculateLastNightSleep(); 
+    const lastNightSleep = calculateLastNightSleep();
     const energyMap = { 1: { level: 'Very Low', color: 'text-red-400' }, 2: { level: 'Low', color: 'text-yellow-400' }, 3: { level: 'Moderate', color: 'text-green-400' }, 4: { level: 'Good', color: 'text-teal-400' }, 5: { level: 'High', color: 'text-purple-400' } };
 
     document.getElementById('summary-mood').textContent = mood;
@@ -654,10 +654,10 @@ function updateNutritionTracker() {
 
     const allMealNutrients = getMealNutrients();
     const currentMealPlanData = getCurrentMealPlan();
-    
+
     const dailyGoals = { iron: 8, calcium: 10, folate: 10, fiber: 8 };
     const totals = { iron: 0, calcium: 0, folate: 0, fiber: 0 };
-    
+
     if (currentMealPlanData) {
         for (const mealKey in currentMealPlanData) {
             if (currentMealPlanData[mealKey] && typeof currentMealPlanData[mealKey] === 'object') {
@@ -685,8 +685,8 @@ function updateNutritionTracker() {
 function getStatusFromAI(statusString) {
     statusString = (statusString || 'low').toLowerCase();
      let status, color, bgColor, percentage;
-    if (statusString === 'good') { status = 'Good'; color = 'text-green-400'; bgColor = 'bg-green-500'; percentage = 90; } 
-    else if (statusString === 'okay') { status = 'Okay'; color = 'text-yellow-400'; bgColor = 'bg-yellow-500'; percentage = 60; } 
+    if (statusString === 'good') { status = 'Good'; color = 'text-green-400'; bgColor = 'bg-green-500'; percentage = 90; }
+    else if (statusString === 'okay') { status = 'Okay'; color = 'text-yellow-400'; bgColor = 'bg-yellow-500'; percentage = 60; }
     else { status = 'Low'; color = 'text-red-400'; bgColor = 'bg-red-500'; percentage = 25; }
     return { status, percentage, color, bgColor };
 }
@@ -694,8 +694,8 @@ function getStatusFromAI(statusString) {
 function calculateNutrientStatus(total, goal) {
     const percentage = goal > 0 ? Math.min(Math.round((total / goal) * 100), 100) : 0;
     let status, color, bgColor;
-    if (percentage >= 80) { status = 'Good'; color = 'text-green-400'; bgColor = 'bg-green-500'; } 
-    else if (percentage >= 40) { status = 'Okay'; color = 'text-yellow-400'; bgColor = 'bg-yellow-500'; } 
+    if (percentage >= 80) { status = 'Good'; color = 'text-green-400'; bgColor = 'bg-green-500'; }
+    else if (percentage >= 40) { status = 'Okay'; color = 'text-yellow-400'; bgColor = 'bg-yellow-500'; }
     else { status = 'Low'; color = 'text-red-400'; bgColor = 'bg-red-500'; }
     return { status, percentage, color, bgColor };
 }
@@ -741,7 +741,7 @@ function calculateSleepDuration(sleepTimeStr, wakeTimeStr) {
 
 function calculateLastNightSleep() {
     const dayIndex = days.indexOf(selectedDayKey);
-    const sleepDayIndex = dayIndex === 0 ? 6 : dayIndex - 1; 
+    const sleepDayIndex = dayIndex === 0 ? 6 : dayIndex - 1;
     const sleepDayKey = days[sleepDayIndex];
     const { sleep, wake } = wellnessData.sleep[sleepDayKey] || { sleep: '', wake: '' };
     const hours = calculateSleepDuration(sleep, wake);
@@ -793,7 +793,7 @@ function updateMoodAndEnergyInsight() {
     } else {
         insight = "A steady mood and energy level is a great sign of balance. Keep it up!";
     }
-    
+
     if (insightEl) insightEl.textContent = insight;
 }
 
@@ -803,7 +803,7 @@ async function handleSymptomCheck() {
     symptomLoader.classList.remove('hidden'); symptomBtnText.textContent = 'Analyzing...'; symptomCheckBtn.disabled = true; symptomResponseEl.innerHTML = '';
     const systemPrompt = `You are a caring wellness assistant for pregnant women. Analyze the symptom, provide potential non-medical causes and gentle remedies. Crucially, always include a disclaimer to consult a doctor. Your response must be ONLY a valid JSON object matching this structure: { "possibleCauses": string[], "gentleRemedies": string[], "disclaimer": string }.`;
     const userQuery = `My symptom today: "${symptomText}"`;
-    const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
+    const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; // Replace with your actual API key handling
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
     const payload = {
         contents: [{ parts: [{ text: userQuery }] }],
@@ -845,7 +845,7 @@ function displaySymptomResponse(data) {
 
 export function updateWellnessChartData() {
     if (!wellnessChart || !wellnessData.weeklyLog) return;
-    
+
     const energyData = days.map(day => (wellnessData.weeklyLog[day] || {}).energy || 0);
     const moodData = days.map(day => moodToValue[(wellnessData.weeklyLog[day] || {}).mood] || 0);
     const sleepData = days.map(day => {
@@ -855,7 +855,7 @@ export function updateWellnessChartData() {
         const { sleep, wake } = wellnessData.sleep[sleepDayKey] || {};
         return calculateSleepDuration(sleep, wake);
     });
-    
+
     wellnessChart.data.datasets[0].data = energyData;
     wellnessChart.data.datasets[1].data = moodData;
     wellnessChart.data.datasets[2].data = sleepData;
@@ -899,7 +899,7 @@ function updateWeeklyWellnessInsight(energyData, moodData, sleepData) {
     } else {
         insight = "You've been consistent with your tracking. This weekly view is great for spotting patterns over time.";
     }
-    
+
     insightEl.textContent = insight;
 }
 
@@ -910,7 +910,7 @@ export function renderWellnessChart() {
     }
     const canvas = document.getElementById('wellnessChart');
     const ctx = canvas.getContext('2d');
-    
+
     const data = {
         labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
         datasets: [
@@ -929,22 +929,22 @@ export function renderWellnessChart() {
                 if (activePoints.length === 0) return;
 
                 const dataIndex = activePoints[0].index; // Clicked day's index (Mon=0...Sun=6)
-                
+
                 // 1. Get today's details
                 const todayDate = new Date();
                 const todayDayIndex = (todayDate.getDay() + 6) % 7; // Today's index (Mon=0...Sun=6)
-                
+
                 // 2. Check if we are viewing the current week or a past week
                 const currentWeekId = getWeekId(todayDate);
                 const chartWeekId = getWeekId(wellnessHistoryCurrentDate);
                 const isCurrentWeek = currentWeekId === chartWeekId;
-                
+
                 // 3. Determine if editing is allowed
                 // Allow if:
                 //    a) We are on a past week (!isCurrentWeek)
                 //    b) We are on the current week AND the clicked day is *before* today
                 const canEdit = !isCurrentWeek || (isCurrentWeek && dataIndex < todayDayIndex);
-                
+
                 if (canEdit) {
                     const dayKey = days[dataIndex];
                     openEditDayModal(dayKey);
@@ -955,19 +955,19 @@ export function renderWellnessChart() {
                 const canvas = wellnessChart.canvas;
                 if (chartElement[0]) {
                     const dataIndex = chartElement[0].index; // Hovered day's index (Mon=0...Sun=6)
-                    
+
                     const todayDate = new Date();
                     const todayDayIndex = (todayDate.getDay() + 6) % 7; // Today's index (Mon=0...Sun=6)
-                    
+
                     const currentWeekId = getWeekId(todayDate);
                     const chartWeekId = getWeekId(wellnessHistoryCurrentDate);
                     const isCurrentWeek = currentWeekId === chartWeekId;
-                    
+
                     // Allow pointer if:
                     //    a) We are on a past week (!isCurrentWeek)
                     //    b) We are on the current week AND the hovered day is *before* today
                     const canEdit = !isCurrentWeek || (isCurrentWeek && dataIndex < todayDayIndex);
-                    
+
                     canvas.style.cursor = canEdit ? 'pointer' : 'default';
                 } else {
                     canvas.style.cursor = 'default';
@@ -996,7 +996,7 @@ function updateDynamicContent() {
     };
     const size = babySizes[diffWeeks] || {fruit: 'a little miracle', emoji: '✨'};
     babyGrowthSnapshotEl.innerHTML = `Week ${diffWeeks} — baby is the size of a ${size.fruit} ${size.emoji}`;
-    
+
     // --- NEW Wellness Tip Logic ---
     const wellnessTipEl = document.getElementById('wellness-tip');
     const tip = wellnessTipsByWeek[diffWeeks] || "Stay hydrated and listen to your body's needs today.";
@@ -1039,7 +1039,7 @@ async function populateSleepModal(date) {
 
     sleepScheduleContainer.innerHTML = '';
     const nightLabels = ["Sun/Mon", "Mon/Tue", "Tue/Wed", "Wed/Thu", "Thu/Fri", "Fri/Sat", "Sat/Sun"];
-    
+
     sleepDays.forEach((day, index) => {
         const dayData = sleepDataForWeek[day] || { sleep: '', wake: '' };
         const item = document.createElement('div');
@@ -1055,7 +1055,7 @@ function closeSleepModal() { sleepModal.classList.remove('active'); setTimeout((
 
 
 async function fetchWithBackoff(url, payload, maxRetries = 5) {
-    let delay = 1000; 
+    let delay = 1000;
     for (let i = 0; i < maxRetries; i++) {
         try {
             const response = await fetch(url, {
@@ -1065,16 +1065,17 @@ async function fetchWithBackoff(url, payload, maxRetries = 5) {
             });
 
             if (response.status === 429) {
-                console.warn(`Rate limited. Retrying in ${delay / 1000}s...`);
+                // Rate limited, wait and retry
+                //console.warn(`Rate limited. Retrying in ${delay / 1000}s...`); // Optional: Log retries
                 await new Promise(resolve => setTimeout(resolve, delay));
-                delay *= 2; 
+                delay *= 2; // Exponential backoff
                 continue;
             }
-            
-            return response;
+
+            return response; // Success or non-retryable error
         } catch (error) {
             console.error('Fetch failed:', error);
-            if (i === maxRetries - 1) throw error;
+            if (i === maxRetries - 1) throw error; // Rethrow after last retry
             await new Promise(resolve => setTimeout(resolve, delay));
             delay *= 2;
         }
@@ -1097,24 +1098,31 @@ export async function generateAllWellnessTips() {
     // Show loaders and clear previous content
     const allContainers = [partnerTipsContainer, hydrationSnacksContainer, partnerAvoidContainer, hydrationAvoidContainer];
     const allLoaders = [partnerTipsLoader, hydrationSnacksLoader, partnerAvoidLoader, hydrationAvoidLoader];
-    
+
     allLoaders.forEach(loader => loader.style.display = 'block');
     allContainers.forEach(container => {
         container.innerHTML = '';
-        const loader = container.nextElementSibling; // Assumes loader is the next sibling
-        if(loader && loader.tagName === 'P') container.appendChild(loader);
+        const loader = container.querySelector('p[id$="-loader"]'); // Find the specific loader p tag
+        if(loader) container.appendChild(loader);
     });
+
 
     try {
         if (!wellnessData.pregnancyStartDate) {
-            throw new Error("Pregnancy start date is not set.");
+            console.warn("Pregnancy start date is not set. Cannot generate tips yet.");
+            allContainers.forEach(container => {
+                 container.innerHTML = `<p class="text-gray-400">Enter pregnancy start date in Baby Growth section to get tips.</p>`
+                 const loader = container.querySelector('p[id$="-loader"]');
+                 if(loader) loader.style.display = 'none';
+            });
+            return; // Exit if no start date
         }
 
         // --- 1. Gather all context ---
         const pregnancyStartDate = new Date(wellnessData.pregnancyStartDate);
         const today = new Date();
         const diffTime = Math.abs(today - pregnancyStartDate);
-        const pregnancyWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) || 5; // Default to 5 if calculation is 0
+        const pregnancyWeek = Math.max(1, Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7))); // Ensure week is at least 1
         const todayIndex = today.getDay();
         const dayKey = days[todayIndex === 0 ? 6 : todayIndex - 1];
         const currentMealPlanData = getCurrentMealPlan();
@@ -1134,14 +1142,14 @@ export async function generateAllWellnessTips() {
         const systemPrompt = `You are an expert prenatal wellness assistant. Your task is to generate four distinct sets of tips based on the user's data.
         Your response MUST be ONLY a valid JSON object with the following four keys: "partnerTips", "hydrationSnacks", "partnerAvoid", "hydrationAvoid".
         Each key must contain an array of 2-3 short, actionable string tips.
-        - partnerTips: Supportive tips for the partner.
-        - hydrationSnacks: Hydration and snacking tips for the user.
-        - partnerAvoid: Things the partner should avoid saying or doing.
-        - hydrationAvoid: Foods or drinks the user should avoid.`;
-        
+        - partnerTips: Supportive tips for the partner based on week, mood, and energy.
+        - hydrationSnacks: Hydration and snacking tips for the user based on week and meal plan.
+        - partnerAvoid: Things the partner should avoid saying or doing based on week, mood, energy.
+        - hydrationAvoid: General pregnancy food/drink safety reminders, possibly referencing today's meal plan IF relevant items are present.`;
+
         const userQuery = `Context for today:\n- Pregnancy Week: ${pregnancyWeek}\n- Today's Meal Plan: ${mealPlanString}\n- Her Mood: ${mood}\n- Her Energy Level (1-5): ${energy}\n\nGenerate all four sets of tips.`;
-        
-        const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
+
+        const apiKey = ""; // API Key is handled by the environment
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
         const payload = {
             contents: [{ parts: [{ text: userQuery }] }],
@@ -1149,24 +1157,35 @@ export async function generateAllWellnessTips() {
             generationConfig: { responseMimeType: "application/json" }
         };
 
-        // --- 3. Make the single API call ---
+        // --- 3. Make the single API call with backoff ---
         const response = await fetchWithBackoff(apiUrl, payload);
-        if (!response.ok) throw new Error('API response not OK');
-        
+        if (!response.ok) throw new Error(`API response not OK: ${response.status} ${response.statusText}`);
+
         const result = await response.json();
-        const allTips = JSON.parse(result.candidates[0].content.parts[0].text);
+
+        // --- Error check API response structure ---
+        if (!result.candidates || !result.candidates[0] || !result.candidates[0].content || !result.candidates[0].content.parts || !result.candidates[0].content.parts[0].text) {
+             console.error("Unexpected API response structure:", result);
+             throw new Error("Invalid response format from API.");
+        }
+
+        const jsonString = result.candidates[0].content.parts[0].text;
+        const allTips = JSON.parse(jsonString); // Parse the JSON string
 
         // --- 4. Distribute the tips to the UI ---
         const renderTips = (container, tips) => {
-            container.innerHTML = '';
-            if (tips && tips.length > 0) {
+            const loader = container.querySelector('p[id$="-loader"]');
+            if(loader) loader.style.display = 'none'; // Hide loader first
+            container.innerHTML = ''; // Clear previous content *after* hiding loader
+            if (tips && Array.isArray(tips) && tips.length > 0) {
                 tips.forEach(tip => {
                     const li = document.createElement('li');
                     li.textContent = tip;
                     container.appendChild(li);
                 });
             } else {
-                container.innerHTML = `<p>Could not generate tips at the moment.</p>`;
+                 console.warn("Received empty or invalid tips for container:", container.id, tips);
+                 container.innerHTML = `<li class="text-gray-400">Helpful tips coming soon!</li>`; // Fallback message
             }
         };
 
@@ -1178,12 +1197,27 @@ export async function generateAllWellnessTips() {
     } catch (error) {
         console.error("Failed to generate combined wellness tips:", error);
         // Set default tips on error
-        partnerTipsContainer.innerHTML = `<li>Offer a gentle back rub tonight.</li><li>Make sure she has a full water bottle.</li>`;
-        hydrationSnacksContainer.innerHTML = `<li>Keep a water bottle handy to sip throughout the day.</li><li>A handful of almonds can be a great energy-boosting snack.</li>`;
-        partnerAvoidContainer.innerHTML = `<li>Avoid commenting on her changing body unless it's a compliment.</li>`;
-        hydrationAvoidContainer.innerHTML = `<li>Avoid unpasteurized juices or milk.</li><li>Limit caffeine intake.</li>`;
-    } finally {
-        allLoaders.forEach(loader => loader.style.display = 'none');
+        const defaultTips = {
+            partnerTips: ["Offer a gentle back rub tonight.", "Make sure she has a full water bottle."],
+            hydrationSnacks: ["Keep a water bottle handy to sip throughout the day.", "A handful of almonds can be a great energy-boosting snack."],
+            partnerAvoid: ["Avoid commenting on her changing body unless it's a compliment."],
+            hydrationAvoid: ["Avoid unpasteurized juices or milk.", "Limit caffeine intake."]
+        };
+        const renderDefaultTips = (container, tips) => {
+             const loader = container.querySelector('p[id$="-loader"]');
+             if(loader) loader.style.display = 'none';
+             container.innerHTML = '';
+             tips.forEach(tip => {
+                 const li = document.createElement('li');
+                 li.textContent = tip;
+                 container.appendChild(li);
+             });
+         };
+         renderDefaultTips(partnerTipsContainer, defaultTips.partnerTips);
+         renderDefaultTips(hydrationSnacksContainer, defaultTips.hydrationSnacks);
+         renderDefaultTips(partnerAvoidContainer, defaultTips.partnerAvoid);
+         renderDefaultTips(hydrationAvoidContainer, defaultTips.hydrationAvoid);
+
     }
 }
 
@@ -1192,7 +1226,7 @@ function openEditDayModal(dayKey) {
     editDayData = {}; // Clear previous data
     editDayData.dayKey = dayKey;
     const dayData = wellnessData.weeklyLog[dayKey] || {};
-    
+
     // Set initial values for editing
     editDayData.mood = dayData.mood || '😐';
     editDayData.energy = dayData.energy || 3;
@@ -1211,25 +1245,15 @@ function openEditDayModal(dayKey) {
         btn.classList.toggle('selected', parseInt(btn.dataset.energy) === editDayData.energy);
     });
     editHydrationText.textContent = editDayData.waterIntake;
-    
+
     editDayModal.classList.remove('hidden');
     setTimeout(() => {
-        const content = editDayModal.querySelector('#edit-day-modal-content');
-        if (content) {
-            content.parentElement.classList.add('active');
-        } else {
-            editDayModal.classList.add('active');
-        }
+        editDayModal.classList.add('active'); // Add active class to the main modal overlay
     }, 10);
 }
 
 function closeEditDayModal() {
-    const content = editDayModal.querySelector('#edit-day-modal-content');
-    if (content) {
-        content.parentElement.classList.remove('active');
-    } else {
-        editDayModal.classList.remove('active');
-    }
+    editDayModal.classList.remove('active'); // Remove active class from the main modal overlay
     setTimeout(() => editDayModal.classList.add('hidden'), 300);
 }
 
@@ -1256,4 +1280,325 @@ export function unloadWellness() {
         wellnessChart.destroy();
         wellnessChart = null;
     }
+}
+
+// --- Supplement Functions --- (Keep these grouped for clarity)
+
+function openSupplementModal(date = new Date()) {
+    supplementLogDate = date;
+    const dateString = date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+    manageSupplementsModal.querySelector('h3').textContent = `Log Supplements for ${dateString}`;
+
+    populateSupplementList();
+    manageSupplementsModal.classList.remove('hidden');
+    setTimeout(() => manageSupplementsModal.classList.add('active'), 10);
+}
+function closeSupplementModal() {
+    if (unsubscribeSupplementLog) unsubscribeSupplementLog();
+    manageSupplementsModal.classList.remove('active');
+    setTimeout(() => manageSupplementsModal.classList.add('hidden'), 300);
+}
+
+async function populateSupplementList() {
+    supplementListContainer.innerHTML = `<p class="text-center text-gray-400">Loading supplements...</p>`;
+
+    const weekId = getWeekId(supplementLogDate);
+    const dayIndex = (supplementLogDate.getDay() + 6) % 7;
+    const dayKey = days[dayIndex];
+    const userId = getCurrentUserId();
+    const wellnessDocRefForLog = doc(db, `users/${userId}/wellness`, weekId);
+
+    if (unsubscribeSupplementLog) unsubscribeSupplementLog();
+
+    // Use try-catch for Firestore operations
+    try {
+        unsubscribeSupplementLog = onSnapshot(wellnessDocRefForLog, (docSnap) => {
+            const wellnessDataForLog = docSnap.exists() ? docSnap.data() : defaultWellnessData;
+            // Ensure dailySupplements exists and the dayKey exists within it
+            const loggedSupplements = (wellnessDataForLog.dailySupplements && wellnessDataForLog.dailySupplements[dayKey]) ? wellnessDataForLog.dailySupplements[dayKey] : [];
+
+            supplementListContainer.innerHTML = ''; // Clear loading message
+
+            if (userSupplements.length === 0) {
+                supplementListContainer.innerHTML = `<p class="text-center text-gray-400">No supplements added yet.</p>`;
+                return;
+            }
+
+            userSupplements.forEach(supp => {
+                const item = document.createElement('div');
+                const isLogged = loggedSupplements.includes(supp);
+                item.className = `flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer`;
+                if (isLogged) {
+                    item.classList.add('bg-purple-500/20', 'border', 'border-purple-400'); // Add border for logged items
+                }
+                const nutrients = supplementNutrients[supp] || { iron: '?', calcium: '?', folate: '?' };
+                 // Simplified nutrient display
+                const nutrientString = `Fe: ${nutrients.iron ?? '?'} | Ca: ${nutrients.calcium ?? '?'} | Fo: ${nutrients.folate ?? '?'}`;
+
+                item.innerHTML = `
+                    <div class="flex-1 pr-2">
+                        <span class="font-semibold text-white">${supp}</span>
+                         <div class="text-xs mt-1 text-gray-400">${nutrientString}</div>
+                    </div>
+                    <div class="flex items-center">
+                         <button class="icon-btn delete-supp-btn mr-1" data-supp="${supp}" title="Remove '${supp}' from your list permanently">
+                            <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                        ${isLogged
+                            ? '<svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'
+                            : '<svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'}
+                    </div>`;
+                // Log/Unlog click listener on the main item div
+                item.addEventListener('click', (e) => {
+                    // Prevent toggling if delete button was clicked
+                    if (!e.target.closest('.delete-supp-btn')) {
+                       toggleSupplementForDay(supp);
+                    }
+                });
+                // Delete button listener
+                item.querySelector('.delete-supp-btn').addEventListener('click', (e) => {
+                     e.stopPropagation(); // Prevent the main click listener
+                     deleteSupplement(supp);
+                 });
+                supplementListContainer.appendChild(item);
+            });
+        }, (error) => { // Add error handling for the snapshot listener
+            console.error("Error listening to wellness data for supplement log:", error);
+            supplementListContainer.innerHTML = `<p class="text-center text-red-400">Error loading supplement log.</p>`;
+        });
+    } catch (error) {
+         console.error("Error setting up supplement log listener:", error);
+         supplementListContainer.innerHTML = `<p class="text-center text-red-400">Error loading supplement log.</p>`;
+    }
+}
+
+
+async function toggleSupplementForDay(suppName) {
+    const dayIndex = (supplementLogDate.getDay() + 6) % 7;
+    const dayKey = days[dayIndex];
+    const weekId = getWeekId(supplementLogDate);
+    const userId = getCurrentUserId();
+    const wellnessDocRefForLog = doc(db, `users/${userId}/wellness`, weekId);
+
+    try {
+        const docSnap = await getDoc(wellnessDocRefForLog);
+        const wellnessDataForLog = docSnap.exists() ? docSnap.data() : defaultWellnessData;
+        // Ensure dailySupplements and the specific day exists
+        const loggedSupplements = (wellnessDataForLog.dailySupplements && wellnessDataForLog.dailySupplements[dayKey]) ? wellnessDataForLog.dailySupplements[dayKey] : [];
+
+
+        const isLogged = loggedSupplements.includes(suppName);
+        const updateOperation = isLogged ? arrayRemove(suppName) : arrayUnion(suppName);
+
+        // Use setDoc with merge: true for robust updates
+        await setDoc(wellnessDocRefForLog, {
+            dailySupplements: {
+                [dayKey]: updateOperation
+            }
+        }, { merge: true });
+
+    } catch (error) {
+        console.error("Error toggling supplement:", error);
+        // Optionally show user feedback here
+    }
+}
+
+
+async function removeSupplementFromDay(suppName) {
+     const todayIndex = new Date().getDay();
+     const dayKey = days[(todayIndex === 0 ? 6 : todayIndex - 1)]; // Get today's key
+     const weekId = getWeekId(new Date()); // Ensure we're updating the current week document
+     const wellnessDocRefForUpdate = doc(db, `users/${getCurrentUserId()}/wellness`, weekId);
+
+     try {
+         await updateDoc(wellnessDocRefForUpdate, {
+             [`dailySupplements.${dayKey}`]: arrayRemove(suppName)
+         });
+     } catch (error) {
+         console.error("Error removing supplement from day:", error);
+     }
+}
+
+
+async function deleteSupplement(suppToDelete) {
+    try {
+        // Remove from the list
+        await updateDoc(userSupplementsRef, { list: arrayRemove(suppToDelete) });
+        // Remove associated nutrients
+        await updateDoc(supplementNutrientsRef, { [suppToDelete]: deleteField() });
+
+        // Remove from all daily logs across all relevant wellness docs (optional, but good practice)
+        // This is more complex, might require iterating through docs or using Cloud Functions for efficiency
+        // For now, removing from the main list is the primary action.
+        console.log(`Supplement '${suppToDelete}' removed from master list.`);
+
+    } catch (error) {
+        console.error("Error deleting supplement:", error);
+    }
+}
+
+async function handleAddSupplement() {
+    const userSupp = newSupplementInput.value.trim(); if (!userSupp) return;
+    supplementApiLoader.classList.remove('hidden'); addSupplementText.textContent = 'Checking...'; addSupplementBtn.disabled = true; supplementApiFeedback.classList.add('hidden');
+    const systemPrompt = "You are a prenatal nutritionist. Evaluate if a supplement is generally safe for pregnancy. Provide an estimated nutritional profile (integers 0-3) for iron, calcium, and folate. Fiber is not needed. Your response MUST be ONLY a valid JSON object matching this structure: { \"isSuitable\": boolean, \"supplementName\": string, \"reasoning\": string, \"nutrients\": { \"iron\": number, \"calcium\": number, \"folate\": number } }.";
+    const userQuery = `Evaluate this supplement for pregnancy: "${userSupp}"`; const apiKey = ""; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+    const payload = {
+        contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] },
+        generationConfig: { responseMimeType: "application/json" }
+    };
+     try {
+        const response = await fetchWithBackoff(apiUrl, payload); // Use fetchWithBackoff
+        if (!response.ok) throw new Error(`API error: ${response.status} ${response.statusText}`);
+
+        const result = await response.json();
+
+        if (!result.candidates || !result.candidates[0] || !result.candidates[0].content || !result.candidates[0].content.parts || !result.candidates[0].content.parts[0].text) {
+             console.error("Unexpected API response structure for supplement:", result);
+             throw new Error("Invalid response format from API.");
+        }
+
+        const text = result.candidates[0].content.parts[0].text;
+        const data = JSON.parse(text);
+
+        if (data.isSuitable) {
+            if (!userSupplements.includes(data.supplementName)) {
+                await updateDoc(userSupplementsRef, { list: arrayUnion(data.supplementName) });
+                if (supplementNutrientsRef && data.nutrients) {
+                    // Make sure nutrients object is valid before updating
+                    const validNutrients = {
+                        iron: typeof data.nutrients.iron === 'number' ? data.nutrients.iron : 0,
+                        calcium: typeof data.nutrients.calcium === 'number' ? data.nutrients.calcium : 0,
+                        folate: typeof data.nutrients.folate === 'number' ? data.nutrients.folate : 0,
+                        fiber: 0 // Explicitly set fiber to 0 as requested
+                    };
+                    await updateDoc(supplementNutrientsRef, { [data.supplementName]: validNutrients });
+                }
+                newSupplementInput.value = ''; showApiFeedback(`Success! "${data.supplementName}" was added.`, 'success', supplementApiFeedback);
+            } else { showApiFeedback(`"${data.supplementName}" is already on the list.`, 'warning', supplementApiFeedback); }
+        } else {
+            showApiFeedback(`<strong>Caution:</strong><br>${data.reasoning}`, 'error', supplementApiFeedback);
+        }
+    } catch (error) {
+        console.error("Gemini API call failed for supplement:", error);
+        showApiFeedback("Sorry, I couldn't verify that right now. Please try again.", 'error', supplementApiFeedback);
+    }
+    finally { supplementApiLoader.classList.add('hidden'); addSupplementText.textContent = 'Check & Add Supplement'; addSupplementBtn.disabled = false; }
+}
+
+
+// --- Nutrition History Functions --- (Keep these grouped)
+
+function openNutritionHistoryModal() {
+    nutritionHistoryCurrentDate = new Date(); // Reset to current week
+    populateNutritionHistory(nutritionHistoryCurrentDate);
+    nutritionHistoryModal.classList.remove('hidden');
+    setTimeout(() => nutritionHistoryModal.classList.add('active'), 10);
+}
+
+function closeNutritionHistoryModal() {
+    nutritionHistoryModal.classList.remove('active');
+    setTimeout(() => nutritionHistoryModal.classList.add('hidden'), 300);
+}
+
+async function populateNutritionHistory(date) {
+    nutritionHistoryContainer.innerHTML = '<p class="text-center text-gray-400">Loading history...</p>';
+    nutritionHistoryWeekDisplay.textContent = formatWeekDisplay(date);
+
+    const weekId = getWeekId(date);
+    const userId = getCurrentUserId();
+    if (!userId) {
+        nutritionHistoryContainer.innerHTML = '<p class="text-center text-red-400">Could not load data. User not found.</p>';
+        return;
+    }
+
+    try {
+        const weekMealPlanRef = doc(db, `users/${userId}/mealPlans`, weekId);
+        const weekMealPlanSnap = await getDoc(weekMealPlanRef);
+        const mealPlanForWeek = weekMealPlanSnap.exists() ? weekMealPlanSnap.data() : defaultMealPlan;
+
+        const weekWellnessRef = doc(db, `users/${userId}/wellness`, weekId);
+        const weekWellnessSnap = await getDoc(weekWellnessRef);
+        const wellnessForWeek = weekWellnessSnap.exists() ? weekWellnessSnap.data() : defaultWellnessData;
+
+
+        nutritionHistoryContainer.innerHTML = ''; // Clear loading message
+        const allMealNutrients = getMealNutrients();
+        const dailyGoals = { iron: 8, calcium: 10, folate: 10, fiber: 8 }; // Example goals
+
+        days.forEach((dayKey, index) => {
+            const dayTitle = dayTitles[dayKey];
+            const totals = { iron: 0, calcium: 0, folate: 0, fiber: 0 };
+            for (const mealKey in mealPlanForWeek) {
+                if (mealPlanForWeek[mealKey] && typeof mealPlanForWeek[mealKey] === 'object') {
+                    const mealName = mealPlanForWeek[mealKey][dayKey];
+                    if (mealName && allMealNutrients[mealName]) {
+                        const nutrients = allMealNutrients[mealName];
+                        totals.iron += nutrients.iron || 0;
+                        totals.calcium += nutrients.calcium || 0;
+                        totals.folate += nutrients.folate || 0;
+                        totals.fiber += nutrients.fiber || 0;
+                    }
+                }
+            }
+
+            // Ensure dailySupplements and the specific day exists
+            const daySupplements = (wellnessForWeek.dailySupplements && wellnessForWeek.dailySupplements[dayKey]) ? wellnessForWeek.dailySupplements[dayKey] : [];
+            daySupplements.forEach(suppName => {
+                if (supplementNutrients[suppName]) {
+                    const nutrients = supplementNutrients[suppName];
+                    totals.iron += nutrients.iron || 0;
+                    totals.calcium += nutrients.calcium || 0;
+                    totals.folate += nutrients.folate || 0;
+                    // Fiber is not typically in supplements, ignore here
+                }
+            });
+
+            const nutritionData = {
+                iron: calculateNutrientStatus(totals.iron, dailyGoals.iron),
+                calcium: calculateNutrientStatus(totals.calcium, dailyGoals.calcium),
+                folate: calculateNutrientStatus(totals.folate, dailyGoals.folate),
+                fiber: calculateNutrientStatus(totals.fiber, dailyGoals.fiber)
+            };
+
+            const item = document.createElement('div');
+            item.className = 'p-3 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors';
+            item.innerHTML = `
+                <h4 class="font-bold text-lg text-purple-300 mb-2">${dayTitle}</h4>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2 text-sm">
+                    <div>Iron: <span class="font-semibold ${nutritionData.iron.color}">${nutritionData.iron.status} (${nutritionData.iron.percentage}%)</span></div>
+                    <div>Calcium: <span class="font-semibold ${nutritionData.calcium.color}">${nutritionData.calcium.status} (${nutritionData.calcium.percentage}%)</span></div>
+                    <div>Folate: <span class="font-semibold ${nutritionData.folate.color}">${nutritionData.folate.status} (${nutritionData.folate.percentage}%)</span></div>
+                    <div>Fiber: <span class="font-semibold ${nutritionData.fiber.color}">${nutritionData.fiber.status} (${nutritionData.fiber.percentage}%)</span></div>
+                </div>
+            `;
+            const mondayOfRelevantWeek = new Date(getWeekId(date) + 'T00:00:00Z');
+            const dayDate = new Date(mondayOfRelevantWeek);
+            dayDate.setDate(mondayOfRelevantWeek.getDate() + index);
+
+            // Clicking a day in history opens the supplement log for THAT day
+            item.addEventListener('click', () => {
+                closeNutritionHistoryModal(); // Close history modal first
+                openSupplementModal(dayDate); // Open supplement log for the clicked day
+            });
+            nutritionHistoryContainer.appendChild(item);
+        });
+    } catch (error) {
+        console.error("Error fetching nutrition history:", error);
+        nutritionHistoryContainer.innerHTML = '<p class="text-center text-red-400">Could not load nutrition history.</p>';
+    }
+}
+
+// --- Utility Functions --- (Keep these grouped)
+
+function showApiFeedback(message, type, element) {
+    element.innerHTML = message;
+    element.className = 'text-sm p-3 rounded-md bg-opacity-20'; // Reset classes first
+    if (type === 'success') element.classList.add('bg-green-500', 'text-green-200');
+    else if (type === 'error') element.classList.add('bg-red-500', 'text-red-200');
+    else if (type === 'warning') element.classList.add('bg-yellow-500', 'text-yellow-200');
+    element.classList.remove('hidden');
+    // Auto-hide after a few seconds
+    setTimeout(() => {
+        element.classList.add('hidden');
+    }, 4000);
 }
