@@ -668,40 +668,31 @@
         </div>
     </div>
 
-    <!-- New Baby Message Modal -->
-    <div id="baby-message-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
-        <!-- **** ADDED glass-card class here **** -->
-        <div id="baby-message-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-md transform scale-95 opacity-0 transition-transform transition-opacity duration-300 text-center">
-             <h3 class="text-2xl font-bold mb-4 text-indigo-200">A Note From Baby 🍼</h3> <!-- Added emoji -->
-             <!-- Removed bg-white/5, glass-card provides background -->
-             <div id="baby-message-content" class="text-gray-200 text-lg p-6 rounded-lg min-h-[100px] flex items-center justify-center relative overflow-hidden">
-                 <!-- Optional: Add a subtle inner glow or pattern -->
-                 <div class="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-transparent to-blue-500/10 opacity-50 rounded-lg -z-10"></div>
-                Hi Mama, I’m just a tiny speck now, but I already feel your love 💕
-             </div>
-             <button id="baby-message-close-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors mt-6">Close</button>
-        </div>
-    </div>
-
-
-    <script type="module" src="./js/main.js"></script>
-</body>
-</html>
-
     <!-- New Baby Message Modal - UPDATED -->
     <div id="baby-message-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
-        <!-- Using glass-card for the main modal structure -->
-        <div id="baby-message-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-sm transform scale-95 opacity-0 transition-transform transition-opacity duration-300 text-center">
-             <!-- Updated Title with animated emoji -->
-             <h3 class="text-2xl font-bold mb-6 text-indigo-200 flex items-center justify-center gap-2">
+        <!-- 
+          UPDATES:
+          - Removed 'glass-card' and 'text-center' from this div.
+          - Added 'chat-bubble-style' for the light, transparent text message look.
+          - Made 'max-w-md' for a bit more space.
+        -->
+        <div id="baby-message-modal-content" class="chat-bubble-style p-6 md:p-8 rounded-lg w-full max-w-md transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
+             <!-- 
+               UPDATES:
+               - Title changed to "Mini Piggy" with animated emoji (Task 2 & 3).
+               - Aligned to the start (left).
+             -->
+             <h3 class="text-xl font-bold mb-4 flex items-center justify-start gap-2">
                  Mini Piggy <span class="baby-emoji-animate">👶</span>
              </h3>
-             <!-- Inner content styled like a chat bubble -->
-             <div id="baby-message-content" class="chat-bubble-style text-gray-800 text-lg p-4 rounded-lg min-h-[100px] flex items-center justify-center relative text-left shadow-md">
-                 <!-- Message text goes here -->
-                 Hi Mama, I’m just a tiny speck now, but I already feel your love 💕
+             <!-- 
+               UPDATES:
+               - Text color changed for readability on light background.
+             -->
+             <div id="baby-message-content" class="text-lg min-h-[80px] flex items-center justify-start relative">
+                Hi Mama, I’m just a tiny speck now, but I already feel your love 💕
              </div>
-             <!-- Close button removed -->
+             <!-- Close button removed (Task 1) -->
         </div>
     </div>
 
