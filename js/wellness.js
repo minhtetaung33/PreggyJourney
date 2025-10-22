@@ -66,11 +66,6 @@ const editHydrationText = document.getElementById('edit-hydration-text');
 const editDayModalCancelBtn = document.getElementById('edit-day-modal-cancel-btn');
 const editDayModalSaveBtn = document.getElementById('edit-day-modal-save-btn');
 
-// --- NEW DOM ELEMENTS FOR SNAPSHOT CARD ---
-const snapshotContentEl = document.getElementById('snapshot-content');
-const nextSnapshotBtn = document.getElementById('next-snapshot-btn');
-// --- END NEW DOM ELEMENTS ---
-
 
 let wellnessDataRef, symptomTrackerCollectionRef, userSupplementsRef, supplementNutrientsRef;
 let unsubscribeWellnessData, unsubscribeUserSupplements, unsubscribeSupplementNutrients, unsubscribeSupplementLog, unsubscribeDailyWellness;
@@ -89,12 +84,6 @@ let wellnessHistoryCurrentDate = new Date();
 let isHistoryView = false;
 let selectedDayKey = 'monday'; // The day being shown in the dashboard (e.g., 'monday')
 let editDayData = {}; // Temp storage for editing a day's data
-
-// --- NEW STATE FOR SNAPSHOT CARD ---
-let currentSnapshotWeek = -1;
-let currentSnapshotIndex = 0;
-const snapshotDisplayOrder = ['baby', 'tip', 'fact', 'partner']; // The 4 types of content to cycle through
-// --- END NEW STATE ---
 
 
 const defaultWellnessData = {
@@ -132,185 +121,48 @@ const defaultMealPlan = {
     dinner: { monday: "", tuesday: "", wednesday: "", thursday: "", friday: "", saturday: "", sunday: "" }
 };
 
-// --- NEW EXPANDED 40-WEEK CONTENT ---
-
-// 1. Baby Sizes (Weeks 1-40)
-const babySizes = {
-    1: "You're officially in week 1! It's the start of your cycle, so no baby yet, just hopeful planning!  planner 📅",
-    2: "This is likely when conception happens! The journey is just beginning. ✨",
-    3: "Your baby is a tiny ball of cells, called a blastocyst, smaller than a poppy seed. 🌱",
-    4: "Your baby is the size of a **poppy seed**! They're now an embryo settling in for the long haul. 🌱",
-    5: "Baby is the size of a **peppercorn**! They look more like a tiny tadpole than a person. 🌶️",
-    6: "About the size of a **sweet pea**! A heartbeat might be detectable on ultrasound now. 💖",
-    7: "Your little one is the size of a **blueberry**! They're busy growing tiny arm and leg buds. 🫐",
-    8: "Baby is the size of a **raspberry**! They're constantly moving, though you can't feel it yet. 🍓",
-    9: "The size of a **cherry**! Baby has tiny, distinct fingers and toes now. 🍒",
-    10: "Your baby is a **strawberry**! They've graduated from embryo to fetus. 🎉",
-    11: "Baby is the size of a **lime**! They're practicing swallowing and kicking. 🍈",
-    12: "The size of a **plum**! Baby's reflexes are developing, and they can make a tiny fist. ✊",
-    13: "Your baby is a **peach**! Welcome to the 2nd trimester! 🍑",
-    14: "Baby is the size of a **lemon**! They can squint, frown, and even suck their thumb. 🍋",
-    15: "About the size of an **apple**! Baby's skeleton is hardening, changing from soft cartilage to bone. 🍎",
-    16: "Your baby is an **avocado**! You might start to feel those first magical flutters soon. 🥑",
-    17: "The size of a **pear**! Baby's own fingerprints are forming. 🍐",
-    18: "Baby is a **bell pepper**! They're getting good at yawning and hiccuping. 🫑",
-    19: "About the size of a **mango**! A protective waxy coating (vernix) is forming on their skin. 🥭",
-    20: "Your baby is a **banana**! You're halfway there! 🍌",
-    21: "The size of a **large carrot**! You can *really* feel those kicks and jabs now. 🥕",
-    22: "Baby is the size of a **papaya**! They can hear your voice and other sounds now.  papaya 🧡",
-    23: "Your little one is a **grapefruit**! Their skin is still translucent, but that's changing fast.  grapefruit 🍊",
-    24: "Baby is the size of an **ear of corn**! Their lungs are developing branches of the respiratory 'tree.' 🌽",
-    25: "The size of an **acorn squash**! Baby's hair (if they have it) is growing and getting color. 🎃",
-    26: "Your baby is a **zucchini**! They are practicing 'breathing' by inhaling and exhaling amniotic fluid. 🥒",
-    27: "Baby is the size of a **head of cauliflower**! This marks the end of the 2nd trimester. 🥦",
-    28: "The size of a **large eggplant**! Welcome to the 3rd trimester! Baby can blink their eyes. 🍆",
-    29: "Your baby is a **butternut squash**! They are getting plumper and plumper every day. 💛",
-    30: "About the size of a **cabbage**! Baby is gaining about half a pound per week from here on out. 🥬",
-    31: "Baby is the size of a **coconut**! They're sleeping in cycles (just like a newborn). 🥥",
-    32: "The size of a **bunch of kale**! Baby's fingernails are fully formed. 🥬",
-    33: "Your baby is a **pineapple**! The bones in their skull aren't fused, which helps them fit through the birth canal. 🍍",
-    34: "Baby is the size of a **cantaloupe**! Their little systems are almost all good to go. 🍈",
-    35: "The size of a **honeydew melon**! Less room in there means you'll feel more wiggles and less 'kicks.' 🍈",
-    36: "Your baby is a **head of romaine lettuce**! They're in the home stretch! 🥬",
-    37: "Baby is the size of a **bunch of Swiss chard**! They are now considered 'early term.' 🌿",
-    38: "The size of a **pumpkin**! Baby is shedding the lanugo (fine body hair) that kept them warm. 🎃",
-    39: "Your baby is a **watermelon**! They're fully developed and just packing on the pounds. 🍉",
-    40: "The size of a **small watermelon**! Baby is officially 'full term' and ready to meet you! 🍉🎉"
-};
-
-// 2. Wellness Tips (Weeks 1-40)
 const wellnessTipsByWeek = {
-    1: "You're in the planning phase! Focus on your health, eat well, and consider starting a prenatal vitamin. 💊",
-    2: "It's all about timing! Listen to your body and try to de-stress. A relaxing bath or a good book can work wonders. 🛁",
-    3: "Many don't even know they're pregnant yet! Keep taking that prenatal vitamin with folic acid. It's super important. 🧠",
-    4: "You might be feeling... different. Tender breasts and fatigue are common. Listen to your body and rest! 😴",
-    5: "Morning sickness alert! 🤢 Try keeping plain crackers by your bed and eating a few *before* you get up.",
-    6: "Feeling exhausted? That's your body working overtime! Naps are your new best friend. 😴",
-    7: "Stay hydrated! 💧 It's key for you and baby. If water is boring, try adding a slice of lemon or cucumber.",
-    8: "Food aversions are real! 🤢 If you can't stand veggies, try a fruit smoothie. Find what works!",
-    9: "Your sense of smell might be a superpower now. 👃 Avoid strong odors that trigger nausea. Fresh air is your friend!",
-    10: "Feeling a bit better? Light exercise, like walking, is great for circulation and your mood. 🚶‍♀️",
-    11: "Cravings kicking in? 🥒 pickles & 🍦 ice cream? Balance them with healthy options, but it's okay to indulge a little!",
-    12: "You're nearing the end of the 1st trimester! Many early symptoms may start to ease up soon. You've got this! 💪",
-    13: "Hello, 2nd trimester! Your energy might be returning. 🎉 Enjoy this 'honeymoon' phase!",
-    14: "As your belly grows, comfy clothes are a must. Think stretchy waistbands and soft fabrics. ☁️",
-    15: "Start sleeping on your side. 😴 A pillow between your knees or a full body pillow can be a lifesaver!",
-    16: "Was that a gas bubble... or the baby?! 🤔 Those first 'flutters' are gentle. Pay close attention!",
-    17: "Feeling a bit 'stuck'? Constipation is common. Up your fiber (fruits, veggies, whole grains) and water! 🍎💧",
-    18: "Your appetite might be increasing. Focus on nutrient-dense snacks like yogurt, nuts, or hard-boiled eggs. 🥚",
-    19: "Got backaches? 😫 Gentle stretches, a warm (not hot!) bath, and good posture can provide relief.",
-    20: "You're halfway there! 🥳 Celebrate this milestone. Maybe a nice dinner or a relaxing pedicure?",
-    21: "Those kicks are getting stronger! 💥 This is a great time to start 'kick counts' if your doctor recommends it.",
-    22: "Baby can hear you! 🎶 Talk, sing, or read to your little one. It's a great way to bond.",
-    23: "Feeling clumsy? Your center of gravity is shifting. Ditch the high heels for comfy, stable shoes. 👟",
-    24: "Get tested for gestational diabetes. It's a routine test around this time and it's super important! 🥤",
-    25: "Your hair might be looking amazing! 💇‍♀️ Pregnancy hormones can make it thicker and shinier.",
-    26: "Brain fog is real! 🤯 Keep lists, set reminders, and don't be hard on yourself for forgetting your keys.",
-    27: "You made it to the 3rd trimester (almost)! 🎊 Time to start thinking about your birth plan, if you want one.",
-    28: "Welcome to the 3rd trimester! 💖 Baby's kicks might start to feel powerful. What a little acrobat!",
-    29: "Heartburn patrol! 🔥 Try eating smaller, more frequent meals and avoid lying down right after eating.",
-    30: "Nesting instinct kicking in? 🧹 Go for it! Organize those baby clothes, but don't overdo it. Ask for help!",
-    31: "Feeling breathless? 😮 Your lungs are a bit crowded. Take it slow and practice good posture.",
-    32: "Think about perineal massage. It can help reduce the risk of tearing during birth. Ask your doc about it! 🧘‍♀️",
-    33: "Pack that hospital bag! 👜 Even if it feels early, it's great to have it ready. Don't forget snacks!",
-    34: "Swollen feet? 🦶 Put them up! Elevating your legs can really help. And keep drinking that water.",
-    35: "You might be feeling ALL the emotions. 😭🥰 It's okay! Your hormones are wild. Talk about it.",
-    36: "Feeling 'lightning crotch'? ⚡️ That's just baby settling lower. It's a weird, but normal, part of the process.",
-    37: "You are 'early term'! 🥳 Baby is almost ready. Do a final check of your car seat installation. 🚗",
-    38: "Rest, rest, rest! 😴 Bank as much sleep as you can. You'll be glad you did. Binge-watch that show!",
-    39: "Go for a walk! 🚶‍♀️ Gentle movement can help baby get into position (and help your sanity!).",
-    40: "It's your due date! ⏰ Or maybe it passed. Don't stress! Most babies don't read the calendar. They'll come when they're ready."
+  1: "🩷 Early beginnings! Your body is preparing for new life. Rest well and eat balanced meals.",
+  2: "🌱 Still preparing — think positive thoughts and keep your body healthy and calm.",
+  3: "✨ Conception may happen around now! Keep up vitamins and hydration.",
+  4: "🤍 You might just find out you’re pregnant — congrats! Start prenatal vitamins if you haven’t already.",
+  5: "🤰 Morning sickness might start. Keep crackers by your bed and sip ginger tea 🍵.",
+  6: "💤 Feeling tired or dizzy? Totally normal — your body’s working nonstop!",
+  7: "💧 Drink plenty of water to help with headaches and support baby’s growth.",
+  8: "🍎 If food smells make you queasy, go for mild snacks like rice, soup, or fruit.",
+  9: "👃 Strong smells? Keep mint or lemon nearby for relief 🌿.",
+  10: "🚶‍♀️ Light walks or stretching can lift your mood and circulation.",
+  11: "🍫 Cravings are fine — just keep them balanced with healthy foods ❤️.",
+  12: "🌸 End of first trimester! Energy may start coming back — celebrate 🎉.",
+  13: "☀️ Enjoy gentle movement like yoga or short outings in fresh air.",
+  14: "👕 Your clothes may feel tight — time for comfy maternity wear.",
+  15: "🛌 Try sleeping on your side with a pillow for extra comfort.",
+  16: "💞 You might start feeling baby flutters soon — exciting times!",
+  17: "🥦 Eat fiber-rich foods and stay hydrated to prevent constipation.",
+  18: "🍽️ Appetite increasing? Focus on nutrient-rich snacks and protein.",
+  19: "💆 Light stretching or warm compresses can help with back pain.",
+  20: "🎉 Halfway there! You’re doing amazing — keep eating well and resting 💪.",
+  21: "🩺 Time for your anatomy scan — enjoy seeing your little one grow!",
+  22: "🧘‍♀️ Practice deep breathing to relax and prepare for birth.",
+  23: "👣 Swelling? Elevate your legs and wear comfy shoes.",
+  24: "🥛 Get enough calcium and vitamin D for your baby’s strong bones.",
+  25: "🤍 Talk or sing to your baby — they can hear your voice now!",
+  26: "🩵 A belly band or maternity belt can ease pressure and support your back.",
+  27: "🌙 Trouble sleeping? Use pillows to support your belly and rest better.",
+  28: "💉 Third trimester starts! Time for checkups and glucose testing.",
+  29: "🧺 Start washing tiny baby clothes with gentle detergent 👕🧸.",
+  30: "🍲 Prepare easy freezer meals — they’ll help after delivery.",
+  31: "❤️ Mood swings? Take breaks and do something you love.",
+  32: "🪶 Stretch lightly and move slowly — your balance is changing.",
+  33: "👶 Start thinking about your birth plan and share it with your provider.",
+  34: "🍼 Organize baby supplies and pack basic essentials.",
+  35: "🎒 Time to pack your hospital bag — include clothes, snacks, and phone chargers.",
+  36: "🚗 Test the baby car seat and keep the hospital bag ready.",
+  37: "🌼 You’re almost full term! Keep emergency contacts handy.",
+  38: "💆 Rest and breathe — baby could arrive anytime. Practice calm routines.",
+  39: "🌸 Final countdown! Relax, trust your body, and enjoy quiet moments before meeting baby.",
+  40: "🎒👶 It’s go time! Check your hospital bag: ID, birth plan, comfy clothes, baby blanket, diapers, wipes, nursing pads, snacks for your partner, and phone chargers. You’re ready to meet your little one — breathe, smile, and welcome this new life with love 💖✨."
 };
-
-// 3. Fun Facts (Weeks 1-40)
-const funFactsByWeek = {
-    1: "Did you know... 'Week 1' is retrospective? It's counted from the first day of your last period. 🤯",
-    2: "Did you know... you're not *technically* pregnant yet? This is the week conception usually happens. 🤫",
-    3: "Did you know... your baby's sex is determined at the moment of fertilization? 🧬",
-    4: "Did you know... the amniotic sac, which will be baby's home for 9 months, is already forming? 🏠",
-    5: "Did you know... baby's heart is starting to form and beat? It's just a tiny tube-like structure for now. ❤️",
-    6: "Did you know... baby's circulatory system is the first one to be functional? They're building their own plumbing! 💧",
-    7: "Did you know... baby is generating about 100 new brain cells every single minute? What a brainiac! 🧠",
-    8: "Did you know... baby's taste buds are starting to form this week? They'll soon be tasting what you eat! 😋",
-    9: "Did you know... those tiny webbed fingers and toes are now separating into individual digits? 🖐️",
-    10: "Did you know... if you could poke your baby (don't!), they would squirm? They're developing reflexes! 🤸",
-    11: "Did you know... baby is already practicing for their big debut? They're swallowing and kicking in there. 🦵",
-    12: "Did you know... your baby is already making tiny (un-pee-like) pee? It's a sign their kidneys are working! 💦",
-    13: "Did you know... your baby's unique fingerprints are starting to form on their tiny fingertips? 👆",
-    14: "Did you know... baby can make facial expressions now, like frowning and squinting? 😠😑",
-    15: "Did you know... baby's eyes can sense light? If you shine a flashlight on your belly, they might move away! 💡",
-    16: "Did you know... your baby's nervous system is starting to function? They're making connections! ⚡",
-    17: "Did you know... baby is growing a layer of 'brown fat'? This special fat will help keep them warm after birth. 🔥",
-    18: "Did you know... your baby might be able to hear now? Their tiny inner ear bones are hardening. 🎧",
-    19: "Did you know... baby girls are already developing all the eggs they'll ever have? That's millions! 🤯",
-    20: "Did you know... you can likely find out the sex this week via ultrasound? (If you want to!) 💙💖",
-    21: "Did you know... your baby's kicks are now coordinated? They're not just random twitches anymore! 🕺",
-    22: "Did you know... baby's skin is covered in a fine, downy hair called lanugo? It's like a tiny peach fuzz. 🍑",
-    23: "Did you know... baby's hearing is getting better? They can hear your heartbeat, your stomach gurgling, and your voice! 📣",
-    24: "Did you know... baby's lungs are developing 'surfactant'? This substance helps them breathe air after birth. 🫁",
-    25: "Did you know... your baby's nostrils are starting to open? They're getting ready to smell! 👃",
-    26: "Did you know... baby's eyes are starting to open and blink? They're seeing... well, the inside of you! 👀",
-    27: "Did you know... your baby might recognize your voice and your partner's? Talk to that belly! 🗣️",
-    28: "Did you know... your baby can dream? Their brain activity shows cycles of REM sleep! 😴",
-    29: "Did you know... baby is now smart enough to regulate their own body temperature? (With a lot of help from you!) 🌡️",
-    30: "Did you know... your baby's bone marrow has taken over creating red blood cells? Such a big-kid move. 🩸",
-    31: "Did you know... your baby can 'taste' strong flavors from your diet, like garlic or spice, in the amniotic fluid? 🌶️",
-    32: "Did you know... baby is practicing for life on the outside? They're swallowing, 'breathing,' and sucking. 👶",
-    33: "Did you know... baby's bones are hardening, but their skull bones remain soft and flexible for birth? Smart! 🧠",
-    34: "Did you know... your baby's protective waxy coating (vernix) is getting thicker? It's nature's best moisturizer! 🧴",
-    35: "Did you know... your baby's kidneys are fully developed and their liver is processing waste? ⚙️",
-    36: "Did you know... baby is likely 'dropping' or 'engaging' into your pelvis now, getting ready for the big day? 👇",
-    37: "Did you know... your baby is now considered 'early term'? They're just practicing their breathing and packing on fat. 🏋️",
-    38: "Did you know... your baby's brain is still growing at an amazing rate? All those wrinkles (gyri) are forming! 🧠",
-    39: "Did you know... your baby's immune system is getting a huge boost from you? They're stocking up on your antibodies! 🛡️",
-    40: "Did you know... only about 5% of babies are born on their actual due date? Your baby is fashionably late (or early)! ⏰"
-};
-
-// 4. Partner Tips (Weeks 1-40)
-const partnerTipsByWeek = {
-    1: "This is a great week to talk about your shared goals and dreams. You're in this together from day one! 🤝",
-    2: "This is a 'just be supportive' week. Keep stress low, maybe offer a nice foot rub. No pressure! 😊",
-    3: "She might not know yet, but she's pregnant! A good time to be extra kind and helpful around the house. 🏡",
-    4: "She might be taking a test this week! 🤞 Be there with her. Your reaction and support mean the world.",
-    5: "She's probably feeling TIRED. 😴 Take on an extra chore or two without being asked. It's a huge help.",
-    6: "Is she feeling nauseous? 🤢 Offer to make her toast or crackers. And maybe take over cooking dinner for a bit!",
-    7: "Her new superpower: smell! 👃 Be mindful of strong scents like cologne, coffee, or certain foods.",
-    8: "She might hate her favorite food and crave weird stuff. Don't judge! Just roll with it. 'Pickles and peanut butter? Got it!' 👍",
-    9: "She's exhausted and hormonal. Reassure her that she's doing an amazing job. A simple 'You're incredible' goes a long way. ❤️",
-    10: "Her body is changing. Tell her she's beautiful. Often. 🥰",
-    11: "Offer to go for a light walk with her. It's good for her, and a great way for you two to connect. 🚶‍♂️🚶‍♀️",
-    12: "Celebrate the end of the 1st trimester! 🎉 Maybe you can plan a small, relaxing 'babymoon'?",
-    13: "Her energy might be back! This is a great time to tackle some 'pre-baby' projects together. 🎨",
-    14: "Time to get comfy! ☁️ A comfy body pillow can be a total game-changer for her sleep. Best gift ever.",
-    15: "She might be feeling a bit more like her old self. Plan a date night! (Even if it's just takeout and a movie). 🍿",
-    16: "Ask her, 'Did you feel the baby today?' 😯 Show your excitement about those first flutters!",
-    17: "Offer her water. All the time. 'Have you had water lately?' is a great love language right now. 💧",
-    18: "Her back might be starting to ache. A gentle back rub = instant hero status. 🦸‍♂️",
-    19: "She's halfway! 🥳 Tell her how proud you are of her. Acknowledge the hard work she's been doing.",
-    20: "The anatomy scan! 📷 It's a big, emotional appointment. Be there to hold her hand and see your baby!",
-    21: "Feel those kicks! 💥 Put your hand on her belly and be patient. It's one of the coolest ways to bond.",
-    22: "Talk to the belly! 🗣️ Baby can hear you now. It might feel silly, but it's a real connection.",
-    23: "Her feet might be sore. A foot rub is amazing. (Just be gentle and avoid pressure points near the ankle!) 🦶",
-    24: "She's got her glucose test soon. 🥤 Be her support person. It's not a fun test, so be extra sweet.",
-    25: "Research time! 🤓 Start looking into baby gear with her, like car seats and strollers. Show you're a team.",
-    26: "She might be feeling anxious. 😟 Ask her what's on her mind. Just listening is the most important part.",
-    27: "Tell her she's glowing. ✨ (Even if she says she feels like a whale. Especially then.)",
-    28: "Hello, 3rd trimester! Help her get comfortable. More pillows! All the pillows! ☁️",
-    29: "She might have 'nesting' energy. 🧹 Help her organize, but also remind her to rest. You do the heavy lifting!",
-    30: "Start thinking about your route to the hospital. 🚗 Do a practice drive. It'll make you both feel more prepared.",
-    31: "Reassure her. 💖 Fears about labor and delivery are normal. Let her know you'll be her rock.",
-    32: "Pack your own hospital bag! 🎒 You'll need snacks, a phone charger, and a change of clothes, too.",
-    33: "Talk about your birth plan. What are her wishes? How can you be her #1 advocate in the delivery room? 📣",
-    34: "Help her with her shoes. 👟 Bending over is a major project now. Be her official shoe-putter-on-er.",
-    35: "Just listen. 👂 She might need to vent about being tired, sore, and just... 'over it.' That's okay!",
-    36: "The home stretch! 🏁 Install the car seat. Seriously, do it now. You'll thank yourselves later.",
-    37: "Keep her comfortable. 😌 More back rubs. More foot rubs. All the rubs. And snacks. Always snacks.",
-    38: "Rest with her. 😴 Binge that show, take a nap together. You're 'banking sleep' as a team.",
-    39: "Keep your phone charged and on! 📱 Be ready for the call. This is not a 'silent mode' week!",
-    40: "It's go time (or close)! ⏰ Stay calm, be encouraging, and tell her 'you can do this'—because she can."
-};
-
-// --- END NEW CONTENT ---
 
 const sleepDays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -466,17 +318,6 @@ function setupEventListeners() {
         }
     });
     
-    // --- NEW EVENT LISTENER FOR SNAPSHOT CARD ---
-    nextSnapshotBtn.addEventListener('click', (e) => {
-        e.stopPropagation(); // Stop it from opening the "edit start date" modal
-        
-        // Cycle to the next tip
-        currentSnapshotIndex = (currentSnapshotIndex + 1) % snapshotDisplayOrder.length;
-        
-        // Display the new tip
-        displayCurrentSnapshot();
-    });
-
     moodLogButtons.addEventListener('click', async (e) => {
         const button = e.target.closest('.mood-btn');
         if(!button || button.disabled) return;
@@ -607,62 +448,6 @@ function setupEventListeners() {
     // END: Fix for Edit Day Modal
 }
 
-// --- NEW FUNCTION TO DISPLAY SNAPSHOT CONTENT ---
-function displayCurrentSnapshot() {
-    if (!snapshotContentEl) return;
-
-    const today = new Date();
-    const pregnancyStartDate = new Date(wellnessData.pregnancyStartDate);
-    if (isNaN(pregnancyStartDate.getTime())) {
-        snapshotContentEl.textContent = "Set your pregnancy start date to see weekly tips!";
-        return;
-    }
-    
-    const diffTime = Math.abs(today - pregnancyStartDate);
-    const diffWeeks = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) + 1; // +1 to make it 1-based
-
-    // If the week has changed, reset the index to show baby size first
-    if (diffWeeks !== currentSnapshotWeek) {
-        currentSnapshotWeek = diffWeeks;
-        currentSnapshotIndex = 0;
-    }
-
-    const key = snapshotDisplayOrder[currentSnapshotIndex];
-    let content = "";
-    let week = currentSnapshotWeek;
-
-    // Handle being outside the 1-40 week range
-    if (week < 1) week = 1;
-    if (week > 40) week = 40;
-
-    // Get the correct content from the right object
-    switch (key) {
-        case 'baby':
-            content = babySizes[week] || babySizes[40];
-            break;
-        case 'tip':
-            content = wellnessTipsByWeek[week] || wellnessTipsByWeek[40];
-            break;
-        case 'fact':
-            content = funFactsByWeek[week] || funFactsByWeek[40];
-            break;
-        case 'partner':
-            content = partnerTipsByWeek[week] || partnerTipsByWeek[40];
-            break;
-        default:
-            content = babySizes[week] || babySizes[40];
-    }
-    
-    // Fade out
-    snapshotContentEl.style.opacity = 0;
-    
-    // Wait for fade out, then change content and fade in
-    setTimeout(() => {
-        snapshotContentEl.innerHTML = `<strong>Week ${currentSnapshotWeek}:</strong> ${content}`;
-        snapshotContentEl.style.opacity = 1;
-    }, 200); // 200ms matches the transition duration
-}
-
 export function updateDashboardUI() {
     if (!wellnessData || Object.keys(wellnessData).length === 0) return;
     
@@ -678,7 +463,7 @@ export function updateDashboardUI() {
     updateMoodLog(mood);
     updateEnergyLog(energy);
     updateMoodAndEnergyInsight();
-    updateDynamicContent(); // This function will now call displayCurrentSnapshot()
+    updateDynamicContent();
     
     // --- NEW LOGIC FOR DISABLING CONTROLS ---
 
@@ -1088,23 +873,19 @@ export function renderWellnessChart() {
 }
 
 function updateDynamicContent() {
-    // This function is now simpler.
-    // It just needs to trigger the display of the new snapshot card.
-    // The date logic is now inside displayCurrentSnapshot().
-    displayCurrentSnapshot();
-    
-    // --- OLD CODE TO REMOVE ---
-    // if(!wellnessData.pregnancyStartDate) return;
-    // const pregnancyStartDate = new Date(wellnessData.pregnancyStartDate);
-    // const today = new Date();
-    // const diffTime = Math.abs(today - pregnancyStartDate);
-    // const diffWeeks = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7));
-    // const babySizes = { ... }; // This is now a global object
-    // const size = babySizes[diffWeeks] || {fruit: 'a little miracle', emoji: '✨'};
-    // babyGrowthSnapshotEl.innerHTML = `Week ${diffWeeks} — baby is the size of a ${size.fruit} ${size.emoji}`;
-    // const wellnessTipEl = document.getElementById('wellness-tip');
-    // const tip = wellnessTipsByWeek[diffWeeks] || "Stay hydrated and listen to your body's needs today.";
-    // wellnessTipEl.textContent = tip;
+    if(!wellnessData.pregnancyStartDate) return;
+    const pregnancyStartDate = new Date(wellnessData.pregnancyStartDate);
+    const today = new Date();
+    const diffTime = Math.abs(today - pregnancyStartDate);
+    const diffWeeks = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7));
+    const babySizes = {
+        4: {fruit: 'poppy seed', emoji: '🌱'}, 5: {fruit: 'peppercorn', emoji: '🌶️'}, 6: {fruit: 'sweet pea', emoji: '🟢'}, 7: {fruit: 'blueberry', emoji: '🫐'}, 8: {fruit: 'raspberry', emoji: '🍓'}, 9: {fruit: 'cherry', emoji: '🍒'}, 10: {fruit: 'strawberry', emoji: '🍓'}, 11: {fruit: 'lime', emoji: '🍈'}, 12: {fruit: 'plum', emoji: '🍑'}, 13: {fruit: 'peach', emoji: '🍑'}, 14: {fruit: 'lemon', emoji: '🍋'}, 15: {fruit: 'apple', emoji: '🍎'}, 16: {fruit: 'avocado', emoji: '🥑'}, 17: {fruit: 'pear', emoji: '🍐'}, 18: {fruit: 'bell pepper', emoji: '🫑'}, 19: {fruit: 'mango', emoji: '🥭'}, 20: {fruit: 'banana', emoji: '🍌'},
+    };
+    const size = babySizes[diffWeeks] || {fruit: 'a little miracle', emoji: '✨'};
+    babyGrowthSnapshotEl.innerHTML = `Week ${diffWeeks} — baby is the size of a ${size.fruit} ${size.emoji}`;
+    const wellnessTipEl = document.getElementById('wellness-tip');
+    const tip = wellnessTipsByWeek[diffWeeks] || "Stay hydrated and listen to your body's needs today.";
+    wellnessTipEl.textContent = tip;
 }
 
 function openSupplementModal(date = new Date()) {
