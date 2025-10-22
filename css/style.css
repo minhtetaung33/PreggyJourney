@@ -8,19 +8,6 @@
     70% { box-shadow: 0 0 0 10px rgba(199, 210, 254, 0); }
 }
 
-/* --- NEW: Simple bounce animation for baby emoji --- */
-@keyframes baby-bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
-}
-
-.baby-emoji-animate {
-    display: inline-block;
-    animation: baby-bounce 1s infinite ease-in-out;
-}
-/* --- End new animation --- */
-
-
 body {
     font-family: 'Inter', sans-serif;
     background-image: url('https://i.imgur.com/HnUnpQJ.jpeg');
@@ -47,13 +34,6 @@ body {
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
     transition: all 0.3s ease;
 }
-
-/* --- Added subtle blue tint to match Baby Growth example --- */
-#baby-message-modal-content.glass-card {
-    background: rgba(100, 116, 139, 0.15); /* Slightly blue-grey tint */
-    border: 1px solid rgba(147, 197, 253, 0.2); /* Soft blue border */
-}
-
 
 .glass-card:hover:not(.no-hover) {
      box-shadow: 0 8px 32px 0 rgba(148, 111, 255, 0.37);
@@ -343,27 +323,8 @@ h1, h2, h3 {
     animation: marquee 15s linear infinite;
 }
 
-/* --- NEW Chat Bubble Style for Baby Message --- */
-#baby-message-content.chat-bubble-style {
-    background-color: #e0e7ff; /* Light indigo background like a chat bubble */
-    color: #3730a3; /* Darker indigo text */
-    border-radius: 1rem 1rem 1rem 0; /* Rounded corners, sharp bottom-left */
-    text-align: left; /* Align text left */
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Subtle shadow */
+/* Ensure modal content is above the background glow/patterns */
+#baby-message-content {
     position: relative;
     z-index: 10;
-    /* Removed gradient overlay */
-}
-
-/* Optional: Add a small tail to the bubble */
-#baby-message-content.chat-bubble-style::before {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: -10px; /* Position tail outside the bubble */
-    width: 0;
-    height: 0;
-    border-style: solid;
-    border-width: 0 15px 15px 0; /* Creates the triangle shape */
-    border-color: transparent #e0e7ff transparent transparent; /* Matches bubble background */
 }
