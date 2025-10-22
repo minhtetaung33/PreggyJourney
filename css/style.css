@@ -328,3 +328,54 @@ h1, h2, h3 {
     position: relative;
     z-index: 10;
 }
+
+/* --- NEW BABY MESSAGE STYLES --- */
+
+/* Animation for the baby emoji (Task 3) */
+@keyframes baby-wave {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(20deg); }
+    75% { transform: rotate(-15deg); }
+}
+
+.baby-emoji-animate {
+    display: inline-block;
+    animation: baby-wave 1.5s infinite ease-in-out;
+}
+
+/* Chat bubble style (Task 5 & 6) */
+.chat-bubble-style {
+    /* Light color with 70% opacity */
+    background: rgba(220, 235, 255, 0.7); /* Light blue, 70% opaque */
+    backdrop-filter: blur(5px); /* Add a slight blur to the transparent background */
+    -webkit-backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 1.5rem; /* Rounded corners */
+    position: relative;
+    /* Chat bubble tail */
+    border-bottom-left-radius: 0.5rem;
+}
+
+/* Pseudo-element for the chat bubble "tail" */
+.chat-bubble-style::before {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: -10px; /* Position tail on the left */
+    width: 20px;
+    height: 20px;
+    background-color: transparent;
+    /* This creates the curved cutout for the tail */
+    border-bottom-right-radius: 10px;
+    box-shadow: 5px 0 0 0 rgba(220, 235, 255, 0.7); /* Same color as bubble */
+}
+
+/* Adjust text color inside the light bubble for readability */
+.chat-bubble-style h3 {
+    color: #1e3a8a; /* Dark blue text */
+    text-shadow: none; /* Remove text shadow for clarity on light bg */
+}
+.chat-bubble-style #baby-message-content {
+    color: #334155; /* Dark gray text */
+    font-weight: 500;
+}
