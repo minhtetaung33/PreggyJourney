@@ -277,6 +277,7 @@ function loadSupplements() {
 
 function setupEventListeners() {
     hydrationPlusBtn.addEventListener('click', async () => {
+        if (hydrationPlusBtn.disabled) return;
         const dayData = wellnessData.weeklyLog[selectedDayKey] || {};
         const newIntake = (dayData.waterIntake || 0) + 1;
         if(newIntake <= wellnessData.waterGoal) {
@@ -285,6 +286,7 @@ function setupEventListeners() {
     });
 
     hydrationMinusBtn.addEventListener('click', async () => {
+        if (hydrationMinusBtn.disabled) return;
         const dayData = wellnessData.weeklyLog[selectedDayKey] || {};
         const newIntake = (dayData.waterIntake || 0) - 1;
         if(newIntake >= 0) {
@@ -293,15 +295,15 @@ function setupEventListeners() {
     });
     
     moodLogButtons.addEventListener('click', async (e) => {
-        if (isHistoryView) return;
-        const button = e.target.closest('.mood-btn'); if(!button) return;
+        const button = e.target.closest('.mood-btn');
+        if(!button || button.disabled) return;
         const newMoodEmoji = button.dataset.mood;
         await updateDoc(wellnessDataRef, { [`weeklyLog.${selectedDayKey}.mood`]: newMoodEmoji });
     });
 
     energyLogButtons.addEventListener('click', async (e) => {
-        if (isHistoryView) return;
-        const button = e.target.closest('.energy-btn'); if(!button) return;
+        const button = e.target.closest('.energy-btn');
+        if(!button || button.disabled) return;
         const newEnergyLevel = parseInt(button.dataset.energy);
         await updateDoc(wellnessDataRef, { [`weeklyLog.${selectedDayKey}.energy`]: newEnergyLevel });
     });
@@ -439,10 +441,27 @@ export function updateDashboardUI() {
     updateMoodAndEnergyInsight();
     updateDynamicContent();
     
-    hydrationPlusBtn.disabled = isHistoryView;
-    hydrationMinusBtn.disabled = isHistoryView;
-    moodLogButtons.querySelectorAll('button').forEach(b => b.disabled = isHistoryView);
-    energyLogButtons.querySelectorAll('button').forEach(b => b.disabled = isHistoryView);
+    // --- NEW LOGIC FOR DISABLING CONTROLS ---
+
+    // 1. Get today's details
+    const todayDate = new Date();
+    const todayDayIndex = (todayDate.getDay() + 6) % 7; // Today's index (Mon=0...Sun=6)
+    const todayKey = days[todayDayIndex];
+    
+    // 2. Check if we are viewing the current week
+    const currentWeekId = getWeekId(todayDate);
+    const chartWeekId = getWeekId(wellnessHistoryCurrentDate);
+    const isCurrentWeek = currentWeekId === chartWeekId;
+
+    // 3. We are allowed to edit the main controls ONLY if it's the current week AND the selected day is today.
+    //    (selectedDayKey is set to today if isCurrentWeek is true)
+    const canEditMainControls = isCurrentWeek && selectedDayKey === todayKey;
+
+    // 4. Set the disabled status
+    hydrationPlusBtn.disabled = !canEditMainControls;
+    hydrationMinusBtn.disabled = !canEditMainControls;
+    moodLogButtons.querySelectorAll('button').forEach(b => b.disabled = !canEditMainControls);
+    energyLogButtons.querySelectorAll('button').forEach(b => b.disabled = !canEditMainControls);
 }
 
 function updateDailySummary(mood, energy, waterIntake) {
@@ -769,17 +788,54 @@ export function renderWellnessChart() {
         options: {
             responsive: true, interaction: { mode: 'index', intersect: false },
             onClick: (e) => {
-                if (!isHistoryView) return;
+                // --- NEW onClick LOGIC ---
                 const activePoints = wellnessChart.getElementsAtEventForMode(e, 'index', { intersect: true }, true);
-                if (activePoints.length > 0) {
-                    const dataIndex = activePoints[0].index;
+                if (activePoints.length === 0) return;
+
+                const dataIndex = activePoints[0].index; // Clicked day's index (Mon=0...Sun=6)
+                
+                // 1. Get today's details
+                const todayDate = new Date();
+                const todayDayIndex = (todayDate.getDay() + 6) % 7; // Today's index (Mon=0...Sun=6)
+                
+                // 2. Check if we are viewing the current week or a past week
+                const currentWeekId = getWeekId(todayDate);
+                const chartWeekId = getWeekId(wellnessHistoryCurrentDate);
+                const isCurrentWeek = currentWeekId === chartWeekId;
+                
+                // 3. Determine if editing is allowed
+                // Allow if:
+                //    a) We are on a past week (!isCurrentWeek)
+                //    b) We are on the current week AND the clicked day is *before* today
+                const canEdit = !isCurrentWeek || (isCurrentWeek && dataIndex < todayDayIndex);
+                
+                if (canEdit) {
                     const dayKey = days[dataIndex];
                     openEditDayModal(dayKey);
                 }
             },
             onHover: (event, chartElement) => {
+                // --- NEW onHover LOGIC ---
                 const canvas = wellnessChart.canvas;
-                canvas.style.cursor = chartElement[0] && isHistoryView ? 'pointer' : 'default';
+                if (chartElement[0]) {
+                    const dataIndex = chartElement[0].index; // Hovered day's index (Mon=0...Sun=6)
+                    
+                    const todayDate = new Date();
+                    const todayDayIndex = (todayDate.getDay() + 6) % 7; // Today's index (Mon=0...Sun=6)
+                    
+                    const currentWeekId = getWeekId(todayDate);
+                    const chartWeekId = getWeekId(wellnessHistoryCurrentDate);
+                    const isCurrentWeek = currentWeekId === chartWeekId;
+                    
+                    // Allow pointer if:
+                    //    a) We are on a past week (!isCurrentWeek)
+                    //    b) We are on the current week AND the hovered day is *before* today
+                    const canEdit = !isCurrentWeek || (isCurrentWeek && dataIndex < todayDayIndex);
+                    
+                    canvas.style.cursor = canEdit ? 'pointer' : 'default';
+                } else {
+                    canvas.style.cursor = 'default';
+                }
             },
             scales: {
                 x: { ticks: { color: '#9ca3af' }, grid: { color: '#ffffff1a'} },
