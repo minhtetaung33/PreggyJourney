@@ -127,13 +127,21 @@
                             </div>
                             <!-- Side Cards -->
                             <div class="space-y-8">
-                               <div class="glass-card p-4 md:p-6 text-center">
-                                    <h3 class="text-xl font-bold mb-2">💡 Wellness Tip</h3>
-                                    <p id="wellness-tip" class="text-gray-300">Eat small meals every 3 hours to help with nausea and maintain energy.</p>
-                               </div>
-                               <div id="baby-growth-card" class="glass-card p-4 md:p-6 text-center cursor-pointer hover:bg-white/10 transition-colors">
-                                    <h3 class="text-xl font-bold mb-2">🍼 Baby Growth</h3>
-                                    <p id="baby-growth-snapshot" class="text-gray-300 text-lg">Week 10 — baby is the size of a strawberry 🍓</p>
+                               <!-- REMOVED the old "Wellness Tip" card -->
+                               
+                               <!-- MODIFIED the "Baby Growth" card to be the new "Weekly Snapshot" card -->
+                               <div id="baby-growth-card" class="glass-card p-4 md:p-6 cursor-pointer hover:bg-white/10 transition-colors">
+                                    <div class="flex justify-between items-center mb-3">
+                                        <h3 class="text-xl font-bold">💡 Weekly Snapshot</h3>
+                                        <button id="next-snapshot-btn" class="icon-btn" title="Next Tip">
+                                            <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                              <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0 0v-4.992m0 4.992h-4.993" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <!-- New content area that will be updated by JS -->
+                                    <p id="snapshot-content" class="text-gray-300 text-lg transition-opacity duration-300"></p>
+                                    <p class="text-xs text-gray-500 mt-3 text-center">(Click card to set pregnancy dates)</p>
                                </div>
                             </div>
                         </div>
