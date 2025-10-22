@@ -127,9 +127,17 @@
                             </div>
                             <!-- Side Cards -->
                             <div class="space-y-8">
-                               <div class="glass-card p-4 md:p-6 text-center">
-                                    <h3 class="text-xl font-bold mb-2">💡 Wellness Tip</h3>
-                                    <p id="wellness-tip" class="text-gray-300">Eat small meals every 3 hours to help with nausea and maintain energy.</p>
+                               <!-- Wellness Tip Card - UPDATED -->
+                               <div id="wellness-tip-card" class="glass-card p-4 md:p-6 text-center relative overflow-hidden cursor-pointer no-hover">
+                                    <div id="wellness-glow" class="wellness-glow"></div>
+                                    <div class="relative z-10">
+                                        <h3 class="text-xl font-bold mb-3">💡 Wellness Tip</h3>
+                                        <p id="wellness-tip" class="text-gray-300 mb-3">Eat small meals every 3 hours to help with nausea and maintain energy.</p>
+                                        <!-- Fun Fact Marquee -->
+                                        <div class="marquee text-xs text-indigo-200">
+                                            <span id="fun-fact-content">Did you know? Your baby can already hear your voice!</span>
+                                        </div>
+                                    </div>
                                </div>
                                <div id="baby-growth-card" class="glass-card p-4 md:p-6 text-center cursor-pointer hover:bg-white/10 transition-colors">
                                     <h3 class="text-xl font-bold mb-2">🍼 Baby Growth</h3>
@@ -657,6 +665,17 @@
                 <button id="image-link-cancel-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg">Cancel</button>
                 <button id="image-link-save-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg">Save Link</button>
             </div>
+        </div>
+    </div>
+
+    <!-- New Baby Message Modal -->
+    <div id="baby-message-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
+        <div id="baby-message-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-md transform scale-95 opacity-0 transition-transform transition-opacity duration-300 text-center">
+             <h3 class="text-2xl font-bold mb-4 text-indigo-200">A Note From Baby</h3>
+             <div id="baby-message-content" class="text-gray-200 text-lg bg-white/5 p-6 rounded-lg min-h-[100px] flex items-center justify-center">
+                Hi Mama, I’m just a tiny speck now, but I already feel your love 💕
+             </div>
+             <button id="baby-message-close-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors mt-6">Close</button>
         </div>
     </div>
 
