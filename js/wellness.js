@@ -66,6 +66,15 @@ const editHydrationText = document.getElementById('edit-hydration-text');
 const editDayModalCancelBtn = document.getElementById('edit-day-modal-cancel-btn');
 const editDayModalSaveBtn = document.getElementById('edit-day-modal-save-btn');
 
+// --- NEW DOM Elements for Wellness Tip ---
+const wellnessTipCard = document.getElementById('wellness-tip-card');
+const wellnessGlow = document.getElementById('wellness-glow');
+const funFactEl = document.getElementById('fun-fact-content');
+const babyMessageModal = document.getElementById('baby-message-modal');
+const babyMessageContent = document.getElementById('baby-message-content');
+const babyMessageCloseBtn = document.getElementById('baby-message-close-btn');
+// --- End of NEW DOM Elements ---
+
 
 let wellnessDataRef, symptomTrackerCollectionRef, userSupplementsRef, supplementNutrientsRef;
 let unsubscribeWellnessData, unsubscribeUserSupplements, unsubscribeSupplementNutrients, unsubscribeSupplementLog, unsubscribeDailyWellness;
@@ -163,6 +172,95 @@ const wellnessTipsByWeek = {
   39: "🌸 Final countdown! Relax, trust your body, and enjoy quiet moments before meeting baby.",
   40: "🎒👶 It’s go time! Check your hospital bag: ID, birth plan, comfy clothes, baby blanket, diapers, wipes, nursing pads, snacks for your partner, and phone chargers. You’re ready to meet your little one — breathe, smile, and welcome this new life with love 💖✨."
 };
+
+// --- NEW: Baby Messages by Week ---
+const babyMessages = {
+    1: "Hi Mama! I'm just a thought right now, but you're already preparing a cozy home for me. 💕",
+    2: "Still getting ready! Your body is amazing, making everything perfect for my arrival. 🌱",
+    3: "It's starting! I might be on my way to officially joining you on this journey. ✨",
+    4: "Guess what? I'm here! Just a tiny ball of cells, but I'm growing so fast. 🤍",
+    5: "Hi Mama, I’m just a tiny speck now, but I already feel your love 💕",
+    6: "I have a tiny heartbeat now! It's super fast, like a little drum. 💓",
+    7: "I'm wiggling around in here, even though you can't feel me yet! 🤸‍♀️",
+    8: "I'm starting to look more like a tiny baby, not just a speck. 😊",
+    9: "My little fingers and toes are forming. So excited to hold your hand! 🖐️",
+    10: "I’m growing little hands and feet — can’t wait to hold yours someday 🖐️",
+    11: "I'm practicing my kicks and stretches in here. It's getting fun!",
+    12: "All my important parts are here! Now I just need to grow, grow, grow. 🌸",
+    13: "I'm starting to get my own unique fingerprints. How cool is that?",
+    14: "I can make faces now! I'm practicing frowning and squinting. 😠",
+    15: "Yum! I can taste what you're eating through the amniotic fluid. 😋",
+    16: "You might feel me soon! It might feel like a tiny bubble or flutter. 💞",
+    17: "I'm getting a bit stronger. My kicks will be harder to miss soon!",
+    18: "I'm listening! I can hear your heart beating, and it's my favorite sound. ❤️",
+    19: "I'm covered in a fine hair called lanugo to keep me warm. Cozy!",
+    20: "I can hear you now, keep talking to me 🌸",
+    21: "I'm practicing swallowing, getting ready for my first sips of milk. 🍼",
+    22: "I can tell when it's light or dark outside now. ☀️🌙",
+    23: "Your voice is becoming my favorite sound. Keep singing and talking to me! 🎶",
+    24: "I'm getting plumper! My skin is still see-through, though. 😊",
+    25: "I love hearing you and your partner talk. I'm getting to know you both!",
+    26: "My eyes are opening for the first time! I can't see much, but it's new. 👀",
+    27: "I'm practicing breathing by 'inhaling' amniotic fluid. It's a workout!",
+    28: "It's getting a bit snug in here as I grow bigger. More hugs from you! 🤗",
+    29: "I'm starting to put on more baby fat to keep me warm outside.",
+    30: "I love when you rest — it helps me dream too 💤",
+    31: "My brain is working overtime, making billions of connections! 🧠",
+    32: "I'm probably head-down now, getting ready for the big day!",
+    33: "My bones are hardening, but my skull is still soft to make my journey out easier. 👍",
+    34: "I can recognize your favorite songs if you play them often! 🎵",
+    35: "I'm practicing my grip by holding onto my own feet. 😄",
+    36: "I'm shedding that fuzzy hair (lanugo) I had. Almost ready!",
+    37: "I'm 'full term' now! I'm just waiting for the perfect time to meet you. 💖",
+    38: "Just relaxing and getting my last bits of nutrients from you. Thanks, Mama!",
+    39: "It's almost time! My lungs are ready for my first breath of fresh air. 🌬️",
+    40: "See you soon, Mama. I can’t wait to meet you 💖"
+};
+
+// --- NEW: Fun Facts by Week ---
+const funFacts = {
+    1: "Did you know? Week 1 is technically your period—your body is just preparing the 'nest'!",
+    2: "Did you know? Ovulation (when the egg is released) happens around the end of this week.",
+    3: "Did you know? If conception happens, the fertilized egg is called a zygote!",
+    4: "Did you know? The tiny ball of cells, a blastocyst, implants into your uterus this week.",
+    5: "Did you know? Your baby's heart, brain, and spinal cord are already beginning to form.",
+    6: "Did you know? Your baby's heart is beating! It's often visible on an early ultrasound.",
+    7: "Did you know? The baby is generating about 100 new brain cells every single minute!",
+    8: "Did you know? Your baby is now officially called a 'fetus' instead of an embryo.",
+    9: "Did you know? Tiny, distinct fingers and toes are replacing the webbed 'paddles'.",
+    10: "Did you know? Your baby has finished the most critical part of development. Hooray!",
+    11: "Did you know? The baby is kicking and stretching, but you probably can't feel it yet.",
+    12: "Did you know? Your baby can make a fist and even has tiny fingernails starting to grow.",
+    13: "Did you know? Your baby's unique fingerprints are now in place!",
+    14: "Did you know? The baby can squint, frown, and grimace. They're practicing expressions!",
+    15: "Did you know? Taste buds are forming, and baby can taste flavors from your diet.",
+    16: "Did you know? The baby's eyes can blink, and their nervous system is starting to function.",
+    17: "Did you know? The skeleton is hardening from soft cartilage into bone.",
+    18: "Did you know? Baby can hear sounds now, like your heartbeat and blood rushing.",
+    19: "Did you know? A waxy, cheese-like coating called 'vernix' is forming to protect their skin.",
+    20: "Did you know? You're halfway there! Baby's gender is likely visible on an ultrasound now.",
+    21: "Did you know? Baby is practicing swallowing amniotic fluid, which is good for their digestive system.",
+    22: "Did you know? Eyebrows and eyelids are now present, and hair might be sprouting!",
+    23: "Did you know? Baby's hearing is improving. They can hear your voice clearly now!",
+    24: "Did you know? Baby's lungs are developing 'branches' and cells that produce surfactant.",
+    25: "Did you know? Baby's skin is turning pinker as tiny blood vessels (capillaries) form.",
+    26: "Did you know? Baby's eyes are opening and can perceive light and darkness.",
+    27: "Did you know? Baby may have a regular sleep/wake cycle now. (Maybe not yours!)",
+    28: "Did you know? This is the third trimester! Baby can dream and has eyelashes.",
+    29: "Did you know? Baby's head is growing to make room for that developing brain.",
+    30: "Did you know? Baby's bone marrow is now in charge of producing red blood cells.",
+    31: "Did you know? Baby can turn their head from side to side. 👋",
+    32: "Did you know? Baby is practicing 'breathing' by moving their diaphragm.",
+    33: "Did you know? Baby is now detecting light and may turn towards a bright source.",
+    34: "Did you know? Baby's fingernails have reached the tips of their fingers.",
+    35: "Did you know? Baby is gaining about half a pound per week now!",
+    36: "Did you know? Baby is 'dropping' or moving down into your pelvis to get ready.",
+    37: "Did you know? Your baby is now considered 'full term'!",
+    38: "Did you know? Baby's brain and lungs are still maturing right up until birth.",
+    39: "Did you know? The baby is covered in vernix, which will help them pass through the birth canal.",
+    40: "Did you know? The average newborn weighs about 7.5 pounds. But any size is perfect!"
+};
+
 
 const sleepDays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -446,6 +544,24 @@ function setupEventListeners() {
         }
     });
     // END: Fix for Edit Day Modal
+
+    // --- NEW Event Listeners for Baby Message Modal ---
+    wellnessTipCard.addEventListener('click', () => {
+        babyMessageModal.classList.remove('hidden');
+        setTimeout(() => babyMessageModal.classList.add('active'), 10);
+    });
+
+    babyMessageCloseBtn.addEventListener('click', () => {
+        babyMessageModal.classList.remove('active');
+        setTimeout(() => babyMessageModal.classList.add('hidden'), 300);
+    });
+
+    babyMessageModal.addEventListener('click', (e) => {
+        if (e.target === babyMessageModal) {
+            babyMessageModal.classList.remove('active');
+            setTimeout(() => babyMessageModal.classList.add('hidden'), 300);
+        }
+    });
 }
 
 export function updateDashboardUI() {
@@ -877,15 +993,37 @@ function updateDynamicContent() {
     const pregnancyStartDate = new Date(wellnessData.pregnancyStartDate);
     const today = new Date();
     const diffTime = Math.abs(today - pregnancyStartDate);
-    const diffWeeks = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7));
+    const diffWeeks = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) || 1; // Default to 1
+    
     const babySizes = {
         4: {fruit: 'poppy seed', emoji: '🌱'}, 5: {fruit: 'peppercorn', emoji: '🌶️'}, 6: {fruit: 'sweet pea', emoji: '🟢'}, 7: {fruit: 'blueberry', emoji: '🫐'}, 8: {fruit: 'raspberry', emoji: '🍓'}, 9: {fruit: 'cherry', emoji: '🍒'}, 10: {fruit: 'strawberry', emoji: '🍓'}, 11: {fruit: 'lime', emoji: '🍈'}, 12: {fruit: 'plum', emoji: '🍑'}, 13: {fruit: 'peach', emoji: '🍑'}, 14: {fruit: 'lemon', emoji: '🍋'}, 15: {fruit: 'apple', emoji: '🍎'}, 16: {fruit: 'avocado', emoji: '🥑'}, 17: {fruit: 'pear', emoji: '🍐'}, 18: {fruit: 'bell pepper', emoji: '🫑'}, 19: {fruit: 'mango', emoji: '🥭'}, 20: {fruit: 'banana', emoji: '🍌'},
+        // Adding more sizes for completeness
+        21: { fruit: 'carrot', emoji: '🥕' }, 22: { fruit: 'spaghetti squash', emoji: '🎃' }, 23: { fruit: 'large mango', emoji: '🥭' }, 24: { fruit: 'ear of corn', emoji: '🌽' }, 25: { fruit: 'rutabaga', emoji: ' turnips' }, 26: { fruit: 'head of lettuce', emoji: '🥬' }, 27: { fruit: 'cauliflower', emoji: '🥦' }, 28: { fruit: 'eggplant', emoji: '🍆' }, 29: { fruit: 'butternut squash', emoji: '🎃' }, 30: { fruit: 'cabbage', emoji: '🥬' }, 31: { fruit: 'coconut', emoji: '🥥' }, 32: { fruit: 'jicama', emoji: '🥔' }, 33: { fruit: 'pineapple', emoji: '🍍' }, 34: { fruit: 'cantaloupe', emoji: '🍈' }, 35: { fruit: 'honeydew melon', emoji: '🍈' }, 36: { fruit: 'romaine lettuce', emoji: '🥬' }, 37: { fruit: 'swiss chard', emoji: '🥬' }, 38: { fruit: 'pumpkin', emoji: '🎃' }, 39: { fruit: 'watermelon', emoji: '🍉' }, 40: { fruit: 'small pumpkin', emoji: '🎃' }
     };
+
     const size = babySizes[diffWeeks] || {fruit: 'a little miracle', emoji: '✨'};
     babyGrowthSnapshotEl.innerHTML = `Week ${diffWeeks} — baby is the size of a ${size.fruit} ${size.emoji}`;
+    
+    // --- NEW WELLNESS TIP, GLOW, and FUN FACT LOGIC ---
     const wellnessTipEl = document.getElementById('wellness-tip');
     const tip = wellnessTipsByWeek[diffWeeks] || "Stay hydrated and listen to your body's needs today.";
     wellnessTipEl.textContent = tip;
+
+    // Update Fun Fact
+    funFactEl.textContent = funFacts[diffWeeks] || "Did you know? You're doing an amazing job!";
+
+    // Update Baby Message
+    babyMessageContent.textContent = babyMessages[diffWeeks] || "I'm growing every day thanks to you, Mama! 💖";
+    
+    // Update Glow Color based on Trimester
+    wellnessGlow.className = "wellness-glow"; // Reset classes
+    if (diffWeeks <= 13) {
+        wellnessGlow.classList.add('glow-green'); // First trimester
+    } else if (diffWeeks <= 27) {
+        wellnessGlow.classList.add('glow-lavender'); // Second trimester
+    } else {
+        wellnessGlow.classList.add('glow-blue'); // Third trimester
+    }
 }
 
 function openSupplementModal(date = new Date()) {
