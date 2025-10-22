@@ -72,7 +72,8 @@ const wellnessGlow = document.getElementById('wellness-glow');
 const funFactEl = document.getElementById('fun-fact-content');
 const babyMessageModal = document.getElementById('baby-message-modal');
 const babyMessageContent = document.getElementById('baby-message-content');
-// const babyMessageCloseBtn = document.getElementById('baby-message-close-btn'); // Button removed per request
+const babyMessageCloseBtn = document.getElementById('baby-message-close-btn');
+// --- End of NEW DOM Elements ---
 
 
 let wellnessDataRef, symptomTrackerCollectionRef, userSupplementsRef, supplementNutrientsRef;
@@ -172,85 +173,94 @@ const wellnessTipsByWeek = {
   40: "🎒👶 It’s go time! Check your hospital bag: ID, birth plan, comfy clothes, baby blanket, diapers, wipes, nursing pads, snacks for your partner, and phone chargers. You’re ready to meet your little one — breathe, smile, and welcome this new life with love 💖✨."
 };
 
-// --- NEW: Fun facts and Baby Messages ---
-const funFactsByWeek = {
-    5: "Did you know? My heart is already beating, even though I'm only the size of a peppercorn!",
-    6: "My nose, mouth, and ears are starting to form this week.",
-    7: "I'm starting to move around, but you can't feel me yet!",
-    8: "I have little fingers and toes now, but they're still webbed.",
-    9: "I've graduated from an embryo to a fetus! That's a big step!",
-    10: "My vital organs are fully formed and I'm busy practicing kicking.",
-    11: "I can make a fist and even get hiccups!",
-    12: "My face looks much more human now, and I have fingernails.",
-    13: "I'm developing vocal cords... getting ready to talk to you!",
-    14: "I can squint, frown, and maybe even suck my thumb.",
-    15: "My skeleton is hardening, changing from soft cartilage to bone.",
-    16: "My eyes can blink and my heart is pumping lots of blood.",
-    17: "I'm developing a bit of body fat to keep me warm.",
-    18: "You might feel my first real kicks around this time! Get ready!",
-    19: "I'm covered in a waxy coating called 'vernix' to protect my skin.",
-    20: "I can hear you! Your voice is my favorite sound.",
-    21: "My taste buds are developing, and I can taste what you eat!",
-    22: "I look like a miniature newborn now.",
-    23: "I'm listening to your heartbeat and the sounds of the world.",
-    24: "My lungs are developing 'branches' in preparation for breathing.",
-    25: "I'm adding more fat and my hair is growing.",
-    26: "My eyes are starting to open and see light.",
-    27: "I might have a regular sleep-and-wake cycle now. (Sorry if it's when you're sleeping!)",
-    28: "I'm dreaming! Scientists can see REM sleep in babies at this stage.",
-    29: "I'm getting a bit cramped in here, but I still love to stretch.",
-    30: "I can see! It's dim, but I can tell light from dark.",
-    31: "My brain is developing super fast, making billions of connections.",
-    32: "I'm practicing breathing by 'inhaling' amniotic fluid.",
-    33: "My bones are hardening, but my skull is still soft for delivery.",
-    34: "My little fingernails have reached the tips of my fingers.",
-    35: "I'm gaining about half a pound a week now!",
-    36: "I'm probably 'head-down' now, getting ready for the big day.",
-    37: "My lungs are likely mature and ready for the outside world.",
-    38: "I'm just adding fat and fine-tuning my systems.",
-    39: "I'm considered 'full term'! I could arrive any day now.",
-    40: "It's my due date! I'm so excited to meet you, Mama!"
-};
-
+// --- NEW: Baby Messages by Week ---
 const babyMessages = {
+    1: "Hi Mama! I'm just a thought right now, but you're already preparing a cozy home for me. 💕",
+    2: "Still getting ready! Your body is amazing, making everything perfect for my arrival. 🌱",
+    3: "It's starting! I might be on my way to officially joining you on this journey. ✨",
+    4: "Guess what? I'm here! Just a tiny ball of cells, but I'm growing so fast. 🤍",
     5: "Hi Mama, I’m just a tiny speck now, but I already feel your love 💕",
-    6: "I'm working hard growing a brain and a heart just for you!",
-    7: "Wiggling around in here, even though you can't feel me yet! ✨",
-    8: "I've got tiny little hands and feet! 🖐️",
-    9: "I'm starting to look more like a tiny human. We're in this together!",
-    10: "Guess what? I can make a fist now! Getting strong for you.",
-    11: "I'm practicing opening and closing my hands. Can't wait to hold yours.",
-    12: "Just finished my 'first trimester' project: building all my main parts! 🥳",
-    13: "My fingerprints are one-of-a-kind, just like your love.",
-    14: "I'm practicing my grimace and frown... hope I only show you smiles though!",
-    15: "I can sense light, even through your tummy. You're my sunshine ☀️",
-    16: "Did you feel that? It might have been me saying hello! 💖",
-    17: "Getting a little chubbier to stay warm. Thanks for the snacks, Mama!",
-    18: "I love stretching my new arms and legs. Hope I'm not kicking too hard!",
-    19: "Just floating in my cozy little bubble. Thanks for making it so safe.",
-    20: "I can hear you now! Keep talking and singing to me, I love it 🌸",
-    21: "Yum! That last meal was tasty. I can taste the flavors you eat!",
-    22: "Just practicing my breathing... getting ready to take my first big breath.",
-    23: "I love the sound of your voice and your heartbeat. It's my favorite song.",
-    24: "My lungs are getting stronger every day.",
-    25: "Getting my hair styled... or at least, it's growing! 👶",
-    26: "My eyes are opening! Can't wait to see your face.",
-    27: "I'm having dreams! Maybe I'm dreaming about you.",
-    28: "My brain is getting super smart in here!",
-    29: "It's getting a bit snug, but I love being close to you.",
-    30: "I'm practicing turning my head and looking around. What's out there?",
-    31: "Almost ready! Just adding the finishing touches.",
-    32: "I'm getting head-down and ready for our big meeting!",
-    33: "My immune system is getting a boost from you. Thanks for protecting me!",
-    34: "My fingernails are all grown in. Ready for my first manicure!",
-    35: "Packing on the pounds! Getting plump and cute for my debut.",
-    36: "I'm practicing sucking so I'll be a pro at eating when I see you.",
-    37: "I'm 'full term' now! It means I'm ready whenever you are.",
-    38: "My lungs are all set. Just enjoying these last few quiet days.",
-    39: "I'm so excited, Mama. Any day now! 💖",
+    6: "I have a tiny heartbeat now! It's super fast, like a little drum. 💓",
+    7: "I'm wiggling around in here, even though you can't feel me yet! 🤸‍♀️",
+    8: "I'm starting to look more like a tiny baby, not just a speck. 😊",
+    9: "My little fingers and toes are forming. So excited to hold your hand! 🖐️",
+    10: "I’m growing little hands and feet — can’t wait to hold yours someday 🖐️",
+    11: "I'm practicing my kicks and stretches in here. It's getting fun!",
+    12: "All my important parts are here! Now I just need to grow, grow, grow. 🌸",
+    13: "I'm starting to get my own unique fingerprints. How cool is that?",
+    14: "I can make faces now! I'm practicing frowning and squinting. 😠",
+    15: "Yum! I can taste what you're eating through the amniotic fluid. 😋",
+    16: "You might feel me soon! It might feel like a tiny bubble or flutter. 💞",
+    17: "I'm getting a bit stronger. My kicks will be harder to miss soon!",
+    18: "I'm listening! I can hear your heart beating, and it's my favorite sound. ❤️",
+    19: "I'm covered in a fine hair called lanugo to keep me warm. Cozy!",
+    20: "I can hear you now, keep talking to me 🌸",
+    21: "I'm practicing swallowing, getting ready for my first sips of milk. 🍼",
+    22: "I can tell when it's light or dark outside now. ☀️🌙",
+    23: "Your voice is becoming my favorite sound. Keep singing and talking to me! 🎶",
+    24: "I'm getting plumper! My skin is still see-through, though. 😊",
+    25: "I love hearing you and your partner talk. I'm getting to know you both!",
+    26: "My eyes are opening for the first time! I can't see much, but it's new. 👀",
+    27: "I'm practicing breathing by 'inhaling' amniotic fluid. It's a workout!",
+    28: "It's getting a bit snug in here as I grow bigger. More hugs from you! 🤗",
+    29: "I'm starting to put on more baby fat to keep me warm outside.",
+    30: "I love when you rest — it helps me dream too 💤",
+    31: "My brain is working overtime, making billions of connections! 🧠",
+    32: "I'm probably head-down now, getting ready for the big day!",
+    33: "My bones are hardening, but my skull is still soft to make my journey out easier. 👍",
+    34: "I can recognize your favorite songs if you play them often! 🎵",
+    35: "I'm practicing my grip by holding onto my own feet. 😄",
+    36: "I'm shedding that fuzzy hair (lanugo) I had. Almost ready!",
+    37: "I'm 'full term' now! I'm just waiting for the perfect time to meet you. 💖",
+    38: "Just relaxing and getting my last bits of nutrients from you. Thanks, Mama!",
+    39: "It's almost time! My lungs are ready for my first breath of fresh air. 🌬️",
     40: "See you soon, Mama. I can’t wait to meet you 💖"
 };
-// --- End new content ---
+
+// --- NEW: Fun Facts by Week ---
+const funFacts = {
+    1: "Did you know? Week 1 is technically your period—your body is just preparing the 'nest'!",
+    2: "Did you know? Ovulation (when the egg is released) happens around the end of this week.",
+    3: "Did you know? If conception happens, the fertilized egg is called a zygote!",
+    4: "Did you know? The tiny ball of cells, a blastocyst, implants into your uterus this week.",
+    5: "Did you know? Your baby's heart, brain, and spinal cord are already beginning to form.",
+    6: "Did you know? Your baby's heart is beating! It's often visible on an early ultrasound.",
+    7: "Did you know? The baby is generating about 100 new brain cells every single minute!",
+    8: "Did you know? Your baby is now officially called a 'fetus' instead of an embryo.",
+    9: "Did you know? Tiny, distinct fingers and toes are replacing the webbed 'paddles'.",
+    10: "Did you know? Your baby has finished the most critical part of development. Hooray!",
+    11: "Did you know? The baby is kicking and stretching, but you probably can't feel it yet.",
+    12: "Did you know? Your baby can make a fist and even has tiny fingernails starting to grow.",
+    13: "Did you know? Your baby's unique fingerprints are now in place!",
+    14: "Did you know? The baby can squint, frown, and grimace. They're practicing expressions!",
+    15: "Did you know? Taste buds are forming, and baby can taste flavors from your diet.",
+    16: "Did you know? The baby's eyes can blink, and their nervous system is starting to function.",
+    17: "Did you know? The skeleton is hardening from soft cartilage into bone.",
+    18: "Did you know? Baby can hear sounds now, like your heartbeat and blood rushing.",
+    19: "Did you know? A waxy, cheese-like coating called 'vernix' is forming to protect their skin.",
+    20: "Did you know? You're halfway there! Baby's gender is likely visible on an ultrasound now.",
+    21: "Did you know? Baby is practicing swallowing amniotic fluid, which is good for their digestive system.",
+    22: "Did you know? Eyebrows and eyelids are now present, and hair might be sprouting!",
+    23: "Did you know? Baby's hearing is improving. They can hear your voice clearly now!",
+    24: "Did you know? Baby's lungs are developing 'branches' and cells that produce surfactant.",
+    25: "Did you know? Baby's skin is turning pinker as tiny blood vessels (capillaries) form.",
+    26: "Did you know? Baby's eyes are opening and can perceive light and darkness.",
+    27: "Did you know? Baby may have a regular sleep/wake cycle now. (Maybe not yours!)",
+    28: "Did you know? This is the third trimester! Baby can dream and has eyelashes.",
+    29: "Did you know? Baby's head is growing to make room for that developing brain.",
+    30: "Did you know? Baby's bone marrow is now in charge of producing red blood cells.",
+    31: "Did you know? Baby can turn their head from side to side. 👋",
+    32: "Did you know? Baby is practicing 'breathing' by moving their diaphragm.",
+    33: "Did you know? Baby is now detecting light and may turn towards a bright source.",
+    34: "Did you know? Baby's fingernails have reached the tips of their fingers.",
+    35: "Did you know? Baby is gaining about half a pound per week now!",
+    36: "Did you know? Baby is 'dropping' or moving down into your pelvis to get ready.",
+    37: "Did you know? Your baby is now considered 'full term'!",
+    38: "Did you know? Baby's brain and lungs are still maturing right up until birth.",
+    39: "Did you know? The baby is covered in vernix, which will help them pass through the birth canal.",
+    40: "Did you know? The average newborn weighs about 7.5 pounds. But any size is perfect!"
+};
+
 
 const sleepDays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -279,7 +289,7 @@ function formatWeekDisplay(d) {
     const monday = new Date(getWeekId(d) + 'T00:00:00Z');
     const sunday = new Date(monday);
     sunday.setDate(monday.getDate() + 6);
-
+    
     const options = { month: 'short', day: 'numeric', timeZone: 'UTC' };
     const mondayStr = monday.toLocaleDateString('en-US', options);
     const sundayStr = sunday.toLocaleDateString('en-US', options);
@@ -303,9 +313,9 @@ export async function initializeWellness(userId, onWellnessDataUpdate) {
             loadWellnessForDate(wellnessHistoryCurrentDate, onWellnessDataUpdate);
         } else {
             // If it doesn't exist, create it with the start date from the default object
-            setDoc(dailyWellnessRef, {
-                pregnancyStartDate: defaultWellnessData.pregnancyStartDate,
-                pregnancyEndDate: defaultWellnessData.pregnancyEndDate
+            setDoc(dailyWellnessRef, { 
+                pregnancyStartDate: defaultWellnessData.pregnancyStartDate, 
+                pregnancyEndDate: defaultWellnessData.pregnancyEndDate 
             });
         }
     });
@@ -341,17 +351,17 @@ async function loadWellnessForDate(date, onWellnessDataUpdate) {
     const weekId = getWeekId(date);
     const currentWeekId = getWeekId(new Date());
     isHistoryView = (weekId !== currentWeekId);
-
+    
     wellnessWeekDisplay.textContent = formatWeekDisplay(date);
 
     const userId = getCurrentUserId();
     wellnessDataRef = doc(db, `users/${userId}/wellness`, weekId);
-
+    
     await initializeWellnessData(wellnessDataRef); // Ensure doc exists before listening
 
     unsubscribeWellnessData = onSnapshot(wellnessDataRef, (docSnap) => {
         const firestoreData = docSnap.exists() ? docSnap.data() : defaultWellnessData;
-
+        
         // Merge daily data (like start date) with the weekly log data.
         wellnessData = { ...defaultWellnessData, ...dailyWellnessData, ...firestoreData };
 
@@ -405,7 +415,7 @@ function setupEventListeners() {
             await updateDoc(wellnessDataRef, { [`weeklyLog.${selectedDayKey}.waterIntake`]: newIntake });
         }
     });
-
+    
     moodLogButtons.addEventListener('click', async (e) => {
         const button = e.target.closest('.mood-btn');
         if(!button || button.disabled) return;
@@ -431,9 +441,9 @@ function setupEventListeners() {
         const newStartDate = startDateInput.value; let newEndDate = endDateInput.value;
         if (newStartDate) {
             if (!newEndDate) { const startDate = new Date(newStartDate); startDate.setDate(startDate.getDate() + (40 * 7)); newEndDate = startDate.toISOString().split('T')[0]; }
-
+            
             // Save to the 'daily' document. The onSnapshot listener will handle the UI updates.
-            const userDocRef = doc(db, `users/${getCurrentUserId()}/wellness`, 'daily');
+            const userDocRef = doc(db, `users/${getCurrentUserId()}/wellness`, 'daily'); 
             await setDoc(userDocRef, { pregnancyStartDate: newStartDate, pregnancyEndDate: newEndDate }, { merge: true });
         }
         closeStartDateModal();
@@ -454,10 +464,10 @@ function setupEventListeners() {
         const weekId = getWeekId(sleepModalCurrentDate);
         const sleepDocRef = doc(db, `users/${getCurrentUserId()}/wellness`, weekId);
         await setDoc(sleepDocRef, { sleep: newSleepData }, { merge: true });
-
+        
         closeSleepModal();
     });
-
+    
     manageSupplementsBtnHeader.addEventListener('click', () => openSupplementModal(new Date()));
     nutritionHistoryBtn.addEventListener('click', openNutritionHistoryModal);
     nutritionHistoryCloseBtn.addEventListener('click', closeNutritionHistoryModal);
@@ -466,7 +476,7 @@ function setupEventListeners() {
     manageSupplementsModal.addEventListener('click', e => e.target === manageSupplementsModal && closeSupplementModal());
     addSupplementBtn.addEventListener('click', handleAddSupplement);
     newSupplementInput.addEventListener('keyup', e => e.key === 'Enter' && handleAddSupplement());
-
+    
     nutritionHistoryPrevBtn.addEventListener('click', () => {
         nutritionHistoryCurrentDate.setDate(nutritionHistoryCurrentDate.getDate() - 7);
         populateNutritionHistory(nutritionHistoryCurrentDate);
@@ -476,7 +486,7 @@ function setupEventListeners() {
         nutritionHistoryCurrentDate.setDate(nutritionHistoryCurrentDate.getDate() + 7);
         populateNutritionHistory(nutritionHistoryCurrentDate);
     });
-
+    
     wellnessPrevWeekBtn.addEventListener('click', () => {
         const newDate = new Date(wellnessHistoryCurrentDate);
         newDate.setDate(newDate.getDate() - 7);
@@ -488,7 +498,7 @@ function setupEventListeners() {
         newDate.setDate(newDate.getDate() + 7);
         loadWellnessForDate(newDate, () => {});
     });
-
+    
     sleepPrevWeekBtn.addEventListener('click', () => {
         sleepModalCurrentDate.setDate(sleepModalCurrentDate.getDate() - 7);
         populateSleepModal(sleepModalCurrentDate);
@@ -538,31 +548,25 @@ function setupEventListeners() {
     // --- NEW Event Listeners for Baby Message Modal ---
     wellnessTipCard.addEventListener('click', () => {
         babyMessageModal.classList.remove('hidden');
-        setTimeout(() => {
-            // Target the content div for the animation class
-            const modalContent = document.getElementById('baby-message-modal-content');
-            if (modalContent) {
-                 modalContent.classList.add('active');
-            }
-        }, 10);
+        setTimeout(() => babyMessageModal.classList.add('active'), 10);
     });
 
-    // Close on outside click
+    babyMessageCloseBtn.addEventListener('click', () => {
+        babyMessageModal.classList.remove('active');
+        setTimeout(() => babyMessageModal.classList.add('hidden'), 300);
+    });
+
     babyMessageModal.addEventListener('click', (e) => {
         if (e.target === babyMessageModal) {
-            const modalContent = document.getElementById('baby-message-modal-content');
-             if (modalContent) {
-                 modalContent.classList.remove('active');
-            }
+            babyMessageModal.classList.remove('active');
             setTimeout(() => babyMessageModal.classList.add('hidden'), 300);
         }
     });
-    // --- End new listeners ---
 }
 
 export function updateDashboardUI() {
     if (!wellnessData || Object.keys(wellnessData).length === 0) return;
-
+    
     const dayData = wellnessData.weeklyLog[selectedDayKey] || {};
     const mood = dayData.mood || '😐';
     const energy = dayData.energy || 3;
@@ -570,20 +574,20 @@ export function updateDashboardUI() {
 
     updateDailySummary(mood, energy, waterIntake);
     updateHydrationCircle(waterIntake);
-    updateNutritionTracker();
+    updateNutritionTracker(); 
     updateSleepMonitor();
     updateMoodLog(mood);
     updateEnergyLog(energy);
     updateMoodAndEnergyInsight();
     updateDynamicContent();
-
+    
     // --- NEW LOGIC FOR DISABLING CONTROLS ---
 
     // 1. Get today's details
     const todayDate = new Date();
     const todayDayIndex = (todayDate.getDay() + 6) % 7; // Today's index (Mon=0...Sun=6)
     const todayKey = days[todayDayIndex];
-
+    
     // 2. Check if we are viewing the current week
     const currentWeekId = getWeekId(todayDate);
     const chartWeekId = getWeekId(wellnessHistoryCurrentDate);
@@ -601,7 +605,7 @@ export function updateDashboardUI() {
 }
 
 function updateDailySummary(mood, energy, waterIntake) {
-    const lastNightSleep = calculateLastNightSleep();
+    const lastNightSleep = calculateLastNightSleep(); 
     const energyMap = { 1: { level: 'Very Low', color: 'text-red-400' }, 2: { level: 'Low', color: 'text-yellow-400' }, 3: { level: 'Moderate', color: 'text-green-400' }, 4: { level: 'Good', color: 'text-teal-400' }, 5: { level: 'High', color: 'text-purple-400' } };
 
     document.getElementById('summary-mood').textContent = mood;
@@ -654,10 +658,10 @@ function updateNutritionTracker() {
 
     const allMealNutrients = getMealNutrients();
     const currentMealPlanData = getCurrentMealPlan();
-
+    
     const dailyGoals = { iron: 8, calcium: 10, folate: 10, fiber: 8 };
     const totals = { iron: 0, calcium: 0, folate: 0, fiber: 0 };
-
+    
     if (currentMealPlanData) {
         for (const mealKey in currentMealPlanData) {
             if (currentMealPlanData[mealKey] && typeof currentMealPlanData[mealKey] === 'object') {
@@ -685,8 +689,8 @@ function updateNutritionTracker() {
 function getStatusFromAI(statusString) {
     statusString = (statusString || 'low').toLowerCase();
      let status, color, bgColor, percentage;
-    if (statusString === 'good') { status = 'Good'; color = 'text-green-400'; bgColor = 'bg-green-500'; percentage = 90; }
-    else if (statusString === 'okay') { status = 'Okay'; color = 'text-yellow-400'; bgColor = 'bg-yellow-500'; percentage = 60; }
+    if (statusString === 'good') { status = 'Good'; color = 'text-green-400'; bgColor = 'bg-green-500'; percentage = 90; } 
+    else if (statusString === 'okay') { status = 'Okay'; color = 'text-yellow-400'; bgColor = 'bg-yellow-500'; percentage = 60; } 
     else { status = 'Low'; color = 'text-red-400'; bgColor = 'bg-red-500'; percentage = 25; }
     return { status, percentage, color, bgColor };
 }
@@ -694,8 +698,8 @@ function getStatusFromAI(statusString) {
 function calculateNutrientStatus(total, goal) {
     const percentage = goal > 0 ? Math.min(Math.round((total / goal) * 100), 100) : 0;
     let status, color, bgColor;
-    if (percentage >= 80) { status = 'Good'; color = 'text-green-400'; bgColor = 'bg-green-500'; }
-    else if (percentage >= 40) { status = 'Okay'; color = 'text-yellow-400'; bgColor = 'bg-yellow-500'; }
+    if (percentage >= 80) { status = 'Good'; color = 'text-green-400'; bgColor = 'bg-green-500'; } 
+    else if (percentage >= 40) { status = 'Okay'; color = 'text-yellow-400'; bgColor = 'bg-yellow-500'; } 
     else { status = 'Low'; color = 'text-red-400'; bgColor = 'bg-red-500'; }
     return { status, percentage, color, bgColor };
 }
@@ -741,7 +745,7 @@ function calculateSleepDuration(sleepTimeStr, wakeTimeStr) {
 
 function calculateLastNightSleep() {
     const dayIndex = days.indexOf(selectedDayKey);
-    const sleepDayIndex = dayIndex === 0 ? 6 : dayIndex - 1;
+    const sleepDayIndex = dayIndex === 0 ? 6 : dayIndex - 1; 
     const sleepDayKey = days[sleepDayIndex];
     const { sleep, wake } = wellnessData.sleep[sleepDayKey] || { sleep: '', wake: '' };
     const hours = calculateSleepDuration(sleep, wake);
@@ -793,7 +797,7 @@ function updateMoodAndEnergyInsight() {
     } else {
         insight = "A steady mood and energy level is a great sign of balance. Keep it up!";
     }
-
+    
     if (insightEl) insightEl.textContent = insight;
 }
 
@@ -803,7 +807,7 @@ async function handleSymptomCheck() {
     symptomLoader.classList.remove('hidden'); symptomBtnText.textContent = 'Analyzing...'; symptomCheckBtn.disabled = true; symptomResponseEl.innerHTML = '';
     const systemPrompt = `You are a caring wellness assistant for pregnant women. Analyze the symptom, provide potential non-medical causes and gentle remedies. Crucially, always include a disclaimer to consult a doctor. Your response must be ONLY a valid JSON object matching this structure: { "possibleCauses": string[], "gentleRemedies": string[], "disclaimer": string }.`;
     const userQuery = `My symptom today: "${symptomText}"`;
-    const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; // Replace with your actual API key handling
+    const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
     const payload = {
         contents: [{ parts: [{ text: userQuery }] }],
@@ -845,7 +849,7 @@ function displaySymptomResponse(data) {
 
 export function updateWellnessChartData() {
     if (!wellnessChart || !wellnessData.weeklyLog) return;
-
+    
     const energyData = days.map(day => (wellnessData.weeklyLog[day] || {}).energy || 0);
     const moodData = days.map(day => moodToValue[(wellnessData.weeklyLog[day] || {}).mood] || 0);
     const sleepData = days.map(day => {
@@ -855,7 +859,7 @@ export function updateWellnessChartData() {
         const { sleep, wake } = wellnessData.sleep[sleepDayKey] || {};
         return calculateSleepDuration(sleep, wake);
     });
-
+    
     wellnessChart.data.datasets[0].data = energyData;
     wellnessChart.data.datasets[1].data = moodData;
     wellnessChart.data.datasets[2].data = sleepData;
@@ -899,7 +903,7 @@ function updateWeeklyWellnessInsight(energyData, moodData, sleepData) {
     } else {
         insight = "You've been consistent with your tracking. This weekly view is great for spotting patterns over time.";
     }
-
+    
     insightEl.textContent = insight;
 }
 
@@ -910,7 +914,7 @@ export function renderWellnessChart() {
     }
     const canvas = document.getElementById('wellnessChart');
     const ctx = canvas.getContext('2d');
-
+    
     const data = {
         labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
         datasets: [
@@ -929,22 +933,22 @@ export function renderWellnessChart() {
                 if (activePoints.length === 0) return;
 
                 const dataIndex = activePoints[0].index; // Clicked day's index (Mon=0...Sun=6)
-
+                
                 // 1. Get today's details
                 const todayDate = new Date();
                 const todayDayIndex = (todayDate.getDay() + 6) % 7; // Today's index (Mon=0...Sun=6)
-
+                
                 // 2. Check if we are viewing the current week or a past week
                 const currentWeekId = getWeekId(todayDate);
                 const chartWeekId = getWeekId(wellnessHistoryCurrentDate);
                 const isCurrentWeek = currentWeekId === chartWeekId;
-
+                
                 // 3. Determine if editing is allowed
                 // Allow if:
                 //    a) We are on a past week (!isCurrentWeek)
                 //    b) We are on the current week AND the clicked day is *before* today
                 const canEdit = !isCurrentWeek || (isCurrentWeek && dataIndex < todayDayIndex);
-
+                
                 if (canEdit) {
                     const dayKey = days[dataIndex];
                     openEditDayModal(dayKey);
@@ -955,19 +959,19 @@ export function renderWellnessChart() {
                 const canvas = wellnessChart.canvas;
                 if (chartElement[0]) {
                     const dataIndex = chartElement[0].index; // Hovered day's index (Mon=0...Sun=6)
-
+                    
                     const todayDate = new Date();
                     const todayDayIndex = (todayDate.getDay() + 6) % 7; // Today's index (Mon=0...Sun=6)
-
+                    
                     const currentWeekId = getWeekId(todayDate);
                     const chartWeekId = getWeekId(wellnessHistoryCurrentDate);
                     const isCurrentWeek = currentWeekId === chartWeekId;
-
+                    
                     // Allow pointer if:
                     //    a) We are on a past week (!isCurrentWeek)
                     //    b) We are on the current week AND the hovered day is *before* today
                     const canEdit = !isCurrentWeek || (isCurrentWeek && dataIndex < todayDayIndex);
-
+                    
                     canvas.style.cursor = canEdit ? 'pointer' : 'default';
                 } else {
                     canvas.style.cursor = 'default';
@@ -989,37 +993,269 @@ function updateDynamicContent() {
     const pregnancyStartDate = new Date(wellnessData.pregnancyStartDate);
     const today = new Date();
     const diffTime = Math.abs(today - pregnancyStartDate);
-    const diffWeeks = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7));
+    const diffWeeks = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) || 1; // Default to 1
+    
     const babySizes = {
         4: {fruit: 'poppy seed', emoji: '🌱'}, 5: {fruit: 'peppercorn', emoji: '🌶️'}, 6: {fruit: 'sweet pea', emoji: '🟢'}, 7: {fruit: 'blueberry', emoji: '🫐'}, 8: {fruit: 'raspberry', emoji: '🍓'}, 9: {fruit: 'cherry', emoji: '🍒'}, 10: {fruit: 'strawberry', emoji: '🍓'}, 11: {fruit: 'lime', emoji: '🍈'}, 12: {fruit: 'plum', emoji: '🍑'}, 13: {fruit: 'peach', emoji: '🍑'}, 14: {fruit: 'lemon', emoji: '🍋'}, 15: {fruit: 'apple', emoji: '🍎'}, 16: {fruit: 'avocado', emoji: '🥑'}, 17: {fruit: 'pear', emoji: '🍐'}, 18: {fruit: 'bell pepper', emoji: '🫑'}, 19: {fruit: 'mango', emoji: '🥭'}, 20: {fruit: 'banana', emoji: '🍌'},
-        21: { fruit: 'carrot', emoji: '🥕' }, 22: { fruit: 'coconut', emoji: '🥥' }, 23: { fruit: 'large mango', emoji: '🥭' }, 24: { fruit: 'cantaloupe', emoji: '🍈' }, 25: { fruit: 'cauliflower', emoji: '🥦' }, 26: { fruit: 'lettuce head', emoji: '🥬' }, 27: { fruit: 'turnip', emoji: ' turnips' }, 28: { fruit: 'eggplant', emoji: '🍆' }, 29: { fruit: 'butternut squash', emoji: '🎃' }, 30: { fruit: 'cabbage', emoji: '🥬' }, 31: { fruit: 'coconut', emoji: '🥥' }, 32: { fruit: 'jicama', emoji: '🥔' }, 33: { fruit: 'pineapple', emoji: '🍍' }, 34: { fruit: 'large cantaloupe', emoji: '🍈' }, 35: { fruit: 'honeydew melon', emoji: '🍈' }, 36: { fruit: 'romaine lettuce', emoji: '🥬' }, 37: { fruit: 'swiss chard', emoji: '🥬' }, 38: { fruit: 'leek', emoji: '🌿' }, 39: { fruit: 'small pumpkin', emoji: '🎃' }, 40: { fruit: 'watermelon', emoji: '🍉' }
+        // Adding more sizes for completeness
+        21: { fruit: 'carrot', emoji: '🥕' }, 22: { fruit: 'spaghetti squash', emoji: '🎃' }, 23: { fruit: 'large mango', emoji: '🥭' }, 24: { fruit: 'ear of corn', emoji: '🌽' }, 25: { fruit: 'rutabaga', emoji: ' turnips' }, 26: { fruit: 'head of lettuce', emoji: '🥬' }, 27: { fruit: 'cauliflower', emoji: '🥦' }, 28: { fruit: 'eggplant', emoji: '🍆' }, 29: { fruit: 'butternut squash', emoji: '🎃' }, 30: { fruit: 'cabbage', emoji: '🥬' }, 31: { fruit: 'coconut', emoji: '🥥' }, 32: { fruit: 'jicama', emoji: '🥔' }, 33: { fruit: 'pineapple', emoji: '🍍' }, 34: { fruit: 'cantaloupe', emoji: '🍈' }, 35: { fruit: 'honeydew melon', emoji: '🍈' }, 36: { fruit: 'romaine lettuce', emoji: '🥬' }, 37: { fruit: 'swiss chard', emoji: '🥬' }, 38: { fruit: 'pumpkin', emoji: '🎃' }, 39: { fruit: 'watermelon', emoji: '🍉' }, 40: { fruit: 'small pumpkin', emoji: '🎃' }
     };
+
     const size = babySizes[diffWeeks] || {fruit: 'a little miracle', emoji: '✨'};
     babyGrowthSnapshotEl.innerHTML = `Week ${diffWeeks} — baby is the size of a ${size.fruit} ${size.emoji}`;
-
-    // --- NEW Wellness Tip Logic ---
+    
+    // --- NEW WELLNESS TIP, GLOW, and FUN FACT LOGIC ---
     const wellnessTipEl = document.getElementById('wellness-tip');
     const tip = wellnessTipsByWeek[diffWeeks] || "Stay hydrated and listen to your body's needs today.";
     wellnessTipEl.textContent = tip;
 
-    // Update glow color
+    // Update Fun Fact
+    funFactEl.textContent = funFacts[diffWeeks] || "Did you know? You're doing an amazing job!";
+
+    // Update Baby Message
+    babyMessageContent.textContent = babyMessages[diffWeeks] || "I'm growing every day thanks to you, Mama! 💖";
+    
+    // Update Glow Color based on Trimester
+    wellnessGlow.className = "wellness-glow"; // Reset classes
     if (diffWeeks <= 13) {
-        wellnessGlow.className = 'wellness-glow glow-green';
-    } else if (diffWeeks <= 26) {
-        wellnessGlow.className = 'wellness-glow glow-lavender';
+        wellnessGlow.classList.add('glow-green'); // First trimester
+    } else if (diffWeeks <= 27) {
+        wellnessGlow.classList.add('glow-lavender'); // Second trimester
     } else {
-        wellnessGlow.className = 'wellness-glow glow-blue';
+        wellnessGlow.classList.add('glow-blue'); // Third trimester
+    }
+}
+
+function openSupplementModal(date = new Date()) {
+    supplementLogDate = date;
+    const dateString = date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+    manageSupplementsModal.querySelector('h3').textContent = `Log Supplements for ${dateString}`;
+
+    populateSupplementList();
+    manageSupplementsModal.classList.remove('hidden');
+    setTimeout(() => manageSupplementsModal.classList.add('active'), 10);
+}
+function closeSupplementModal() {
+    if (unsubscribeSupplementLog) unsubscribeSupplementLog();
+    manageSupplementsModal.classList.remove('active');
+    setTimeout(() => manageSupplementsModal.classList.add('hidden'), 300);
+}
+
+async function populateSupplementList() {
+    supplementListContainer.innerHTML = `<p class="text-center text-gray-400">Loading supplements...</p>`;
+    
+    const weekId = getWeekId(supplementLogDate);
+    const dayIndex = (supplementLogDate.getDay() + 6) % 7; 
+    const dayKey = days[dayIndex];
+    const userId = getCurrentUserId();
+    const wellnessDocRefForLog = doc(db, `users/${userId}/wellness`, weekId);
+
+    if (unsubscribeSupplementLog) unsubscribeSupplementLog();
+
+    unsubscribeSupplementLog = onSnapshot(wellnessDocRefForLog, (docSnap) => {
+        const wellnessDataForLog = docSnap.exists() ? docSnap.data() : defaultWellnessData;
+        const loggedSupplements = wellnessDataForLog.dailySupplements[dayKey] || [];
+        
+        supplementListContainer.innerHTML = '';
+        if (userSupplements.length === 0) {
+            supplementListContainer.innerHTML = `<p class="text-center text-gray-400">No supplements added yet.</p>`;
+            return;
+        }
+
+        userSupplements.forEach(supp => {
+            const item = document.createElement('div');
+            const isLogged = loggedSupplements.includes(supp);
+            item.className = `flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer`;
+            if (isLogged) {
+                item.classList.add('bg-purple-500/20');
+            }
+            const nutrients = supplementNutrients[supp] || { iron: '?', calcium: '?', folate: '?' };
+
+            item.innerHTML = `
+                <div class="flex-1 pr-2">
+                    <span class="font-semibold text-white">${supp}</span>
+                    <div class="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs mt-1.5 text-gray-300">
+                        <span>Iron: ${nutrients.iron}</span>
+                        <span>Ca: ${nutrients.calcium}</span>
+                        <span>Folate: ${nutrients.folate}</span>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    ${isLogged ? '<svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>' : '<svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'}
+                </div>`;
+            item.addEventListener('click', () => toggleSupplementForDay(supp));
+            supplementListContainer.appendChild(item);
+        });
+    });
+}
+
+async function toggleSupplementForDay(suppName) {
+    const dayIndex = (supplementLogDate.getDay() + 6) % 7; 
+    const dayKey = days[dayIndex];
+    const weekId = getWeekId(supplementLogDate);
+    const userId = getCurrentUserId();
+    const wellnessDocRefForLog = doc(db, `users/${userId}/wellness`, weekId);
+
+    const docSnap = await getDoc(wellnessDocRefForLog);
+    const wellnessDataForLog = docSnap.exists() ? docSnap.data() : defaultWellnessData;
+    const loggedSupplements = wellnessDataForLog.dailySupplements[dayKey] || [];
+
+    const isLogged = loggedSupplements.includes(suppName);
+    const updateOperation = isLogged ? arrayRemove(suppName) : arrayUnion(suppName);
+
+    await setDoc(wellnessDocRefForLog, {
+        dailySupplements: {
+            [dayKey]: updateOperation
+        }
+    }, { merge: true });
+}
+
+function updateDailySupplementsUI(dayKey) {
+    dailySupplementsList.innerHTML = '';
+    const todaysSupplements = wellnessData.dailySupplements[dayKey] || [];
+    if (todaysSupplements.length === 0) {
+        dailySupplementsList.innerHTML = `<p class="text-xs text-gray-400 italic">No supplements logged for today.</p>`;
+        return;
+    }
+    todaysSupplements.forEach(suppName => {
+        const pill = document.createElement('div');
+        pill.className = 'flex items-center bg-purple-500 bg-opacity-20 text-purple-200 text-xs font-semibold px-2.5 py-1 rounded-full';
+        pill.innerHTML = `<span>${suppName}</span>
+        <button class="ml-2 remove-supp-btn" data-supp="${suppName}">
+            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+        </button>`;
+        pill.querySelector('.remove-supp-btn').addEventListener('click', () => removeSupplementFromDay(suppName));
+        dailySupplementsList.appendChild(pill);
+    });
+}
+
+async function removeSupplementFromDay(suppName) {
+     const todayIndex = new Date().getDay(); const dayKey = days[(todayIndex === 0 ? 6 : todayIndex - 1)];
+     await updateDoc(wellnessDataRef, { [`dailySupplements.${dayKey}`]: arrayRemove(suppName) });
+}
+
+async function deleteSupplement(suppToDelete) {
+    await updateDoc(userSupplementsRef, { list: arrayRemove(suppToDelete) });
+    await updateDoc(supplementNutrientsRef, { [suppToDelete]: deleteField() });
+}
+
+async function handleAddSupplement() {
+    const userSupp = newSupplementInput.value.trim(); if (!userSupp) return;
+    supplementApiLoader.classList.remove('hidden'); addSupplementText.textContent = 'Checking...'; addSupplementBtn.disabled = true; supplementApiFeedback.classList.add('hidden');
+    const systemPrompt = "You are a prenatal nutritionist. Evaluate if a supplement is generally safe for pregnancy. Provide an estimated nutritional profile (integers 0-3) for iron, calcium, and folate. Your response MUST be ONLY a valid JSON object matching this structure: { \"isSuitable\": boolean, \"supplementName\": string, \"reasoning\": string, \"nutrients\": { \"iron\": number, \"calcium\": number, \"folate\": number } }.";
+    const userQuery = `Evaluate this supplement for pregnancy: "${userSupp}"`; const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+    const payload = {
+        contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] },
+        generationConfig: { responseMimeType: "application/json" }
+    };
+     try {
+        const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (!response.ok) throw new Error(`API error: ${response.statusText}`);
+        const result = await response.json(); const text = result.candidates[0].content.parts[0].text; const data = JSON.parse(text);
+        if (data.isSuitable) {
+            if (!userSupplements.includes(data.supplementName)) {
+                await updateDoc(userSupplementsRef, { list: arrayUnion(data.supplementName) });
+                if (supplementNutrientsRef && data.nutrients) {
+                    await updateDoc(supplementNutrientsRef, { [data.supplementName]: {...data.nutrients, fiber: 0} });
+                }
+                newSupplementInput.value = ''; showApiFeedback(`Success! "${data.supplementName}" was added.`, 'success', supplementApiFeedback);
+            } else { showApiFeedback(`"${data.supplementName}" is already on the list.`, 'warning', supplementApiFeedback); }
+        } else {
+            showApiFeedback(`<strong>Caution:</strong><br>${data.reasoning}`, 'error', supplementApiFeedback);
+        }
+    } catch (error) { console.error("Gemini API call failed for supplement:", error); showApiFeedback("Sorry, I couldn't verify that right now.", 'error', supplementApiFeedback); } 
+    finally { supplementApiLoader.classList.add('hidden'); addSupplementText.textContent = 'Check & Add Supplement'; addSupplementBtn.disabled = false; }
+}
+
+function openNutritionHistoryModal() {
+    nutritionHistoryCurrentDate = new Date(); // Reset to current week
+    populateNutritionHistory(nutritionHistoryCurrentDate);
+    nutritionHistoryModal.classList.remove('hidden');
+    setTimeout(() => nutritionHistoryModal.classList.add('active'), 10);
+}
+
+function closeNutritionHistoryModal() {
+    nutritionHistoryModal.classList.remove('active');
+    setTimeout(() => nutritionHistoryModal.classList.add('hidden'), 300);
+}
+
+async function populateNutritionHistory(date) {
+    nutritionHistoryContainer.innerHTML = '<p class="text-center text-gray-400">Loading history...</p>';
+    nutritionHistoryWeekDisplay.textContent = formatWeekDisplay(date);
+
+    const weekId = getWeekId(date);
+    const userId = getCurrentUserId();
+    if (!userId) {
+        nutritionHistoryContainer.innerHTML = '<p class="text-center text-red-400">Could not load data. User not found.</p>';
+        return;
     }
 
-    // Update fun fact
-    const fact = funFactsByWeek[diffWeeks] || "Did you know? Your baby's heart is beating incredibly fast!";
-    funFactEl.textContent = fact;
+    const weekMealPlanRef = doc(db, `users/${userId}/mealPlans`, weekId);
+    const weekMealPlanSnap = await getDoc(weekMealPlanRef);
+    const mealPlanForWeek = weekMealPlanSnap.exists() ? weekMealPlanSnap.data() : defaultMealPlan;
 
-    // Update baby message
-    const message = babyMessages[diffWeeks] || "I'm growing so much every day. Love, Baby ❤️";
-    babyMessageContent.textContent = message;
-    // --- End new logic ---
+    const weekWellnessRef = doc(db, `users/${userId}/wellness`, weekId);
+    const weekWellnessSnap = await getDoc(weekWellnessRef);
+    const wellnessForWeek = weekWellnessSnap.exists() ? weekWellnessSnap.data() : defaultWellnessData;
+
+
+    nutritionHistoryContainer.innerHTML = '';
+    const allMealNutrients = getMealNutrients();
+    const dailyGoals = { iron: 8, calcium: 10, folate: 10, fiber: 8 };
+
+    days.forEach((dayKey, index) => {
+        const dayTitle = dayTitles[dayKey];
+        const totals = { iron: 0, calcium: 0, folate: 0, fiber: 0 };
+        for (const mealKey in mealPlanForWeek) {
+            if (mealPlanForWeek[mealKey] && typeof mealPlanForWeek[mealKey] === 'object') {
+                const mealName = mealPlanForWeek[mealKey][dayKey];
+                if (mealName && allMealNutrients[mealName]) {
+                    const nutrients = allMealNutrients[mealName];
+                    totals.iron += nutrients.iron || 0;
+                    totals.calcium += nutrients.calcium || 0;
+                    totals.folate += nutrients.folate || 0;
+                    totals.fiber += nutrients.fiber || 0;
+                }
+            }
+        }
+        
+        const daySupplements = wellnessForWeek.dailySupplements[dayKey] || [];
+        daySupplements.forEach(suppName => {
+            if (supplementNutrients[suppName]) {
+                const nutrients = supplementNutrients[suppName];
+                totals.iron += nutrients.iron || 0;
+                totals.calcium += nutrients.calcium || 0;
+                totals.folate += nutrients.folate || 0;
+            }
+        });
+        
+        const nutritionData = {
+            iron: calculateNutrientStatus(totals.iron, dailyGoals.iron),
+            calcium: calculateNutrientStatus(totals.calcium, dailyGoals.calcium),
+            folate: calculateNutrientStatus(totals.folate, dailyGoals.folate),
+            fiber: calculateNutrientStatus(totals.fiber, dailyGoals.fiber)
+        };
+
+        const item = document.createElement('div');
+        item.className = 'p-3 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors';
+        item.innerHTML = `
+            <h4 class="font-bold text-lg text-purple-300 mb-2">${dayTitle}</h4>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2 text-sm">
+                <div>Iron: <span class="font-semibold ${nutritionData.iron.color}">${nutritionData.iron.status} (${nutritionData.iron.percentage}%)</span></div>
+                <div>Calcium: <span class="font-semibold ${nutritionData.calcium.color}">${nutritionData.calcium.status} (${nutritionData.calcium.percentage}%)</span></div>
+                <div>Folate: <span class="font-semibold ${nutritionData.folate.color}">${nutritionData.folate.status} (${nutritionData.folate.percentage}%)</span></div>
+                <div>Fiber: <span class="font-semibold ${nutritionData.fiber.color}">${nutritionData.fiber.status} (${nutritionData.fiber.percentage}%)</span></div>
+            </div>
+        `;
+        const mondayOfRelevantWeek = new Date(getWeekId(date) + 'T00:00:00Z');
+        const dayDate = new Date(mondayOfRelevantWeek);
+        dayDate.setDate(mondayOfRelevantWeek.getDate() + index);
+
+        item.addEventListener('click', () => openSupplementModal(dayDate));
+        nutritionHistoryContainer.appendChild(item);
+    });
 }
+
 
 function closeStartDateModal() { startDateModal.classList.remove('active'); setTimeout(() => startDateModal.classList.add('hidden'), 300); }
 
@@ -1039,7 +1275,7 @@ async function populateSleepModal(date) {
 
     sleepScheduleContainer.innerHTML = '';
     const nightLabels = ["Sun/Mon", "Mon/Tue", "Tue/Wed", "Wed/Thu", "Thu/Fri", "Fri/Sat", "Sat/Sun"];
-
+    
     sleepDays.forEach((day, index) => {
         const dayData = sleepDataForWeek[day] || { sleep: '', wake: '' };
         const item = document.createElement('div');
@@ -1055,7 +1291,7 @@ function closeSleepModal() { sleepModal.classList.remove('active'); setTimeout((
 
 
 async function fetchWithBackoff(url, payload, maxRetries = 5) {
-    let delay = 1000;
+    let delay = 1000; 
     for (let i = 0; i < maxRetries; i++) {
         try {
             const response = await fetch(url, {
@@ -1065,17 +1301,16 @@ async function fetchWithBackoff(url, payload, maxRetries = 5) {
             });
 
             if (response.status === 429) {
-                // Rate limited, wait and retry
-                //console.warn(`Rate limited. Retrying in ${delay / 1000}s...`); // Optional: Log retries
+                console.warn(`Rate limited. Retrying in ${delay / 1000}s...`);
                 await new Promise(resolve => setTimeout(resolve, delay));
-                delay *= 2; // Exponential backoff
+                delay *= 2; 
                 continue;
             }
-
-            return response; // Success or non-retryable error
+            
+            return response;
         } catch (error) {
             console.error('Fetch failed:', error);
-            if (i === maxRetries - 1) throw error; // Rethrow after last retry
+            if (i === maxRetries - 1) throw error;
             await new Promise(resolve => setTimeout(resolve, delay));
             delay *= 2;
         }
@@ -1098,31 +1333,24 @@ export async function generateAllWellnessTips() {
     // Show loaders and clear previous content
     const allContainers = [partnerTipsContainer, hydrationSnacksContainer, partnerAvoidContainer, hydrationAvoidContainer];
     const allLoaders = [partnerTipsLoader, hydrationSnacksLoader, partnerAvoidLoader, hydrationAvoidLoader];
-
+    
     allLoaders.forEach(loader => loader.style.display = 'block');
     allContainers.forEach(container => {
         container.innerHTML = '';
-        const loader = container.querySelector('p[id$="-loader"]'); // Find the specific loader p tag
-        if(loader) container.appendChild(loader);
+        const loader = container.nextElementSibling; // Assumes loader is the next sibling
+        if(loader && loader.tagName === 'P') container.appendChild(loader);
     });
-
 
     try {
         if (!wellnessData.pregnancyStartDate) {
-            console.warn("Pregnancy start date is not set. Cannot generate tips yet.");
-            allContainers.forEach(container => {
-                 container.innerHTML = `<p class="text-gray-400">Enter pregnancy start date in Baby Growth section to get tips.</p>`
-                 const loader = container.querySelector('p[id$="-loader"]');
-                 if(loader) loader.style.display = 'none';
-            });
-            return; // Exit if no start date
+            throw new Error("Pregnancy start date is not set.");
         }
 
         // --- 1. Gather all context ---
         const pregnancyStartDate = new Date(wellnessData.pregnancyStartDate);
         const today = new Date();
         const diffTime = Math.abs(today - pregnancyStartDate);
-        const pregnancyWeek = Math.max(1, Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7))); // Ensure week is at least 1
+        const pregnancyWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) || 5; // Default to 5 if calculation is 0
         const todayIndex = today.getDay();
         const dayKey = days[todayIndex === 0 ? 6 : todayIndex - 1];
         const currentMealPlanData = getCurrentMealPlan();
@@ -1142,14 +1370,14 @@ export async function generateAllWellnessTips() {
         const systemPrompt = `You are an expert prenatal wellness assistant. Your task is to generate four distinct sets of tips based on the user's data.
         Your response MUST be ONLY a valid JSON object with the following four keys: "partnerTips", "hydrationSnacks", "partnerAvoid", "hydrationAvoid".
         Each key must contain an array of 2-3 short, actionable string tips.
-        - partnerTips: Supportive tips for the partner based on week, mood, and energy.
-        - hydrationSnacks: Hydration and snacking tips for the user based on week and meal plan.
-        - partnerAvoid: Things the partner should avoid saying or doing based on week, mood, energy.
-        - hydrationAvoid: General pregnancy food/drink safety reminders, possibly referencing today's meal plan IF relevant items are present.`;
-
+        - partnerTips: Supportive tips for the partner.
+        - hydrationSnacks: Hydration and snacking tips for the user.
+        - partnerAvoid: Things the partner should avoid saying or doing.
+        - hydrationAvoid: Foods or drinks the user should avoid.`;
+        
         const userQuery = `Context for today:\n- Pregnancy Week: ${pregnancyWeek}\n- Today's Meal Plan: ${mealPlanString}\n- Her Mood: ${mood}\n- Her Energy Level (1-5): ${energy}\n\nGenerate all four sets of tips.`;
-
-        const apiKey = ""; // API Key is handled by the environment
+        
+        const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
         const payload = {
             contents: [{ parts: [{ text: userQuery }] }],
@@ -1157,35 +1385,24 @@ export async function generateAllWellnessTips() {
             generationConfig: { responseMimeType: "application/json" }
         };
 
-        // --- 3. Make the single API call with backoff ---
+        // --- 3. Make the single API call ---
         const response = await fetchWithBackoff(apiUrl, payload);
-        if (!response.ok) throw new Error(`API response not OK: ${response.status} ${response.statusText}`);
-
+        if (!response.ok) throw new Error('API response not OK');
+        
         const result = await response.json();
-
-        // --- Error check API response structure ---
-        if (!result.candidates || !result.candidates[0] || !result.candidates[0].content || !result.candidates[0].content.parts || !result.candidates[0].content.parts[0].text) {
-             console.error("Unexpected API response structure:", result);
-             throw new Error("Invalid response format from API.");
-        }
-
-        const jsonString = result.candidates[0].content.parts[0].text;
-        const allTips = JSON.parse(jsonString); // Parse the JSON string
+        const allTips = JSON.parse(result.candidates[0].content.parts[0].text);
 
         // --- 4. Distribute the tips to the UI ---
         const renderTips = (container, tips) => {
-            const loader = container.querySelector('p[id$="-loader"]');
-            if(loader) loader.style.display = 'none'; // Hide loader first
-            container.innerHTML = ''; // Clear previous content *after* hiding loader
-            if (tips && Array.isArray(tips) && tips.length > 0) {
+            container.innerHTML = '';
+            if (tips && tips.length > 0) {
                 tips.forEach(tip => {
                     const li = document.createElement('li');
                     li.textContent = tip;
                     container.appendChild(li);
                 });
             } else {
-                 console.warn("Received empty or invalid tips for container:", container.id, tips);
-                 container.innerHTML = `<li class="text-gray-400">Helpful tips coming soon!</li>`; // Fallback message
+                container.innerHTML = `<p>Could not generate tips at the moment.</p>`;
             }
         };
 
@@ -1197,27 +1414,12 @@ export async function generateAllWellnessTips() {
     } catch (error) {
         console.error("Failed to generate combined wellness tips:", error);
         // Set default tips on error
-        const defaultTips = {
-            partnerTips: ["Offer a gentle back rub tonight.", "Make sure she has a full water bottle."],
-            hydrationSnacks: ["Keep a water bottle handy to sip throughout the day.", "A handful of almonds can be a great energy-boosting snack."],
-            partnerAvoid: ["Avoid commenting on her changing body unless it's a compliment."],
-            hydrationAvoid: ["Avoid unpasteurized juices or milk.", "Limit caffeine intake."]
-        };
-        const renderDefaultTips = (container, tips) => {
-             const loader = container.querySelector('p[id$="-loader"]');
-             if(loader) loader.style.display = 'none';
-             container.innerHTML = '';
-             tips.forEach(tip => {
-                 const li = document.createElement('li');
-                 li.textContent = tip;
-                 container.appendChild(li);
-             });
-         };
-         renderDefaultTips(partnerTipsContainer, defaultTips.partnerTips);
-         renderDefaultTips(hydrationSnacksContainer, defaultTips.hydrationSnacks);
-         renderDefaultTips(partnerAvoidContainer, defaultTips.partnerAvoid);
-         renderDefaultTips(hydrationAvoidContainer, defaultTips.hydrationAvoid);
-
+        partnerTipsContainer.innerHTML = `<li>Offer a gentle back rub tonight.</li><li>Make sure she has a full water bottle.</li>`;
+        hydrationSnacksContainer.innerHTML = `<li>Keep a water bottle handy to sip throughout the day.</li><li>A handful of almonds can be a great energy-boosting snack.</li>`;
+        partnerAvoidContainer.innerHTML = `<li>Avoid commenting on her changing body unless it's a compliment.</li>`;
+        hydrationAvoidContainer.innerHTML = `<li>Avoid unpasteurized juices or milk.</li><li>Limit caffeine intake.</li>`;
+    } finally {
+        allLoaders.forEach(loader => loader.style.display = 'none');
     }
 }
 
@@ -1226,7 +1428,7 @@ function openEditDayModal(dayKey) {
     editDayData = {}; // Clear previous data
     editDayData.dayKey = dayKey;
     const dayData = wellnessData.weeklyLog[dayKey] || {};
-
+    
     // Set initial values for editing
     editDayData.mood = dayData.mood || '😐';
     editDayData.energy = dayData.energy || 3;
@@ -1245,15 +1447,25 @@ function openEditDayModal(dayKey) {
         btn.classList.toggle('selected', parseInt(btn.dataset.energy) === editDayData.energy);
     });
     editHydrationText.textContent = editDayData.waterIntake;
-
+    
     editDayModal.classList.remove('hidden');
     setTimeout(() => {
-        editDayModal.classList.add('active'); // Add active class to the main modal overlay
+        const content = editDayModal.querySelector('#edit-day-modal-content');
+        if (content) {
+            content.parentElement.classList.add('active');
+        } else {
+            editDayModal.classList.add('active');
+        }
     }, 10);
 }
 
 function closeEditDayModal() {
-    editDayModal.classList.remove('active'); // Remove active class from the main modal overlay
+    const content = editDayModal.querySelector('#edit-day-modal-content');
+    if (content) {
+        content.parentElement.classList.remove('active');
+    } else {
+        editDayModal.classList.remove('active');
+    }
     setTimeout(() => editDayModal.classList.add('hidden'), 300);
 }
 
@@ -1280,325 +1492,4 @@ export function unloadWellness() {
         wellnessChart.destroy();
         wellnessChart = null;
     }
-}
-
-// --- Supplement Functions --- (Keep these grouped for clarity)
-
-function openSupplementModal(date = new Date()) {
-    supplementLogDate = date;
-    const dateString = date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
-    manageSupplementsModal.querySelector('h3').textContent = `Log Supplements for ${dateString}`;
-
-    populateSupplementList();
-    manageSupplementsModal.classList.remove('hidden');
-    setTimeout(() => manageSupplementsModal.classList.add('active'), 10);
-}
-function closeSupplementModal() {
-    if (unsubscribeSupplementLog) unsubscribeSupplementLog();
-    manageSupplementsModal.classList.remove('active');
-    setTimeout(() => manageSupplementsModal.classList.add('hidden'), 300);
-}
-
-async function populateSupplementList() {
-    supplementListContainer.innerHTML = `<p class="text-center text-gray-400">Loading supplements...</p>`;
-
-    const weekId = getWeekId(supplementLogDate);
-    const dayIndex = (supplementLogDate.getDay() + 6) % 7;
-    const dayKey = days[dayIndex];
-    const userId = getCurrentUserId();
-    const wellnessDocRefForLog = doc(db, `users/${userId}/wellness`, weekId);
-
-    if (unsubscribeSupplementLog) unsubscribeSupplementLog();
-
-    // Use try-catch for Firestore operations
-    try {
-        unsubscribeSupplementLog = onSnapshot(wellnessDocRefForLog, (docSnap) => {
-            const wellnessDataForLog = docSnap.exists() ? docSnap.data() : defaultWellnessData;
-            // Ensure dailySupplements exists and the dayKey exists within it
-            const loggedSupplements = (wellnessDataForLog.dailySupplements && wellnessDataForLog.dailySupplements[dayKey]) ? wellnessDataForLog.dailySupplements[dayKey] : [];
-
-            supplementListContainer.innerHTML = ''; // Clear loading message
-
-            if (userSupplements.length === 0) {
-                supplementListContainer.innerHTML = `<p class="text-center text-gray-400">No supplements added yet.</p>`;
-                return;
-            }
-
-            userSupplements.forEach(supp => {
-                const item = document.createElement('div');
-                const isLogged = loggedSupplements.includes(supp);
-                item.className = `flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer`;
-                if (isLogged) {
-                    item.classList.add('bg-purple-500/20', 'border', 'border-purple-400'); // Add border for logged items
-                }
-                const nutrients = supplementNutrients[supp] || { iron: '?', calcium: '?', folate: '?' };
-                 // Simplified nutrient display
-                const nutrientString = `Fe: ${nutrients.iron ?? '?'} | Ca: ${nutrients.calcium ?? '?'} | Fo: ${nutrients.folate ?? '?'}`;
-
-                item.innerHTML = `
-                    <div class="flex-1 pr-2">
-                        <span class="font-semibold text-white">${supp}</span>
-                         <div class="text-xs mt-1 text-gray-400">${nutrientString}</div>
-                    </div>
-                    <div class="flex items-center">
-                         <button class="icon-btn delete-supp-btn mr-1" data-supp="${supp}" title="Remove '${supp}' from your list permanently">
-                            <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                        </button>
-                        ${isLogged
-                            ? '<svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'
-                            : '<svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'}
-                    </div>`;
-                // Log/Unlog click listener on the main item div
-                item.addEventListener('click', (e) => {
-                    // Prevent toggling if delete button was clicked
-                    if (!e.target.closest('.delete-supp-btn')) {
-                       toggleSupplementForDay(supp);
-                    }
-                });
-                // Delete button listener
-                item.querySelector('.delete-supp-btn').addEventListener('click', (e) => {
-                     e.stopPropagation(); // Prevent the main click listener
-                     deleteSupplement(supp);
-                 });
-                supplementListContainer.appendChild(item);
-            });
-        }, (error) => { // Add error handling for the snapshot listener
-            console.error("Error listening to wellness data for supplement log:", error);
-            supplementListContainer.innerHTML = `<p class="text-center text-red-400">Error loading supplement log.</p>`;
-        });
-    } catch (error) {
-         console.error("Error setting up supplement log listener:", error);
-         supplementListContainer.innerHTML = `<p class="text-center text-red-400">Error loading supplement log.</p>`;
-    }
-}
-
-
-async function toggleSupplementForDay(suppName) {
-    const dayIndex = (supplementLogDate.getDay() + 6) % 7;
-    const dayKey = days[dayIndex];
-    const weekId = getWeekId(supplementLogDate);
-    const userId = getCurrentUserId();
-    const wellnessDocRefForLog = doc(db, `users/${userId}/wellness`, weekId);
-
-    try {
-        const docSnap = await getDoc(wellnessDocRefForLog);
-        const wellnessDataForLog = docSnap.exists() ? docSnap.data() : defaultWellnessData;
-        // Ensure dailySupplements and the specific day exists
-        const loggedSupplements = (wellnessDataForLog.dailySupplements && wellnessDataForLog.dailySupplements[dayKey]) ? wellnessDataForLog.dailySupplements[dayKey] : [];
-
-
-        const isLogged = loggedSupplements.includes(suppName);
-        const updateOperation = isLogged ? arrayRemove(suppName) : arrayUnion(suppName);
-
-        // Use setDoc with merge: true for robust updates
-        await setDoc(wellnessDocRefForLog, {
-            dailySupplements: {
-                [dayKey]: updateOperation
-            }
-        }, { merge: true });
-
-    } catch (error) {
-        console.error("Error toggling supplement:", error);
-        // Optionally show user feedback here
-    }
-}
-
-
-async function removeSupplementFromDay(suppName) {
-     const todayIndex = new Date().getDay();
-     const dayKey = days[(todayIndex === 0 ? 6 : todayIndex - 1)]; // Get today's key
-     const weekId = getWeekId(new Date()); // Ensure we're updating the current week document
-     const wellnessDocRefForUpdate = doc(db, `users/${getCurrentUserId()}/wellness`, weekId);
-
-     try {
-         await updateDoc(wellnessDocRefForUpdate, {
-             [`dailySupplements.${dayKey}`]: arrayRemove(suppName)
-         });
-     } catch (error) {
-         console.error("Error removing supplement from day:", error);
-     }
-}
-
-
-async function deleteSupplement(suppToDelete) {
-    try {
-        // Remove from the list
-        await updateDoc(userSupplementsRef, { list: arrayRemove(suppToDelete) });
-        // Remove associated nutrients
-        await updateDoc(supplementNutrientsRef, { [suppToDelete]: deleteField() });
-
-        // Remove from all daily logs across all relevant wellness docs (optional, but good practice)
-        // This is more complex, might require iterating through docs or using Cloud Functions for efficiency
-        // For now, removing from the main list is the primary action.
-        console.log(`Supplement '${suppToDelete}' removed from master list.`);
-
-    } catch (error) {
-        console.error("Error deleting supplement:", error);
-    }
-}
-
-async function handleAddSupplement() {
-    const userSupp = newSupplementInput.value.trim(); if (!userSupp) return;
-    supplementApiLoader.classList.remove('hidden'); addSupplementText.textContent = 'Checking...'; addSupplementBtn.disabled = true; supplementApiFeedback.classList.add('hidden');
-    const systemPrompt = "You are a prenatal nutritionist. Evaluate if a supplement is generally safe for pregnancy. Provide an estimated nutritional profile (integers 0-3) for iron, calcium, and folate. Fiber is not needed. Your response MUST be ONLY a valid JSON object matching this structure: { \"isSuitable\": boolean, \"supplementName\": string, \"reasoning\": string, \"nutrients\": { \"iron\": number, \"calcium\": number, \"folate\": number } }.";
-    const userQuery = `Evaluate this supplement for pregnancy: "${userSupp}"`; const apiKey = ""; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-    const payload = {
-        contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] },
-        generationConfig: { responseMimeType: "application/json" }
-    };
-     try {
-        const response = await fetchWithBackoff(apiUrl, payload); // Use fetchWithBackoff
-        if (!response.ok) throw new Error(`API error: ${response.status} ${response.statusText}`);
-
-        const result = await response.json();
-
-        if (!result.candidates || !result.candidates[0] || !result.candidates[0].content || !result.candidates[0].content.parts || !result.candidates[0].content.parts[0].text) {
-             console.error("Unexpected API response structure for supplement:", result);
-             throw new Error("Invalid response format from API.");
-        }
-
-        const text = result.candidates[0].content.parts[0].text;
-        const data = JSON.parse(text);
-
-        if (data.isSuitable) {
-            if (!userSupplements.includes(data.supplementName)) {
-                await updateDoc(userSupplementsRef, { list: arrayUnion(data.supplementName) });
-                if (supplementNutrientsRef && data.nutrients) {
-                    // Make sure nutrients object is valid before updating
-                    const validNutrients = {
-                        iron: typeof data.nutrients.iron === 'number' ? data.nutrients.iron : 0,
-                        calcium: typeof data.nutrients.calcium === 'number' ? data.nutrients.calcium : 0,
-                        folate: typeof data.nutrients.folate === 'number' ? data.nutrients.folate : 0,
-                        fiber: 0 // Explicitly set fiber to 0 as requested
-                    };
-                    await updateDoc(supplementNutrientsRef, { [data.supplementName]: validNutrients });
-                }
-                newSupplementInput.value = ''; showApiFeedback(`Success! "${data.supplementName}" was added.`, 'success', supplementApiFeedback);
-            } else { showApiFeedback(`"${data.supplementName}" is already on the list.`, 'warning', supplementApiFeedback); }
-        } else {
-            showApiFeedback(`<strong>Caution:</strong><br>${data.reasoning}`, 'error', supplementApiFeedback);
-        }
-    } catch (error) {
-        console.error("Gemini API call failed for supplement:", error);
-        showApiFeedback("Sorry, I couldn't verify that right now. Please try again.", 'error', supplementApiFeedback);
-    }
-    finally { supplementApiLoader.classList.add('hidden'); addSupplementText.textContent = 'Check & Add Supplement'; addSupplementBtn.disabled = false; }
-}
-
-
-// --- Nutrition History Functions --- (Keep these grouped)
-
-function openNutritionHistoryModal() {
-    nutritionHistoryCurrentDate = new Date(); // Reset to current week
-    populateNutritionHistory(nutritionHistoryCurrentDate);
-    nutritionHistoryModal.classList.remove('hidden');
-    setTimeout(() => nutritionHistoryModal.classList.add('active'), 10);
-}
-
-function closeNutritionHistoryModal() {
-    nutritionHistoryModal.classList.remove('active');
-    setTimeout(() => nutritionHistoryModal.classList.add('hidden'), 300);
-}
-
-async function populateNutritionHistory(date) {
-    nutritionHistoryContainer.innerHTML = '<p class="text-center text-gray-400">Loading history...</p>';
-    nutritionHistoryWeekDisplay.textContent = formatWeekDisplay(date);
-
-    const weekId = getWeekId(date);
-    const userId = getCurrentUserId();
-    if (!userId) {
-        nutritionHistoryContainer.innerHTML = '<p class="text-center text-red-400">Could not load data. User not found.</p>';
-        return;
-    }
-
-    try {
-        const weekMealPlanRef = doc(db, `users/${userId}/mealPlans`, weekId);
-        const weekMealPlanSnap = await getDoc(weekMealPlanRef);
-        const mealPlanForWeek = weekMealPlanSnap.exists() ? weekMealPlanSnap.data() : defaultMealPlan;
-
-        const weekWellnessRef = doc(db, `users/${userId}/wellness`, weekId);
-        const weekWellnessSnap = await getDoc(weekWellnessRef);
-        const wellnessForWeek = weekWellnessSnap.exists() ? weekWellnessSnap.data() : defaultWellnessData;
-
-
-        nutritionHistoryContainer.innerHTML = ''; // Clear loading message
-        const allMealNutrients = getMealNutrients();
-        const dailyGoals = { iron: 8, calcium: 10, folate: 10, fiber: 8 }; // Example goals
-
-        days.forEach((dayKey, index) => {
-            const dayTitle = dayTitles[dayKey];
-            const totals = { iron: 0, calcium: 0, folate: 0, fiber: 0 };
-            for (const mealKey in mealPlanForWeek) {
-                if (mealPlanForWeek[mealKey] && typeof mealPlanForWeek[mealKey] === 'object') {
-                    const mealName = mealPlanForWeek[mealKey][dayKey];
-                    if (mealName && allMealNutrients[mealName]) {
-                        const nutrients = allMealNutrients[mealName];
-                        totals.iron += nutrients.iron || 0;
-                        totals.calcium += nutrients.calcium || 0;
-                        totals.folate += nutrients.folate || 0;
-                        totals.fiber += nutrients.fiber || 0;
-                    }
-                }
-            }
-
-            // Ensure dailySupplements and the specific day exists
-            const daySupplements = (wellnessForWeek.dailySupplements && wellnessForWeek.dailySupplements[dayKey]) ? wellnessForWeek.dailySupplements[dayKey] : [];
-            daySupplements.forEach(suppName => {
-                if (supplementNutrients[suppName]) {
-                    const nutrients = supplementNutrients[suppName];
-                    totals.iron += nutrients.iron || 0;
-                    totals.calcium += nutrients.calcium || 0;
-                    totals.folate += nutrients.folate || 0;
-                    // Fiber is not typically in supplements, ignore here
-                }
-            });
-
-            const nutritionData = {
-                iron: calculateNutrientStatus(totals.iron, dailyGoals.iron),
-                calcium: calculateNutrientStatus(totals.calcium, dailyGoals.calcium),
-                folate: calculateNutrientStatus(totals.folate, dailyGoals.folate),
-                fiber: calculateNutrientStatus(totals.fiber, dailyGoals.fiber)
-            };
-
-            const item = document.createElement('div');
-            item.className = 'p-3 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors';
-            item.innerHTML = `
-                <h4 class="font-bold text-lg text-purple-300 mb-2">${dayTitle}</h4>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2 text-sm">
-                    <div>Iron: <span class="font-semibold ${nutritionData.iron.color}">${nutritionData.iron.status} (${nutritionData.iron.percentage}%)</span></div>
-                    <div>Calcium: <span class="font-semibold ${nutritionData.calcium.color}">${nutritionData.calcium.status} (${nutritionData.calcium.percentage}%)</span></div>
-                    <div>Folate: <span class="font-semibold ${nutritionData.folate.color}">${nutritionData.folate.status} (${nutritionData.folate.percentage}%)</span></div>
-                    <div>Fiber: <span class="font-semibold ${nutritionData.fiber.color}">${nutritionData.fiber.status} (${nutritionData.fiber.percentage}%)</span></div>
-                </div>
-            `;
-            const mondayOfRelevantWeek = new Date(getWeekId(date) + 'T00:00:00Z');
-            const dayDate = new Date(mondayOfRelevantWeek);
-            dayDate.setDate(mondayOfRelevantWeek.getDate() + index);
-
-            // Clicking a day in history opens the supplement log for THAT day
-            item.addEventListener('click', () => {
-                closeNutritionHistoryModal(); // Close history modal first
-                openSupplementModal(dayDate); // Open supplement log for the clicked day
-            });
-            nutritionHistoryContainer.appendChild(item);
-        });
-    } catch (error) {
-        console.error("Error fetching nutrition history:", error);
-        nutritionHistoryContainer.innerHTML = '<p class="text-center text-red-400">Could not load nutrition history.</p>';
-    }
-}
-
-// --- Utility Functions --- (Keep these grouped)
-
-function showApiFeedback(message, type, element) {
-    element.innerHTML = message;
-    element.className = 'text-sm p-3 rounded-md bg-opacity-20'; // Reset classes first
-    if (type === 'success') element.classList.add('bg-green-500', 'text-green-200');
-    else if (type === 'error') element.classList.add('bg-red-500', 'text-red-200');
-    else if (type === 'warning') element.classList.add('bg-yellow-500', 'text-yellow-200');
-    element.classList.remove('hidden');
-    // Auto-hide after a few seconds
-    setTimeout(() => {
-        element.classList.add('hidden');
-    }, 4000);
 }
