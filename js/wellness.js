@@ -72,7 +72,7 @@ const wellnessGlow = document.getElementById('wellness-glow');
 const funFactEl = document.getElementById('fun-fact-content');
 const babyMessageModal = document.getElementById('baby-message-modal');
 const babyMessageContent = document.getElementById('baby-message-content');
-const babyMessageCloseBtn = document.getElementById('baby-message-close-btn');
+// const babyMessageCloseBtn = document.getElementById('baby-message-close-btn'); // REMOVED (Task 1)
 // --- End of NEW DOM Elements ---
 
 
@@ -551,11 +551,13 @@ function setupEventListeners() {
         setTimeout(() => babyMessageModal.classList.add('active'), 10);
     });
 
-    babyMessageCloseBtn.addEventListener('click', () => {
-        babyMessageModal.classList.remove('active');
-        setTimeout(() => babyMessageModal.classList.add('hidden'), 300);
-    });
+    // REMOVED close button listener (Task 1)
+    // babyMessageCloseBtn.addEventListener('click', () => {
+    //     babyMessageModal.classList.remove('active');
+    //     setTimeout(() => babyMessageModal.classList.add('hidden'), 300);
+    // });
 
+    // This listener handles closing when clicking the backdrop (Task 2)
     babyMessageModal.addEventListener('click', (e) => {
         if (e.target === babyMessageModal) {
             babyMessageModal.classList.remove('active');
