@@ -17,6 +17,7 @@ const babyGrowthSnapshotEl = document.getElementById('baby-growth-snapshot');
 const moodLogButtons = document.getElementById('mood-log-buttons');
 const energyLogButtons = document.getElementById('energy-log-buttons');
 const babyGrowthCard = document.getElementById('baby-growth-card');
+const babyVisualizerContainer = document.getElementById('baby-visualizer-container'); // Added this
 const startDateModal = document.getElementById('start-date-modal');
 const startDateInput = document.getElementById('start-date-input');
 const endDateInput = document.getElementById('end-date-input');
@@ -74,6 +75,11 @@ const babyMessageModal = document.getElementById('baby-message-modal');
 const babyMessageContent = document.getElementById('baby-message-content');
 // const babyMessageCloseBtn = document.getElementById('baby-message-close-btn'); // REMOVED (Task 1)
 // --- End of NEW DOM Elements ---
+
+// --- 3D Visualizer Globals ---
+let scene, camera, renderer, babyModel, mouseControls;
+let animationFrameId = null;
+// --- End 3D Globals ---
 
 
 let wellnessDataRef, symptomTrackerCollectionRef, userSupplementsRef, supplementNutrientsRef;
@@ -222,7 +228,7 @@ const funFacts = {
     1: "Did you know? Week 1 is technically your period—your body is just preparing the 'nest'!",
     2: "Did you know? Ovulation (when the egg is released) happens around the end of this week.",
     3: "Did you know? If conception happens, the fertilized egg is called a zygote!",
-    4: "Did you know? The tiny ball of cells, a blastocyst, implants into your uterus this week.",
+    4. "Did you know? The tiny ball of cells, a blastocyst, implants into your uterus this week.",
     5: "Did you know? Your baby's heart, brain, and spinal cord are already beginning to form.",
     6: "Did you know? Your baby's heart is beating! It's often visible on an early ultrasound.",
     7: "Did you know? The baby is generating about 100 new brain cells every single minute!",
@@ -297,6 +303,149 @@ function formatWeekDisplay(d) {
     return `${mondayStr} - ${sundayStr}`;
 }
 
+// --- NEW 3D VISUALIZER FUNCTIONS ---
+
+/**
+ * Initializes the 3D scene, camera, renderer, and model.
+ */
+function initThreeJS() {
+    // 1. Check if THREE is loaded and container exists
+    if (typeof THREE === 'undefined' || !babyVisualizerContainer) {
+        console.error("Three.js or container not found.");
+        return;
+    }
+    
+    // 2. Scene
+    scene = new THREE.Scene();
+
+    // 3. Camera
+    const width = babyVisualizerContainer.clientWidth;
+    const height = babyVisualizerContainer.clientHeight;
+    camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+    camera.position.z = 5;
+
+    // 4. Renderer
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); // alpha: true for transparent bg
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    babyVisualizerContainer.appendChild(renderer.domElement);
+
+    // 5. Abstract Model (a cloud of points)
+    const geometry = new THREE.IcosahedronGeometry(1.5, 4); // radius 1.5, detail 4
+    const material = new THREE.PointsMaterial({
+        color: 0xa78bfa, // Purple
+        size: 0.015,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        opacity: 0.8
+    });
+    babyModel = new THREE.Points(geometry, material);
+    scene.add(babyModel);
+
+    // 6. Lighting (Subtle, for if we change to a solid model)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    scene.add(ambientLight);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(1, 1, 1);
+    scene.add(directionalLight);
+
+    // 7. Mouse Controls (Simple rotation)
+    mouseControls = {
+        isDragging: false,
+        previousMousePosition: { x: 0, y: 0 },
+        onMouseDown: (e) => {
+            mouseControls.isDragging = true;
+            mouseControls.previousMousePosition.x = e.clientX;
+            mouseControls.previousMousePosition.y = e.clientY;
+            babyVisualizerContainer.style.cursor = 'grabbing';
+        },
+        onMouseMove: (e) => {
+            if (!mouseControls.isDragging) return;
+            const deltaX = e.clientX - mouseControls.previousMousePosition.x;
+            const deltaY = e.clientY - mouseControls.previousMousePosition.y;
+            
+            if (babyModel) {
+                babyModel.rotation.y += deltaX * 0.005;
+                babyModel.rotation.x += deltaY * 0.005;
+            }
+
+            mouseControls.previousMousePosition.x = e.clientX;
+            mouseControls.previousMousePosition.y = e.clientY;
+        },
+        onMouseUp: () => {
+            mouseControls.isDragging = false;
+            babyVisualizerContainer.style.cursor = 'grab';
+        },
+        onMouseLeave: () => {
+            mouseControls.isDragging = false;
+            babyVisualizerContainer.style.cursor = 'grab';
+        }
+    };
+    babyVisualizerContainer.addEventListener('mousedown', mouseControls.onMouseDown);
+    babyVisualizerContainer.addEventListener('mousemove', mouseControls.onMouseMove);
+    babyVisualizerContainer.addEventListener('mouseup', mouseControls.onMouseUp);
+    babyVisualizerContainer.addEventListener('mouseleave', mouseControls.onMouseLeave);
+
+
+    // 8. Handle Resize
+    const onResize = () => {
+        if (!renderer || !camera || !babyVisualizerContainer) return;
+        const newWidth = babyVisualizerContainer.clientWidth;
+        const newHeight = babyVisualizerContainer.clientHeight;
+        
+        if (newWidth === 0 || newHeight === 0) return; // Avoid errors when hidden
+        
+        camera.aspect = newWidth / newHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(newWidth, newHeight);
+    };
+    // Use ResizeObserver to handle resize even when tab is hidden/shown
+    new ResizeObserver(onResize).observe(babyVisualizerContainer);
+    onResize(); // Call once to set initial size
+
+    // 9. Start Animation
+    animateThreeJS();
+}
+
+/**
+ * The animation loop for the 3D scene.
+ */
+function animateThreeJS() {
+    animationFrameId = requestAnimationFrame(animateThreeJS);
+    
+    // Gentle auto-rotation if not being dragged
+    if (babyModel && mouseControls && !mouseControls.isDragging) {
+        babyModel.rotation.y += 0.002;
+        babyModel.rotation.x += 0.0005;
+    }
+
+    if (renderer && scene && camera) {
+        renderer.render(scene, camera);
+    }
+}
+
+/**
+ * Updates the scale of the 3D model based on the pregnancy week.
+ * @param {number} week - The current week of pregnancy.
+ */
+function updateBabyModelSize(week) {
+    if (!babyModel) return;
+
+    // We start at week 1, max at week 40
+    // Clamp week between 1 and 40
+    const clampedWeek = Math.max(1, Math.min(week, 40));
+    
+    // Use a power scale (grows faster at the end)
+    // Map [1, 40] to [0.1, 1.5]
+    const scale = 0.1 + Math.pow(clampedWeek / 40, 2) * 1.4;
+
+    babyModel.scale.set(scale, scale, scale);
+}
+
+// --- END 3D VISUALIZER FUNCTIONS ---
+
+
 export async function initializeWellness(userId, onWellnessDataUpdate) {
     symptomTrackerCollectionRef = collection(db, `users/${userId}/symptomLogs`);
     userSupplementsRef = doc(db, `users/${userId}/supplements`, 'list-v1');
@@ -324,6 +473,9 @@ export async function initializeWellness(userId, onWellnessDataUpdate) {
     await initializeSupplements();
     loadSupplements();
     setupEventListeners();
+
+    // Initialize the 3D scene
+    initThreeJS();
 }
 
 async function initializeWellnessData(docRef, onWellnessDataUpdate) {
@@ -431,16 +583,28 @@ function setupEventListeners() {
     });
 
     symptomCheckBtn.addEventListener('click', handleSymptomCheck);
-    babyGrowthCard.addEventListener('click', () => {
-        startDateInput.value = wellnessData.pregnancyStartDate; endDateInput.value = wellnessData.pregnancyEndDate || '';
-        startDateModal.classList.remove('hidden'); setTimeout(() => startDateModal.classList.add('active'), 10);
-    });
+    
+    // Updated babyGrowthCard listener to open the date modal
+    if (babyGrowthCard) {
+        const header = babyGrowthCard.querySelector('h3');
+        if (header) {
+            // Make header clickable to open date modal
+            header.classList.add('cursor-pointer', 'hover:text-white');
+            header.addEventListener('click', () => {
+                startDateInput.value = wellnessData.pregnancyStartDate; 
+                endDateInput.value = wellnessData.pregnancyEndDate || '';
+                startDateModal.classList.remove('hidden'); 
+                setTimeout(() => startDateModal.classList.add('active'), 10);
+            });
+        }
+    }
+
     startDateModalCancelBtn.addEventListener('click', closeStartDateModal);
     startDateModal.addEventListener('click', (e) => e.target === startDateModal && closeStartDateModal());
     startDateModalSaveBtn.addEventListener('click', async () => {
         const newStartDate = startDateInput.value; let newEndDate = endDateInput.value;
         if (newStartDate) {
-            if (!newEndDate) { const startDate = new Date(newStartDate); startDate.setDate(startDate.getDate() + (40 * 7)); newEndDate = startDate.toISOString().split('T')[0]; }
+            if (!newEndDate) { const startDate = new Date(newStartDate + 'T00:00:00'); startDate.setDate(startDate.getDate() + (40 * 7)); newEndDate = startDate.toISOString().split('T')[0]; }
             
             // Save to the 'daily' document. The onSnapshot listener will handle the UI updates.
             const userDocRef = doc(db, `users/${getCurrentUserId()}/wellness`, 'daily'); 
@@ -915,6 +1079,7 @@ export function renderWellnessChart() {
         wellnessChart.destroy();
     }
     const canvas = document.getElementById('wellnessChart');
+    if (!canvas) return; // Add check
     const ctx = canvas.getContext('2d');
     
     const data = {
@@ -992,7 +1157,7 @@ export function renderWellnessChart() {
 
 function updateDynamicContent() {
     if(!wellnessData.pregnancyStartDate) return;
-    const pregnancyStartDate = new Date(wellnessData.pregnancyStartDate);
+    const pregnancyStartDate = new Date(wellnessData.pregnancyStartDate + 'T00:00:00');
     const today = new Date();
     const diffTime = Math.abs(today - pregnancyStartDate);
     const diffWeeks = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) || 1; // Default to 1
@@ -1004,27 +1169,36 @@ function updateDynamicContent() {
     };
 
     const size = babySizes[diffWeeks] || {fruit: 'a little miracle', emoji: '✨'};
-    babyGrowthSnapshotEl.innerHTML = `Week ${diffWeeks} — baby is the size of a ${size.fruit} ${size.emoji}`;
+    
+    // Update the text label
+    if (babyGrowthSnapshotEl) {
+        babyGrowthSnapshotEl.innerHTML = `Week ${diffWeeks} — size of a ${size.fruit} ${size.emoji}`;
+    }
+    
+    // Update the 3D model scale
+    updateBabyModelSize(diffWeeks);
     
     // --- NEW WELLNESS TIP, GLOW, and FUN FACT LOGIC ---
     const wellnessTipEl = document.getElementById('wellness-tip');
     const tip = wellnessTipsByWeek[diffWeeks] || "Stay hydrated and listen to your body's needs today.";
-    wellnessTipEl.textContent = tip;
+    if (wellnessTipEl) wellnessTipEl.textContent = tip;
 
     // Update Fun Fact
-    funFactEl.textContent = funFacts[diffWeeks] || "Did you know? You're doing an amazing job!";
+    if (funFactEl) funFactEl.textContent = funFacts[diffWeeks] || "Did you know? You're doing an amazing job!";
 
     // Update Baby Message
-    babyMessageContent.textContent = babyMessages[diffWeeks] || "I'm growing every day thanks to you, Mama! 💖";
+    if (babyMessageContent) babyMessageContent.textContent = babyMessages[diffWeeks] || "I'm growing every day thanks to you, Mama! 💖";
     
     // Update Glow Color based on Trimester
-    wellnessGlow.className = "wellness-glow"; // Reset classes
-    if (diffWeeks <= 13) {
-        wellnessGlow.classList.add('glow-green'); // First trimester
-    } else if (diffWeeks <= 27) {
-        wellnessGlow.classList.add('glow-lavender'); // Second trimester
-    } else {
-        wellnessGlow.classList.add('glow-blue'); // Third trimester
+    if (wellnessGlow) {
+        wellnessGlow.className = "wellness-glow"; // Reset classes
+        if (diffWeeks <= 13) {
+            wellnessGlow.classList.add('glow-green'); // First trimester
+        } else if (diffWeeks <= 27) {
+            wellnessGlow.classList.add('glow-lavender'); // Second trimester
+        } else {
+            wellnessGlow.classList.add('glow-blue'); // Third trimester
+        }
     }
 }
 
@@ -1056,7 +1230,7 @@ async function populateSupplementList() {
 
     unsubscribeSupplementLog = onSnapshot(wellnessDocRefForLog, (docSnap) => {
         const wellnessDataForLog = docSnap.exists() ? docSnap.data() : defaultWellnessData;
-        const loggedSupplements = wellnessDataForLog.dailySupplements[dayKey] || [];
+        const loggedSupplements = (wellnessDataForLog.dailySupplements && wellnessDataForLog.dailySupplements[dayKey]) ? wellnessDataForLog.dailySupplements[dayKey] : [];
         
         supplementListContainer.innerHTML = '';
         if (userSupplements.length === 0) {
@@ -1100,7 +1274,7 @@ async function toggleSupplementForDay(suppName) {
 
     const docSnap = await getDoc(wellnessDocRefForLog);
     const wellnessDataForLog = docSnap.exists() ? docSnap.data() : defaultWellnessData;
-    const loggedSupplements = wellnessDataForLog.dailySupplements[dayKey] || [];
+    const loggedSupplements = (wellnessDataForLog.dailySupplements && wellnessDataForLog.dailySupplements[dayKey]) ? wellnessDataForLog.dailySupplements[dayKey] : [];
 
     const isLogged = loggedSupplements.includes(suppName);
     const updateOperation = isLogged ? arrayRemove(suppName) : arrayUnion(suppName);
@@ -1114,7 +1288,7 @@ async function toggleSupplementForDay(suppName) {
 
 function updateDailySupplementsUI(dayKey) {
     dailySupplementsList.innerHTML = '';
-    const todaysSupplements = wellnessData.dailySupplements[dayKey] || [];
+    const todaysSupplements = (wellnessData.dailySupplements && wellnessData.dailySupplements[dayKey]) ? wellnessData.dailySupplements[dayKey] : [];
     if (todaysSupplements.length === 0) {
         dailySupplementsList.innerHTML = `<p class="text-xs text-gray-400 italic">No supplements logged for today.</p>`;
         return;
@@ -1221,7 +1395,7 @@ async function populateNutritionHistory(date) {
             }
         }
         
-        const daySupplements = wellnessForWeek.dailySupplements[dayKey] || [];
+        const daySupplements = (wellnessForWeek.dailySupplements && wellnessForWeek.dailySupplements[dayKey]) ? wellnessForWeek.dailySupplements[dayKey] : [];
         daySupplements.forEach(suppName => {
             if (supplementNutrients[suppName]) {
                 const nutrients = supplementNutrients[suppName];
@@ -1336,11 +1510,12 @@ export async function generateAllWellnessTips() {
     const allContainers = [partnerTipsContainer, hydrationSnacksContainer, partnerAvoidContainer, hydrationAvoidContainer];
     const allLoaders = [partnerTipsLoader, hydrationSnacksLoader, partnerAvoidLoader, hydrationAvoidLoader];
     
-    allLoaders.forEach(loader => loader.style.display = 'block');
+    allLoaders.forEach(loader => { if(loader) loader.style.display = 'block' });
     allContainers.forEach(container => {
+        if (!container) return;
         container.innerHTML = '';
-        const loader = container.nextElementSibling; // Assumes loader is the next sibling
-        if(loader && loader.tagName === 'P') container.appendChild(loader);
+        const loader = container.querySelector('p[id$="-loader"]'); // Find child loader
+        if(loader) container.appendChild(loader);
     });
 
     try {
@@ -1349,7 +1524,7 @@ export async function generateAllWellnessTips() {
         }
 
         // --- 1. Gather all context ---
-        const pregnancyStartDate = new Date(wellnessData.pregnancyStartDate);
+        const pregnancyStartDate = new Date(wellnessData.pregnancyStartDate + 'T00:00:00');
         const today = new Date();
         const diffTime = Math.abs(today - pregnancyStartDate);
         const pregnancyWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) || 5; // Default to 5 if calculation is 0
@@ -1396,6 +1571,7 @@ export async function generateAllWellnessTips() {
 
         // --- 4. Distribute the tips to the UI ---
         const renderTips = (container, tips) => {
+            if (!container) return;
             container.innerHTML = '';
             if (tips && tips.length > 0) {
                 tips.forEach(tip => {
@@ -1416,12 +1592,12 @@ export async function generateAllWellnessTips() {
     } catch (error) {
         console.error("Failed to generate combined wellness tips:", error);
         // Set default tips on error
-        partnerTipsContainer.innerHTML = `<li>Offer a gentle back rub tonight.</li><li>Make sure she has a full water bottle.</li>`;
-        hydrationSnacksContainer.innerHTML = `<li>Keep a water bottle handy to sip throughout the day.</li><li>A handful of almonds can be a great energy-boosting snack.</li>`;
-        partnerAvoidContainer.innerHTML = `<li>Avoid commenting on her changing body unless it's a compliment.</li>`;
-        hydrationAvoidContainer.innerHTML = `<li>Avoid unpasteurized juices or milk.</li><li>Limit caffeine intake.</li>`;
+        if(partnerTipsContainer) partnerTipsContainer.innerHTML = `<li>Offer a gentle back rub tonight.</li><li>Make sure she has a full water bottle.</li>`;
+        if(hydrationSnacksContainer) hydrationSnacksContainer.innerHTML = `<li>Keep a water bottle handy to sip throughout the day.</li><li>A handful of almonds can be a great energy-boosting snack.</li>`;
+        if(partnerAvoidContainer) partnerAvoidContainer.innerHTML = `<li>Avoid commenting on her changing body unless it's a compliment.</li>`;
+        if(hydrationAvoidContainer) hydrationAvoidContainer.innerHTML = `<li>Avoid unpasteurized juices or milk.</li><li>Limit caffeine intake.</li>`;
     } finally {
-        allLoaders.forEach(loader => loader.style.display = 'none');
+        allLoaders.forEach(loader => { if(loader) loader.style.display = 'none' });
     }
 }
 
@@ -1454,7 +1630,12 @@ function openEditDayModal(dayKey) {
     setTimeout(() => {
         const content = editDayModal.querySelector('#edit-day-modal-content');
         if (content) {
-            content.parentElement.classList.add('active');
+            // Check for parentElement before adding class
+            if (content.parentElement) {
+                content.parentElement.classList.add('active');
+            } else {
+                editDayModal.classList.add('active'); // Fallback
+            }
         } else {
             editDayModal.classList.add('active');
         }
@@ -1464,7 +1645,11 @@ function openEditDayModal(dayKey) {
 function closeEditDayModal() {
     const content = editDayModal.querySelector('#edit-day-modal-content');
     if (content) {
-        content.parentElement.classList.remove('active');
+         if (content.parentElement) {
+            content.parentElement.classList.remove('active');
+         } else {
+            editDayModal.classList.remove('active'); // Fallback
+         }
     } else {
         editDayModal.classList.remove('active');
     }
@@ -1494,4 +1679,41 @@ export function unloadWellness() {
         wellnessChart.destroy();
         wellnessChart = null;
     }
+
+    // --- NEW 3D CLEANUP LOGIC ---
+    if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+    }
+    if (babyVisualizerContainer && mouseControls) {
+        babyVisualizerContainer.removeEventListener('mousedown', mouseControls.onMouseDown);
+        babyVisualizerContainer.removeEventListener('mousemove', mouseControls.onMouseMove);
+        babyVisualizerContainer.removeEventListener('mouseup', mouseControls.onMouseUp);
+        babyVisualizerContainer.removeEventListener('mouseleave', mouseControls.onMouseLeave);
+        // Remove the canvas
+        while (babyVisualizerContainer.firstChild) {
+            babyVisualizerContainer.removeChild(babyVisualizerContainer.firstChild);
+        }
+    }
+    if (renderer) {
+        renderer.dispose();
+        renderer = null;
+    }
+    if (scene) {
+        scene.traverse((object) => {
+            if (object.geometry) object.geometry.dispose();
+            if (object.material) {
+                if (Array.isArray(object.material)) {
+                    object.material.forEach(material => material.dispose());
+                } else {
+                    object.material.dispose();
+                }
+            }
+        });
+        scene = null;
+    }
+    camera = null;
+    babyModel = null;
+    mouseControls = null;
+    // --- END NEW 3D CLEANUP LOGIC ---
 }
