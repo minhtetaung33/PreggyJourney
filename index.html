@@ -6,6 +6,8 @@
     <title>Pregnancy Wellness Planner</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Add three.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Updated path to /css/style.css -->
     <link rel="stylesheet" href="./css/style.css">
@@ -105,7 +107,7 @@
                                  <div id="hydration-snacks-container" class="space-y-2 text-gray-300 list-disc list-inside">
                                     <!-- AI-generated tips will go here -->
                                     <p id="hydration-snacks-loader" class="text-gray-400">Loading personalized tips...</p>
-                                </div>
+                                 </div>
                                 <h4 class="text-lg font-bold mt-6 mb-2 text-red-400">To Avoid</h4>
                                 <div id="hydration-avoid-container" class="space-y-2 text-gray-300 list-disc list-inside">
                                     <!-- AI-generated avoid tips will go here -->
@@ -148,10 +150,16 @@
                                         </div>
                                     </div>
                                </div>
+                               <!-- 3D Baby Visualizer Card - UPDATED -->
                                <!-- Added anim-card class -->
-                               <div id="baby-growth-card" class="glass-card anim-card p-4 md:p-6 text-center cursor-pointer hover:bg-white/10 transition-colors">
-                                    <h3 class="text-xl font-bold mb-2">🍼 Baby Growth</h3>
-                                    <p id="baby-growth-snapshot" class="text-gray-300 text-lg">Week 10 — baby is the size of a strawberry 🍓</p>
+                               <div id="baby-growth-card" class="glass-card anim-card p-4 md:p-6 text-center no-hover">
+                                    <h3 class="text-xl font-bold mb-3">🍼 3D Baby Visualizer</h3>
+                                    <!-- This container will hold the 3D canvas -->
+                                    <div id="baby-visualizer-container" class="w-full h-48 rounded-lg overflow-hidden relative">
+                                        <!-- Canvas will be inserted here by JS -->
+                                    </div>
+                                    <!-- The text description is now below the visualizer -->
+                                    <p id="baby-growth-snapshot" class="text-gray-300 text-sm mt-3">Week 10 — baby is the size of a strawberry 🍓</p>
                                </div>
                             </div>
                         </div>
@@ -557,7 +565,7 @@
                 </div>
                 <select id="edit-todo-category" class="meal-select text-sm">
                     <option value="Health">🧘‍♀️ Health</option>
-                    <option value="Baby">🍼 Baby Prep</option>
+                    <option value."Baby">🍼 Baby Prep</option>
                     <option value="Home">🏡 Home</option>
                     <option value="Reminder">💬 Reminder</option>
                     <option value="Custom">✨ Custom</option>
