@@ -355,6 +355,7 @@ function initThreeJS() {
         isDragging: false,
         previousMousePosition: { x: 0, y: 0 },
         onMouseDown: (e) => {
+            e.stopPropagation(); // <-- ADDED: Stops click from bubbling to the parent card
             mouseControls.isDragging = true;
             mouseControls.previousMousePosition.x = e.clientX;
             mouseControls.previousMousePosition.y = e.clientY;
@@ -590,10 +591,16 @@ function setupEventListeners() {
     // --- End re-added listeners ---
 
     // Baby Growth Card / Start Date Modal Listeners (Consolidated)
-    babyGrowthCard.addEventListener('click', () => {
-        startDateInput.value = wellnessData.pregnancyStartDate; endDateInput.value = wellnessData.pregnancyEndDate || '';
-        startDateModal.classList.remove('hidden'); setTimeout(() => startDateModal.classList.add('active'), 10);
+    // REMOVED: babyGrowthCard.addEventListener('click', ...)
+    
+    // ADDED: Listener is now ONLY on the snapshot text element
+    babyGrowthSnapshotEl.addEventListener('click', () => {
+        startDateInput.value = wellnessData.pregnancyStartDate; 
+        endDateInput.value = wellnessData.pregnancyEndDate || '';
+        startDateModal.classList.remove('hidden'); 
+        setTimeout(() => startDateModal.classList.add('active'), 10);
     });
+
     startDateModalCancelBtn.addEventListener('click', closeStartDateModal);
     startDateModal.addEventListener('click', (e) => e.target === startDateModal && closeStartDateModal());
     startDateModalSaveBtn.addEventListener('click', async () => {
