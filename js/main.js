@@ -13,6 +13,8 @@ import {
     wellnessChart 
 } from './wellness.js';
 import { initializeJourney, unloadJourney, updateWellnessDataForJourney } from './journey.js';
+// Import new calm space functions
+import { initializeCalmSpace, unloadCalmSpace, updateWellnessDataForCalmSpace, stopCalmSpaceActivities } from './calm-space.js';
 
 let wellnessData = {};
 let currentMealPlan = {};
@@ -23,6 +25,7 @@ function onWellnessDataUpdate(newData) {
     wellnessData = newData;
     updateWellnessDataForMealPlanner(newData);
     updateWellnessDataForJourney(newData);
+    updateWellnessDataForCalmSpace(newData); // Pass data to new module
     
     // Check if both data sources are ready, and if tips haven't been generated yet.
     if (!tipsHaveBeenGenerated && Object.keys(currentMealPlan).length > 0 && Object.keys(wellnessData).length > 0) {
@@ -56,12 +59,14 @@ export const loadAllDataForUser = (userId) => {
     initializeMealPlanner(userId, onMealPlanUpdate, wellnessData);
     initializeWellness(userId, onWellnessDataUpdate);
     initializeJourney(userId, wellnessData);
+    initializeCalmSpace(userId, wellnessData); // Initialize new module
 };
 
 export const unloadAllData = () => {
     unloadMealPlanner();
     unloadWellness();
     unloadJourney();
+    unloadCalmSpace(); // Unload new module
 };
 
 
@@ -87,6 +92,11 @@ document.addEventListener('DOMContentLoaded', () => {
 function handleTabSwitch(activeTab) {
     const userId = getCurrentUserId();
     if (!userId) return;
+
+    // Stop any calm space activities (like sound) if we switch away
+    if (activeTab !== 'calm') {
+        stopCalmSpaceActivities();
+    }
 
     if (activeTab === 'symptom') {
         // If the chart instance doesn't exist yet, render it.
