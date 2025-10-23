@@ -17,9 +17,11 @@ export const elements = {
     mealPlanTab: document.getElementById('tab-meal-plan'),
     symptomTrackerTab: document.getElementById('tab-symptom-tracker'),
     journeyTab: document.getElementById('tab-journey'),
+    calmSpaceTab: document.getElementById('tab-calm-space'), // Add new tab
     mealPlanContent: document.getElementById('content-meal-plan'),
     symptomTrackerContent: document.getElementById('content-symptom-tracker'),
     journeyContent: document.getElementById('content-journey'),
+    calmSpaceContent: document.getElementById('content-calm-space'), // Add new content
 
     // --- NEW Animation Elements ---
     bubbleBackground: document.getElementById('bubble-background'),
@@ -150,26 +152,40 @@ export function setupTabs(onTabSwitch) {
         switchTab('journey');
         onTabSwitch('journey');
     });
+    // Add listener for new tab
+    elements.calmSpaceTab.addEventListener('click', () => {
+        switchTab('calm');
+        onTabSwitch('calm');
+    });
 }
 
 function switchTab(activeTab) {
     const tabs = {
         meal: { btn: elements.mealPlanTab, content: elements.mealPlanContent },
         symptom: { btn: elements.symptomTrackerTab, content: elements.symptomTrackerContent },
-        journey: { btn: elements.journeyTab, content: elements.journeyContent }
+        journey: { btn: elements.journeyTab, content: elements.journeyContent },
+        calm: { btn: elements.calmSpaceTab, content: elements.calmSpaceContent } // Add calm tab
     };
 
     Object.keys(tabs).forEach(key => {
-        tabs[key].btn.classList.remove('active');
-        tabs[key].content.classList.remove('active');
+        if(tabs[key].btn) {
+            tabs[key].btn.classList.remove('active');
+        }
+        if(tabs[key].content) {
+            tabs[key].content.classList.remove('active');
+        }
         // Reset animations on other tabs
         if (key !== activeTab) {
             resetTabAnimation(tabs[key].content);
         }
     });
 
-    tabs[activeTab].btn.classList.add('active');
-    tabs[activeTab].content.classList.add('active');
+    if(tabs[activeTab].btn) {
+        tabs[activeTab].btn.classList.add('active');
+    }
+    if(tabs[activeTab].content) {
+        tabs[activeTab].content.classList.add('active');
+    }
     
     // Play animation for the new active tab
     playTabEntranceAnimation(tabs[activeTab].content);
