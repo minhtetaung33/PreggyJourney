@@ -228,7 +228,7 @@ const funFacts = {
     1: "Did you know? Week 1 is technically your period—your body is just preparing the 'nest'!",
     2: "Did you know? Ovulation (when the egg is released) happens around the end of this week.",
     3: "Did you know? If conception happens, the fertilized egg is called a zygote!",
-    4. "Did you know? The tiny ball of cells, a blastocyst, implants into your uterus this week.",
+    4: "Did you know? The tiny ball of cells, a blastocyst, implants into your uterus this week.", // Corrected key from 4. to 4
     5: "Did you know? Your baby's heart, brain, and spinal cord are already beginning to form.",
     6: "Did you know? Your baby's heart is beating! It's often visible on an early ultrasound.",
     7: "Did you know? The baby is generating about 100 new brain cells every single minute!",
