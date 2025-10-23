@@ -13,8 +13,8 @@ import {
     wellnessChart 
 } from './wellness.js';
 import { initializeJourney, unloadJourney, updateWellnessDataForJourney } from './journey.js';
-// Import new Calm Space module
-import { initializeCalmSpace, unloadCalmSpace } from './calm-space.js';
+// Import new calm space functions
+import { initializeCalmSpace, unloadCalmSpace, triggerCalmSpaceIntro } from './calm-space.js';
 
 let wellnessData = {};
 let currentMealPlan = {};
@@ -58,14 +58,14 @@ export const loadAllDataForUser = (userId) => {
     initializeMealPlanner(userId, onMealPlanUpdate, wellnessData);
     initializeWellness(userId, onWellnessDataUpdate);
     initializeJourney(userId, wellnessData);
-    initializeCalmSpace(userId, wellnessData); // Initialize new module
+    initializeCalmSpace(userId); // Initialize new calm space module
 };
 
 export const unloadAllData = () => {
     unloadMealPlanner();
     unloadWellness();
     unloadJourney();
-    unloadCalmSpace(); // Unload new module
+    unloadCalmSpace(); // Unload new calm space module
 };
 
 
@@ -101,9 +101,9 @@ function handleTabSwitch(activeTab) {
         updateWellnessChartData();
         updateDashboardUI();
     }
-    
-    // Add other tab-specific logic here if needed, e.g.,
-    // if (activeTab === 'calm') {
-    //     // ... logic for when calm tab is clicked ...
-    // }
+
+    if (activeTab === 'calm') {
+        // Tell the calm space module to start its animations/intro
+        triggerCalmSpaceIntro();
+    }
 }
