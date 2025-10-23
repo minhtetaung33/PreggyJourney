@@ -17,6 +17,106 @@ body {
     color: #f0f0f0;
 }
 
+/* --- NEW ANIMATION STYLES --- */
+#page-load-overlay {
+    position: fixed;
+    inset: 0;
+    /* Use a soft gradient as requested */
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.9), rgba(253, 248, 255, 0.9)); /* white to blush/lavender */
+    z-index: 100;
+    opacity: 1;
+    transition: opacity 1.5s cubic-bezier(0.215, 0.61, 0.355, 1); /* easeOutCubic */
+    pointer-events: none;
+}
+
+body.loaded #page-load-overlay {
+    opacity: 0;
+}
+
+#bubble-background {
+    position: fixed;
+    inset: 0;
+    z-index: 0; /* Behind content but above body bg */
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.background-bubble {
+    position: absolute;
+    bottom: -150px;
+    border-radius: 50%;
+    /* Soft, transparent bubble color */
+    background: rgba(220, 235, 255, 0.1); 
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    filter: blur(1px);
+    animation: rise 15s infinite ease-in;
+    opacity: 0;
+}
+
+@keyframes rise {
+    0% {
+        transform: translateY(0) scale(1);
+        opacity: 0;
+    }
+    10% {
+        opacity: 0.7;
+    }
+    90% {
+        opacity: 0.7;
+    }
+    100% {
+        transform: translateY(-120vh) scale(0.5);
+        opacity: 0;
+    }
+}
+
+@keyframes bubbleIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    70% {
+        opacity: 1;
+        transform: scale(1.05); /* Gentle overshoot */
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1.0); /* Settle */
+    }
+}
+
+@keyframes softFloat {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-5px); /* Calm breathing motion */
+    }
+}
+
+/* Initial state for animatable cards */
+.anim-card {
+    opacity: 0;
+}
+
+/* Class added by JS to trigger bubble-in animation */
+.anim-card.anim-bubble-in {
+    animation: bubbleIn 0.8s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+}
+
+/* Class added by JS to trigger float animation */
+.anim-card.anim-float {
+    animation: softFloat 5s ease-in-out infinite;
+}
+
+/* Ensure app container is above the bubble background */
+#app-container {
+    position: relative;
+    z-index: 2;
+}
+/* --- END NEW ANIMATION STYLES --- */
+
+
 .hero-section {
     animation: fadeIn 1s ease-out;
 }
@@ -33,10 +133,13 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.2);
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
     transition: all 0.3s ease;
+    /* Add soft glow/reflection */
+    background-image: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0) 50%);
+    box-shadow: 0 0 20px rgba(199, 210, 254, 0.1), 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 }
 
 .glass-card:hover:not(.no-hover) {
-     box-shadow: 0 8px 32px 0 rgba(148, 111, 255, 0.37);
+     box-shadow: 0 0 20px rgba(148, 111, 255, 0.2), 0 8px 32px 0 rgba(148, 111, 255, 0.37);
 }
 
 h1, h2, h3 {
