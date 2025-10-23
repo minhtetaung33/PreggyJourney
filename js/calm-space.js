@@ -1,426 +1,362 @@
 import { db } from './firebase.js';
 import { getCurrentUserId } from './auth.js';
-import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { doc, setDoc, addDoc, collection, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-// DOM Elements
-let calmThemeContainer, themePickerButtons, startBreathingBtn, breathingCircle, breathingText;
-let colorTherapyDisplay, soundPlayerButtons, stopSoundBtn;
-let startMeditationBtn, meditationText, bellyOutline, toggleVoiceBtn, voiceBtnText, voiceLoader;
-let startStretchesBtn, neckRollAnim, shoulderRollAnim, stretchTimer1, stretchTimer2;
-let journalModal, journalMoodButtons, journalModalCloseBtn;
-let waterReminderToast;
+// --- DOM Elements ---
+let startBreathingBtn, breathingContainer, breathingCircle, breathingGlow, breathingText;
+let soundMoodButtons, calmSpaceThemeLayer, themePickerButtons;
+let babyConnectionVisual;
+let prevStretchBtn, nextStretchBtn, stretchVisual, stretchTitle, stretchDesc;
+let waterReminderPopup, closeWaterReminderBtn;
+let journalModal, journalMoodButtons, journalMoodText, journalCancelBtn, journalSaveBtn;
 
-// State
-let userId, wellnessData;
+let userId = null;
+let currentMoodSelection = null;
+let moodJournalCollectionRef = null;
+
+// --- State ---
 let isBreathing = false;
-let isMeditating = false;
-let isStretching = false;
-let isVoiceEnabled = false;
-let activeMoodSound = null;
-let waterInterval;
-let stretchInterval;
-let currentAudio = null; // To hold the current HTMLAudioElement for TTS
+let breathingTimer;
+let waterReminderTimer;
+let currentStretchIndex = 0;
+let exerciseTimeout; // To trigger journal modal
 
-// Tone.js Synths
-let noise, autoFilter, lullabySynth, chimeSynth;
+// --- Audio Synthesis (Tone.js) ---
+let sounds = {
+    ocean: null,
+    rain: null,
+    lullaby: null,
+    chimes: null,
+    heartbeat: null
+};
+let currentSound = null;
 
-// Meditation Script
-const meditationScript = [
-    { text: "Place your hands on your belly and take a deep, slow breath in...", duration: 5000 },
-    { text: "...and slowly breathe out. Feel your hands, feel your baby.", duration: 5000 },
-    { text: "Breathe in love and calm...", duration: 4000 },
-    { text: "...breathe out any tension or worry.", duration: 4000 },
-    { text: "Imagine your baby, safe and warm inside.", duration: 5000 },
-    { text: "Picture your baby smiling and feeling your love.", duration: 5000 },
-    { text: "Send a wave of love and peace from your heart to your baby.", duration: 6000 },
-    { text: "You are connected. You are both safe. You are strong.", duration: 5000 },
-    { text: "Take one more deep breath in...", duration: 4000 },
-    { text: "...and let it all go. You've completed your connection.", duration: 5000 }
+// --- Stretch Data ---
+const stretches = [
+    {
+        title: "Neck Rolls",
+        desc: "Gently roll your head from side to side, then in slow circles.",
+        svg: `<svg class="w-20 h-20 text-teal-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.532 4.096a.75.75 0 01.936.464l.87 3.48a.75.75 0 01-.702.96h-1.97a.75.75 0 00-.75.75v.018a.75.75 0 01-1.5 0v-.018a.75.75 0 00-.75-.75h-1.332a.75.75 0 00-.75.75v.018a.75.75 0 01-1.5 0v-.018a.75.75 0 00-.75-.75H5.13a.75.75 0 01-.702-.96l.87-3.48a.75.75 0 01.936-.464l1.83.61a.75.75 0 00.81-.05l1.83-.87a.75.75 0 01.814 0l1.83.87a.75.75 0 00.81.05l1.83-.61zM12 12.75a4.5 4.5 0 100-9 4.5 4.5 0 000 9zM12 12.75v6m0 0a.75.75 0 01-1.5 0v-6m1.5 0v6m0 0h.008v.008H12v-.008zM12 18.75a.75.75 0 01-1.5 0v-6m1.5 0v6m0 0h.008v.008H12v-.008z" /></svg>`
+    },
+    {
+        title: "Shoulder Circles",
+        desc: "Roll your shoulders up, back, and down. Repeat 5 times, then reverse.",
+        svg: `<svg class="w-20 h-20 text-teal-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.376c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" transform="rotate(90 12 12)" /></svg>`
+    },
+    {
+        title: "Hip Tilts",
+        desc: "While sitting or standing, gently tilt your pelvis forward and back.",
+        svg: `<svg class="w-20 h-20 text-teal-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.182 15.182a4.5 4.5 0 01-6.364 0M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9 9.563C9 9.254 9.254 9 9.563 9h4.874c.31 0 .563.254.563.563v4.874c0 .31-.254.563-.563.563H9.563C9.254 15 9 14.746 9 14.437V9.564z" /></svg>`
+    }
 ];
 
-export function initializeCalmSpace(uid, wData) {
+// --- Initialization ---
+export function initializeCalmSpace(uid) {
     userId = uid;
-    wellnessData = wData;
+    if (userId) {
+        moodJournalCollectionRef = collection(db, `users/${userId}/moodJournal`);
+    }
 
-    // Query DOM elements
-    calmThemeContainer = document.getElementById('calm-theme-container');
-    themePickerButtons = document.getElementById('theme-picker-buttons');
+    // Get all DOM elements
     startBreathingBtn = document.getElementById('start-breathing-btn');
+    breathingContainer = document.getElementById('breathing-visualizer-container');
     breathingCircle = document.getElementById('breathing-circle');
+    breathingGlow = document.getElementById('breathing-glow-ring');
     breathingText = document.getElementById('breathing-text');
-    colorTherapyDisplay = document.getElementById('color-therapy-display');
-    soundPlayerButtons = document.getElementById('sound-player-buttons');
-    stopSoundBtn = document.getElementById('stop-sound-btn');
-    startMeditationBtn = document.getElementById('start-meditation-btn');
-    meditationText = document.getElementById('meditation-text');
-    bellyOutline = document.getElementById('belly-outline');
-    toggleVoiceBtn = document.getElementById('toggle-voice-btn');
-    voiceBtnText = document.getElementById('voice-btn-text');
-    voiceLoader = document.getElementById('voice-loader');
-    startStretchesBtn = document.getElementById('start-stretches-btn');
-    neckRollAnim = document.getElementById('neck-roll-anim');
-    shoulderRollAnim = document.getElementById('shoulder-roll-anim');
-    stretchTimer1 = document.getElementById('stretch-timer-1');
-    stretchTimer2 = document.getElementById('stretch-timer-2');
+    
+    soundMoodButtons = document.getElementById('sound-mood-buttons');
+    calmSpaceThemeLayer = document.getElementById('calm-space-theme-layer');
+    themePickerButtons = document.getElementById('theme-picker-buttons');
+    
+    babyConnectionVisual = document.getElementById('baby-connection-visual');
+    
+    prevStretchBtn = document.getElementById('prev-stretch-btn');
+    nextStretchBtn = document.getElementById('next-stretch-btn');
+    stretchVisual = document.getElementById('stretch-visual');
+    stretchTitle = document.getElementById('stretch-title');
+    stretchDesc = document.getElementById('stretch-desc');
+    
+    waterReminderPopup = document.getElementById('water-reminder-popup');
+    closeWaterReminderBtn = document.getElementById('close-water-reminder-btn');
+    
     journalModal = document.getElementById('journal-modal');
     journalMoodButtons = document.getElementById('journal-mood-buttons');
-    journalModalCloseBtn = document.getElementById('journal-modal-close-btn');
-    waterReminderToast = document.getElementById('water-reminder-toast');
+    journalMoodText = document.getElementById('journal-mood-text');
+    journalCancelBtn = document.getElementById('journal-modal-cancel-btn');
+    journalSaveBtn = document.getElementById('journal-modal-save-btn');
 
-    // Initialize Tone.js components
-    initializeSounds();
+    // Add all event listeners
+    startBreathingBtn.addEventListener('click', toggleBreathing);
+    soundMoodButtons.addEventListener('click', handleSoundMoodClick);
+    themePickerButtons.addEventListener('click', handleThemeClick);
+    
+    prevStretchBtn.addEventListener('click', showPrevStretch);
+    nextStretchBtn.addEventListener('click', showNextStretch);
+    
+    closeWaterReminderBtn.addEventListener('click', () => waterReminderPopup.classList.add('hidden'));
+    
+    journalMoodButtons.addEventListener('click', handleJournalMoodSelect);
+    journalCancelBtn.addEventListener('click', closeJournalModal);
+    journalSaveBtn.addEventListener('click', saveJournalEntry);
 
-    // Setup event listeners
-    setupEventListeners();
-
-    // Start water reminder
-    if (waterInterval) clearInterval(waterInterval);
-    waterInterval = setInterval(showWaterReminder, 20 * 60 * 1000); // 20 minutes
+    // Initial setup
+    updateStretchContent();
+    createParticles(15);
+    calmSpaceThemeLayer.classList.add('theme-glow');
 }
 
 export function unloadCalmSpace() {
+    // Stop all timers and animations
+    if (isBreathing) {
+        toggleBreathing(); // This will stop it
+    }
+    clearTimeout(breathingTimer);
+    clearTimeout(exerciseTimeout);
+    clearInterval(waterReminderTimer);
+
     // Stop all sounds
     stopAllSounds();
-    if (noise) noise.stop();
+    currentSound = null;
 
-    // Clear intervals
-    if (waterInterval) clearInterval(waterInterval);
-    if (stretchInterval) clearInterval(stretchInterval);
+    // Remove event listeners (basic, not all anonymous)
+    // In a real app, you'd store and remove specific listeners
+    startBreathingBtn.removeEventListener('click', toggleBreathing);
+    soundMoodButtons.removeEventListener('click', handleSoundMoodClick);
+    themePickerButtons.removeEventListener('click', handleThemeClick);
+    prevStretchBtn.removeEventListener('click', showPrevStretch);
+    nextStretchBtn.removeEventListener('click', showNextStretch);
+    closeWaterReminderBtn.removeEventListener('click', () => waterReminderPopup.classList.add('hidden'));
+    journalMoodButtons.removeEventListener('click', handleJournalMoodSelect);
+    journalCancelBtn.removeEventListener('click', closeJournalModal);
+    journalSaveBtn.removeEventListener('click', saveJournalEntry);
 
-    // Reset states
-    isBreathing = false;
-    isMeditating = false;
-    isStretching = false;
+    userId = null;
+    moodJournalCollectionRef = null;
+}
+
+export function triggerCalmSpaceIntro() {
+    // Start water reminder interval (e.g., every 15 minutes)
+    if (waterReminderTimer) clearInterval(waterReminderTimer);
+    waterReminderTimer = setInterval(() => {
+        waterReminderPopup.classList.remove('hidden');
+    }, 1000 * 60 * 15); // 15 minutes
     
-    // Audio cleanup
-    if (currentAudio) {
-        currentAudio.pause();
-        currentAudio = null;
+    // Start heartbeat sound softly
+    playHeartbeat();
+}
+
+// --- 1. Guided Breathing ---
+function toggleBreathing() {
+    isBreathing = !isBreathing;
+    if (isBreathing) {
+        startBreathingBtn.textContent = 'Stop';
+        breathingContainer.classList.add('breathing-animate');
+        runBreathingTextCycle();
+        // Start journal timer
+        startExerciseTimer(1000 * 60 * 2); // 2 minutes
+    } else {
+        startBreathingBtn.textContent = 'Start (4-2-6)';
+        breathingContainer.classList.remove('breathing-animate');
+        clearTimeout(breathingTimer);
+        breathingText.textContent = 'Press Start';
+        // Stop journal timer
+        clearTimeout(exerciseTimeout);
+    }
+}
+
+function runBreathingTextCycle() {
+    breathingText.textContent = 'Inhale...';
+    breathingTimer = setTimeout(() => {
+        breathingText.textContent = 'Hold...';
+        breathingTimer = setTimeout(() => {
+            breathingText.textContent = 'Exhale...';
+            breathingTimer = setTimeout(runBreathingTextCycle, 6000); // 6s exhale
+        }, 2000); // 2s hold
+    }, 4000); // 4s inhale
+}
+
+// --- 2. Sound & Color Player ---
+function handleSoundMoodClick(e) {
+    const button = e.target.closest('.mood-sound-btn');
+    if (!button) return;
+
+    const mood = button.dataset.mood;
+    
+    // Update button active state
+    soundMoodButtons.querySelectorAll('.mood-sound-btn').forEach(btn => btn.classList.remove('active'));
+    button.classList.add('active');
+
+    stopAllSounds();
+
+    if (mood === 'calm') {
+        playOcean();
+        currentSound = 'ocean';
+        startExerciseTimer(1000 * 60 * 3); // 3 minutes
+    } else if (mood === 'dreamy') {
+        playLullaby();
+        currentSound = 'lullaby';
+        startExerciseTimer(1000 * 60 * 3);
+    } else if (mood === 'sleepy') {
+        playRain();
+        currentSound = 'rain';
+        startExerciseTimer(1000 * 60 * 3);
+    } else if (mood === 'happy') {
+        playChimes();
+        currentSound = 'chimes';
+        startExerciseTimer(1000 * 60 * 3);
+    } else if (mood === 'stop') {
+        button.classList.remove('active');
+        clearTimeout(exerciseTimeout);
     }
 }
 
 function initializeSounds() {
-    // Ocean/Calm: Filtered noise
-    noise = new Tone.Noise("pink").start();
-    autoFilter = new Tone.AutoFilter({
-        frequency: "8m",
-        baseFrequency: 150,
-        octaves: 4,
-        depth: 0.5
-    }).toDestination();
-    
-    // Dreamy/Lullaby: Simple synth
-    lullabySynth = new Tone.Synth({
-        oscillator: { type: "sine" },
-        envelope: { attack: 0.1, decay: 0.2, sustain: 0.3, release: 1 }
-    }).toDestination();
-    lullabySynth.volume.value = -12;
-
-    // Happy/Wind Chimes: Metal synth for bright sounds
-    chimeSynth = new Tone.MetalSynth({
-        frequency: 200,
-        envelope: { attack: 0.001, decay: 1.4, release: 0.2 },
-        harmonicity: 5.1,
-        modulationIndex: 32,
-        resonance: 4000,
-        octaves: 1.5
-    }).toDestination();
-    chimeSynth.volume.value = -15;
-}
-
-function setupEventListeners() {
-    // Theme Picker
-    themePickerButtons.addEventListener('click', (e) => {
-        const button = e.target.closest('.theme-btn');
-        if (!button) return;
-        
-        const theme = button.dataset.theme;
-        calmThemeContainer.className = `space-y-8 calm-theme-${theme}`;
-        
-        themePickerButtons.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
-        button.classList.add('active');
-    });
-
-    // Breathing
-    startBreathingBtn.addEventListener('click', toggleBreathing);
-    breathingCircle.addEventListener('click', toggleBreathing);
-
-    // Sound & Color
-    soundPlayerButtons.addEventListener('click', (e) => {
-        const button = e.target.closest('.mood-sound-btn');
-        if (button) {
-            const mood = button.dataset.mood;
-            playMoodSound(mood);
-            soundPlayerButtons.querySelectorAll('.mood-sound-btn').forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-        }
-    });
-    stopSoundBtn.addEventListener('click', () => {
-        stopAllSounds();
-        colorTherapyDisplay.className = 'w-full h-24 rounded-lg mb-4 transition-all duration-1000';
-        soundPlayerButtons.querySelectorAll('.mood-sound-btn').forEach(btn => btn.classList.remove('active'));
-    });
-
-    // Meditation
-    startMeditationBtn.addEventListener('click', toggleMeditation);
-    toggleVoiceBtn.addEventListener('click', () => {
-        isVoiceEnabled = !isVoiceEnabled;
-        voiceBtnText.textContent = isVoiceEnabled ? "Disable Voice" : "Enable Voice";
-        toggleVoiceBtn.classList.toggle('active', isVoiceEnabled);
-        
-        if (!isVoiceEnabled && currentAudio) {
-            currentAudio.pause(); // Stop TTS if disabled
-        }
-    });
-
-    // Stretches
-    startStretchesBtn.addEventListener('click', toggleStretches);
-
-    // Journal
-    journalMoodButtons.addEventListener('click', (e) => {
-        const button = e.target.closest('.journal-mood-btn');
-        if (!button) return;
-
-        const moodRating = parseInt(button.dataset.mood);
-        saveJournalEntry(moodRating);
-        
-        journalMoodButtons.querySelectorAll('.journal-mood-btn').forEach(btn => btn.classList.remove('selected'));
-        button.classList.add('selected');
-        
-        setTimeout(closeJournalModal, 500);
-    });
-    journalModalCloseBtn.addEventListener('click', closeJournalModal);
-    journalModal.addEventListener('click', (e) => e.target === journalModal && closeJournalModal());
-}
-
-// --- Breathing Logic ---
-function toggleBreathing() {
-    isBreathing = !isBreathing;
-    if (isBreathing) {
-        breathingCircle.classList.remove('breathing-circle-paused');
-        breathingCircle.classList.add('breathing-circle-active');
-        startBreathingBtn.textContent = "Stop Breathing";
-        runBreathingText();
-    } else {
-        breathingCircle.classList.add('breathing-circle-paused');
-        breathingCircle.classList.remove('breathing-circle-active');
-        startBreathingBtn.textContent = "Start 4-2-6 Breathing";
-        breathingText.textContent = "Start";
-        // Show journal pop-up on stop
-        setTimeout(() => showJournalModal("Breathing"), 500);
+    if (!sounds.ocean) {
+        // Ocean: Filtered noise
+        sounds.ocean = new Tone.Noise("brown").toDestination();
+        const filter = new Tone.AutoFilter({
+            frequency: 0.5,
+            baseFrequency: 150,
+            octaves: 4
+        }).toDestination().start();
+        sounds.ocean.connect(filter);
+    }
+    if (!sounds.rain) {
+        // Rain: Filtered noise
+        sounds.rain = new Tone.Noise("pink").toDestination();
+        const rainFilter = new Tone.AutoFilter({
+            frequency: 1,
+            baseFrequency: 400,
+            octaves: 3
+        }).toDestination().start();
+        sounds.rain.connect(rainFilter);
+        sounds.rain.volume.value = -10;
+    }
+    if (!sounds.lullaby) {
+        // Lullaby: Simple synth
+        sounds.lullaby = new Tone.Synth({
+            oscillator: { type: "fatsine" },
+            envelope: { attack: 0.1, decay: 0.2, sustain: 0.5, release: 0.8 }
+        }).toDestination();
+        sounds.lullaby.volume.value = -12;
+    }
+    if (!sounds.chimes) {
+        // Chimes: Metal synth
+        sounds.chimes = new Tone.MetalSynth({
+            frequency: 200,
+            envelope: { attack: 0.001, decay: 0.4, release: 0.2 },
+            harmonicity: 5.1,
+            modulationIndex: 32,
+            resonance: 800,
+            octaves: 1.5
+        }).toDestination();
+        sounds.chimes.volume.value = -15;
+    }
+    if (!sounds.heartbeat) {
+        // Heartbeat: Membrane synth
+        sounds.heartbeat = new Tone.MembraneSynth({
+            pitchDecay: 0.05,
+            octaves: 10,
+            envelope: { attack: 0.001, decay: 0.4, sustain: 0.01, release: 1.4, attackCurve: "exponential" }
+        }).toDestination();
+        sounds.heartbeat.volume.value = -10;
     }
 }
 
-function runBreathingText() {
-    if (!isBreathing) return;
-    breathingText.textContent = "Inhale (4)";
-    setTimeout(() => {
-        if (!isBreathing) return;
-        breathingText.textContent = "Hold (2)";
-        setTimeout(() => {
-            if (!isBreathing) return;
-            breathingText.textContent = "Exhale (6)";
-            setTimeout(runBreathingText, 6000);
-        }, 2000);
-    }, 4000);
-}
-
-// --- Sound & Color Logic ---
 function stopAllSounds() {
-    if (activeMoodSound) {
-        activeMoodSound.stop();
-        activeMoodSound = null;
-    }
-    if (noise.state === 'started') noise.disconnect(autoFilter);
-    if (lullabySynth) lullabySynth.triggerRelease();
-    if (chimeSynth) chimeSynth.triggerRelease();
-    Tone.Transport.stop();
-    Tone.Transport.cancel();
-}
-
-function playMoodSound(mood) {
-    stopAllSounds();
-    Tone.Transport.start();
-
-    if (mood === 'calm' || mood === 'sleepy') {
-        // Ocean/Rain sound
-        noise.connect(autoFilter);
-        autoFilter.frequency.rampTo(mood === 'calm' ? "8m" : "20m", 10);
-        activeMoodSound = noise;
-    } else if (mood === 'dreamy') {
-        // Lullaby
-        const melody = [
-            'C4', 'E4', 'G4', 'C5', 'G4', 'E4',
-            'C4', 'E4', 'G4', 'C5', 'G4', 'E4',
-        ];
-        activeMoodSound = new Tone.Sequence((time, note) => {
-            lullabySynth.triggerAttackRelease(note, '8n', time);
-        }, melody, '4n').start(0);
-        Tone.Transport.bpm.value = 60;
-    } else if (mood === 'happy') {
-        // Wind Chimes
-        const notes = ['C5', 'D5', 'E5', 'G5', 'A5'];
-        activeMoodSound = new Tone.Loop(time => {
-            const note = notes[Math.floor(Math.random() * notes.length)];
-            chimeSynth.triggerAttackRelease(note, '2n', time);
-        }, '2n').start(0);
-        Tone.Transport.bpm.value = 100;
-    }
-    
-    // Set color
-    colorTherapyDisplay.className = `w-full h-24 rounded-lg mb-4 transition-all duration-1000 color-${mood}`;
-}
-
-// --- Meditation Logic ---
-function toggleMeditation() {
-    isMeditating = !isMeditating;
-    if (isMeditating) {
-        startMeditationBtn.textContent = "Stop Meditation";
-        bellyOutline.classList.remove('belly-outline-paused');
-        bellyOutline.classList.add('belly-outline-active');
-        runMeditationScript(0);
-    } else {
-        startMeditationBtn.textContent = "Start Meditation";
-        meditationText.textContent = "Place your hands on your belly and take a deep breath.";
-        bellyOutline.classList.add('belly-outline-paused');
-        bellyOutline.classList.remove('belly-outline-active');
-        if (currentAudio) currentAudio.pause();
-        // Show journal pop-up on stop
-        setTimeout(() => showJournalModal("Meditation"), 500);
-    }
-}
-
-function runMeditationScript(index) {
-    if (!isMeditating || index >= meditationScript.length) {
-        toggleMeditation(); // Auto-stop when script ends
-        return;
-    }
-
-    const step = meditationScript[index];
-    meditationText.textContent = step.text;
-
-    if (isVoiceEnabled) {
-        playTTS(step.text, () => {
-            if (isMeditating) { // Check again in case user stopped during TTS
-                runMeditationScript(index + 1);
+    Object.values(sounds).forEach(sound => {
+        if (sound) {
+            if (sound instanceof Tone.Noise) {
+                sound.stop();
             }
-        });
-    } else {
-        setTimeout(() => {
-            runMeditationScript(index + 1);
-        }, step.duration);
-    }
-}
-
-// --- Text-to-Speech (TTS) Logic ---
-async function playTTS(textToSpeak, onEndedCallback) {
-    if (currentAudio) {
-        currentAudio.pause(); // Stop previous audio
-    }
-    
-    voiceLoader.classList.remove('hidden');
-    toggleVoiceBtn.disabled = true;
-
-    try {
-        const apiKey = ""; // Leave as-is, will be populated by runtime
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
-        
-        const payload = {
-            contents: [{
-                parts: [{ text: `Say in a soft, soothing, and gentle voice: ${textToSpeak}` }]
-            }],
-            generationConfig: {
-                responseModalities: ["AUDIO"],
-                speechConfig: {
-                    voiceConfig: {
-                        prebuiltVoiceConfig: { voiceName: "Aoede" } // Breezy voice
-                    }
-                }
-            },
-            model: "gemini-2.5-flash-preview-tts"
-        };
-        
-        const response = await fetchWithBackoff(apiUrl, payload);
-        
-        if (!response.ok) {
-            throw new Error(`API error: ${response.statusText}`);
+            if (sound.name === "Loop") {
+                sound.stop(0);
+                sound.cancel();
+            }
         }
+    });
+    currentSound = null;
+}
 
-        const result = await response.json();
-        const part = result?.candidates?.[0]?.content?.parts?.[0];
-        const audioData = part?.inlineData?.data;
-        const mimeType = part?.inlineData?.mimeType;
+function playOcean() {
+    if (Tone.context.state !== 'running') Tone.context.resume();
+    initializeSounds();
+    sounds.ocean.start();
+}
 
-        if (audioData && mimeType && mimeType.startsWith("audio/")) {
-            const sampleRate = parseInt(mimeType.match(/rate=(\d+)/)[1], 10);
-            const pcmData = base64ToArrayBuffer(audioData);
-            const pcm16 = new Int16Array(pcmData);
-            const wavBlob = pcmToWav(pcm16, sampleRate);
-            const audioUrl = URL.createObjectURL(wavBlob);
-            
-            currentAudio = new Audio(audioUrl);
-            currentAudio.onended = () => {
-                if (onEndedCallback) onEndedCallback();
-            };
-            currentAudio.play();
-        } else {
-            console.error('Invalid TTS response structure:', result);
-            if (onEndedCallback) onEndedCallback(); // Continue script even if TTS fails
+function playRain() {
+    if (Tone.context.state !== 'running') Tone.context.resume();
+    initializeSounds();
+    sounds.rain.start();
+}
+
+function playLullaby() {
+    if (Tone.context.state !== 'running') Tone.context.resume();
+    initializeSounds();
+    const notes = ["C4", "E4", "G4", "E4", "C4", null, "G3", "C4", "E4", "C4", null];
+    const loop = new Tone.Loop(time => {
+        const note = notes[Math.floor(Math.random() * notes.length)];
+        if (note) {
+            sounds.lullaby.triggerAttackRelease(note, "8n", time);
         }
-
-    } catch (error) {
-        console.error("Error generating TTS:", error);
-        if (onEndedCallback) onEndedCallback(); // Continue script on error
-    } finally {
-        voiceLoader.classList.add('hidden');
-        toggleVoiceBtn.disabled = false;
-    }
+    }, "2n").start(0);
+    sounds.lullaby.loop = loop; // Store loop to stop it later
+    Tone.Transport.start();
 }
 
-// --- Stretch Logic ---
-function toggleStretches() {
-    isStretching = !isStretching;
-    if (isStretching) {
-        startStretchesBtn.textContent = "Stop Stretches";
-        neckRollAnim.classList.add('stretch-active');
-        shoulderRollAnim.classList.add('stretch-active');
-        runStretchTimer(10, stretchTimer1, () => {
-            runStretchTimer(15, stretchTimer2, () => {
-                if (isStretching) toggleStretches(); // Auto-stop
-            });
-        });
-    } else {
-        startStretchesBtn.textContent = "Start Stretches";
-        neckRollAnim.classList.remove('stretch-active');
-        shoulderRollAnim.classList.remove('stretch-active');
-        if (stretchInterval) clearInterval(stretchInterval);
-        stretchTimer1.textContent = "10s";
-        stretchTimer2.textContent = "15s";
-        // Show journal pop-up on stop
-        setTimeout(() => showJournalModal("Stretching"), 500);
-    }
+function playChimes() {
+    if (Tone.context.state !== 'running') Tone.context.resume();
+    initializeSounds();
+    const notes = [600, 700, 800, 900, 1000];
+    const loop = new Tone.Loop(time => {
+        const note = notes[Math.floor(Math.random() * notes.length)];
+        sounds.chimes.triggerAttackRelease(note, "4n", time);
+    }, "1n").start(0);
+    sounds.chimes.loop = loop;
+    Tone.Transport.start();
 }
 
-function runStretchTimer(duration, timerEl, onComplete) {
-    if (stretchInterval) clearInterval(stretchInterval);
-    let timeLeft = duration;
-    timerEl.textContent = `${timeLeft}s`;
-    
-    stretchInterval = setInterval(() => {
-        timeLeft--;
-        timerEl.textContent = `${timeLeft}s`;
-        if (timeLeft <= 0) {
-            clearInterval(stretchInterval);
-            if (onComplete) onComplete();
-        }
-    }, 1000);
+function playHeartbeat() {
+    if (Tone.context.state !== 'running') Tone.context.resume();
+    initializeSounds();
+    const loop = new Tone.Loop(time => {
+        sounds.heartbeat.triggerAttackRelease("C2", "8n", time);
+        sounds.heartbeat.triggerAttackRelease("C2", "8n", time + 0.25);
+    }, "1n").start(0);
+    sounds.heartbeat.loop = loop;
+    Tone.Transport.start();
 }
 
-// --- Journal Logic ---
-function showJournalModal(source) {
-    if (!userId) return; // Don't show if logged out
-    
-    journalModal.dataset.source = source || 'unknown'; // Store what triggered it
+// --- 4. Stretch Guide ---
+function showNextStretch() {
+    currentStretchIndex = (currentStretchIndex + 1) % stretches.length;
+    updateStretchContent();
+}
+
+function showPrevStretch() {
+    currentStretchIndex = (currentStretchIndex - 1 + stretches.length) % stretches.length;
+    updateStretchContent();
+}
+
+function updateStretchContent() {
+    const stretch = stretches[currentStretchIndex];
+    stretchVisual.innerHTML = stretch.svg;
+    stretchTitle.textContent = stretch.title;
+    stretchDesc.textContent = stretch.desc;
+}
+
+// --- 5. Journal Modal ---
+function startExerciseTimer(duration) {
+    clearTimeout(exerciseTimeout);
+    exerciseTimeout = setTimeout(() => {
+        openJournalModal();
+    }, duration);
+}
+
+function openJournalModal() {
+    currentMoodSelection = null;
+    journalSaveBtn.disabled = true;
+    journalMoodText.textContent = "";
     journalMoodButtons.querySelectorAll('.journal-mood-btn').forEach(btn => btn.classList.remove('selected'));
     
     journalModal.classList.remove('hidden');
@@ -432,104 +368,73 @@ function closeJournalModal() {
     setTimeout(() => journalModal.classList.add('hidden'), 300);
 }
 
-async function saveJournalEntry(moodRating) {
-    if (!userId) {
-        console.error("Cannot save journal: No user ID");
-        return;
-    }
+function handleJournalMoodSelect(e) {
+    const button = e.target.closest('.journal-mood-btn');
+    if (!button) return;
+
+    currentMoodSelection = parseInt(button.dataset.mood);
+    journalMoodButtons.querySelectorAll('.journal-mood-btn').forEach(btn => btn.classList.remove('selected'));
+    button.classList.add('selected');
     
-    const journalRef = collection(db, `users/${userId}/calmJournal`);
+    const moodMap = { 1: "Stressed", 2: "A bit uneasy", 3: "Okay", 4: "Calm", 5: "Very relaxed" };
+    journalMoodText.textContent = moodMap[currentMoodSelection];
+    journalSaveBtn.disabled = false;
+}
+
+async function saveJournalEntry() {
+    if (!currentMoodSelection || !moodJournalCollectionRef) return;
+    
+    journalSaveBtn.disabled = true;
+    journalSaveBtn.textContent = "Saving...";
+
     try {
-        await addDoc(journalRef, {
-            moodRating: moodRating,
-            source: journalModal.dataset.source || 'unknown',
+        await addDoc(moodJournalCollectionRef, {
+            mood: currentMoodSelection,
             createdAt: serverTimestamp()
         });
     } catch (error) {
-        console.error("Error saving journal entry:", error);
+        console.error("Error saving mood entry: ", error);
+    } finally {
+        journalSaveBtn.disabled = false;
+        journalSaveBtn.textContent = "Save";
+        closeJournalModal();
     }
 }
 
-// --- Water Reminder Logic ---
-function showWaterReminder() {
-    waterReminderToast.classList.add('show');
-    setTimeout(() => {
-        waterReminderToast.classList.remove('show');
-    }, 5000); // Hide after 5 seconds
+// --- Theme Picker ---
+function handleThemeClick(e) {
+    const button = e.target.closest('.theme-btn');
+    if (!button) return;
+
+    const theme = button.dataset.theme;
+    
+    themePickerButtons.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
+    button.classList.add('active');
+
+    calmSpaceThemeLayer.classList.remove('theme-glow', 'theme-ocean', 'theme-sky', 'theme-blossom');
+    calmSpaceThemeLayer.classList.add(`theme-${theme}`);
 }
 
-
-// --- Utility Functions ---
-
-// Retries fetch with exponential backoff
-async function fetchWithBackoff(url, payload, retries = 3, delay = 1000) {
-    for (let i = 0; i < retries; i++) {
-        try {
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            if (response.status === 429) { // Rate limited
-                console.warn(`Rate limited. Retrying in ${delay / 1000}s...`);
-                await new Promise(resolve => setTimeout(resolve, delay));
-                delay *= 2; // Exponential backoff
-                continue;
-            }
-            return response;
-        } catch (error) {
-            console.error(`Fetch attempt ${i + 1} failed:`, error);
-            if (i === retries - 1) throw error; // Throw after last retry
-            await new Promise(resolve => setTimeout(resolve, delay));
-            delay *= 2;
-        }
+// --- Particle Effect ---
+function createParticles(count) {
+    const container = document.getElementById('calm-particles');
+    for (let i = 0; i < count; i++) {
+        const particle = document.createElement('span');
+        particle.className = 'particle';
+        
+        const size = Math.random() * 8 + 2; // 2px to 10px
+        const delay = Math.random() * 20; // 0-20s delay
+        const duration = Math.random() * 10 + 15; // 15-25s duration
+        const left = Math.random() * 100;
+        const drift = (Math.random() - 0.5) * 20; // -10vw to +10vw
+        
+        particle.style.width = `${size}px`;
+        particle.style.height = `${size}px`;
+        particle.style.left = `${left}vw`;
+        particle.style.animationDelay = `${delay}s`;
+        particle.style.animationDuration = `${duration}s`;
+        particle.style.setProperty('--drift', `${drift}vw`);
+        
+        container.appendChild(particle);
     }
-}
-
-// Decodes base64 string to ArrayBuffer
-function base64ToArrayBuffer(base64) {
-    const binaryString = atob(base64);
-    const len = binaryString.length;
-    const bytes = new Uint8Array(len);
-    for (let i = 0; i < len; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-    }
-    return bytes.buffer;
-}
-
-// Converts raw PCM data to a WAV file Blob
-function pcmToWav(pcmData, sampleRate) {
-    const numChannels = 1;
-    const bytesPerSample = 2; // 16-bit PCM
-    const dataSize = pcmData.length * bytesPerSample;
-    const blockAlign = numChannels * bytesPerSample;
-    const byteRate = sampleRate * blockAlign;
-
-    const buffer = new ArrayBuffer(44 + dataSize);
-    const view = new DataView(buffer);
-
-    // RIFF header
-    view.setUint32(0, 0x52494646, false); // "RIFF"
-    view.setUint32(4, 36 + dataSize, true);
-    view.setUint32(8, 0x57415645, false); // "WAVE"
-    // "fmt " sub-chunk
-    view.setUint32(12, 0x666d7420, false); // "fmt "
-    view.setUint32(16, 16, true); // Sub-chunk size (16 for PCM)
-    view.setUint16(20, 1, true); // Audio format (1 for PCM)
-    view.setUint16(22, numChannels, true);
-    view.setUint32(24, sampleRate, true);
-    view.setUint32(28, byteRate, true);
-    view.setUint16(32, blockAlign, true);
-    view.setUint16(34, 16, true); // Bits per sample
-    // "data" sub-chunk
-    view.setUint32(36, 0x64617461, false); // "data"
-    view.setUint32(40, dataSize, true);
-
-    // Write PCM data
-    let offset = 44;
-    for (let i = 0; i < pcmData.length; i++, offset += 2) {
-        view.setInt16(offset, pcmData[i], true);
-    }
-
-    return new Blob([buffer], { type: 'audio/wav' });
 }
