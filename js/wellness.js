@@ -515,7 +515,10 @@ async function loadWellnessForDate(date, onWellnessDataUpdate) {
         const firestoreData = docSnap.exists() ? docSnap.data() : defaultWellnessData;
         
         // Merge daily data (like start date) with the weekly log data.
-        wellnessData = { ...defaultWellnessData, ...dailyWellnessData, ...firestoreData };
+        // --- FIX: ---
+        // Changed merge order to apply dailyWellnessData LAST, so the
+        // correct pregnancyStartDate overwrites any old/default values.
+        wellnessData = { ...defaultWellnessData, ...firestoreData, ...dailyWellnessData };
 
         if (!isHistoryView) {
             const todayIndex = new Date().getDay();
