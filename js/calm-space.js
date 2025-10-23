@@ -1,6 +1,8 @@
 import { db } from './firebase.js';
 import { doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-import { getWeekId, getDayId } from './wellness.js'; // Assuming wellness.js exports these
+// import { getWeekId, getDayId } from './wellness.js'; // Assuming wellness.js exports these
+// --- FIX 1: Remove getDayId from import ---
+import { getWeekId } from './wellness.js'; // Assuming wellness.js exports getWeekId
 
 // --- DOM Elements ---
 let breathingSelect, startBreathingBtn, stopBreathingBtn, breathingCircle, breathingText, breathingGlowRing, breathingDescription;
@@ -18,6 +20,17 @@ let activeMeditationInterval = null;
 let activeStretchTimer = null;
 let activeExerciseName = '';
 let selectedJournalMood = null;
+
+// --- FIX 2: Add a local getDayId helper function ---
+/**
+ * Gets the string name for the day of the week.
+ * @param {Date} date - The date object.
+ * @returns {string} - Day name (e.g., "monday").
+ */
+function getDayId(date) {
+    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    return days[date.getDay()];
+}
 
 // --- Constants ---
 const BREATHING_EXERCISES = {
@@ -364,7 +377,12 @@ async function saveJournalEntry() {
     if (!selectedJournalMood || !currentUserId) return;
 
     try {
-        const { weekId, dayId } = getWeekId(new Date());
+        // --- FIX 3: Correct the usage of getWeekId and getDayId ---
+        // const { weekId, dayId } = getWeekId(new Date()); // This was the buggy line
+        const today = new Date();
+        const weekId = getWeekId(today);
+        const dayId = getDayId(today); // Use our new local function
+
         const dayRef = doc(db, 'users', currentUserId, 'wellness', weekId, 'days', dayId);
 
         // We will save this as 'calmMood' to distinguish it from the main mood log
