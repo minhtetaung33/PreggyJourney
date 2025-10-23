@@ -1,181 +1,183 @@
+// js/calm-space.js
+import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { db } from './firebase.js';
-import { getCurrentUserId } from './auth.js';
-import { doc, collection, addDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getCurrentUserId } from "./auth.js";
 
-// --- STATE ---
-let calmMoodLogsRef;
-let currentUserId;
-let wellnessData;
+// --- STATE VARIABLES ---
+let currentUserId = null;
 let activeBreathingInterval = null;
 let activeMeditationInterval = null;
-let oceanWavesPlayer = null;
-let heartbeatPlayer = null;
-let waterReminderSynth = null;
-let activeMood = null;
-let currentExerciseName = null; // To track what exercise was just finished
+let activeStretchInterval = null;
+let activeAmbientAudio = null;
+let activeWaterAudio = null;
+let activeToneAudio = null;
 
-// --- DOM ELEMENTS ---
-let elements = {};
-
-// --- BREATHING EXERCISES ---
+// --- DATA ---
 const breathingExercises = {
-    'diaphragmatic': {
-        name: 'Diaphragmatic Breathing',
-        instructions: [
-            { text: "Breathe in deeply through your nose, letting your belly expand.", duration: 4000 },
-            { text: "Exhale slowly through your mouth, letting your belly fall.", duration: 6000 }
-        ],
-        animationClass: 'animate-breathe-diaphragmatic'
-    },
-    'pursed-lip': {
-        name: 'Pursed-Lip Breathing',
-        instructions: [
-            { text: "Breathe in through your nose for 2 seconds.", duration: 2000 },
-            { text: "Pucker your lips and exhale slowly for 4 seconds.", duration: 4000 }
-        ],
-        animationClass: 'animate-breathe-pursed'
-    },
-    'alternate-nostril': {
-        name: 'Alternate Nostril Breathing',
-        instructions: [
-            { text: "Close right nostril, inhale through left.", duration: 4000 },
-            { text: "Close left, exhale through right.", duration: 6000 },
-            { text: "Inhale through right nostril.", duration: 4000 },
-            { text: "Close right, exhale through left.", duration: 6000 }
-        ],
-        animationClass: 'animate-breathe-alternate' // Will just pulse gently
-    },
-    'box': {
-        name: 'Box Breathing',
-        instructions: [
-            { text: "Inhale for 4 seconds.", duration: 4000 },
-            { text: "Hold your breath for 4 seconds.", duration: 4000 },
-            { text: "Exhale for 4 seconds.", duration: 4000 },
-            { text: "Hold the exhale for 4 seconds.", duration: 4000 }
-        ],
-        animationClass: 'animate-breathe-box'
-    },
-    '4-7-8': {
-        name: '4-7-8 Breathing',
-        instructions: [
-            { text: "Breathe in for 4 seconds.", duration: 4000 },
-            { text: "Hold your breath for 7 seconds.", duration: 7000 },
-            { text: "Exhale completely for 8 seconds.", duration: 8000 }
-        ],
-        animationClass: 'animate-breathe-478'
-    }
+    "diaphragmatic": { name: "Diaphragmatic Breathing", timings: [4000, 0, 6000, 0], steps: ["Inhale (4s)", "Hold", "Exhale (6s)", "Hold"] },
+    "pursed-lip": { name: "Pursed-Lip Breathing", timings: [2000, 0, 4000, 0], steps: ["Inhale (2s)", "Hold", "Exhale (4s)", "Hold"] },
+    "box": { name: "Box Breathing", timings: [4000, 4000, 4000, 4000], steps: ["Inhale (4s)", "Hold (4s)", "Exhale (4s)", "Hold (4s)"] },
+    "4-7-8": { name: "4-7-8 Breathing", timings: [4000, 7000, 8000, 0], steps: ["Inhale (4s)", "Hold (7s)", "Exhale (8s)", "Hold"] },
+    "alternate-nostril": { name: "Alternate Nostril (Guided)", timings: [4000, 0, 4000, 0], steps: ["Inhale Left (4s)", "Hold", "Exhale Right (4s)", "Hold"] } // Simplified for visualizer
 };
 
-// --- MEDITATION TEXTS ---
 const meditationTexts = [
     "Imagine your baby smiling inside.",
-    "You are your baby's safe and loving home.",
-    "Send a wave of love from your heart to your baby.",
-    "Your baby feels your calmness and your joy.",
-    "You are already a wonderful mother.",
-    "Breathe in love, breathe out any tension."
+    "You are creating a safe, loving space for your baby.",
+    "Breathe in love, breathe out any tension.",
+    "Your baby feels your calm and your love.",
+    "You are strong. You are connected.",
+    "Every breath you take also nourishes your baby."
 ];
 
-/**
- * Initializes the Calm Space tab
- * @param {string} userId - The current user's ID
- * @param {object} initialWellnessData - The user's wellness data
- */
-export function initializeCalmSpace(userId, initialWellnessData) {
-    currentUserId = userId;
-    wellnessData = initialWellnessData;
-    calmMoodLogsRef = collection(db, `users/${currentUserId}/calmMoodLogs`);
+const stretchGuides = {
+    "neck": { name: "Gentle Neck Tilt", desc: "Slowly tilt your head to one side, hold for 15s. Repeat on the other side.", duration: 30, svg: `<svg class="w-24 h-24" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2"><circle cx="50" cy="30" r="10"/><path d="M50 40 V 60 M 40 70 H 60 M 50 60 L 40 80 M 50 60 L 60 80"/><path d="M50 30 C 45 30, 40 35, 40 40 C 40 45, 45 50, 50 50 M 45 25 A 5 5 0 0 1 55 25"/></svg>` },
+    "back": { name: "Cat-Cow Stretch", desc: "On all fours, inhale to arch your back down. Exhale to round your spine up. Repeat for 60s.", duration: 60, svg: `<svg class="w-24 h-24" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2"><path d="M 20 60 Q 50 40, 80 60 M 20 70 L 25 90 M 30 70 L 35 90 M 70 70 L 65 90 M 80 70 L 75 90"/><circle cx="75" cy="50" r="5"/></svg>` },
+    "legs": { name: "Seated Forward Fold", desc: "Sit with legs extended. Gently lean forward, keeping your back straight. Hold for 30s.", duration: 30, svg: `<svg class="w-24 h-24" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2"><path d="M 30 80 H 90 M 30 80 L 40 60 Q 50 50, 70 60 L 80 70"/><circle cx="75" cy="50" r="5"/></svg>` },
+    "hips": { name: "Butterfly Pose", desc: "Sit with the soles of your feet together. Gently press your knees toward the floor. Hold for 45s.", duration: 45, svg: `<svg class="w-24 h-24" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2"><path d="M 50 50 L 30 80 H 70 L 50 50 M 45 80 L 30 90 M 55 80 L 70 90"/><path d="M 50 50 Q 40 50, 35 60 L 30 80"/><path d="M 50 50 Q 60 50, 65 60 L 70 80"/><circle cx="50" cy="40" r="5"/></svg>` }
+};
 
-    // Cache DOM elements
-    elements = {
-        breathingVisualizer: document.getElementById('breathing-visualizer'),
-        breathingInstructions: document.getElementById('breathing-instructions'),
-        breathingSelector: document.getElementById('breathing-selector'),
-        stopBreathingBtn: document.getElementById('stop-breathing-btn'),
-        meditationCard: document.getElementById('meditation-card'),
-        meditationText: document.getElementById('meditation-text'),
-        meditationBelly: document.getElementById('meditation-belly'),
-        stretchGrid: document.getElementById('stretch-grid'),
-        stretchPlayer: document.getElementById('stretch-player'),
-        stretchTitle: document.getElementById('stretch-title'),
-        stretchAnimation: document.getElementById('stretch-animation'),
-        stretchCountdown: document.getElementById('stretch-countdown'),
-        stretchCloseBtn: document.getElementById('stretch-close-btn'),
-        waterReminderBtn: document.getElementById('water-reminder-btn'),
-        journalModal: document.getElementById('journal-modal'),
-        journalCloseBtn: document.getElementById('journal-modal-close-btn'),
-        journalTitle: document.getElementById('journal-modal-title'),
-        journalEmojiButtons: document.getElementById('journal-emoji-buttons'),
-        journalSaveBtn: document.getElementById('journal-save-btn'),
-        particlesContainer: document.getElementById('calm-particles')
-    };
-
-    // Initialize audio players (will start on first user interaction)
-    setupAudio();
-
-    // Setup event listeners
-    setupEventListeners();
-
-    // Create floating particles
-    createFloatingParticles();
+// --- AUDIO CONTEXT for TONES ---
+// We use this for generating tones dynamically without external files.
+let audioCtx;
+function getAudioContext() {
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
 }
 
-/**
- * Sets up all audio components using Tone.js
- */
-function setupAudio() {
-    // Ocean Waves: A looping noise generator
-    oceanWavesPlayer = new Tone.NoisePlayer({
-        noise: { type: 'pink' },
-        envelope: { attack: 0.5, decay: 0.1, sustain: 1, release: 0.5 },
-        filter: { type: 'lowpass', Q: 2, frequency: 600 },
-        volume: -20 // Softer
-    }).toDestination();
-    oceanWavesPlayer.playbackRate = 0.5;
+// Function to play a simple, gentle tone
+function playTone(frequency, duration, type = 'sine') {
+    try {
+        const ctx = getAudioContext();
+        const oscillator = ctx.createOscillator();
+        const gainNode = ctx.createGain();
 
-    // Heartbeat: A simple synth pulse
-    heartbeatPlayer = new Tone.MembraneSynth({
-        pitchDecay: 0.01,
-        octaves: 2,
-        oscillator: { type: 'sine' },
-        envelope: { attack: 0.001, decay: 0.2, sustain: 0.01, release: 0.001 },
-        volume: -10
-    }).toDestination();
+        oscillator.type = type;
+        oscillator.frequency.setValueAtTime(frequency, ctx.currentTime);
+        
+        gainNode.gain.setValueAtTime(0, ctx.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.05); // Fade in
+        gainNode.gain.linearRampToValueAtTime(0, ctx.currentTime + duration - 0.05); // Fade out
 
-    // Water Reminder: A simple, pleasant synth
-    waterReminderSynth = new Tone.Synth({
-        oscillator: { type: 'triangle' },
-        envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.5 },
-        volume: -10
-    }).toDestination();
+        oscillator.connect(gainNode);
+        gainNode.connect(ctx.destination);
+        
+        oscillator.start();
+        oscillator.stop(ctx.currentTime + duration);
+    } catch (e) {
+        console.error("AudioContext error:", e);
+    }
 }
 
-/**
- * Binds all event listeners for the Calm Space tab
- */
-function setupEventListeners() {
-    // Breathing exercise selection
-    if (elements.breathingSelector) {
-        elements.breathingSelector.addEventListener('click', (e) => {
-            const button = e.target.closest('.breathing-btn');
-            if (button && button.dataset.exercise) {
-                // Highlight selected button
-                elements.breathingSelector.querySelectorAll('.breathing-btn').forEach(btn => btn.classList.remove('active'));
-                button.classList.add('active');
-                
-                startBreathingExercise(button.dataset.exercise);
+
+// --- INITIALIZATION ---
+export function initializeCalmSpace() {
+    currentUserId = getCurrentUserId();
+    if (!currentUserId) return;
+
+    // --- Create Audio Elements ---
+    // We create them in JS to keep the HTML cleaner
+    if (!document.getElementById('ambient-ocean-audio')) {
+        const oceanAudio = document.createElement('audio');
+        oceanAudio.id = 'ambient-ocean-audio';
+        oceanAudio.src = 'https://cdn.pixabay.com/audio/2022/03/16/audio_94229b1b6a.mp3'; // Replace with a safe, reliable audio source
+        oceanAudio.loop = true;
+        document.body.appendChild(oceanAudio);
+
+        const heartbeatAudio = document.createElement('audio');
+        heartbeatAudio.id = 'ambient-heartbeat-audio';
+        heartbeatAudio.src = 'https://cdn.pixabay.com/audio/2021/08/09/audio_b2f8e21a8a.mp3'; // Replace with safe audio
+        heartbeatAudio.loop = true;
+        document.body.appendChild(heartbeatAudio);
+    }
+    
+    // Select the newly created audio elements
+    activeAmbientAudio = document.getElementById('ambient-ocean-audio');
+    
+    // This tone is for the water reminder
+    activeWaterAudio = new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_7564d3c52e.mp3'); // Gentle bell sound
+    
+    // This tone is for the stretch countdown
+    activeToneAudio = new Audio('https://cdn.pixabay.com/audio/2022/05/27/audio_882f09ada8.mp3'); // Short tone
+
+    // --- Setup Listeners ---
+    setupCalmEventListeners();
+    
+    // --- Populate Dynamic Content ---
+    populateSelect('breathing-select', Object.keys(breathingExercises), Object.values(breathingExercises).map(e => e.name));
+    populateStretchCards();
+}
+
+function populateSelect(elementId, keys, values) {
+    const select = document.getElementById(elementId);
+    if (!select) return;
+    
+    select.innerHTML = ''; // Clear existing
+    
+    const defaultOpt = document.createElement('option');
+    defaultOpt.value = "";
+    defaultOpt.textContent = `Select exercise...`;
+    select.appendChild(defaultOpt);
+
+    keys.forEach((key, index) => {
+        const opt = document.createElement('option');
+        opt.value = key;
+        opt.textContent = values[index];
+        select.appendChild(opt);
+    });
+}
+
+function populateStretchCards() {
+    const container = document.getElementById('stretch-guide-container');
+    if (!container) return;
+    
+    container.innerHTML = ''; // Clear existing
+    
+    Object.keys(stretchGuides).forEach(key => {
+        const guide = stretchGuides[key];
+        const card = document.createElement('div');
+        card.className = 'glass-card anim-card p-4 text-center cursor-pointer hover:bg-white/20 transition-colors stretch-card';
+        card.dataset.stretchKey = key;
+        
+        card.innerHTML = `
+            <div class="w-24 h-24 mx-auto text-purple-300 mb-2">
+                ${guide.svg}
+            </div>
+            <h4 class="text-lg font-bold text-white">${guide.name}</h4>
+        `;
+        
+        container.appendChild(card);
+    });
+}
+
+// --- EVENT LISTENERS ---
+function setupCalmEventListeners() {
+    // --- Breathing Visualizer ---
+    const startBreathingBtn = document.getElementById('start-breathing-btn');
+    if (startBreathingBtn) {
+        startBreathingBtn.addEventListener('click', () => {
+            if (activeBreathingInterval) {
+                stopBreathingExercise();
+            } else {
+                startBreathingExercise();
             }
         });
     }
 
-    // Stop breathing exercise
-    if (elements.stopBreathingBtn) {
-        elements.stopBreathingBtn.addEventListener('click', stopActiveExercise);
+    // --- Ambient Sound ---
+    const ambientSoundSelect = document.getElementById('ambient-sound-select');
+    if (ambientSoundSelect) {
+        ambientSoundSelect.addEventListener('change', (e) => {
+            playAmbientSound(e.target.value);
+        });
     }
 
-    // Meditation card
-    if (elements.meditationCard) {
-        elements.meditationCard.addEventListener('click', () => {
+    // --- Baby Connection ---
+    const meditationCard = document.getElementById('baby-connection-card');
+    if (meditationCard) {
+        meditationCard.addEventListener('click', () => {
             if (activeMeditationInterval) {
                 stopMeditation();
             } else {
@@ -183,355 +185,372 @@ function setupEventListeners() {
             }
         });
     }
-
-    // Stretch selection
-    if (elements.stretchGrid) {
-        elements.stretchGrid.addEventListener('click', (e) => {
+    
+    // --- Stretches ---
+    const stretchContainer = document.getElementById('stretch-guide-container');
+    if (stretchContainer) {
+        stretchContainer.addEventListener('click', (e) => {
             const card = e.target.closest('.stretch-card');
-            if (card && card.dataset.stretch) {
-                startStretch(card.dataset.stretch, card.querySelector('h4').textContent);
+            if (card && card.dataset.stretchKey) {
+                startStretch(card.dataset.stretchKey);
             }
         });
     }
-
-    // Close stretch player
-    if (elements.stretchCloseBtn) {
-        elements.stretchCloseBtn.addEventListener('click', stopStretch);
+    
+    const stopStretchBtn = document.getElementById('stop-stretch-btn');
+    if(stopStretchBtn) {
+        stopStretchBtn.addEventListener('click', stopStretch);
     }
 
-    // Water reminder
-    if (elements.waterReminderBtn) {
-        elements.waterReminderBtn.addEventListener('click', playWaterReminder);
-    }
-
-    // Journal Modal
-    if (elements.journalCloseBtn) {
-        elements.journalCloseBtn.addEventListener('click', closeJournalModal);
-    }
-    if (elements.journalModal) {
-        elements.journalModal.addEventListener('click', (e) => {
-            if (e.target === elements.journalModal) {
-                closeJournalModal();
-            }
+    // --- Journal Modal ---
+    const journalModal = document.getElementById('journal-modal');
+    if (journalModal) {
+        journalModal.addEventListener('click', (e) => {
+            if (e.target === journalModal) closeJournalModal();
         });
     }
-    if (elements.journalEmojiButtons) {
-        elements.journalEmojiButtons.addEventListener('click', (e) => {
-            const button = e.target.closest('button');
+
+    const closeJournalBtn = document.getElementById('journal-close-btn');
+    if (closeJournalBtn) {
+        closeJournalBtn.addEventListener('click', closeJournalModal);
+    }
+
+    const moodEmojiContainer = document.getElementById('mood-emoji-container');
+    if (moodEmojiContainer) {
+        moodEmojiContainer.addEventListener('click', (e) => {
+            const button = e.target.closest('.mood-btn');
             if (button) {
-                activeMood = button.dataset.mood;
-                elements.journalEmojiButtons.querySelectorAll('button').forEach(btn => btn.classList.remove('selected'));
+                const mood = button.dataset.mood;
+                // Highlight selected
+                moodEmojiContainer.querySelectorAll('.mood-btn').forEach(btn => btn.classList.remove('selected'));
                 button.classList.add('selected');
-                elements.journalSaveBtn.disabled = false;
+                // Save
+                saveMood(mood);
             }
         });
     }
-    if (elements.journalSaveBtn) {
-        elements.journalSaveBtn.addEventListener('click', saveMoodEntry);
+    
+    // --- Water Reminder ---
+    const waterReminderBtn = document.getElementById('water-reminder-btn');
+    if(waterReminderBtn) {
+        waterReminderBtn.addEventListener('click', playWaterReminder);
     }
 }
 
-/**
- * Stops any currently running exercise (breathing or meditation)
- */
-function stopActiveExercise() {
+// --- BREATHING VISUALIZER LOGIC ---
+function startBreathingExercise() {
+    const select = document.getElementById('breathing-select');
+    const visualizer = document.getElementById('breathing-visualizer');
+    const statusText = document.getElementById('breathing-status-text');
+    const startBtn = document.getElementById('start-breathing-btn');
+    if (!select || !visualizer || !statusText || !startBtn) return;
+    
+    const exerciseKey = select.value;
+    if (!exerciseKey) return;
+    
+    stopBreathingExercise(); // Stop any existing exercise
+
+    const exercise = breathingExercises[exerciseKey];
+    const totalDuration = exercise.timings.reduce((a, b) => a + b, 0);
+    let step = 0;
+    
+    const runStep = () => {
+        const duration = exercise.timings[step];
+        const stepName = exercise.steps[step];
+        
+        statusText.textContent = stepName;
+        
+        // Handle animation
+        if (stepName.includes("Inhale")) {
+            visualizer.style.transform = 'scale(1)';
+            visualizer.style.transitionDuration = `${duration}ms`;
+            visualizer.classList.add('glowing');
+        } else if (stepName.includes("Exhale")) {
+            visualizer.style.transform = 'scale(0.5)';
+            visualizer.style.transitionDuration = `${duration}ms`;
+            visualizer.classList.remove('glowing');
+        }
+        
+        // Move to next step after duration, if duration > 0
+        if (duration > 0) {
+            step = (step + 1) % exercise.timings.length;
+        } else {
+            // If duration is 0, skip to the next step immediately
+            step = (step + 1) % exercise.timings.length;
+            runStep(); // Run the next step immediately
+            return;
+        }
+    };
+    
+    // Initial step
+    runStep();
+    
+    // Set interval for subsequent steps
+    // This is tricky. Let's restart the "loop" every totalDuration
+    activeBreathingInterval = setInterval(() => {
+        step = 0; // Reset to start
+        runStep();
+    }, totalDuration);
+    
+    // Set interval for the steps *within* the loop
+    // This is a better approach.
+    clearInterval(activeBreathingInterval); // Clear the previous interval
+    
+    let timeInCycle = 0;
+    const tick = () => {
+        if (timeInCycle === 0) { // Inhale
+            statusText.textContent = exercise.steps[0];
+            visualizer.style.transform = 'scale(1)';
+            visualizer.style.transitionDuration = `${exercise.timings[0]}ms`;
+            visualizer.classList.add('glowing');
+        }
+        if (timeInCycle === exercise.timings[0]) { // Hold 1
+            if(exercise.timings[1] > 0) statusText.textContent = exercise.steps[1];
+        }
+        if (timeInCycle === exercise.timings[0] + exercise.timings[1]) { // Exhale
+            statusText.textContent = exercise.steps[2];
+            visualizer.style.transform = 'scale(0.5)';
+            visualizer.style.transitionDuration = `${exercise.timings[2]}ms`;
+            visualizer.classList.remove('glowing');
+        }
+        if (timeInCycle === exercise.timings[0] + exercise.timings[1] + exercise.timings[2]) { // Hold 2
+             if(exercise.timings[3] > 0) statusText.textContent = exercise.steps[3];
+        }
+        
+        timeInCycle += 100; // Check every 100ms
+        if(timeInCycle >= totalDuration) {
+            timeInCycle = 0;
+        }
+    };
+    
+    // Run first step immediately
+    timeInCycle = 0;
+    tick(); 
+    // Set interval
+    activeBreathingInterval = setInterval(tick, 100);
+
+    startBtn.textContent = 'Stop';
+    select.disabled = true;
+    showJournalModal('Guided Breathing');
+}
+
+function stopBreathingExercise() {
+    const visualizer = document.getElementById('breathing-visualizer');
+    const statusText = document.getElementById('breathing-status-text');
+    const startBtn = document.getElementById('start-breathing-btn');
+    const select = document.getElementById('breathing-select');
+    
     if (activeBreathingInterval) {
         clearInterval(activeBreathingInterval);
         activeBreathingInterval = null;
-        if (oceanWavesPlayer.state === 'started') {
-            oceanWavesPlayer.stop();
-        }
-        elements.breathingVisualizer.className = 'breathing-circle';
-        elements.breathingInstructions.textContent = 'Select an exercise to begin.';
-        elements.breathingSelector.querySelectorAll('.breathing-btn').forEach(btn => btn.classList.remove('active'));
-        showJournalPopup(currentExerciseName); // Show journal on stop
-        currentExerciseName = null;
+    }
+    
+    if(visualizer) {
+        visualizer.style.transform = 'scale(0.75)';
+        visualizer.style.transitionDuration = '1000ms';
+        visualizer.classList.remove('glowing');
+    }
+    if(statusText) statusText.textContent = 'Tap "Start" to begin';
+    if(startBtn) startBtn.textContent = 'Start';
+    if(select) select.disabled = false;
+}
+
+// --- AMBIENT SOUND LOGIC ---
+function playAmbientSound(sound) {
+    // Stop any currently playing audio
+    if (activeAmbientAudio) {
+        activeAmbientAudio.pause();
+        activeAmbientAudio.currentTime = 0;
+    }
+    
+    if (sound === 'ocean') {
+        activeAmbientAudio = document.getElementById('ambient-ocean-audio');
+    } else if (sound === 'heartbeat') {
+        activeAmbientAudio = document.getElementById('ambient-heartbeat-audio');
+    } else {
+        return; // "None" was selected
+    }
+
+    if (activeAmbientAudio) {
+        activeAmbientAudio.play().catch(e => console.error("Audio play failed:", e));
     }
 }
 
-/**
- * Starts a selected breathing exercise
- * @param {string} exerciseKey - The key (e.g., 'box') of the exercise
- */
-async function startBreathingExercise(exerciseKey) {
-    // Start Tone.js context on user interaction
-    if (Tone.context.state !== 'running') {
-        await Tone.start();
-    }
-
-    stopActiveExercise(); // Stop any previous exercise
-    stopMeditation(); // Also stop meditation
-
-    const exercise = breathingExercises[exerciseKey];
-    if (!exercise) return;
-
-    currentExerciseName = exercise.name;
-    elements.breathingVisualizer.className = 'breathing-circle'; // Reset
-    void elements.breathingVisualizer.offsetWidth; // Trigger reflow
-    elements.breathingVisualizer.classList.add(exercise.animationClass);
-    elements.stopBreathingBtn.classList.remove('hidden');
-
-    // Start ocean sounds
-    oceanWavesPlayer.start();
-
-    let instructionIndex = 0;
-    const runInstruction = () => {
-        const instruction = exercise.instructions[instructionIndex];
-        elements.breathingInstructions.textContent = instruction.text;
-        
-        activeBreathingInterval = setTimeout(() => {
-            instructionIndex = (instructionIndex + 1) % exercise.instructions.length;
-            runInstruction();
-        }, instruction.duration);
+// --- MEDITATION LOGIC ---
+function startMeditation() {
+    const card = document.getElementById('baby-connection-card');
+    const textEl = document.getElementById('meditation-text');
+    const visualEl = document.getElementById('meditation-visual');
+    if (!card || !textEl || !visualEl) return;
+    
+    stopMeditation(); // Stop any existing
+    
+    card.classList.add('active'); // e.g., to change border or glow
+    visualEl.classList.add('pulsing'); // Add pulsing animation
+    
+    const showRandomText = () => {
+        const randomIndex = Math.floor(Math.random() * meditationTexts.length);
+        textEl.textContent = meditationTexts[randomIndex];
+        textEl.classList.add('fade-in');
+        setTimeout(() => textEl.classList.remove('fade-in'), 1000); // Match animation duration
     };
-
-    runInstruction();
+    
+    showRandomText(); // Show one immediately
+    activeMeditationInterval = setInterval(showRandomText, 11000);
+    
+    showJournalModal('Baby Connection Meditation');
 }
 
-/**
- * Starts the Baby Connection Meditation
- */
-async function startMeditation() {
-    // Start Tone.js context on user interaction
-    if (Tone.context.state !== 'running') {
-        await Tone.start();
-    }
-
-    stopActiveExercise(); // Stop breathing exercise
-
-    if (activeMeditationInterval) return; // Already running
-
-    currentExerciseName = "Baby Connection Meditation";
-    elements.meditationCard.classList.add('active');
-    elements.meditationBelly.classList.add('animate-pulse-belly');
-    
-    // Start heartbeat
-    heartbeatPlayer.triggerAttackRelease("C2", "8n", Tone.now());
-    heartbeatPlayer.triggerAttackRelease("C2", "8n", Tone.now() + 0.3);
-    
-    activeMeditationInterval = setInterval(() => {
-        // Play heartbeat
-        heartbeatPlayer.triggerAttackRelease("C2", "8n", Tone.now());
-        heartbeatPlayer.triggerAttackRelease("C2", "8n", Tone.now() + 0.3);
-
-        // Change text every 11 seconds (this interval is approx 1 second)
-        // A bit of a hack, but simpler than multiple intervals
-        const seconds = new Date().getSeconds();
-        if (seconds % 11 === 0) {
-            const randomIndex = Math.floor(Math.random() * meditationTexts.length);
-            elements.meditationText.textContent = meditationTexts[randomIndex];
-        }
-    }, 1000); // Check every second
-
-    // Set initial text
-    elements.meditationText.textContent = meditationTexts[0];
-}
-
-/**
- * Stops the Baby Connection Meditation
- */
 function stopMeditation() {
+    const card = document.getElementById('baby-connection-card');
+    const textEl = document.getElementById('meditation-text');
+    const visualEl = document.getElementById('meditation-visual');
+    
     if (activeMeditationInterval) {
         clearInterval(activeMeditationInterval);
         activeMeditationInterval = null;
-        elements.meditationCard.classList.remove('active');
-        elements.meditationBelly.classList.remove('animate-pulse-belly');
-        elements.meditationText.textContent = "Tap to connect with your baby.";
-        showJournalPopup(currentExerciseName); // Show journal on stop
-        currentExerciseName = null;
     }
+    
+    if(card) card.classList.remove('active');
+    if(visualEl) visualEl.classList.remove('pulsing');
+    if(textEl) textEl.textContent = 'Click to begin connecting with your baby.';
 }
 
-/**
- * Shows the stretch player modal
- * @param {string} stretchKey - The key for the stretch (e.g., 'cat-cow')
- * @param {string} stretchName - The display name (e.g., 'Cat-Cow')
- */
-function startStretch(stretchKey, stretchName) {
-    stopActiveExercise();
-    stopMeditation();
+// --- STRETCH LOGIC ---
+function startStretch(stretchKey) {
+    const guide = stretchGuides[stretchKey];
+    if (!guide) return;
+    
+    const container = document.getElementById('stretch-guide-container');
+    const activeView = document.getElementById('active-stretch-view');
+    const titleEl = document.getElementById('stretch-title');
+    const descEl = document.getElementById('stretch-desc');
+    const timerEl = document.getElementById('stretch-timer');
+    const svgEl = document.getElementById('stretch-svg-container');
 
-    currentExerciseName = stretchName;
-    elements.stretchTitle.textContent = stretchName;
+    if (!container || !activeView || !titleEl || !descEl || !timerEl || !svgEl) return;
     
-    // TODO: Update animation/emoji
-    // For now, we'll just show a generic emoji
-    elements.stretchAnimation.innerHTML = `<div class="text-7xl">${getStretchEmoji(stretchKey)}</div>`;
-    
-    elements.stretchPlayer.classList.remove('hidden');
-    elements.stretchPlayer.classList.add('active');
+    stopStretch(); // Stop any active stretch
 
-    let countdown = 30;
-    elements.stretchCountdown.textContent = `${countdown}s`;
+    // Show active view, hide list
+    container.classList.add('hidden');
+    activeView.classList.remove('hidden');
     
-    activeBreathingInterval = setInterval(() => {
-        countdown--;
-        elements.stretchCountdown.textContent = `${countdown}s`;
-        if (countdown <= 0) {
+    // Populate content
+    titleEl.textContent = guide.name;
+    descEl.textContent = guide.desc;
+    svgEl.innerHTML = guide.svg;
+    
+    let timeLeft = guide.duration;
+    timerEl.textContent = `${timeLeft}s`;
+    
+    activeStretchInterval = setInterval(() => {
+        timeLeft--;
+        timerEl.textContent = `${timeLeft}s`;
+        
+        if(timeLeft > 0 && timeLeft <= 3) {
+            // Play countdown tone
+            if(activeToneAudio) activeToneAudio.play().catch(e => console.error("Tone play failed:", e));
+        }
+        
+        if (timeLeft <= 0) {
             stopStretch();
+            showJournalModal(guide.name); // Show journal when complete
         }
     }, 1000);
 }
 
-/**
- * Hides the stretch player and shows the journal
- */
 function stopStretch() {
-    if (activeBreathingInterval) {
-        clearInterval(activeBreathingInterval);
-        activeBreathingInterval = null;
+    if (activeStretchInterval) {
+        clearInterval(activeStretchInterval);
+        activeStretchInterval = null;
     }
-    elements.stretchPlayer.classList.remove('active');
-    setTimeout(() => {
-        elements.stretchPlayer.classList.add('hidden');
-    }, 300);
     
-    showJournalPopup(currentExerciseName);
-    currentExerciseName = null;
+    const container = document.getElementById('stretch-guide-container');
+    const activeView = document.getElementById('active-stretch-view');
+    
+    if(container) container.classList.remove('hidden');
+    if(activeView) activeView.classList.add('hidden');
 }
 
-/**
- * Gets an emoji for a given stretch key
- * @param {string} stretchKey 
- * @returns {string} Emoji
- */
-function getStretchEmoji(stretchKey) {
-    const emojis = {
-        'cat-cow': '🐄',
-        'pelvic-tilt': '🧘‍♀️',
-        'side-stretch': '🙆‍♀️',
-        'neck-release': '💆‍♀️',
-        'childs-pose': '🙇‍♀️',
-        'hip-opener': '🤸‍♀️'
-    };
-    return emojis[stretchKey] || '🧘‍♀️';
-}
-
-/**
- * Plays the water reminder sound
- */
-async function playWaterReminder() {
-    if (Tone.context.state !== 'running') {
-        await Tone.start();
+// --- JOURNAL MODAL LOGIC ---
+function showJournalModal(exerciseName) {
+    const modal = document.getElementById('journal-modal');
+    const title = document.getElementById('journal-title');
+    if (!modal || !title) return;
+    
+    title.textContent = `You completed: ${exerciseName}`;
+    
+    // Reset mood selection
+    const moodEmojiContainer = document.getElementById('mood-emoji-container');
+    if(moodEmojiContainer) {
+        moodEmojiContainer.querySelectorAll('.mood-btn').forEach(btn => btn.classList.remove('selected'));
     }
-    const now = Tone.now();
-    waterReminderSynth.triggerAttackRelease("C5", "8n", now);
-    waterReminderSynth.triggerAttackRelease("E5", "8n", now + 0.2);
-    waterReminderSynth.triggerAttackRelease("G5", "8n", now + 0.4);
+    
+    modal.classList.remove('hidden');
+    setTimeout(() => modal.classList.add('active'), 10);
 }
 
-/**
- * Shows the mindful journal pop-up
- * @param {string} exerciseName - The name of the exercise just completed
- */
-function showJournalPopup(exerciseName = "your session") {
-    if (!exerciseName) return; // Don't show if no exercise was active
-
-    elements.journalTitle.textContent = `After ${exerciseName}, how do you feel?`;
-    activeMood = null;
-    elements.journalEmojiButtons.querySelectorAll('button').forEach(btn => btn.classList.remove('selected'));
-    elements.journalSaveBtn.disabled = true;
-    elements.journalSaveBtn.textContent = 'Save';
-
-    elements.journalModal.classList.remove('hidden');
-    setTimeout(() => elements.journalModal.classList.add('active'), 10);
-}
-
-/**
- * Closes the mindful journal pop-up
- */
 function closeJournalModal() {
-    elements.journalModal.classList.remove('active');
-    setTimeout(() => elements.journalModal.classList.add('hidden'), 300);
+    const modal = document.getElementById('journal-modal');
+    if (!modal) return;
+    
+    modal.classList.remove('active');
+    setTimeout(() => modal.classList.add('hidden'), 300);
 }
 
-/**
- * Saves the selected mood to Firebase
- */
-async function saveMoodEntry() {
-    if (!activeMood || !currentUserId) return;
-
-    elements.journalSaveBtn.disabled = true;
-    elements.journalSaveBtn.textContent = 'Saving...';
-
+async function saveMood(mood) {
+    const titleEl = document.getElementById('journal-title');
+    if (!currentUserId || !titleEl) {
+        console.error("No user or title for mood log");
+        return;
+    }
+    
+    const exercise = titleEl.textContent.replace('You completed: ', '');
+    const moodLog = {
+        userId: currentUserId,
+        mood: mood,
+        activity: exercise,
+        createdAt: serverTimestamp()
+    };
+    
     try {
-        await addDoc(calmMoodLogsRef, {
-            mood: activeMood,
-            exercise: currentExerciseName || 'Unknown',
-            createdAt: serverTimestamp(),
-            week: wellnessData ? Math.floor(Math.abs(new Date() - new Date(wellnessData.pregnancyStartDate)) / (1000 * 60 * 60 * 24 * 7)) : 0
-        });
+        const docRef = await addDoc(collection(db, `users/${currentUserId}/moodLogs`), moodLog);
+        console.log("Mood log saved with ID: ", docRef.id);
         
-        elements.journalSaveBtn.textContent = 'Saved! ✨';
-        setTimeout(closeJournalModal, 1000);
-
-    } catch (error) {
-        console.error("Error saving mood log:", error);
-        elements.journalSaveBtn.textContent = 'Error. Try again.';
-        elements.journalSaveBtn.disabled = false;
+        // Give feedback (e.g., sparkle) and close
+        const sparkleEl = document.getElementById('journal-sparkle');
+        if(sparkleEl) {
+            sparkleEl.classList.add('animate');
+            setTimeout(() => sparkleEl.classList.remove('animate'), 1000);
+        }
+        
+        setTimeout(closeJournalModal, 500); // Close modal after a short delay
+        
+    } catch (e) {
+        console.error("Error adding mood log: ", e);
     }
 }
 
-/**
- * Creates the floating particle effect
- */
-function createFloatingParticles() {
-    if (!elements.particlesContainer) return;
-    const particleCount = 20;
-    for (let i = 0; i < particleCount; i++) {
-        const particle = document.createElement('div');
-        particle.className = 'calm-particle';
-        particle.style.left = `${Math.random() * 100}%`;
-        particle.style.animationDuration = `${Math.random() * 10 + 10}s`;
-        particle.style.animationDelay = `${Math.random() * 10}s`;
-        particle.style.width = `${Math.random() * 4 + 2}px`;
-        particle.style.height = particle.style.width;
-        particle.style.opacity = Math.random() * 0.5 + 0.2;
-        elements.particlesContainer.appendChild(particle);
+// --- WATER REMINDER ---
+function playWaterReminder() {
+    if(activeWaterAudio) {
+        activeWaterAudio.currentTime = 0;
+        activeWaterAudio.play().catch(e => console.error("Water reminder audio failed:", e));
     }
+    showJournalModal("Drink Water Reminder");
 }
 
-/**
- * Function called by main.js when this tab is switched to.
- * We can use this to restart animations if needed.
- */
-export function handleCalmSpaceTabSwitch() {
-    // Re-create particles or restart animations if they were stopped
-    if (elements.particlesContainer && elements.particlesContainer.children.length === 0) {
-        createFloatingParticles();
-    }
-}
-
-/**
- * Cleans up when the user logs out
- */
+// --- CLEANUP ---
 export function unloadCalmSpace() {
-    stopActiveExercise();
+    stopBreathingExercise();
     stopMeditation();
     stopStretch();
-
-    if (oceanWavesPlayer) {
-        oceanWavesPlayer.dispose();
-        oceanWavesPlayer = null;
+    if (activeAmbientAudio) {
+        activeAmbientAudio.pause();
     }
-    if (heartbeatPlayer) {
-        heartbeatPlayer.dispose();
-        heartbeatPlayer = null;
-    }
-    if (waterReminderSynth) {
-        waterReminderSynth.dispose();
-        waterReminderSynth = null;
-    }
-
-    if (elements.particlesContainer) {
-        elements.particlesContainer.innerHTML = '';
-    }
-
-    // Clear intervals
-    if (activeBreathingInterval) clearInterval(activeBreathingInterval);
-    if (activeMeditationInterval) clearInterval(activeMeditationInterval);
-    activeBreathingInterval = null;
-    activeMeditationInterval = null;
-
-    // TODO: Remove event listeners if necessary
+    
+    currentUserId = null;
+    // We don't need to remove event listeners if the tab content is simply hidden
+    // If the content is *removed* from the DOM, they are garbage collected.
 }
