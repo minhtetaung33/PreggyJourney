@@ -1,6 +1,7 @@
 import { configError } from './firebase.js';
 import { setupAuthentication, getCurrentUserId } from './auth.js';
-import { setupTabs } from './ui.js';
+// Import createBubbleBackground from ui.js
+import { setupTabs, createBubbleBackground } from './ui.js';
 import { initializeMealPlanner, unloadMealPlanner, updateWellnessDataForMealPlanner } from './meal-planner.js';
 import { 
     initializeWellness, 
@@ -72,6 +73,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     setupAuthentication();
     setupTabs(handleTabSwitch);
+
+    // --- NEW ANIMATION SETUP ---
+    // 1. Create the rising bubbles
+    createBubbleBackground();
+    // 2. Fade out the page overlay after a short delay
+    setTimeout(() => {
+        document.body.classList.add('loaded');
+    }, 500); // 0.5s delay before fading out
+    // --- END NEW ANIMATION SETUP ---
 });
 
 function handleTabSwitch(activeTab) {
