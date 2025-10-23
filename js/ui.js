@@ -17,9 +17,11 @@ export const elements = {
     mealPlanTab: document.getElementById('tab-meal-plan'),
     symptomTrackerTab: document.getElementById('tab-symptom-tracker'),
     journeyTab: document.getElementById('tab-journey'),
+    calmSpaceTab: document.getElementById('tab-calm-space'), // New Tab
     mealPlanContent: document.getElementById('content-meal-plan'),
     symptomTrackerContent: document.getElementById('content-symptom-tracker'),
     journeyContent: document.getElementById('content-journey'),
+    calmSpaceContent: document.getElementById('content-calm-space'), // New Content
 
     // --- NEW Animation Elements ---
     bubbleBackground: document.getElementById('bubble-background'),
@@ -56,7 +58,6 @@ export function createBubbleBackground() {
     
     // Update keyframes in CSS to use drift (we can't, but we can slightly modify the animation)
     // We'll modify the `rise` keyframe in CSS to include a horizontal movement.
-    // Let's assume the CSS `rise` keyframe is updated to handle horizontal movement.
     // For simplicity, we'll stick to the vertical rise defined in CSS.
 }
 
@@ -146,6 +147,11 @@ export function setupTabs(onTabSwitch) {
         switchTab('symptom');
         onTabSwitch('symptom');
     });
+    // Add Calm Space listener
+    elements.calmSpaceTab.addEventListener('click', () => {
+        switchTab('calm');
+        onTabSwitch('calm');
+    });
     elements.journeyTab.addEventListener('click', () => {
         switchTab('journey');
         onTabSwitch('journey');
@@ -156,21 +162,26 @@ function switchTab(activeTab) {
     const tabs = {
         meal: { btn: elements.mealPlanTab, content: elements.mealPlanContent },
         symptom: { btn: elements.symptomTrackerTab, content: elements.symptomTrackerContent },
+        calm: { btn: elements.calmSpaceTab, content: elements.calmSpaceContent }, // Add Calm Space
         journey: { btn: elements.journeyTab, content: elements.journeyContent }
     };
 
     Object.keys(tabs).forEach(key => {
-        tabs[key].btn.classList.remove('active');
-        tabs[key].content.classList.remove('active');
-        // Reset animations on other tabs
-        if (key !== activeTab) {
-            resetTabAnimation(tabs[key].content);
+        if (tabs[key].btn && tabs[key].content) { // Check if elements exist
+            tabs[key].btn.classList.remove('active');
+            tabs[key].content.classList.remove('active');
+            // Reset animations on other tabs
+            if (key !== activeTab) {
+                resetTabAnimation(tabs[key].content);
+            }
         }
     });
 
-    tabs[activeTab].btn.classList.add('active');
-    tabs[activeTab].content.classList.add('active');
-    
-    // Play animation for the new active tab
-    playTabEntranceAnimation(tabs[activeTab].content);
+    if (tabs[activeTab] && tabs[activeTab].btn && tabs[activeTab].content) { // Check if active tab exists
+        tabs[activeTab].btn.classList.add('active');
+        tabs[activeTab].content.classList.add('active');
+        
+        // Play animation for the new active tab
+        playTabEntranceAnimation(tabs[activeTab].content);
+    }
 }
