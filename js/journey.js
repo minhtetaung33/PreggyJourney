@@ -1,4 +1,4 @@
-import { collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { db } from './firebase.js';
 import { getCurrentUserId } from "./auth.js";
 
@@ -166,30 +166,35 @@ function renderTodos(todos) {
     });
 }
 
+/**
+ * Renders the wish list, sorting un-purchased items to the top.
+ * @param {Array} wishes - The array of wish items from Firestore.
+ */
 function renderWishes(wishes) {
     wishlistContainer.innerHTML = '';
 
-    // --- NEW: Sort wishes array ---
-    // Sorts by purchased status (false comes first)
-    // Then sorts by creation time (newest first) within each status group
-    const sortedWishes = wishes.sort((a, b) => {
-        // Sort by 'purchased' status first (false/0 comes before true/1)
-        const purchasedSort = (a.purchased ? 1 : 0) - (b.purchased ? 1 : 0);
-        if (purchasedSort !== 0) {
-            return purchasedSort;
+    // Sort wishes:
+    // 1. Un-purchased (false) items first.
+    // 2. Within purchased/un-purchased groups, sort by creation date (newest first).
+    const sortedWishes = [...wishes].sort((a, b) => {
+        if (a.purchased !== b.purchased) {
+            return a.purchased - b.purchased; // false (0) comes before true (1)
         }
-        // If purchase status is the same, sort by createdAt descending (newest first)
-        const dateA = a.createdAt?.toDate() || 0;
-        const dateB = b.createdAt?.toDate() || 0;
+        // If 'purchased' status is the same, sort by 'createdAt' descending
+        const dateA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
+        const dateB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
         return dateB - dateA; // Newest first
     });
-    // --- END NEW ---
 
-
-    if (sortedWishes.length === 0) { // Use sortedWishes
+    if (sortedWishes.length === 0) {
         wishlistContainer.innerHTML = `<p class="text-center text-gray-400">No wishes yet. Add one below!</p>`;
+        // Reset progress bar for empty list
+        wishlistProgressText.textContent = `0/0 Items`;
+        wishlistProgressBar.style.width = '0%';
+        return; // Exit function
     }
-    // Use sortedWishes in the loop
+
+    // Iterate over the newly sorted list
     sortedWishes.forEach(wish => {
         const item = document.createElement('div');
         item.className = `wish-item-card p-3 bg-white/5 rounded-lg border border-transparent ${wish.purchased ? 'purchased opacity-60' : ''}`;
@@ -206,10 +211,9 @@ function renderWishes(wishes) {
             </div>
             <div class="flex justify-between items-center mt-2 text-sm">
                 <span class="font-semibold text-teal-300">${wish.price ? `$${wish.price}`: ''}</span>
-                ${wish.link ? `<a href="${wish.link.startsWith('http') ? wish.link : 'https://' + wish.link}" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline">Store Link</a>` : ''}
+                ${wish.link ? `<a href="${wish.link}" target="_blank" class="text-blue-400 hover:underline">Store Link</a>` : ''}
             </div>
         `;
-        // Ensure link has https:// if missing - added rel="noopener noreferrer" for security
         item.querySelector('input[type="checkbox"]').addEventListener('change', async (e) => {
             const wishDocRef = doc(db, `users/${getCurrentUserId()}/wishes`, wish.id);
             await updateDoc(wishDocRef, { purchased: e.target.checked });
@@ -221,11 +225,12 @@ function renderWishes(wishes) {
         wishlistContainer.appendChild(item);
     });
     
-    // Use the original wishes array count for progress, not the sorted one
-    const purchasedCount = wishes.filter(w => w.purchased).length; 
+    // This calculation remains correct as it's based on the original full 'wishes' array
+    const purchasedCount = wishes.filter(w => w.purchased).length;
     wishlistProgressText.textContent = `${purchasedCount}/${wishes.length} Items`;
     wishlistProgressBar.style.width = wishes.length > 0 ? `${(purchasedCount / wishes.length) * 100}%` : '0%';
 }
+
 
 function renderReflections(reflections) {
     reflectionsContainer.innerHTML = '';
@@ -333,7 +338,7 @@ function renderAiWishSuggestions(suggestions) {
 function loadTodos() {
     if (!todosRef) return;
     if(unsubscribeTodos) unsubscribeTodos();
-    const q = query(todosRef, "createdAt", "desc");
+    const q = query(todosRef, orderBy("createdAt", "desc"));
     unsubscribeTodos = onSnapshot(q, (snapshot) => {
         currentTodos = [];
         snapshot.forEach(doc => currentTodos.push({ id: doc.id, ...doc.data() }));
@@ -344,20 +349,19 @@ function loadTodos() {
 function loadWishes() {
     if (!wishesRef) return;
     if(unsubscribeWishes) unsubscribeWishes();
-    // Remove the Firestore orderBy clause as we sort client-side now
-    // const q = query(wishesRef, orderBy("createdAt", "desc")); 
-    unsubscribeWishes = onSnapshot(wishesRef, (snapshot) => { // Listen directly to the collection
+    const q = query(wishesRef, orderBy("createdAt", "desc"));
+    unsubscribeWishes = onSnapshot(q, (snapshot) => {
         currentWishes = [];
         snapshot.forEach(doc => currentWishes.push({ id: doc.id, ...doc.data() }));
-        renderWishes(currentWishes); // Sorting happens inside renderWishes
+        renderWishes(currentWishes);
     });
 }
 
 function loadReflections() {
     if (!reflectionsRef) return;
     if(unsubscribeReflections) unsubscribeReflections();
-    const q = query(reflectionsRef, "createdAt", "desc");
-    unsubscribeWishes = onSnapshot(q, (snapshot) => {
+    const q = query(reflectionsRef, orderBy("createdAt", "desc"));
+    unsubscribeReflections = onSnapshot(q, (snapshot) => {
         currentReflections = [];
         snapshot.forEach(doc => currentReflections.push({ id: doc.id, ...doc.data() }));
         renderReflections(currentReflections);
