@@ -550,44 +550,47 @@ function loadSupplements() {
 }
 
 function setupEventListeners() {
-    // ... existing event listeners ...
-
-    sleepMonitorCard.addEventListener('click', () => {
-        openSleepModal(wellnessHistoryCurrentDate);
-    });
-    sleepModalCancelBtn.addEventListener('click', closeSleepModal);
-    sleepModal.addEventListener('click', (e) => e.target === sleepModal && closeSleepModal());
-    sleepModalSaveBtn.addEventListener('click', async () => {
-        const newSleepData = {};
-        sleepDays.forEach(day => {
-            const sleepInput = document.getElementById(`sleep-time-${day}`);
-            const wakeInput = document.getElementById(`wake-time-${day}`);
-            newSleepData[day] = { sleep: sleepInput.value, wake: wakeInput.value };
-        }); // End of forEach loop
-
-        // Save the data AFTER the loop finishes
-        const weekId = getWeekId(sleepModalCurrentDate);
-        const userId = getCurrentUserId(); // Get user ID
-        if (userId) { // Check if user ID exists
-            const sleepDocRef = doc(db, `users/${userId}/wellness`, weekId);
-            try {
-                await setDoc(sleepDocRef, { sleep: newSleepData }, { merge: true });
-                console.log("Sleep data saved successfully for week:", weekId);
-            } catch (error) {
-                console.error("Error saving sleep data:", error);
-            }
-        } else {
-            console.error("User ID not found, cannot save sleep data.");
+    // --- Re-added missing listeners ---
+    hydrationPlusBtn.addEventListener('click', async () => {
+        if (hydrationPlusBtn.disabled) return;
+        const dayData = wellnessData.weeklyLog[selectedDayKey] || {};
+        const newIntake = (dayData.waterIntake || 0) + 1;
+        if(newIntake <= wellnessData.waterGoal) {
+            await updateDoc(wellnessDataRef, { [`weeklyLog.${selectedDayKey}.waterIntake`]: newIntake });
         }
+    });
 
-        closeSleepModal();
-    }); // *** Added the missing closing }); here ***
+    hydrationMinusBtn.addEventListener('click', async () => {
+        if (hydrationMinusBtn.disabled) return;
+        const dayData = wellnessData.weeklyLog[selectedDayKey] || {};
+        const newIntake = (dayData.waterIntake || 0) - 1;
+        if(newIntake >= 0) {
+            await updateDoc(wellnessDataRef, { [`weeklyLog.${selectedDayKey}.waterIntake`]: newIntake });
+        }
+    });
+    
+    moodLogButtons.addEventListener('click', async (e) => {
+        const button = e.target.closest('.mood-btn');
+        if(!button || button.disabled) return;
+        const newMoodEmoji = button.dataset.mood;
+        await updateDoc(wellnessDataRef, { [`weeklyLog.${selectedDayKey}.mood`]: newMoodEmoji });
+    });
 
-    manageSupplementsBtnHeader.addEventListener('click', () => openSupplementModal(new Date()));
-    nutritionHistoryBtn.addEventListener('click', openNutritionHistoryModal);
-    // ... rest of event listeners ...
-}
+    energyLogButtons.addEventListener('click', async (e) => {
+        const button = e.target.closest('.energy-btn');
+        if(!button || button.disabled) return;
+        const newEnergyLevel = parseInt(button.dataset.energy);
+        await updateDoc(wellnessDataRef, { [`weeklyLog.${selectedDayKey}.energy`]: newEnergyLevel });
+    });
 
+    symptomCheckBtn.addEventListener('click', handleSymptomCheck);
+    // --- End re-added listeners ---
+
+    // Baby Growth Card / Start Date Modal Listeners (Consolidated)
+    babyGrowthCard.addEventListener('click', () => {
+        startDateInput.value = wellnessData.pregnancyStartDate; endDateInput.value = wellnessData.pregnancyEndDate || '';
+        startDateModal.classList.remove('hidden'); setTimeout(() => startDateModal.classList.add('active'), 10);
+    });
     startDateModalCancelBtn.addEventListener('click', closeStartDateModal);
     startDateModal.addEventListener('click', (e) => e.target === startDateModal && closeStartDateModal());
     startDateModalSaveBtn.addEventListener('click', async () => {
@@ -623,13 +626,39 @@ function setupEventListeners() {
         closeStartDateModal();
     });
 
+    // Sleep Modal Listeners (Consolidated)
+    sleepMonitorCard.addEventListener('click', () => {
+        openSleepModal(wellnessHistoryCurrentDate);
+    });
+    sleepModalCancelBtn.addEventListener('click', closeSleepModal);
+    sleepModal.addEventListener('click', (e) => e.target === sleepModal && closeSleepModal());
+    sleepModalSaveBtn.addEventListener('click', async () => {
+        const newSleepData = {};
+        sleepDays.forEach(day => {
+            const sleepInput = document.getElementById(`sleep-time-${day}`);
+            const wakeInput = document.getElementById(`wake-time-${day}`);
+            newSleepData[day] = { sleep: sleepInput.value, wake: wakeInput.value };
+        }); // End of forEach loop
+
+        // Save the data AFTER the loop finishes
         const weekId = getWeekId(sleepModalCurrentDate);
-        const sleepDocRef = doc(db, `users/${getCurrentUserId()}/wellness`, weekId);
-        await setDoc(sleepDocRef, { sleep: newSleepData }, { merge: true });
-        
+        const userId = getCurrentUserId(); // Get user ID
+        if (userId) { // Check if user ID exists
+            const sleepDocRef = doc(db, `users/${userId}/wellness`, weekId);
+            try {
+                await setDoc(sleepDocRef, { sleep: newSleepData }, { merge: true });
+                console.log("Sleep data saved successfully for week:", weekId);
+            } catch (error) {
+                console.error("Error saving sleep data:", error);
+            }
+        } else {
+            console.error("User ID not found, cannot save sleep data.");
+        }
+
         closeSleepModal();
     });
     
+    // Other Listeners (Consolidated)
     manageSupplementsBtnHeader.addEventListener('click', () => openSupplementModal(new Date()));
     nutritionHistoryBtn.addEventListener('click', openNutritionHistoryModal);
     nutritionHistoryCloseBtn.addEventListener('click', closeNutritionHistoryModal);
@@ -671,7 +700,7 @@ function setupEventListeners() {
         populateSleepModal(sleepModalCurrentDate);
     });
 
-    // START: Fix for Edit Day Modal
+    // Edit Day Modal Listeners
     editDayModalCancelBtn.addEventListener('click', closeEditDayModal);
     editDayModal.addEventListener('click', e => e.target === editDayModal && closeEditDayModal());
     editDayModalSaveBtn.addEventListener('click', handleSaveEditDay);
@@ -705,28 +734,20 @@ function setupEventListeners() {
             editHydrationText.textContent = editDayData.waterIntake;
         }
     });
-    // END: Fix for Edit Day Modal
 
-    // --- NEW Event Listeners for Baby Message Modal ---
+    // Baby Message Modal Listener
     wellnessTipCard.addEventListener('click', () => {
         babyMessageModal.classList.remove('hidden');
         setTimeout(() => babyMessageModal.classList.add('active'), 10);
     });
 
-    // REMOVED close button listener (Task 1)
-    // babyMessageCloseBtn.addEventListener('click', () => {
-    //     babyMessageModal.classList.remove('active');
-    //     setTimeout(() => babyMessageModal.classList.add('hidden'), 300);
-    // });
-
-    // This listener handles closing when clicking the backdrop (Task 2)
     babyMessageModal.addEventListener('click', (e) => {
         if (e.target === babyMessageModal) {
             babyMessageModal.classList.remove('active');
             setTimeout(() => babyMessageModal.classList.add('hidden'), 300);
         }
     });
-}
+} // --- THIS IS THE END of setupEventListeners ---
 
 export function updateDashboardUI() {
     if (!wellnessData || Object.keys(wellnessData).length === 0) return;
