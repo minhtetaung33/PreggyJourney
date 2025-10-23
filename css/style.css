@@ -246,8 +246,9 @@ h1, h2, h3 {
 #nutrition-history-modal.active #nutrition-history-modal-content,
 #edit-day-modal.active #edit-day-modal-content,
 #image-link-modal.active #image-link-modal-content,
-#baby-message-modal.active #baby-message-modal-content, /* Ensure animation applies */
-#ai-meal-modal.active #ai-meal-modal-content {
+#baby-message-modal.active #baby-message-modal-content,
+#ai-meal-modal.active #ai-meal-modal-content,
+#journal-modal.active #journal-modal-content { /* Add journal modal */
     transform: scale(1);
     opacity: 1;
 }
@@ -312,7 +313,8 @@ h1, h2, h3 {
 }
 
 .mood-btn.selected,
-#edit-mood-log-buttons .mood-btn.selected {
+#edit-mood-log-buttons .mood-btn.selected,
+.journal-mood-btn.selected { /* Add journal modal */
     transform: scale(1.25);
     filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
 }
@@ -481,4 +483,205 @@ h1, h2, h3 {
 .chat-bubble-style #baby-message-content {
     color: #334155; /* Dark gray text */
     font-weight: 500;
+}
+
+
+/* --- NEW CALM SPACE STYLES --- */
+
+/* Theme Variables */
+:root {
+    --theme-primary: #60a5fa; /* sky-400 */
+    --theme-secondary: #3b82f6; /* blue-500 */
+    --theme-gradient: linear-gradient(to right, var(--theme-primary), var(--theme-secondary));
+    --theme-gradient-breathing: linear-gradient(135deg, #c7d2fe, #a5b4fc, #fbcfe8); /* lavender -> indigo -> pink */
+}
+
+#calm-theme-container.calm-theme-sky {
+    --theme-primary: #60a5fa; /* sky-400 */
+    --theme-secondary: #3b82f6; /* blue-500 */
+    --theme-gradient-breathing: linear-gradient(135deg, #a5f3fc, #60a5fa, #c7d2fe); /* cyan -> sky -> lavender */
+}
+#calm-theme-container.calm-theme-blossom {
+    --theme-primary: #f472b6; /* pink-400 */
+    --theme-secondary: #ec4899; /* pink-500 */
+    --theme-gradient-breathing: linear-gradient(135deg, #fbcfe8, #f472b6, #fda4af); /* pink-100 -> pink-400 -> rose-300 */
+}
+#calm-theme-container.calm-theme-ocean {
+    --theme-primary: #2dd4bf; /* teal-400 */
+    --theme-secondary: #06b6d4; /* cyan-500 */
+    --theme-gradient-breathing: linear-gradient(135deg, #99f6e4, #2dd4bf, #67e8f9); /* teal-100 -> teal-400 -> cyan-300 */
+}
+#calm-theme-container.calm-theme-glow {
+    --theme-primary: #fbbf24; /* amber-400 */
+    --theme-secondary: #f97316; /* orange-500 */
+    --theme-gradient-breathing: linear-gradient(135deg, #fef08a, #fbbf24, #fdba74); /* yellow-200 -> amber-400 -> orange-300 */
+}
+
+.theme-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.theme-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+.theme-btn.active {
+    background-color: rgba(255, 255, 255, 0.3);
+    border-color: var(--theme-primary);
+    color: var(--theme-primary);
+}
+.theme-swatch {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Breathing Visualizer */
+@keyframes breathe {
+    0% { transform: scale(0.6); opacity: 0.7; } /* Inhale start */
+    40% { transform: scale(1); opacity: 1; } /* Inhale end (4s / 12s) */
+    57% { transform: scale(1); opacity: 1; } /* Hold end (2s / 12s) */
+    100% { transform: scale(0.6); opacity: 0.7; } /* Exhale end (6s / 12s) */
+}
+@keyframes rotate-gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+#breathing-circle {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: var(--theme-gradient-breathing);
+    background-size: 200% 200%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #1e3a8a; /* Dark blue text */
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    transition: all 0.5s ease;
+    cursor: pointer;
+    box-shadow: 0 0 40px var(--theme-primary), 0 0 80px var(--theme-primary);
+}
+#breathing-circle.breathing-circle-paused {
+    transform: scale(0.6);
+    opacity: 0.7;
+}
+#breathing-circle.breathing-circle-active {
+    animation: breathe 12s ease-in-out infinite, rotate-gradient 12s linear infinite;
+}
+
+/* Baby Connection Meditation */
+@keyframes pulse-belly {
+    0%, 100% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.05); opacity: 1; }
+}
+#belly-outline {
+    width: 100%;
+    height: 100%;
+    border: 4px solid var(--theme-primary);
+    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; /* Egg/belly shape */
+    box-shadow: 0 0 20px var(--theme-primary), inset 0 0 20px var(--theme-primary);
+    transition: all 0.5s ease;
+}
+#belly-outline.belly-outline-paused {
+    opacity: 0.6;
+}
+#belly-outline.belly-outline-active {
+    animation: pulse-belly 3s ease-in-out infinite;
+}
+
+/* Sound & Color Player */
+#color-therapy-display {
+    background-color: var(--theme-primary);
+    opacity: 0.3;
+    transition: all 2s ease-in-out;
+}
+#color-therapy-display.color-calm { background-color: #60a5fa; } /* blue */
+#color-therapy-display.color-happy { background-color: #facc15; } /* yellow */
+#color-therapy-display.color-dreamy { background-color: #c084fc; } /* purple */
+#color-therapy-display.color-sleepy { background-color: #4f46e5; } /* indigo */
+
+.mood-sound-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+.mood-sound-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+.mood-sound-btn.active {
+    background-color: var(--theme-primary);
+    border-color: var(--theme-secondary);
+    color: #fff;
+    box-shadow: 0 0 15px var(--theme-primary);
+}
+
+/* Gentle Stretches */
+.stretch-visual-container {
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    flex-shrink: 0;
+}
+.stretch-silhouette-head {
+    width: 20px;
+    height: 20px;
+    background: var(--theme-gradient);
+    border-radius: 50%;
+    position: relative;
+    top: -10px;
+}
+.stretch-silhouette-head::after {
+    content: '';
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    background: var(--theme-gradient);
+    border-radius: 40% 40% 50% 50%;
+    top: 15px;
+    left: -5px;
+}
+#neck-roll-anim.stretch-active { animation: neck-roll 5s ease-in-out infinite; }
+@keyframes neck-roll {
+    0%, 100% { transform: translateX(0) rotate(0); }
+    25% { transform: translateX(-10px) rotate(-30deg); }
+    75% { transform: translateX(10px) rotate(30deg); }
+}
+
+.stretch-silhouette-shoulder {
+    width: 15px;
+    height: 15px;
+    background: var(--theme-gradient);
+    border-radius: 50%;
+    position: relative;
+    top: -5px;
+    box-shadow: -15px 0 0 var(--theme-primary), 15px 0 0 var(--theme-primary);
+}
+#shoulder-roll-anim.stretch-active { animation: shoulder-roll 3s ease-in-out infinite; }
+@keyframes shoulder-roll {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px) scale(1.1); }
+}
+
+/* Water Reminder Toast */
+#water-reminder-toast.show {
+    transform: translateX(0);
+    opacity: 1;
 }
