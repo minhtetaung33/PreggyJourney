@@ -6,10 +6,17 @@
     <title>Pregnancy Wellness Planner</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Add GSAP (GreenSock Animation Platform) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./css/style.css">
 </head>
 <body class="antialiased text-gray-200">
+
+    <!-- Vortex Animation Overlay -->
+    <div id="vortex-overlay" class="fixed inset-0 flex justify-center items-center hidden z-[9998] pointer-events-none">
+        <div id="vortex-spinner" class="w-64 h-64 rounded-full"></div>
+    </div>
 
     <div id="app-container" class="container mx-auto p-4 md:p-8 max-w-7xl">
         <!-- New Hero Section -->
@@ -46,8 +53,9 @@
             <!-- Main Content -->
             <main>
                 <!-- Meal Planner Tab -->
+                <!-- Add 'falling-card' class to the main glass-card -->
                 <div id="content-meal-plan" class="tab-content active">
-                    <div class="glass-card p-4 md:p-6">
+                    <div class="glass-card p-4 md:p-6 falling-card">
                         <div class="flex items-center justify-between mb-6 px-2">
                             <h2 class="text-2xl font-bold flex items-center">
                                 <svg class="w-8 h-8 text-purple-300 mr-3 hidden md:block" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 15.546c-.523 0-1.046.151-1.5.454a2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0c.004-.867.126-1.723.38-2.546.174-.53.385-1.054.64-1.571a21.89 21.89 0 012.652-3.956c1.522-1.657 2.733-3.482 3.683-5.527a5.553 5.553 0 011.02-1.923c.37-.621.733-1.21 1.09-1.742a2.492 2.492 0 014.226 2.158c-.373.632-.74,1.226-1.11,1.845a5.553 5.553 0 01-1.02,1.923c-.95,2.045-2.16,3.87-3.684,5.527a21.885 21.885 0 01-2.652,3.956c-.255.517-.466,1.041-.64,1.571-.254.823-.376,1.68-.38,2.546z"></path></svg>
@@ -113,7 +121,8 @@
                 <div id="content-symptom-tracker" class="tab-content">
                     <div class="space-y-8">
                         <!-- Top Row -->
-                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <!-- Add 'falling-card' to the main grid and the wellness card -->
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 falling-card">
                             <!-- AI Symptom Assistant -->
                             <div class="glass-card p-4 md:p-6 lg:col-span-2">
                                 <h3 class="text-xl font-bold mb-4 flex items-center">🤖 AI Symptom Assistant</h3>
@@ -147,7 +156,8 @@
                         </div>
                         
                         <!-- Wellness Dashboard -->
-                        <div class="glass-card p-4 md:p-6">
+                        <!-- Add 'falling-card' to the main dashboard card -->
+                        <div class="glass-card p-4 md:p-6 falling-card">
                             <div class="flex items-center justify-between mb-6">
                                 <h3 class="text-2xl font-bold flex items-center">📈 Wellness Dashboard</h3>
                                 <div class="flex items-center gap-2 md:gap-4">
@@ -280,7 +290,8 @@
                 <div id="content-journey" class="tab-content">
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         <!-- Left Column: To-Do List & Reflections -->
-                        <div class="lg:col-span-2 space-y-8">
+                        <!-- Add 'falling-card' -->
+                        <div class="lg:col-span-2 space-y-8 falling-card">
                             <!-- To-Do List -->
                             <div class="glass-card p-4 md:p-6">
                                 <div id="todo-header" class="flex justify-between items-center mb-4 cursor-pointer">
@@ -336,7 +347,8 @@
                         </div>
 
                         <!-- Right Column: Little Wishes -->
-                        <div class="glass-card p-4 md:p-6">
+                        <!-- Add 'falling-card' -->
+                        <div class="glass-card p-4 md:p-6 falling-card">
                             <div id="wishlist-header" class="flex justify-between items-center mb-4 cursor-pointer">
                                 <h3 class="text-2xl font-bold">🎁 Little Wishes</h3>
                                 <svg id="wishlist-toggle-icon" class="w-6 h-6 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
