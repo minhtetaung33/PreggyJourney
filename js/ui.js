@@ -20,7 +20,88 @@ export const elements = {
     mealPlanContent: document.getElementById('content-meal-plan'),
     symptomTrackerContent: document.getElementById('content-symptom-tracker'),
     journeyContent: document.getElementById('content-journey'),
+
+    // --- NEW Animation Elements ---
+    bubbleBackground: document.getElementById('bubble-background'),
+    pageLoadOverlay: document.getElementById('page-load-overlay'),
 };
+
+/**
+ * Creates the rising bubble background effect.
+ */
+export function createBubbleBackground() {
+    if (!elements.bubbleBackground) return;
+    const numBubbles = 30; // More bubbles
+    for (let i = 0; i < numBubbles; i++) {
+        const bubble = document.createElement('span');
+        bubble.className = 'background-bubble';
+        
+        const size = Math.random() * 80 + 20; // Size from 20px to 100px
+        const duration = Math.random() * 10 + 10; // Duration from 10s to 20s
+        const delay = Math.random() * 15; // Start delay up to 15s
+        const horizontal = Math.random() * 100; // Horizontal position
+        const drift = (Math.random() - 0.5) * 20; // Horizontal drift
+
+        bubble.style.width = `${size}px`;
+        bubble.style.height = `${size}px`;
+        bubble.style.left = `calc(${horizontal}vw - ${size / 2}px)`;
+        bubble.style.animationDuration = `${duration}s`;
+        bubble.style.animationDelay = `${delay}s`;
+        
+        // Custom property for horizontal drift
+        bubble.style.setProperty('--drift', `${drift}vw`); 
+        
+        elements.bubbleBackground.appendChild(bubble);
+    }
+    
+    // Update keyframes in CSS to use drift (we can't, but we can slightly modify the animation)
+    // We'll modify the `rise` keyframe in CSS to include a horizontal movement.
+    // Let's assume the CSS `rise` keyframe is updated to handle horizontal movement.
+    // For simplicity, we'll stick to the vertical rise defined in CSS.
+}
+
+/**
+ * Resets the entrance animations for a given tab content area.
+ * @param {HTMLElement} tabContentElement - The tab content element (e.g., elements.mealPlanContent)
+ */
+function resetTabAnimation(tabContentElement) {
+    if (!tabContentElement) return;
+    const cards = tabContentElement.querySelectorAll('.anim-card');
+    cards.forEach(card => {
+        card.classList.remove('anim-bubble-in', 'anim-float');
+        // Re-apply initial hidden state
+        card.style.opacity = '0'; 
+    });
+}
+
+/**
+ * Plays the staggered bubble-in animation for a tab content area.
+ * @param {HTMLElement} tabContentElement - The tab content element (e.g., elements.mealPlanContent)
+ */
+function playTabEntranceAnimation(tabContentElement) {
+    if (!tabContentElement) return;
+    const cards = tabContentElement.querySelectorAll('.anim-card');
+    const staggerDelay = 300; // 0.3s delay between cards
+
+    cards.forEach((card, index) => {
+        // Ensure card is reset before animating
+        card.classList.remove('anim-bubble-in', 'anim-float');
+        card.style.opacity = '0';
+
+        setTimeout(() => {
+            card.style.opacity = '1'; // Make it visible *as* animation starts
+            card.classList.add('anim-bubble-in');
+        }, index * staggerDelay);
+    });
+
+    // Add the floating animation after all cards have bubbled in
+    const totalAnimationTime = (cards.length - 1) * staggerDelay + 800; // Last card starts + 800ms animation
+    setTimeout(() => {
+        cards.forEach(card => {
+            card.classList.add('anim-float');
+        });
+    }, totalAnimationTime);
+}
 
 export function showMainApp() {
     elements.authButtons.classList.add('hidden');
@@ -28,6 +109,14 @@ export function showMainApp() {
     elements.userInfo.classList.remove('hidden');
     elements.mainApp.classList.remove('hidden');
     elements.heroSection.classList.add('hidden');
+
+    // Trigger animation for the default active tab
+    setTimeout(() => {
+        const activeContent = document.querySelector('.tab-content.active');
+        if(activeContent) {
+            playTabEntranceAnimation(activeContent);
+        }
+    }, 200); // Small delay for content to render
 }
 
 export function showHeroSection() {
@@ -73,8 +162,15 @@ function switchTab(activeTab) {
     Object.keys(tabs).forEach(key => {
         tabs[key].btn.classList.remove('active');
         tabs[key].content.classList.remove('active');
+        // Reset animations on other tabs
+        if (key !== activeTab) {
+            resetTabAnimation(tabs[key].content);
+        }
     });
 
     tabs[activeTab].btn.classList.add('active');
     tabs[activeTab].content.classList.add('active');
+    
+    // Play animation for the new active tab
+    playTabEntranceAnimation(tabs[activeTab].content);
 }
