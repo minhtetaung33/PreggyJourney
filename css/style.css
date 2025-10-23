@@ -379,3 +379,34 @@ h1, h2, h3 {
     color: #334155; /* Dark gray text */
     font-weight: 500;
 }
+
+/* --- Vortex Transition Styles --- */
+#vortex-overlay {
+    /* Use a dark, emotional purple/blue tint */
+    background-color: rgba(10, 5, 20, 0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    opacity: 0;
+}
+
+#vortex-spinner {
+    /* Use a mix of colors for a glowing, ethereal feel */
+    border-top: 8px solid rgba(167, 139, 250, 0.1); /* Lighter purple */
+    border-bottom: 8px solid rgba(167, 139, 250, 0.1); /* Lighter purple */
+    border-left: 8px solid rgba(232, 217, 255, 0.8); /* Glowing part */
+    border-right: 8px solid rgba(167, 139, 250, 0.1); /* Lighter purple */
+    
+    /* Add the glow and blur */
+    filter: blur(8px) brightness(1.5);
+    opacity: 0;
+    transform: scale(0.2) rotate(0deg);
+}
+
+/* --- Falling Card Styles --- */
+.falling-card {
+    /* Initial state for the animation */
+    opacity: 0;
+    transform: translateY(-50px);
+    /* Optimize for animation */
+    will-change: transform, opacity;
+}
