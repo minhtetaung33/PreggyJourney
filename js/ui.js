@@ -147,14 +147,14 @@ export function setupTabs(onTabSwitch) {
         switchTab('symptom');
         onTabSwitch('symptom');
     });
-    // Add Calm Space listener
-    elements.calmSpaceTab.addEventListener('click', () => {
-        switchTab('calm');
-        onTabSwitch('calm');
-    });
     elements.journeyTab.addEventListener('click', () => {
         switchTab('journey');
         onTabSwitch('journey');
+    });
+    // Add listener for new tab
+    elements.calmSpaceTab.addEventListener('click', () => {
+        switchTab('calm');
+        onTabSwitch('calm');
     });
 }
 
@@ -162,8 +162,8 @@ function switchTab(activeTab) {
     const tabs = {
         meal: { btn: elements.mealPlanTab, content: elements.mealPlanContent },
         symptom: { btn: elements.symptomTrackerTab, content: elements.symptomTrackerContent },
-        calm: { btn: elements.calmSpaceTab, content: elements.calmSpaceContent }, // Add Calm Space
-        journey: { btn: elements.journeyTab, content: elements.journeyContent }
+        journey: { btn: elements.journeyTab, content: elements.journeyContent },
+        calm: { btn: elements.calmSpaceTab, content: elements.calmSpaceContent } // Add calm tab
     };
 
     Object.keys(tabs).forEach(key => {
@@ -177,7 +177,7 @@ function switchTab(activeTab) {
         }
     });
 
-    if (tabs[activeTab] && tabs[activeTab].btn && tabs[activeTab].content) { // Check if active tab exists
+    if (tabs[activeTab] && tabs[activeTab].btn && tabs[activeTab].content) { // Check if new tab exists
         tabs[activeTab].btn.classList.add('active');
         tabs[activeTab].content.classList.add('active');
         
