@@ -602,28 +602,37 @@ function setupEventListeners() {
     startDateModalCancelBtn.addEventListener('click', closeStartDateModal);
     startDateModal.addEventListener('click', (e) => e.target === startDateModal && closeStartDateModal());
     startDateModalSaveBtn.addEventListener('click', async () => {
-        const newStartDate = startDateInput.value; let newEndDate = endDateInput.value;
+        const newStartDate = startDateInput.value;
+        let newEndDate = endDateInput.value;
         if (newStartDate) {
-            if (!newEndDate) { const startDate = new Date(newStartDate + 'T00:00:00'); startDate.setDate(startDate.getDate() + (40 * 7)); newEndDate = startDate.toISOString().split('T')[0]; }
-            
+            // Calculate end date if not provided
+            if (!newEndDate) {
+                // Correctly parse the start date and calculate the due date (40 weeks later)
+                // Use UTC methods to avoid timezone issues
+                const startDateObj = new Date(newStartDate + 'T00:00:00Z'); // Ensure UTC parsing
+                const dueDateObj = new Date(startDateObj);
+                dueDateObj.setUTCDate(startDateObj.getUTCDate() + (40 * 7)); // Add 280 days in UTC
+                newEndDate = dueDateObj.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+            }
+
             // Save to the 'daily' document. The onSnapshot listener will handle the UI updates.
-            const userDocRef = doc(db, `users/${getCurrentUserId()}/wellness`, 'daily'); 
-            await setDoc(userDocRef, { pregnancyStartDate: newStartDate, pregnancyEndDate: newEndDate }, { merge: true });
+            const userId = getCurrentUserId(); // Ensure userId is fetched correctly
+            if (userId) { // Add a check for userId
+                const userDocRef = doc(db, `users/${userId}/wellness`, 'daily');
+                try {
+                    await setDoc(userDocRef, { pregnancyStartDate: newStartDate, pregnancyEndDate: newEndDate }, { merge: true });
+                    console.log("Pregnancy dates updated successfully."); // Add log for confirmation
+                } catch (error) {
+                    console.error("Error updating pregnancy dates:", error); // Log Firestore errors
+                }
+            } else {
+                console.error("User ID not available, cannot save dates."); // Handle case where user ID might be missing
+            }
+        } else {
+            console.warn("Start date is empty, not saving."); // Add warning if start date is missing
         }
         closeStartDateModal();
     });
-    sleepMonitorCard.addEventListener('click', () => {
-        openSleepModal(wellnessHistoryCurrentDate);
-    });
-    sleepModalCancelBtn.addEventListener('click', closeSleepModal);
-    sleepModal.addEventListener('click', (e) => e.target === sleepModal && closeSleepModal());
-    sleepModalSaveBtn.addEventListener('click', async () => {
-        const newSleepData = {};
-        sleepDays.forEach(day => {
-            const sleepInput = document.getElementById(`sleep-time-${day}`);
-            const wakeInput = document.getElementById(`wake-time-${day}`);
-            newSleepData[day] = { sleep: sleepInput.value, wake: wakeInput.value };
-        });
 
         const weekId = getWeekId(sleepModalCurrentDate);
         const sleepDocRef = doc(db, `users/${getCurrentUserId()}/wellness`, weekId);
