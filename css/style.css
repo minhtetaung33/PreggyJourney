@@ -482,3 +482,21 @@ h1, h2, h3 {
     color: #334155; /* Dark gray text */
     font-weight: 500;
 }
+
+
+/* --- NEW 3D VISUALIZER STYLES --- */
+#baby-visualizer-container {
+    background: rgba(0, 0, 0, 0.2); /* Dark, subtle background */
+    cursor: grab; /* Indicate it's interactive */
+    height: 12rem; /* 192px, same as h-48 */
+}
+
+#baby-visualizer-container:grabbing {
+    cursor: grabbing;
+}
+
+#baby-visualizer-container canvas {
+    display: block; /* Remove any default spacing */
+    width: 100% !important;
+    height: 100% !important;
+}
