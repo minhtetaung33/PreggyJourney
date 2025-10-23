@@ -1,6 +1,7 @@
 import { configError } from './firebase.js';
 import { setupAuthentication, getCurrentUserId } from './auth.js';
-import { setupTabs } from './ui.js';
+// We import playPageLoadAnimation, but it's now called from ui.js
+import { setupTabs, playPageLoadAnimation } from './ui.js'; 
 import { initializeMealPlanner, unloadMealPlanner, updateWellnessDataForMealPlanner } from './meal-planner.js';
 import { 
     initializeWellness, 
@@ -72,6 +73,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     setupAuthentication();
     setupTabs(handleTabSwitch);
+    
+    // Page load animation is now triggered by showMainApp() in ui.js,
+    // which is called by setupAuthentication() in auth.js when the user is logged in.
 });
 
 function handleTabSwitch(activeTab) {
