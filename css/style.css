@@ -248,7 +248,8 @@ h1, h2, h3 {
 #image-link-modal.active #image-link-modal-content,
 #baby-message-modal.active #baby-message-modal-content,
 #ai-meal-modal.active #ai-meal-modal-content,
-#journal-modal.active #journal-modal-content { /* Add journal modal */
+/* NEW JOURNAL MODAL */
+#mindful-journal-modal.active #mindful-journal-modal-content {
     transform: scale(1);
     opacity: 1;
 }
@@ -484,148 +485,152 @@ h1, h2, h3 {
     font-weight: 500;
 }
 
+
 /* --- NEW CALM SPACE STYLES --- */
 
-/* Particle Background */
-#calm-particles {
-    position: absolute;
-    inset: 0;
-    overflow: hidden;
-    z-index: 1;
-    border-radius: 0.75rem; /* Match parent */
+@keyframes gradient-pulse {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
-.particle {
+
+#breathing-circle {
+    /* Gradient: lavender → sky blue → peach */
+    background: linear-gradient(270deg, #f3e8ff, #dbeafe, #ffedd5);
+    background-size: 600% 600%;
+    animation: gradient-pulse 10s ease infinite;
+    transition-property: transform, opacity;
+}
+
+#breathing-glow-ring {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    opacity: 0;
+    transition-property: transform, opacity, box-shadow;
+}
+
+/* Breathing Animation States */
+#breathing-circle.breathing-inhale {
+    transform: scale(2); /* Expands */
+}
+#breathing-circle.breathing-exhale {
+    transform: scale(1); /* Contracts */
+}
+#breathing-circle.breathing-hold {
+    /* No scale change, just hold */
+}
+
+/* Glow Ring Animation */
+.glow-pulse {
+    animation: glow-pulse-animation 4s infinite ease-out;
+}
+@keyframes glow-pulse-animation {
+    0% {
+        transform: scale(1);
+        opacity: 0.7;
+        box-shadow: 0 0 10px 5px rgba(255, 255, 255, 0.2);
+    }
+    70% {
+        transform: scale(2.2); /* Expands further than the circle */
+        opacity: 0;
+        box-shadow: 0 0 20px 20px rgba(255, 255, 255, 0);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 0;
+    }
+}
+
+/* Sparkles */
+@keyframes sparkle-anim {
+    0% {
+        transform: scale(0) rotate(0deg);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.5) rotate(180deg);
+        opacity: 0.8;
+    }
+    100% {
+        transform: scale(0) rotate(360deg);
+        opacity: 0;
+    }
+}
+.sparkle {
     position: absolute;
-    background: rgba(255, 255, 255, 0.7);
+    width: 10px;
+    height: 10px;
+    background-color: #ffedd5; /* Peach/gold */
     border-radius: 50%;
     opacity: 0;
-    animation: float-particle 20s infinite linear;
+    animation: sparkle-anim 1s ease-out forwards;
+    box-shadow: 0 0 10px 5px #ffedd5;
 }
-@keyframes float-particle {
-    0% { transform: translateY(100vh) translateX(0); opacity: 0; }
-    10% { opacity: 1; }
-    90% { opacity: 1; }
-    100% { transform: translateY(-10vh) translateX(var(--drift)); opacity: 0; }
-}
-
-/* Breathing Visualizer */
-#breathing-visualizer-container {
-    position: relative;
-    transition: background-color 2s ease-in-out;
-}
-#breathing-circle {
-    width: 100px;
-    height: 100px;
-    background: linear-gradient(145deg, #a78bfa, #c4b5fd); /* Lavender */
-    border-radius: 50%;
-    position: relative;
-    z-index: 5;
-    transition: all 4s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 0 20px rgba(196, 181, 253, 0.5), 0 0 40px rgba(196, 181, 253, 0.3);
-}
-#breathing-glow-ring {
+.sparkle::before, .sparkle::after {
+    content: '';
     position: absolute;
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    background: #c4b5fd;
-    opacity: 0.3;
-    z-index: 2;
-    transition: all 4s cubic-bezier(0.4, 0, 0.2, 1);
-    filter: blur(20px);
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: inherit;
+    border-radius: inherit;
 }
-#breathing-text {
-    text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+.sparkle::before { transform: rotate(45deg); }
+.sparkle::after { transform: rotate(90deg); }
+
+/* Baby Connection Visuals */
+@keyframes soft-pulse-glow {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 20px 10px rgba(252, 211, 240, 0.2); /* Soft pink glow */
+        opacity: 0.7;
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 40px 20px rgba(252, 211, 240, 0.4);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 20px 10px rgba(252, 211, 240, 0.2);
+        opacity: 0.7;
+    }
+}
+@keyframes soft-pulse-border {
+    0%, 100% { transform: scale(1); opacity: 0.5; }
+    50% { transform: scale(1.03); opacity: 0.8; }
 }
 
-/* Breathing animations */
-.breathing-animate #breathing-circle,
-.breathing-animate #breathing-glow-ring {
-    animation: breath-anim 12s infinite ease-in-out;
+#belly-glow {
+    background: radial-gradient(circle, rgba(252, 211, 240, 0.5) 0%, rgba(252, 211, 240, 0) 70%);
+    animation: soft-pulse-glow 5s infinite ease-in-out;
 }
-@keyframes breath-anim {
-    0%   { transform: scale(1); } /* Start */
-    33%  { transform: scale(1.8); } /* Inhale (4s) */
-    50%  { transform: scale(1.8); } /* Hold (2s) */
-    100% { transform: scale(1); } /* Exhale (6s) */
-}
-.breathing-animate #breathing-visualizer-container {
-     animation: breath-color-anim 12s infinite ease-in-out;
-}
-@keyframes breath-color-anim {
-    0%   { background-color: rgba(167, 139, 250, 0.1); } /* Lavender */
-    33%  { background-color: rgba(147, 197, 253, 0.2); } /* Sky Blue */
-    100% { background-color: rgba(167, 139, 250, 0.1); } /* Lavender */
+#belly-outline {
+    animation: soft-pulse-border 5s infinite ease-in-out;
 }
 
-/* Sound & Color Player */
-.mood-sound-btn {
-    padding: 0.75rem 1.25rem;
-    border-radius: 0.75rem;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    background: rgba(255, 255, 255, 0.1);
+/* Meditation Text Pop-up */
+@keyframes text-pop-in-out {
+    0% { transform: translateY(20px); opacity: 0; }
+    15% { transform: translateY(0); opacity: 1; }
+    85% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(-20px); opacity: 0; }
 }
-.mood-sound-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-}
-.mood-sound-btn.active {
-    background: rgba(167, 139, 250, 0.3);
-    color: #fff;
-    border-color: rgba(167, 139, 250, 0.5);
-    box-shadow: 0 4px 12px rgba(167, 139, 250, 0.2);
-}
-.mood-sound-btn.stop-btn.active {
-    background: rgba(239, 68, 68, 0.3);
-    border-color: rgba(239, 68, 68, 0.5);
+#meditation-text-popup.active {
+    animation: text-pop-in-out 11s ease-in-out forwards;
 }
 
-/* Baby Connection */
-#baby-connection-visual {
-    background: rgba(244, 114, 182, 0.1);
-    border: 1px solid rgba(244, 114, 182, 0.3);
-    animation: pulse-heart 2.5s infinite ease-in-out;
+/* Stretch Guide */
+#stretch-countdown {
+    transition: opacity 0.5s ease;
 }
-@keyframes pulse-heart {
-    0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(244, 114, 182, 0.2); }
-    50% { transform: scale(1.1); box-shadow: 0 0 30px rgba(244, 114, 182, 0.4); }
+#stretch-countdown.active {
+    opacity: 1;
 }
 
-/* Theme Picker */
-#calm-space-theme-layer {
-    transition: background-image 1s ease-in-out;
-}
-.theme-btn {
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    background: rgba(255, 255, 255, 0.1);
-}
-.theme-btn.active {
-    background: rgba(255, 255, 255, 0.3);
-    border-color: rgba(255, 255, 255, 0.4);
-}
-/* Theme Gradients */
-.theme-glow { background-image: linear-gradient(135deg, rgba(167, 139, 250, 0.1), rgba(244, 114, 182, 0.1)); }
-.theme-ocean { background-image: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(14, 165, 233, 0.1)); }
-.theme-sky { background-image: linear-gradient(135deg, rgba(147, 197, 253, 0.1), rgba(253, 186, 116, 0.1)); }
-.theme-blossom { background-image: linear-gradient(135deg, rgba(236, 72, 153, 0.1), rgba(253, 186, 116, 0.1)); }
-
-/* Water Reminder */
-#water-reminder-popup {
-    animation: fadeIn 0.5s ease-out;
-}
-
-/* Journal Modal */
-.journal-mood-btn.selected {
-    transform: scale(1.3);
-    filter: drop-shadow(0 0 10px rgba(196, 181, 253, 0.7));
-}
-#journal-modal-save-btn:disabled {
-    background-color: #585191;
-    opacity: 0.5;
-    cursor: not-allowed;
+/* Mindful Journal Modal */
+#journal-mood-buttons .journal-mood-btn.selected {
+    transform: scale(1.4);
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
 }
