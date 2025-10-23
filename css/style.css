@@ -313,8 +313,7 @@ h1, h2, h3 {
 }
 
 .mood-btn.selected,
-#edit-mood-log-buttons .mood-btn.selected,
-.journal-mood-btn.selected { /* Add journal modal */
+#edit-mood-log-buttons .mood-btn.selected {
     transform: scale(1.25);
     filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
 }
@@ -485,203 +484,148 @@ h1, h2, h3 {
     font-weight: 500;
 }
 
-
 /* --- NEW CALM SPACE STYLES --- */
 
-/* Theme Variables */
-:root {
-    --theme-primary: #60a5fa; /* sky-400 */
-    --theme-secondary: #3b82f6; /* blue-500 */
-    --theme-gradient: linear-gradient(to right, var(--theme-primary), var(--theme-secondary));
-    --theme-gradient-breathing: linear-gradient(135deg, #c7d2fe, #a5b4fc, #fbcfe8); /* lavender -> indigo -> pink */
+/* Particle Background */
+#calm-particles {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    z-index: 1;
+    border-radius: 0.75rem; /* Match parent */
 }
-
-#calm-theme-container.calm-theme-sky {
-    --theme-primary: #60a5fa; /* sky-400 */
-    --theme-secondary: #3b82f6; /* blue-500 */
-    --theme-gradient-breathing: linear-gradient(135deg, #a5f3fc, #60a5fa, #c7d2fe); /* cyan -> sky -> lavender */
-}
-#calm-theme-container.calm-theme-blossom {
-    --theme-primary: #f472b6; /* pink-400 */
-    --theme-secondary: #ec4899; /* pink-500 */
-    --theme-gradient-breathing: linear-gradient(135deg, #fbcfe8, #f472b6, #fda4af); /* pink-100 -> pink-400 -> rose-300 */
-}
-#calm-theme-container.calm-theme-ocean {
-    --theme-primary: #2dd4bf; /* teal-400 */
-    --theme-secondary: #06b6d4; /* cyan-500 */
-    --theme-gradient-breathing: linear-gradient(135deg, #99f6e4, #2dd4bf, #67e8f9); /* teal-100 -> teal-400 -> cyan-300 */
-}
-#calm-theme-container.calm-theme-glow {
-    --theme-primary: #fbbf24; /* amber-400 */
-    --theme-secondary: #f97316; /* orange-500 */
-    --theme-gradient-breathing: linear-gradient(135deg, #fef08a, #fbbf24, #fdba74); /* yellow-200 -> amber-400 -> orange-300 */
-}
-
-.theme-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
-    font-weight: 500;
-    transition: all 0.2s ease;
-    background-color: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-}
-.theme-btn:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-}
-.theme-btn.active {
-    background-color: rgba(255, 255, 255, 0.3);
-    border-color: var(--theme-primary);
-    color: var(--theme-primary);
-}
-.theme-swatch {
-    width: 1rem;
-    height: 1rem;
+.particle {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.7);
     border-radius: 50%;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    animation: float-particle 20s infinite linear;
+}
+@keyframes float-particle {
+    0% { transform: translateY(100vh) translateX(0); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateY(-10vh) translateX(var(--drift)); opacity: 0; }
 }
 
 /* Breathing Visualizer */
-@keyframes breathe {
-    0% { transform: scale(0.6); opacity: 0.7; } /* Inhale start */
-    40% { transform: scale(1); opacity: 1; } /* Inhale end (4s / 12s) */
-    57% { transform: scale(1); opacity: 1; } /* Hold end (2s / 12s) */
-    100% { transform: scale(0.6); opacity: 0.7; } /* Exhale end (6s / 12s) */
+#breathing-visualizer-container {
+    position: relative;
+    transition: background-color 2s ease-in-out;
 }
-@keyframes rotate-gradient {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
-
 #breathing-circle {
-    width: 100%;
-    height: 100%;
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(145deg, #a78bfa, #c4b5fd); /* Lavender */
     border-radius: 50%;
-    background: var(--theme-gradient-breathing);
-    background-size: 200% 200%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #1e3a8a; /* Dark blue text */
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-    transition: all 0.5s ease;
-    cursor: pointer;
-    box-shadow: 0 0 40px var(--theme-primary), 0 0 80px var(--theme-primary);
+    position: relative;
+    z-index: 5;
+    transition: all 4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 20px rgba(196, 181, 253, 0.5), 0 0 40px rgba(196, 181, 253, 0.3);
 }
-#breathing-circle.breathing-circle-paused {
-    transform: scale(0.6);
-    opacity: 0.7;
+#breathing-glow-ring {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: #c4b5fd;
+    opacity: 0.3;
+    z-index: 2;
+    transition: all 4s cubic-bezier(0.4, 0, 0.2, 1);
+    filter: blur(20px);
 }
-#breathing-circle.breathing-circle-active {
-    animation: breathe 12s ease-in-out infinite, rotate-gradient 12s linear infinite;
+#breathing-text {
+    text-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
 
-/* Baby Connection Meditation */
-@keyframes pulse-belly {
-    0%, 100% { transform: scale(1); opacity: 0.8; }
-    50% { transform: scale(1.05); opacity: 1; }
+/* Breathing animations */
+.breathing-animate #breathing-circle,
+.breathing-animate #breathing-glow-ring {
+    animation: breath-anim 12s infinite ease-in-out;
 }
-#belly-outline {
-    width: 100%;
-    height: 100%;
-    border: 4px solid var(--theme-primary);
-    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; /* Egg/belly shape */
-    box-shadow: 0 0 20px var(--theme-primary), inset 0 0 20px var(--theme-primary);
-    transition: all 0.5s ease;
+@keyframes breath-anim {
+    0%   { transform: scale(1); } /* Start */
+    33%  { transform: scale(1.8); } /* Inhale (4s) */
+    50%  { transform: scale(1.8); } /* Hold (2s) */
+    100% { transform: scale(1); } /* Exhale (6s) */
 }
-#belly-outline.belly-outline-paused {
-    opacity: 0.6;
+.breathing-animate #breathing-visualizer-container {
+     animation: breath-color-anim 12s infinite ease-in-out;
 }
-#belly-outline.belly-outline-active {
-    animation: pulse-belly 3s ease-in-out infinite;
+@keyframes breath-color-anim {
+    0%   { background-color: rgba(167, 139, 250, 0.1); } /* Lavender */
+    33%  { background-color: rgba(147, 197, 253, 0.2); } /* Sky Blue */
+    100% { background-color: rgba(167, 139, 250, 0.1); } /* Lavender */
 }
 
 /* Sound & Color Player */
-#color-therapy-display {
-    background-color: var(--theme-primary);
-    opacity: 0.3;
-    transition: all 2s ease-in-out;
-}
-#color-therapy-display.color-calm { background-color: #60a5fa; } /* blue */
-#color-therapy-display.color-happy { background-color: #facc15; } /* yellow */
-#color-therapy-display.color-dreamy { background-color: #c084fc; } /* purple */
-#color-therapy-display.color-sleepy { background-color: #4f46e5; } /* indigo */
-
 .mood-sound-btn {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    padding: 0.75rem;
-    border-radius: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 0.75rem;
     font-weight: 600;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.1);
 }
 .mood-sound-btn:hover {
     background: rgba(255, 255, 255, 0.2);
 }
 .mood-sound-btn.active {
-    background-color: var(--theme-primary);
-    border-color: var(--theme-secondary);
+    background: rgba(167, 139, 250, 0.3);
     color: #fff;
-    box-shadow: 0 0 15px var(--theme-primary);
+    border-color: rgba(167, 139, 250, 0.5);
+    box-shadow: 0 4px 12px rgba(167, 139, 250, 0.2);
+}
+.mood-sound-btn.stop-btn.active {
+    background: rgba(239, 68, 68, 0.3);
+    border-color: rgba(239, 68, 68, 0.5);
 }
 
-/* Gentle Stretches */
-.stretch-visual-container {
-    width: 60px;
-    height: 60px;
+/* Baby Connection */
+#baby-connection-visual {
+    background: rgba(244, 114, 182, 0.1);
+    border: 1px solid rgba(244, 114, 182, 0.3);
+    animation: pulse-heart 2.5s infinite ease-in-out;
+}
+@keyframes pulse-heart {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(244, 114, 182, 0.2); }
+    50% { transform: scale(1.1); box-shadow: 0 0 30px rgba(244, 114, 182, 0.4); }
+}
+
+/* Theme Picker */
+#calm-space-theme-layer {
+    transition: background-image 1s ease-in-out;
+}
+.theme-btn {
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.2);
     background: rgba(255, 255, 255, 0.1);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    flex-shrink: 0;
 }
-.stretch-silhouette-head {
-    width: 20px;
-    height: 20px;
-    background: var(--theme-gradient);
-    border-radius: 50%;
-    position: relative;
-    top: -10px;
+.theme-btn.active {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.4);
 }
-.stretch-silhouette-head::after {
-    content: '';
-    position: absolute;
-    width: 30px;
-    height: 30px;
-    background: var(--theme-gradient);
-    border-radius: 40% 40% 50% 50%;
-    top: 15px;
-    left: -5px;
-}
-#neck-roll-anim.stretch-active { animation: neck-roll 5s ease-in-out infinite; }
-@keyframes neck-roll {
-    0%, 100% { transform: translateX(0) rotate(0); }
-    25% { transform: translateX(-10px) rotate(-30deg); }
-    75% { transform: translateX(10px) rotate(30deg); }
+/* Theme Gradients */
+.theme-glow { background-image: linear-gradient(135deg, rgba(167, 139, 250, 0.1), rgba(244, 114, 182, 0.1)); }
+.theme-ocean { background-image: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(14, 165, 233, 0.1)); }
+.theme-sky { background-image: linear-gradient(135deg, rgba(147, 197, 253, 0.1), rgba(253, 186, 116, 0.1)); }
+.theme-blossom { background-image: linear-gradient(135deg, rgba(236, 72, 153, 0.1), rgba(253, 186, 116, 0.1)); }
+
+/* Water Reminder */
+#water-reminder-popup {
+    animation: fadeIn 0.5s ease-out;
 }
 
-.stretch-silhouette-shoulder {
-    width: 15px;
-    height: 15px;
-    background: var(--theme-gradient);
-    border-radius: 50%;
-    position: relative;
-    top: -5px;
-    box-shadow: -15px 0 0 var(--theme-primary), 15px 0 0 var(--theme-primary);
+/* Journal Modal */
+.journal-mood-btn.selected {
+    transform: scale(1.3);
+    filter: drop-shadow(0 0 10px rgba(196, 181, 253, 0.7));
 }
-#shoulder-roll-anim.stretch-active { animation: shoulder-roll 3s ease-in-out infinite; }
-@keyframes shoulder-roll {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-5px) scale(1.1); }
-}
-
-/* Water Reminder Toast */
-#water-reminder-toast.show {
-    transform: translateX(0);
-    opacity: 1;
+#journal-modal-save-btn:disabled {
+    background-color: #585191;
+    opacity: 0.5;
+    cursor: not-allowed;
 }
