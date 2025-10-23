@@ -17,11 +17,11 @@ export const elements = {
     mealPlanTab: document.getElementById('tab-meal-plan'),
     symptomTrackerTab: document.getElementById('tab-symptom-tracker'),
     journeyTab: document.getElementById('tab-journey'),
-    calmSpaceTab: document.getElementById('tab-calm-space'), // New Tab
+    calmSpaceTab: document.getElementById('tab-calm-space'), // NEW TAB
     mealPlanContent: document.getElementById('content-meal-plan'),
     symptomTrackerContent: document.getElementById('content-symptom-tracker'),
     journeyContent: document.getElementById('content-journey'),
-    calmSpaceContent: document.getElementById('content-calm-space'), // New Content
+    calmSpaceContent: document.getElementById('content-calm-space'), // NEW CONTENT
 
     // --- NEW Animation Elements ---
     bubbleBackground: document.getElementById('bubble-background'),
@@ -151,7 +151,7 @@ export function setupTabs(onTabSwitch) {
         switchTab('journey');
         onTabSwitch('journey');
     });
-    // Add listener for new tab
+    // NEW TAB CLICK LISTENER
     elements.calmSpaceTab.addEventListener('click', () => {
         switchTab('calm');
         onTabSwitch('calm');
@@ -159,29 +159,36 @@ export function setupTabs(onTabSwitch) {
 }
 
 function switchTab(activeTab) {
+    // UPDATED TABS OBJECT
     const tabs = {
         meal: { btn: elements.mealPlanTab, content: elements.mealPlanContent },
         symptom: { btn: elements.symptomTrackerTab, content: elements.symptomTrackerContent },
         journey: { btn: elements.journeyTab, content: elements.journeyContent },
-        calm: { btn: elements.calmSpaceTab, content: elements.calmSpaceContent } // Add calm tab
+        calm: { btn: elements.calmSpaceTab, content: elements.calmSpaceContent } // NEW TAB
     };
 
     Object.keys(tabs).forEach(key => {
-        if (tabs[key].btn && tabs[key].content) { // Check if elements exist
+        // Handle potential null elements if HTML isn't updated
+        if(tabs[key].btn) {
             tabs[key].btn.classList.remove('active');
+        }
+        if(tabs[key].content) {
             tabs[key].content.classList.remove('active');
-            // Reset animations on other tabs
-            if (key !== activeTab) {
-                resetTabAnimation(tabs[key].content);
-            }
+        }
+        
+        // Reset animations on other tabs
+        if (key !== activeTab && tabs[key].content) {
+            resetTabAnimation(tabs[key].content);
         }
     });
 
-    if (tabs[activeTab] && tabs[activeTab].btn && tabs[activeTab].content) { // Check if new tab exists
+    if (tabs[activeTab] && tabs[activeTab].btn && tabs[activeTab].content) {
         tabs[activeTab].btn.classList.add('active');
         tabs[activeTab].content.classList.add('active');
         
         // Play animation for the new active tab
         playTabEntranceAnimation(tabs[activeTab].content);
+    } else {
+        console.error(`Tab "${activeTab}" or its elements are not found.`);
     }
 }
