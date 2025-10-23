@@ -2,24 +2,7 @@ import { doc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.
 import { db } from './firebase.js';
 import { getCurrentUserId } from "./auth.js";
 
-// DOM Elements for Calm Space
-let calmSpaceContainer, breathingVisualizer, breathCircle, breathText;
-let soundPlayer, soundMoodSelect, playSoundBtn, lightTherapyBox;
-let meditationPlayer, meditationText, meditationVisual;
-let stretchGuide, stretchSelect, stretchSvgContainer, stretchTitle;
-let journalModal, journalCloseBtn, journalSaveBtn, journalMoodButtons;
-
-// State
-let currentUserId = null;
-let wellnessData = {};
-let activeExercise = null; // 'breathing', 'sound', 'meditation', 'stretch'
-let currentToneSound = null;
-let meditationInterval = null;
-let audioStarted = false; // Flag to ensure Tone.start() is called only once
-
-// --- Sound Generation (Tone.js) ---
-let oceanNoise, lullabySynth, chimesSynth;
-let lullabyPart; // Keep track of the lullaby part
+// ... (keep existing code above) ...
 
 function initializeSounds() {
     // Check if Tone is available (it might fail to load in some environments)
@@ -29,7 +12,7 @@ function initializeSounds() {
     }
     try {
         // Configure Tone.js latency for better performance on various devices
-        Tone.context.latencyHint = 'interactive'; // or 'balanced'
+        // REMOVED: Tone.context.latencyHint = 'interactive'; // or 'balanced' <-- This line caused the error
 
         // 1. Ocean Sound
         oceanNoise = new Tone.Noise("pink"); // Don't start noise immediately
@@ -65,6 +48,8 @@ function initializeSounds() {
         return false; // Indicate failure
     }
 }
+
+// ... (keep existing code below) ...
 
 // --- Date Helper ---
 function getWeekId(d) {
@@ -581,3 +566,18 @@ export function unloadCalmSpace() {
     }
     console.log("Calm Space unloaded.");
 }
+    // Clear references
+    oceanNoise = null;
+    lullabySynth = null;
+    chimesSynth = null;
+    lullabyPart = null;
+    currentToneSound = null;
+    
+    // Clear interval just in case
+    if (meditationInterval) {
+        clearInterval(meditationInterval);
+        meditationInterval = null;
+    }
+    console.log("Calm Space unloaded.");
+}
+
