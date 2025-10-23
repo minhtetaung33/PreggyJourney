@@ -7,9 +7,15 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./css/style.css">
+    <!-- Link to style.css. Ensure the path is correct (e.g., ./style.css or ./css/style.css) -->
+    <link rel="stylesheet" href="./style.css">
 </head>
 <body class="antialiased text-gray-200">
+
+    <!-- Page load overlay for initial fade -->
+    <div id="page-load-overlay"></div>
+    <!-- Background for rising bubbles -->
+    <div id="bubble-background"></div>
 
     <div id="app-container" class="container mx-auto p-4 md:p-8 max-w-7xl">
         <!-- New Hero Section -->
@@ -47,7 +53,8 @@
             <main>
                 <!-- Meal Planner Tab -->
                 <div id="content-meal-plan" class="tab-content active">
-                    <div class="glass-card p-4 md:p-6">
+                    <!-- Added anim-card class -->
+                    <div class="glass-card anim-card p-4 md:p-6">
                         <div class="flex items-center justify-between mb-6 px-2">
                             <h2 class="text-2xl font-bold flex items-center">
                                 <svg class="w-8 h-8 text-purple-300 mr-3 hidden md:block" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 15.546c-.523 0-1.046.151-1.5.454a2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0c.004-.867.126-1.723.38-2.546.174-.53.385-1.054.64-1.571a21.89 21.89 0 012.652-3.956c1.522-1.657 2.733-3.482 3.683-5.527a5.553 5.553 0 011.02-1.923c.37-.621.733-1.21 1.09-1.742a2.492 2.492 0 014.226 2.158c-.373.632-.74,1.226-1.11,1.845a5.553 5.553 0 01-1.02,1.923c-.95,2.045-2.16,3.87-3.684,5.527a21.885 21.885 0 01-2.652,3.956c-.255.517-.466,1.041-.64,1.571-.254.823-.376,1.68-.38,2.546z"></path></svg>
@@ -115,7 +122,8 @@
                         <!-- Top Row -->
                         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                             <!-- AI Symptom Assistant -->
-                            <div class="glass-card p-4 md:p-6 lg:col-span-2">
+                            <!-- Added anim-card class -->
+                            <div class="glass-card anim-card p-4 md:p-6 lg:col-span-2">
                                 <h3 class="text-xl font-bold mb-4 flex items-center">🤖 AI Symptom Assistant</h3>
                                 <p class="text-gray-300 mb-4">Feeling something? Describe it below for gentle, non-medical suggestions.</p>
                                 <textarea id="symptom-input" class="symptom-input min-h-[80px]" placeholder="e.g., I feel dizzy and tired today..."></textarea>
@@ -128,7 +136,8 @@
                             <!-- Side Cards -->
                             <div class="space-y-8">
                                <!-- Wellness Tip Card - UPDATED -->
-                               <div id="wellness-tip-card" class="glass-card p-4 md:p-6 text-center relative overflow-hidden cursor-pointer no-hover">
+                               <!-- Added anim-card class -->
+                               <div id="wellness-tip-card" class="glass-card anim-card p-4 md:p-6 text-center relative overflow-hidden cursor-pointer no-hover">
                                     <div id="wellness-glow" class="wellness-glow"></div>
                                     <div class="relative z-10">
                                         <h3 class="text-xl font-bold mb-3">💡 Wellness Tip</h3>
@@ -139,7 +148,8 @@
                                         </div>
                                     </div>
                                </div>
-                               <div id="baby-growth-card" class="glass-card p-4 md:p-6 text-center cursor-pointer hover:bg-white/10 transition-colors">
+                               <!-- Added anim-card class -->
+                               <div id="baby-growth-card" class="glass-card anim-card p-4 md:p-6 text-center cursor-pointer hover:bg-white/10 transition-colors">
                                     <h3 class="text-xl font-bold mb-2">🍼 Baby Growth</h3>
                                     <p id="baby-growth-snapshot" class="text-gray-300 text-lg">Week 10 — baby is the size of a strawberry 🍓</p>
                                </div>
@@ -147,7 +157,8 @@
                         </div>
                         
                         <!-- Wellness Dashboard -->
-                        <div class="glass-card p-4 md:p-6">
+                        <!-- Added anim-card class -->
+                        <div class="glass-card anim-card p-4 md:p-6">
                             <div class="flex items-center justify-between mb-6">
                                 <h3 class="text-2xl font-bold flex items-center">📈 Wellness Dashboard</h3>
                                 <div class="flex items-center gap-2 md:gap-4">
@@ -282,7 +293,8 @@
                         <!-- Left Column: To-Do List & Reflections -->
                         <div class="lg:col-span-2 space-y-8">
                             <!-- To-Do List -->
-                            <div class="glass-card p-4 md:p-6">
+                            <!-- Added anim-card class -->
+                            <div class="glass-card anim-card p-4 md:p-6">
                                 <div id="todo-header" class="flex justify-between items-center mb-4 cursor-pointer">
                                     <h3 class="text-2xl font-bold">✅ To-Do List</h3>
                                     <svg id="todo-toggle-icon" class="w-6 h-6 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -313,7 +325,8 @@
                             </div>
 
                             <!-- Tiny Reflections -->
-                             <div class="glass-card p-4 md:p-6">
+                            <!-- Added anim-card class -->
+                             <div class="glass-card anim-card p-4 md:p-6">
                                 <div id="reflection-header" class="flex justify-between items-center mb-4 cursor-pointer">
                                     <h3 class="text-2xl font-bold">📝 Tiny Reflections</h3>
                                     <div class="flex items-center">
@@ -336,7 +349,8 @@
                         </div>
 
                         <!-- Right Column: Little Wishes -->
-                        <div class="glass-card p-4 md:p-6">
+                        <!-- Added anim-card class -->
+                        <div class="glass-card anim-card p-4 md:p-6">
                             <div id="wishlist-header" class="flex justify-between items-center mb-4 cursor-pointer">
                                 <h3 class="text-2xl font-bold">🎁 Little Wishes</h3>
                                 <svg id="wishlist-toggle-icon" class="w-6 h-6 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -697,6 +711,13 @@
     </div>
 
 
-    <script type="module" src="./js/main.js"></script>
+    <!-- Ensure paths to JS files are correct -->
+    <script type="module" src="./main.js"></script>
+    <script type="module" src="./ui.js"></script>
+    <script type="module" src="./auth.js"></script>
+    <script type="module" src="./firebase.js"></script>
+    <script type="module" src="./meal-planner.js"></script>
+    <script type="module" src="./wellness.js"></script>
+    <script type="module" src="./journey.js"></script>
 </body>
 </html>
