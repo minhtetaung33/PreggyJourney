@@ -6,8 +6,6 @@
     <title>Pregnancy Wellness Planner</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Add Tone.js for audio synthesis -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Updated path to /css/style.css -->
     <link rel="stylesheet" href="./css/style.css">
@@ -49,8 +47,8 @@
                 <button id="tab-meal-plan" class="tab-btn active">🥣 Meal Plan</button>
                 <button id="tab-symptom-tracker" class="tab-btn">💗 Wellness</button>
                 <button id="tab-journey" class="tab-btn">✨ Journey</button>
-                <!-- New Calm Space Tab -->
-                <button id="tab-calm-space" class="tab-btn">🩵 Calm Space</button>
+                <!-- NEW CALM SPACE TAB -->
+                <button id="tab-calm-space" class="tab-btn">🧘‍♀️ Calm Space</button>
             </div>
 
             <!-- Main Content -->
@@ -401,93 +399,98 @@
                         </div>
                     </div>
                 </div>
-                
-                <!-- New Calm Space Content -->
+
+                <!-- NEW CALM SPACE CONTENT -->
                 <div id="content-calm-space" class="tab-content">
-                    <div id="calm-space-theme-layer" class="relative rounded-xl overflow-hidden p-1">
-                        <!-- Particle background -->
-                        <div id="calm-particles"></div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         
-                        <!-- Main grid layout -->
-                        <div class="relative z-10 grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+                        <!-- Left Column: Breathing and Meditation -->
+                        <div class="space-y-8">
+                            <!-- Guided Breathing Visualizer -->
+                            <div class="glass-card anim-card p-4 md:p-6">
+                                <h3 class="text-2xl font-bold mb-4 text-center">🌬️ Guided Breathing</h3>
+                                <div id="breathing-visualizer-container" class="relative w-full h-64 md:h-80 flex items-center justify-center mb-4">
+                                    <!-- The visualizer circle -->
+                                    <div id="breathing-circle" class="w-32 h-32 rounded-full transition-all duration-3000 ease-in-out"></div>
+                                    <!-- The glowing ring -->
+                                    <div id="breathing-glow-ring" class="absolute w-32 h-32 rounded-full transition-all duration-3000 ease-in-out"></div>
+                                    <!-- Text instruction -->
+                                    <span id="breathing-text" class="absolute text-2xl font-bold text-white z-10">Select an exercise</span>
+                                    <!-- Sparkles container -->
+                                    <div id="sparkle-container" class="absolute inset-0 pointer-events-none"></div>
+                                </div>
+                                <select id="breathing-select" class="meal-select mb-4">
+                                    <option value="none">Select an exercise...</option>
+                                    <option value="diaphragmatic">Diaphragmatic Breathing</option>
+                                    <option value="pursed-lip">Pursed-Lip Breathing</option>
+                                    <option value="alternate-nostril">Alternate Nostril Breathing</option>
+                                    <option value="box">Box Breathing (4-4-4-4)</option>
+                                    <option value="4-7-8">4-7-8 Breathing</option>
+                                </select>
+                                <div class="flex gap-4">
+                                    <button id="start-breathing-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Start</button>
+                                    <button id="stop-breathing-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg transition-colors hidden">Stop</button>
+                                </div>
+                                <p id="breathing-description" class="text-sm text-gray-300 mt-4 text-center min-h-[40px]"></p>
+                            </div>
+
+                            <!-- Baby Connection Meditation -->
+                            <div class="glass-card anim-card p-4 md:p-6">
+                                <h3 class="text-2xl font-bold mb-4 text-center">💖 Baby Connection</h3>
+                                <div class="relative w-full h-64 md:h-80 flex flex-col items-center justify-center mb-4 text-center">
+                                    <!-- Pulsing Belly Visual -->
+                                    <div id="belly-visual-container" class="relative w-48 h-48 mb-4">
+                                        <div id="belly-glow" class="absolute inset-0 rounded-full"></div>
+                                        <div id="belly-outline" class="absolute inset-4 rounded-full border-4 border-white/50 flex items-center justify-center">
+                                            <span class="text-5xl">🤰</span>
+                                        </div>
+                                    </div>
+                                    <!-- Motivational Text Pop-up -->
+                                    <div id="meditation-text-popup" class="absolute top-0 left-0 right-0 text-xl font-semibold text-white"></div>
+                                    <!-- Guide Text -->
+                                    <p id="meditation-guide-text" class="text-lg text-gray-200 px-4">Place your hands on your belly. Feel the warmth and love flowing to your baby.</p>
+                                </div>
+                                <button id="start-meditation-btn" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Begin Connection</button>
+                                <button id="stop-meditation-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg transition-colors mt-2 hidden">End Connection</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Right Column: Stretches and Reminders -->
+                        <div class="space-y-8">
+                            <!-- Gentle Stretch Guide -->
+                            <div class="glass-card anim-card p-4 md:p-6">
+                                <h3 class="text-2xl font-bold mb-4 text-center">🧘‍♀️ Gentle Stretches</h3>
+                                <div id="stretch-guide-container" class="relative w-full h-64 md:h-80 bg-white/5 rounded-lg flex flex-col items-center justify-center mb-4 text-center overflow-hidden">
+                                    <span id="stretch-emoji" class="text-8xl mb-4">🧘‍♀️</span>
+                                    <h4 id="stretch-title" class="text-2xl font-bold mb-2">Select a stretch</h4>
+                                    <p id="stretch-description" class="text-gray-300 px-4">Safe and gentle stretches to relieve tension.</p>
+                                    <div id="stretch-countdown" class="absolute bottom-4 right-4 text-4xl font-bold text-white opacity-0">30</div>
+                                </div>
+                                <select id="stretch-select" class="meal-select mb-4">
+                                    <option value="none">Select a stretch...</option>
+                                    <option value="neck-tilt">Gentle Neck Tilt</option>
+                                    <option value="shoulder-roll">Shoulder Rolls</option>
+                                    <option value="cat-cow">Cat-Cow Pose</option>
+                                    <option value="side-stretch">Seated Side Stretch</option>
+                                    <option value="hip-opener">Butterfly Pose</option>
+                                </select>
+                                <button id="start-stretch-btn" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Start Stretch (30s)</button>
+                                <button id="stop-stretch-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg transition-colors mt-2 hidden">Stop Stretch</button>
+                            </div>
                             
-                            <!-- Left Column (Large Feature) -->
-                            <div class="lg:col-span-2 space-y-6 md:space-y-8">
-                                <!-- 1. Guided Breathing -->
-                                <div class="glass-card anim-card p-4 md:p-6">
-                                    <h3 class="text-xl font-bold mb-4">🌬️ Guided Breathing Visualizer</h3>
-                                    <div class="flex flex-col md:flex-row items-center gap-6">
-                                        <div class="flex-shrink-0 w-48 h-48 md:w-64 md:h-64 rounded-full flex items-center justify-center" id="breathing-visualizer-container">
-                                            <div id="breathing-glow-ring"></div>
-                                            <div id="breathing-circle"></div>
-                                            <span id="breathing-text" class="relative text-xl font-semibold text-white z-10">Press Start</span>
-                                        </div>
-                                        <div class="text-center md:text-left">
-                                            <p class="text-gray-300 mb-4">Sync your breath with the circle. Inhale as it expands, hold, and exhale as it contracts.</p>
-                                            <button id="start-breathing-btn" class="w-full md:w-auto bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">Start (4-2-6)</button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 2. Sound & Color Player -->
-                                <div class="glass-card anim-card p-4 md:p-6">
-                                    <h3 class="text-xl font-bold mb-4">🎵 Sound & Color Relaxation</h3>
-                                    <p class="text-gray-300 mb-6">Choose a mood to begin a gentle soundscape and matching color light therapy.</p>
-                                    <div class_name="flex flex-wrap gap-3" id="sound-mood-buttons">
-                                        <button data-mood="calm" class="mood-sound-btn">🌊 Calm (Ocean)</button>
-                                        <button data-mood="dreamy" class="mood-sound-btn">🎶 Dreamy (Lullaby)</button>
-                                        <button data-mood="sleepy" class="mood-sound-btn">🌧️ Sleepy (Rain)</button>
-                                        <button data-mood="happy" class="mood-sound-btn">🎐 Happy (Chimes)</button>
-                                        <button data-mood="stop" class="mood-sound-btn stop-btn">⏹️ Stop Sound</button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Right Column (Smaller Features) -->
-                            <div class="space-y-6 md:space-y-8">
-                                <!-- 3. Baby Connection -->
-                                <div class="glass-card anim-card p-4 md:p-6 text-center">
-                                    <h3 class="text-xl font-bold mb-4">💖 Baby Connection</h3>
-                                    <div id="baby-connection-visual" class="w-32 h-32 mx-auto mb-4 rounded-full flex items-center justify-center">
-                                        <svg class="w-20 h-20 text-pink-300" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path></svg>
-                                    </div>
-                                    <p class="text-gray-300">Place your hands on your belly. Imagine your baby smiling inside.</p>
-                                </div>
-
-                                <!-- 4. Gentle Stretch Guide -->
-                                <div class="glass-card anim-card p-4 md:p-6">
-                                    <h3 class="text-xl font-bold mb-4">🧘‍♀️ Gentle Stretch Guide</h3>
-                                    <div id="stretch-guide-content" class="text-center">
-                                        <div id="stretch-visual" class="h-24 w-24 mx-auto mb-3 flex items-center justify-center">
-                                            <!-- SVG will be injected here by JS -->
-                                        </div>
-                                        <h4 id="stretch-title" class="font-semibold text-lg text-teal-300">Neck Rolls</h4>
-                                        <p id="stretch-desc" class="text-gray-300 text-sm">Gently roll your head from side to side.</p>
-                                    </div>
-                                    <div class="flex justify-between mt-4">
-                                        <button id="prev-stretch-btn" class="btn-secondary text-sm py-2 px-4 rounded-lg">Previous</button>
-                                        <button id="next-stretch-btn" classs="btn-secondary text-sm py-2 px-4 rounded-lg">Next</button>
-                                    </div>
-                                </div>
-                                
-                                <!-- 5. Theme Picker -->
-                                <div class="glass-card anim-card p-4 md:p-6">
-                                    <h3 class="text-xl font-bold mb-4">🩵 Custom Theme</h3>
-                                    <div class="flex flex-wrap gap-3" id="theme-picker-buttons">
-                                        <button data-theme="glow" class="theme-btn active">Glow</button>
-                                        <button data-theme="ocean" class="theme-btn">Ocean</button>
-                                        <button data-theme="sky" class="theme-btn">Sky</button>
-                                        <button data-theme="blossom" class="theme-btn">Blossom</button>
-                                    </div>
+                            <!-- Drink Water Reminder -->
+                            <div class="glass-card anim-card p-4 md:p-6">
+                                <h3 class="text-2xl font-bold mb-4 text-center">💧 Hydration Reminder</h3>
+                                <div class="flex items-center justify-center gap-4">
+                                    <span class="text-5xl">💧</span>
+                                    <p class="text-gray-300 flex-1">Staying hydrated is key! Click the bell to play a gentle reminder.</p>
+                                    <button id="play-water-reminder-btn" class="icon-btn p-4 rounded-full bg-white/10 hover:bg-white/20">
+                                        <svg class="w-8 h-8 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341A6.002 6.002 0 006 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                                    </button>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Drink Water Reminder (Fixed) -->
-                        <div id="water-reminder-popup" class="glass-card fixed bottom-6 right-6 p-4 rounded-lg z-20 hidden items-center gap-3">
-                            <span>💧 Remember to take a sip of water!</span>
-                            <button id="close-water-reminder-btn" class="icon-btn text-lg">&times;</button>
-                        </div>
                     </div>
                 </div>
 
@@ -496,6 +499,8 @@
     </div>
 
     <!-- Modals -->
+    
+    <!-- AUTH MODAL -->
     <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
         <div id="auth-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-sm transform scale-95 opacity-0 transition-transform transition-opacity duration-300 text-center">
             <h3 class="text-2xl font-bold mb-2">Welcome!</h3>
@@ -508,6 +513,7 @@
         </div>
     </div>
     
+    <!-- MEAL MODAL -->
     <div id="meal-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-30 p-4">
         <div id="modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-md transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
              <h3 id="modal-title" class="text-2xl font-bold mb-4 text-center">Edit Meal</h3>
@@ -517,6 +523,8 @@
              <button id="modal-close-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Close</button>
         </div>
     </div>
+
+    <!-- MANAGE MEALS MODAL -->
     <div id="manage-meals-modal" class="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-md flex justify-center items-center hidden z-40 p-4">
         <div id="manage-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
             <h3 id="manage-modal-title" class="text-2xl font-bold mb-6 text-center">Manage Meals</h3>
@@ -532,6 +540,8 @@
             </div>
         </div>
     </div>
+
+    <!-- EDIT MEAL MODAL -->
     <div id="edit-meal-modal" class="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-md flex justify-center items-center hidden z-50 p-4">
         <div id="edit-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-md transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
             <h3 class="text-2xl font-bold mb-6 text-center">Edit Meal</h3>
@@ -546,6 +556,8 @@
             </div>
         </div>
     </div>
+
+    <!-- START DATE MODAL -->
     <div id="start-date-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
         <div id="start-date-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-md transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
              <h3 class="text-2xl font-bold mb-4 text-center">Update Pregnancy Dates</h3>
@@ -561,6 +573,8 @@
              </div>
         </div>
     </div>
+
+    <!-- AI MEAL MODAL -->
     <div id="ai-meal-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
         <div id="ai-meal-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300 modal-scroll">
              <h3 id="ai-modal-title" class="text-2xl font-bold mb-4 text-center">AI Meal Plan for Monday</h3>
@@ -594,6 +608,8 @@
               <button id="ai-meal-close-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg transition-colors mt-4">Close</button>
         </div>
     </div>
+
+    <!-- MANAGE SUPPLEMENTS MODAL -->
     <div id="manage-supplements-modal" class="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-md flex justify-center items-center hidden z-50 p-4">
         <div id="manage-supplements-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
             <h3 class="text-2xl font-bold mb-6 text-center">Manage & Log Supplements</h3>
@@ -610,6 +626,8 @@
             </div>
         </div>
     </div>
+
+    <!-- REFLECTION MODAL -->
     <div id="reflection-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
         <div id="reflection-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
             <h3 id="reflection-modal-title" class="text-2xl font-bold mb-4 text-center">New Reflection</h3>
@@ -639,6 +657,8 @@
             </div>
         </div>
     </div>
+
+    <!-- EDIT TODO MODAL -->
     <div id="edit-todo-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
         <div id="edit-todo-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
             <h3 id="edit-todo-modal-title" class="text-2xl font-bold mb-4 text-center">Edit Task</h3>
@@ -663,6 +683,8 @@
             </div>
         </div>
     </div>
+
+    <!-- AI SUMMARY MODAL -->
     <div id="ai-summary-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
         <div id="ai-summary-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-md transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
              <h3 class="text-2xl font-bold mb-4 text-center">AI Reflection Summary</h3>
@@ -670,6 +692,8 @@
              <button id="ai-summary-close-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors mt-6">Close</button>
         </div>
     </div>
+
+    <!-- NUTRITION HISTORY MODAL -->
     <div id="nutrition-history-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-40 p-4">
         <div id="nutrition-history-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-2xl transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
             <div class="flex items-center justify-between mb-4">
@@ -692,7 +716,7 @@
         </div>
     </div>
     
-    <!-- Sleep Modal -->
+    <!-- SLEEP MODAL -->
     <div id="sleep-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
         <div id="sleep-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
              <div class="flex items-center justify-between mb-4">
@@ -718,7 +742,7 @@
         </div>
     </div>
 
-    <!-- Edit Wellness Day Modal -->
+    <!-- EDIT WELLNESS DAY MODAL -->
     <div id="edit-day-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
         <div id="edit-day-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
             <h3 id="edit-day-modal-title" class="text-2xl font-bold mb-6 text-center">Edit Log for Wednesday</h3>
@@ -762,7 +786,7 @@
         </div>
     </div>
     
-    <!-- New Image Link Modal -->
+    <!-- IMAGE LINK MODAL -->
     <div id="image-link-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
         <div id="image-link-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-md transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
             <h3 class="text-2xl font-bold mb-4 text-center">Add Image Link</h3>
@@ -775,54 +799,46 @@
         </div>
     </div>
 
-    <!-- New Baby Message Modal - UPDATED -->
+    <!-- BABY MESSAGE MODAL -->
     <div id="baby-message-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
-        <!-- 
-          UPDATES:
-          - Removed 'glass-card' and 'text-center' from this div.
-          - Added 'chat-bubble-style' for the light, transparent text message look.
-          - Made 'max-w-md' for a bit more space.
-        -->
         <div id="baby-message-modal-content" class="chat-bubble-style p-6 md:p-8 rounded-lg w-full max-w-md transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
-             <!-- 
-               UPDATES:
-               - Title changed to "Mini Piggy" with animated emoji (Task 2 & 3).
-               - Aligned to the start (left).
-             -->
              <h3 class="text-xl font-bold mb-4 flex items-center justify-start gap-2">
                  Mini Piggy <span class="baby-emoji-animate">👶</span>
              </h3>
-             <!-- 
-               UPDATES:
-               - Text color changed for readability on light background.
-             -->
              <div id="baby-message-content" class="text-lg min-h-[80px] flex items-center justify-start relative">
                 Hi Mama, I’m just a tiny speck now, but I already feel your love 💕
              </div>
-             <!-- Close button removed (Task 1) -->
         </div>
     </div>
-
-    <!-- New Journal Modal -->
-    <div id="journal-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
-        <div id="journal-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-md transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
-            <h3 class="text-2xl font-bold mb-4 text-center">How do you feel?</h3>
-            <p class="text-gray-300 text-center mb-6">Take a moment to log your calmness.</p>
-            <div id="journal-mood-buttons" class="flex justify-around mb-6">
-                <button class="text-4xl hover:scale-125 transition-transform journal-mood-btn" data-mood="1">😣</button>
-                <button class="text-4xl hover:scale-125 transition-transform journal-mood-btn" data-mood="2">😐</button>
-                <button class="text-4xl hover:scale-125 transition-transform journal-mood-btn" data-mood="3">🙂</button>
-                <button class="text-4xl hover:scale-125 transition-transform journal-mood-btn" data-mood="4">😊</button>
-                <button class="text-4xl hover:scale-125 transition-transform journal-mood-btn" data-mood="5">🥰</button>
+    
+    <!-- NEW MINDFUL JOURNAL MODAL -->
+    <div id="mindful-journal-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
+        <div id="mindful-journal-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-md transform scale-95 opacity-0 transition-transform transition-opacity duration-300 text-center">
+            <h3 class="text-2xl font-bold mb-4">How do you feel right now?</h3>
+            <p id="mindful-journal-prompt" class="text-indigo-200 mb-6">After your 'Box Breathing' session.</p>
+            <div class="flex justify-around mb-6" id="journal-mood-buttons">
+                <button class="text-4xl hover:scale-125 transition-transform journal-mood-btn" data-mood="1">😔</button>
+                <button class="text-4xl hover:scale-125 transition-transform journal-mood-btn" data-mood="2">😕</button>
+                <button class="text-4xl hover:scale-125 transition-transform journal-mood-btn" data-mood="3">😐</button>
+                <button class="text-4xl hover:scale-125 transition-transform journal-mood-btn" data-mood="4">🙂</button>
+                <button class="text-4xl hover:scale-125 transition-transform journal-mood-btn" data-mood="5">😊</button>
             </div>
-            <p id="journal-mood-text" class="text-center text-lg font-semibold text-purple-300 h-6 mb-6"></p>
+            <p class="text-sm text-gray-400 mb-4">Your mood will be saved to your Wellness Dashboard.</p>
             <div class="flex gap-4">
-                <button id="journal-modal-cancel-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg">Skip</button>
-                <button id="journal-modal-save-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg" disabled>Save</button>
+                <button id="journal-skip-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg">Skip</button>
+                <button id="journal-save-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg opacity-50" disabled>Save</button>
             </div>
         </div>
     </div>
 
+    <!-- AUDIO ELEMENTS -->
+    <!-- Using placeholder sounds - replace with your own hosted files if you have them -->
+    <audio id="audio-ocean-waves" loop src="https://actions.google.com/sounds/v1/ambiences/ocean_waves.ogg"></audio>
+    <audio id="audio-heartbeat" loop src="https://actions.google.com/sounds/v1/medical/heart_monitor_single_pulse.ogg"></audio>
+    <audio id="audio-calm-tone" src="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg"></audio>
+    <audio id="audio-sparkle" src="https://actions.google.com/sounds/v1/magical/sparkle_3.ogg"></audio>
+    <audio id="audio-water-reminder" src="https://actions.google.com/sounds/v1/alarms/harp_glissando_up.ogg"></audio>
+    
 
     <!-- Updated paths to /js/ folder -->
     <script type="module" src="./js/main.js"></script>
@@ -832,7 +848,7 @@
     <script type="module" src="./js/meal-planner.js"></script>
     <script type="module" src="./js/wellness.js"></script>
     <script type="module" src="./js/journey.js"></script>
-    <!-- Add new script for calm space -->
+    <!-- NEW SCRIPT TAG -->
     <script type="module" src="./js/calm-space.js"></script>
 </body>
 </html>
