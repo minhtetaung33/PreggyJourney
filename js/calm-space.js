@@ -252,7 +252,7 @@ function cacheDomElements() {
         breathingTimerDisplay: document.getElementById('breathing-timer-display'),
         breathingAnimationElement: document.getElementById('breathing-animation-element'),
         breathingVisualEmoji: document.getElementById('breathing-visual-emoji'), // NEW
-        breathingTimerButtons: document.getElementById('breathing-timer-buttons'), // Corrected ID from HTML
+        breathingTimerInput: document.getElementById('breathing-timer-input'), // UPDATED
         breathingPlayBtn: document.getElementById('breathing-play-btn'), // NEW
         breathingStopBtn: document.getElementById('breathing-stop-btn'), // NEW
         breathingSilentToggle: document.getElementById('breathing-silent-toggle'), // Corrected ID from HTML
@@ -410,14 +410,7 @@ function initBreathing() {
         }
     });
 
-    // --- FIX: Added listener for timer buttons ---
-    elements.breathingTimerButtons.addEventListener('click', e => {
-        const button = e.target.closest('button');
-        if (button && button.dataset.timer) {
-            document.querySelectorAll('#breathing-timer-buttons button').forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-        }
-    });
+    // --- REMOVED: Listener for timer buttons removed ---
 
     // --- NEW: Play/Stop button listeners ---
     if (elements.breathingPlayBtn) {
@@ -500,11 +493,11 @@ function selectBreathing(type) {
 
 function startBreathing() {
     // Get selected timer
-    const timerButton = elements.breathingTimerButtons.querySelector('button.active');
-    if (!timerButton) {
+    const durationMinutes = parseInt(elements.breathingTimerInput.value);
+    if (isNaN(durationMinutes) || durationMinutes <= 0) {
         // Show an error
         if(elements.breathingInstruction) {
-            elements.breathingInstruction.querySelector('p').textContent = "Please select a timer duration first!";
+            elements.breathingInstruction.querySelector('p').textContent = "Please set a valid timer duration (in minutes).";
         }
         return;
     }
@@ -516,7 +509,7 @@ function startBreathing() {
         return;
     }
     
-    const duration = parseInt(timerButton.dataset.timer);
+    const duration = durationMinutes * 60; // Convert minutes to seconds
     
     stopBreathing(); // Clear any previous state
     
@@ -638,7 +631,7 @@ function stopBreathing() {
     if (elements.breathingPlayBtn) elements.breathingPlayBtn.classList.remove('hidden');
     if (elements.breathingStopBtn) elements.breathingStopBtn.classList.add('hidden');
     
-    document.querySelectorAll('#breathing-timer-buttons button').forEach(btn => btn.classList.remove('active'));
+    // REMOVED: Active state removal for timer buttons
 }
 
 // --- Meditation ---
@@ -759,11 +752,9 @@ function startMeditation() {
 function runMeditationGuide() {
     if (!activeMeditationTimer) return; // Stop if timer ended
     
+    // *** CHANGE: Loop instructions ***
     if (currentMeditationStep >= currentMeditationInstructions.length) {
-        if (elements.meditationInstruction) elements.meditationInstruction.textContent = "Continue breathing and resting in this space.";
-        // Stop looping instructions, but let timer run out
-        utterance.onend = null; 
-        return; 
+        currentMeditationStep = 0; // Loop back to the beginning
     }
     
     const isSilent = elements.meditationVoiceToggle.checked;
@@ -777,13 +768,8 @@ function runMeditationGuide() {
         utterance.onend = null; 
         if (activeMeditationTimer) { // Only proceed if timer is still running
             currentMeditationStep++;
-            // Wait a bit before next instruction, unless it's the last one
-            if (currentMeditationStep < currentMeditationInstructions.length) {
-                 setTimeout(runMeditationGuide, 3000); 
-            } else {
-                 // Last instruction finished, let the timer run out with final message
-                 if (elements.meditationInstruction) elements.meditationInstruction.textContent = "Continue breathing and resting in this space.";
-            }
+            // *** CHANGE: Always wait and call runMeditationGuide again ***
+            setTimeout(runMeditationGuide, 3000); // Wait 3s, then play next (or first) instruction
         }
     };
     
