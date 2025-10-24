@@ -499,6 +499,17 @@ h1, h2, h3 {
     box-shadow: 0 0 20px rgba(255, 255, 255, 0.3), 0 0 40px rgba(255, 255, 255, 0.2);
 }
 
+/* NEW: Emoji Visual Styles */
+@keyframes emoji-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+#breathing-visual-emoji,
+#stretch-visual, /* Apply pulse to stretch too */
+#meditation-visual-emoji {
+    animation: emoji-pulse 3s infinite ease-in-out;
+}
+
 /* Box Breathing Animation */
 #breathing-animation-element.box-glow {
     width: 150px;
@@ -583,7 +594,8 @@ h1, h2, h3 {
 #breathing-exercise-buttons .btn-secondary.active,
 #stretch-routine-buttons .btn-secondary.active,
 #meditation-type-buttons .btn-secondary.active,
-#breathing-visualizer-container button[data-timer].active {
+/* Update: Included timer buttons in active state */
+#breathing-timer-buttons .btn-secondary.active {
     background: rgba(167, 139, 250, 0.3);
     color: #fff;
     border-color: rgba(167, 139, 250, 0.5);
@@ -592,22 +604,24 @@ h1, h2, h3 {
 
 /* Stretch Visualizer */
 #stretch-visual.cat-pose {
-    /* Simple SVG representation */
-    width: 150px;
+    /* Simple SVG representation - using emoji now, so clear specific styles */
+    /* width: 150px;
     height: 100px;
     border: 3px solid #fff;
     border-radius: 50% / 30%;
-    transform: translateY(20px);
+    transform: translateY(20px); */
 }
 #stretch-visual.cow-pose {
-    width: 150px;
+    /* width: 150px;
     height: 100px;
     border: 3px solid #fff;
     border-radius: 50% / 30%;
     border-top-color: transparent;
     border-bottom-color: #fff;
-    transform: translateY(-10px);
+    transform: translateY(-10px); */
 }
+/* Other stretch pose classes would go here if needed */
+
 
 /* Meditation Visual */
 @keyframes meditation-glow {
