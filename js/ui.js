@@ -26,6 +26,19 @@ export const elements = {
     calmSpaceContent: document.getElementById('content-calm-space'),
     sparkleContainer: document.getElementById('sparkle-container'), // For sparkle animation
 
+    // --- NEW Daily Summary Elements ---
+    dailySummaryCard: document.getElementById('daily-summary-card'),
+    summaryMoodGauge: document.getElementById('summary-mood-gauge'),
+    summaryMoodEmoji: document.getElementById('summary-mood-emoji'),
+    summaryMoodLabel: document.getElementById('summary-mood-label'),
+    summaryGlowEffect: document.getElementById('summary-glow-effect'),
+    summaryBreathLevel: document.getElementById('summary-breath-level'),
+    summaryStretchLevel: document.getElementById('summary-stretch-level'),
+    summaryMeditationLevel: document.getElementById('summary-meditation-level'),
+    summaryPositiveMessage: document.getElementById('summary-positive-message'),
+    summaryStreakBadge: document.getElementById('summary-streak-badge'),
+    summaryBarChart: document.getElementById('summary-bar-chart'),
+
     // --- NEW Animation Elements ---
     bubbleBackground: document.getElementById('bubble-background'),
     pageLoadOverlay: document.getElementById('page-load-overlay'),
