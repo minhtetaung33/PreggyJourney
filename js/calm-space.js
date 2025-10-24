@@ -1,55 +1,10 @@
 import { db } from './firebase.js';
-// This line is fixed: 'in' has been changed to 'from'
 import { getCurrentUserId } from './auth.js';
 import { createSparkleAnimation } from './ui.js';
 import { doc, setDoc, addDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-// --- DOM Elements ---
-const elements = {
-    // Breathing
-    breathingExerciseButtons: document.getElementById('breathing-exercise-buttons'),
-    breathingVisualizerContainer: document.getElementById('breathing-visualizer-container'),
-    breathingOrb: document.getElementById('breathing-orb'),
-    breathingInstruction: document.getElementById('breathing-instruction'),
-    breathingTimerDisplay: document.getElementById('breathing-timer-display'),
-    breathingAnimationElement: document.getElementById('breathing-animation-element'),
-    breathingTimerButtons: document.getElementById('breathing-timer-buttons'),
-    breathingSilentToggle: document.getElementById('breathing-silent-toggle'),
-
-    // Meditation
-    meditationTypeButtons: document.getElementById('meditation-type-buttons'),
-    meditationVisualContainer: document.getElementById('meditation-visual-container'),
-    meditationOrb: document.getElementById('meditation-orb'),
-    meditationInstruction: document.getElementById('meditation-instruction'),
-    meditationTimerDisplay: document.getElementById('meditation-timer-display'),
-    meditationVoiceToggle: document.getElementById('meditation-voice-toggle'),
-    meditationTimerInput: document.getElementById('meditation-timer-input'),
-    startMeditationBtn: document.getElementById('start-meditation-btn'),
-    meditationAudioPlayer: document.getElementById('meditation-audio-player'),
-
-    // Stretches
-    stretchRoutineButtons: document.getElementById('stretch-routine-buttons'),
-    stretchVisualContainer: document.getElementById('stretch-visual-container'),
-    stretchVisual: document.getElementById('stretch-visual'),
-    stretchInstruction: document.getElementById('stretch-instruction'),
-    stretchPoseDisplay: document.getElementById('stretch-pose-display'),
-    stretchTrimesterSelector: document.getElementById('stretch-trimester-selector'),
-    stretchVoiceToggle: document.getElementById('stretch-voice-toggle'),
-    stretchLoopToggle: document.getElementById('stretch-loop-toggle'),
-    stretchPrevPoseBtn: document.getElementById('stretch-prev-pose-btn'),
-    stretchPlayPauseBtn: document.getElementById('stretch-play-pause-btn'),
-    stretchPlayIcon: document.getElementById('stretch-play-icon'),
-    stretchPauseIcon: document.getElementById('stretch-pause-icon'),
-    stretchNextPoseBtn: document.getElementById('stretch-next-pose-btn'),
-
-    // Reflection Modal
-    mindfulReflectionModal: document.getElementById('mindful-reflection-modal'),
-    mindfulReflectionCloseBtn: document.getElementById('mindful-reflection-close-btn'),
-    mindfulReflectionSaveBtn: document.getElementById('mindful-reflection-save-btn'),
-    mindfulReflectionTextarea: document.getElementById('mindful-reflection-textarea'),
-    mindfulMoodButtons: document.getElementById('mindful-mood-buttons'),
-    mindfulReflectionTitle: document.getElementById('mindful-reflection-title'),
-};
+// --- DOM Elements (Initialized as empty) ---
+let elements = {};
 
 // --- Data from Instructions ---
 const breathingData = {
@@ -263,6 +218,61 @@ let currentStretchRoutine = [];
 let currentStretchPoseIndex = 0;
 let isStretchPaused = true;
 let reflectionData = { type: '', mood: '', note: '' };
+let isDomCached = false; // Flag to prevent re-caching
+
+// --- NEW: Function to cache DOM elements ---
+function cacheDomElements() {
+    if (isDomCached) return; // Only run once
+    
+    elements = {
+        // Breathing
+        breathingExerciseButtons: document.getElementById('breathing-exercise-buttons'),
+        breathingVisualizerContainer: document.getElementById('breathing-visualizer-container'),
+        breathingOrb: document.getElementById('breathing-orb'),
+        breathingInstruction: document.getElementById('breathing-instruction'),
+        breathingTimerDisplay: document.getElementById('breathing-timer-display'),
+        breathingAnimationElement: document.getElementById('breathing-animation-element'),
+        breathingTimerButtons: document.getElementById('breathing-timer-buttons'),
+        breathingSilentToggle: document.getElementById('breathing-silent-toggle'),
+
+        // Meditation
+        meditationTypeButtons: document.getElementById('meditation-type-buttons'),
+        meditationVisualContainer: document.getElementById('meditation-visual-container'),
+        meditationOrb: document.getElementById('meditation-orb'),
+        meditationInstruction: document.getElementById('meditation-instruction'),
+        meditationTimerDisplay: document.getElementById('meditation-timer-display'),
+        meditationVoiceToggle: document.getElementById('meditation-voice-toggle'),
+        meditationTimerInput: document.getElementById('meditation-timer-input'),
+        startMeditationBtn: document.getElementById('start-meditation-btn'),
+        meditationAudioPlayer: document.getElementById('meditation-audio-player'),
+
+        // Stretches
+        stretchRoutineButtons: document.getElementById('stretch-routine-buttons'),
+        stretchVisualContainer: document.getElementById('stretch-visual-container'),
+        stretchVisual: document.getElementById('stretch-visual'),
+        stretchInstruction: document.getElementById('stretch-instruction'),
+        stretchPoseDisplay: document.getElementById('stretch-pose-display'),
+        stretchTrimesterSelector: document.getElementById('stretch-trimester-selector'),
+        stretchVoiceToggle: document.getElementById('stretch-voice-toggle'),
+        stretchLoopToggle: document.getElementById('stretch-loop-toggle'),
+        stretchPrevPoseBtn: document.getElementById('stretch-prev-pose-btn'),
+        stretchPlayPauseBtn: document.getElementById('stretch-play-pause-btn'),
+        stretchPlayIcon: document.getElementById('stretch-play-icon'),
+        stretchPauseIcon: document.getElementById('stretch-pause-icon'),
+        stretchNextPoseBtn: document.getElementById('stretch-next-pose-btn'),
+
+        // Reflection Modal
+        mindfulReflectionModal: document.getElementById('mindful-reflection-modal'),
+        mindfulReflectionCloseBtn: document.getElementById('mindful-reflection-close-btn'),
+        mindfulReflectionSaveBtn: document.getElementById('mindful-reflection-save-btn'),
+        mindfulReflectionTextarea: document.getElementById('mindful-reflection-textarea'),
+        mindfulMoodButtons: document.getElementById('mindful-mood-buttons'),
+        mindfulReflectionTitle: document.getElementById('mindful-reflection-title'),
+    };
+    
+    isDomCached = true;
+}
+
 
 // --- Main Initialization ---
 export function initializeCalmSpace(uid, aid) {
@@ -270,21 +280,45 @@ export function initializeCalmSpace(uid, aid) {
     // Use __app_id if available, otherwise fall back
     appId = typeof __app_id !== 'undefined' ? __app_id : aid;
     
+    // NEW: Cache DOM elements now that we know the DOM is loaded
+    cacheDomElements();
+
     if (!userId || !appId) {
         console.error("Calm Space: Missing User ID or App ID. Saving will fail.");
     }
     
-    initBreathing();
-    initMeditation();
-    initStretches();
-    initReflectionModal();
+    // Check if elements were found before adding listeners
+    if (elements.breathingExerciseButtons) {
+        initBreathing();
+    } else {
+        console.error("Calm Space: Could not find breathing exercise buttons to initialize.");
+    }
+    
+    if (elements.meditationTypeButtons) {
+        initMeditation();
+    } else {
+        console.error("Calm Space: Could not find meditation type buttons to initialize.");
+    }
+    
+    if (elements.stretchRoutineButtons) {
+        initStretches();
+    } else {
+        console.error("Calm Space: Could not find stretch routine buttons to initialize.");
+    }
+
+    if (elements.mindfulReflectionModal) {
+        initReflectionModal();
+    } else {
+        console.error("Calm Space: Could not find reflection modal to initialize.");
+    }
 }
 
 export function unloadCalmSpace() {
     stopBreathing();
     stopMeditation();
     stopStretches();
-    // Remove all event listeners if necessary (or check if they are added once)
+    isDomCached = false; // Reset cache flag on unload
+    elements = {}; // Clear cached elements
 }
 
 // --- Speech Synthesis ---
@@ -318,8 +352,11 @@ function initBreathing() {
     });
 
     // Select 4-7-8 by default
-    elements.breathingExerciseButtons.querySelector('button[data-breath="4-7-8"]').classList.add('active');
-    selectBreathing('4-7-8');
+    const defaultBreathButton = elements.breathingExerciseButtons.querySelector('button[data-breath="4-7-8"]');
+    if (defaultBreathButton) {
+        defaultBreathButton.classList.add('active');
+        selectBreathing('4-7-8');
+    }
 }
 
 function selectBreathing(type) {
@@ -343,7 +380,10 @@ function selectBreathing(type) {
     
     // Set instructions
     const instructionHtml = currentBreathingCycle.instructions.map(step => `<li>${step}</li>`).join('');
-    document.getElementById('breathing-steps-list').innerHTML = instructionHtml;
+    const stepsList = document.getElementById('breathing-steps-list');
+    if (stepsList) {
+        stepsList.innerHTML = instructionHtml;
+    }
 }
 
 function startBreathingTimer(duration) {
@@ -416,11 +456,17 @@ function stopBreathing() {
     clearInterval(activeBreathingTimer);
     activeBreathingTimer = null;
     synth.cancel();
-    elements.breathingTimerDisplay.textContent = '0:00';
-    elements.breathingInstruction.textContent = 'Select an exercise and timer to begin.';
-    elements.breathingOrb.style.transform = 'scale(1)';
-    elements.breathingOrb.style.opacity = '0.7';
-    elements.breathingOrb.classList.remove('heartbeat');
+    if (elements.breathingTimerDisplay) {
+        elements.breathingTimerDisplay.textContent = '0:00';
+    }
+    if (elements.breathingInstruction) {
+        elements.breathingInstruction.textContent = 'Select an exercise and timer to begin.';
+    }
+    if (elements.breathingOrb) {
+        elements.breathingOrb.style.transform = 'scale(1)';
+        elements.breathingOrb.style.opacity = '0.7';
+        elements.breathingOrb.classList.remove('heartbeat');
+    }
     document.querySelectorAll('#breathing-timer-buttons button').forEach(btn => btn.classList.remove('active'));
 }
 
@@ -438,8 +484,11 @@ function initMeditation() {
     elements.startMeditationBtn.addEventListener('click', startMeditation);
 
     // Select first one by default
-    elements.meditationTypeButtons.querySelector('button').classList.add('active');
-    selectMeditation(elements.meditationTypeButtons.querySelector('button').dataset.meditation);
+    const defaultMeditationButton = elements.meditationTypeButtons.querySelector('button');
+    if (defaultMeditationButton) {
+        defaultMeditationButton.classList.add('active');
+        selectMeditation(defaultMeditationButton.dataset.meditation);
+    }
 }
 
 function selectMeditation(type) {
@@ -515,12 +564,20 @@ function stopMeditation() {
     synth.cancel();
     utterance.onend = null;
     
-    elements.meditationAudioPlayer.pause();
-    elements.meditationAudioPlayer.currentTime = 0;
+    if (elements.meditationAudioPlayer) {
+        elements.meditationAudioPlayer.pause();
+        elements.meditationAudioPlayer.currentTime = 0;
+    }
     
-    elements.meditationTimerDisplay.textContent = '0:00';
-    elements.meditationInstruction.textContent = 'Select a meditation and timer to begin.';
-    elements.meditationOrb.classList.remove('active');
+    if (elements.meditationTimerDisplay) {
+        elements.meditationTimerDisplay.textContent = '0:00';
+    }
+    if (elements.meditationInstruction) {
+        elements.meditationInstruction.textContent = 'Select a meditation and timer to begin.';
+    }
+    if (elements.meditationOrb) {
+        elements.meditationOrb.classList.remove('active');
+    }
 }
 
 // --- Stretches ---
@@ -546,8 +603,11 @@ function initStretches() {
     elements.stretchPrevPoseBtn.addEventListener('click', prevPose);
     
     // Select first routine by default
-    elements.stretchRoutineButtons.querySelector('button').classList.add('active');
-    selectStretchRoutine(elements.stretchRoutineButtons.querySelector('button').dataset.stretch);
+    const defaultStretchButton = elements.stretchRoutineButtons.querySelector('button');
+    if (defaultStretchButton) {
+        defaultStretchButton.classList.add('active');
+        selectStretchRoutine(defaultStretchButton.dataset.stretch);
+    }
 }
 
 function selectStretchRoutine(type) {
@@ -657,8 +717,12 @@ function stopStretches() {
     activeStretchTimer = null;
     synth.cancel();
     isStretchPaused = true;
-    elements.stretchPlayIcon.style.display = 'block';
-    elements.stretchPauseIcon.style.display = 'none';
+    if (elements.stretchPlayIcon) {
+        elements.stretchPlayIcon.style.display = 'block';
+    }
+    if (elements.stretchPauseIcon) {
+        elements.stretchPauseIcon.style.display = 'none';
+    }
 }
 
 // --- Mindful Reflection Modal ---
@@ -701,12 +765,26 @@ function closeReflectionModal() {
 async function saveReflection() {
     if (!userId || !appId) {
         console.error("Cannot save reflection: User ID or App ID is missing.");
+        // Use a less obtrusive error message
+        elements.mindfulReflectionTitle.textContent = "Error: Could not save. User not found.";
+        setTimeout(() => {
+             if (reflectionData.name) { // Restore title if possible
+                elements.mindfulReflectionTitle.textContent = `Reflection for ${reflectionData.name}`;
+             }
+        }, 3000);
         return;
     }
     
     reflectionData.note = elements.mindfulReflectionTextarea.value;
     if (!reflectionData.mood) {
-        alert("Please select a mood."); // Replace with a proper modal later
+        // Use a non-blocking way to show error
+        const originalText = elements.mindfulReflectionTitle.textContent;
+        elements.mindfulReflectionTitle.textContent = "Please select a mood first!";
+        elements.mindfulReflectionTitle.classList.add('text-red-400');
+        setTimeout(() => {
+            elements.mindfulReflectionTitle.textContent = originalText;
+            elements.mindfulReflectionTitle.classList.remove('text-red-400');
+        }, 2000);
         return;
     }
 
@@ -725,6 +803,12 @@ async function saveReflection() {
 
     } catch (error) {
         console.error("Error saving reflection: ", error);
-        alert("Could not save your reflection. Please try again."); // Replace
+        const originalText = elements.mindfulReflectionTitle.textContent;
+        elements.mindfulReflectionTitle.textContent = "Error: Could not save reflection.";
+        elements.mindfulReflectionTitle.classList.add('text-red-400');
+        setTimeout(() => {
+            elements.mindfulReflectionTitle.textContent = originalText;
+            elements.mindfulReflectionTitle.classList.remove('text-red-400');
+        }, 3000);
     }
 }
