@@ -252,7 +252,7 @@ function cacheDomElements() {
         breathingTimerDisplay: document.getElementById('breathing-timer-display'),
         breathingAnimationElement: document.getElementById('breathing-animation-element'),
         breathingVisualEmoji: document.getElementById('breathing-visual-emoji'), // NEW
-        breathingTimerInput: document.getElementById('breathing-timer-input'), // UPDATED
+        breathingTimerInput: document.getElementById('breathing-timer-input'), // UPDATED from breathing-timer-buttons
         breathingPlayBtn: document.getElementById('breathing-play-btn'), // NEW
         breathingStopBtn: document.getElementById('breathing-stop-btn'), // NEW
         breathingSilentToggle: document.getElementById('breathing-silent-toggle'), // Corrected ID from HTML
@@ -323,7 +323,7 @@ export function initializeCalmSpace(uid, aid) {
     loadVoices(); // Load speech synthesis voices
 
     if (!userId || !appId) {
-        console.error("Calm Space: Missing User ID or App ID. Saving will fail.");
+        console.warn("Calm Space: Missing User ID or App ID. Saving will fail."); // Changed to warn
     }
     
     // Check if elements were found before adding listeners
@@ -493,6 +493,7 @@ function selectBreathing(type) {
 
 function startBreathing() {
     // Get selected timer
+    // UPDATED: Read from input field
     const durationMinutes = parseInt(elements.breathingTimerInput.value);
     if (isNaN(durationMinutes) || durationMinutes <= 0) {
         // Show an error
@@ -752,7 +753,7 @@ function startMeditation() {
 function runMeditationGuide() {
     if (!activeMeditationTimer) return; // Stop if timer ended
     
-    // *** CHANGE: Loop instructions ***
+    // *** UPDATED: Loop instructions ***
     if (currentMeditationStep >= currentMeditationInstructions.length) {
         currentMeditationStep = 0; // Loop back to the beginning
     }
@@ -768,7 +769,7 @@ function runMeditationGuide() {
         utterance.onend = null; 
         if (activeMeditationTimer) { // Only proceed if timer is still running
             currentMeditationStep++;
-            // *** CHANGE: Always wait and call runMeditationGuide again ***
+            // *** UPDATED: Always wait and call runMeditationGuide again ***
             setTimeout(runMeditationGuide, 3000); // Wait 3s, then play next (or first) instruction
         }
     };
@@ -1140,64 +1141,25 @@ function closeReflectionModal() {
     setTimeout(() => elements.mindfulReflectionModal.classList.add('hidden'), 300);
 }
 
+// *** UPDATED FUNCTION ***
+// This function no longer saves to Firestore. It just provides visual feedback.
 async function saveReflection() {
-    if (!userId || !appId) {
-        console.error("Cannot save reflection: User ID or App ID is missing.");
-        // Use a less obtrusive error message
-        elements.mindfulReflectionTitle.textContent = "Error: Could not save. User not found.";
-        elements.mindfulReflectionTitle.classList.add('text-red-400');
-        setTimeout(() => {
-             // Attempt to restore original title after showing error
-             if (reflectionData.name) {
-                 elements.mindfulReflectionTitle.textContent = `Reflection for ${reflectionData.name}`;
-                 elements.mindfulReflectionTitle.classList.remove('text-red-400');
-             } else {
-                 // Fallback if name wasn't set somehow
-                 elements.mindfulReflectionTitle.textContent = "Reflection"; 
-                 elements.mindfulReflectionTitle.classList.remove('text-red-400');
-             }
-        }, 3000);
-        return;
-    }
+    // User just wants the sparkle feedback, no saving, no errors.
     
-    reflectionData.note = elements.mindfulReflectionTextarea.value;
-    if (!reflectionData.mood) {
-        // Use a non-blocking way to show error
-        const originalText = elements.mindfulReflectionTitle.textContent;
-        elements.mindfulReflectionTitle.textContent = "Please select a mood first!";
-        elements.mindfulReflectionTitle.classList.add('text-red-400');
-        setTimeout(() => {
-            elements.mindfulReflectionTitle.textContent = originalText;
-            elements.mindfulReflectionTitle.classList.remove('text-red-400');
-        }, 2000);
-        return;
-    }
-
+    // We don't need to check for mood or get text from the hidden textarea.
+    // We just show the sparkle animation and close the modal.
+    
     try {
-        // Use the correct Firestore path structure
-        const reflectionsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/calmReflections`);
-        await addDoc(reflectionsCollectionRef, {
-            ...reflectionData,
-            createdAt: serverTimestamp()
-        });
-        
-        // Show sparkle animation on success!
+        // Show sparkle animation on "save"!
         const btnRect = elements.mindfulReflectionSaveBtn.getBoundingClientRect();
         // Calculate center relative to viewport
         const sparkleX = window.scrollX + btnRect.left + btnRect.width / 2;
         const sparkleY = window.scrollY + btnRect.top + btnRect.height / 2;
         createSparkleAnimation(sparkleX, sparkleY);
-        
-        closeReflectionModal();
-
     } catch (error) {
-        console.error("Error saving reflection: ", error);
-        const originalText = elements.mindfulReflectionTitle.textContent;
-        elements.mindfulReflectionTitle.textContent = "Error: Could not save reflection.";
-        elements.mindfulReflectionTitle.classList.add('text-red-400');
-        setTimeout(() => {
-            elements.mindfulReflectionTitle.textContent = originalText;
-            elements.mindfulReflectionTitle.classList.remove('text-red-400');
-        }, 3000);
+        console.error("Error creating sparkle animation: ", error);
     }
+        
+    // Just close the modal.
+    closeReflectionModal();
 }
