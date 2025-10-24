@@ -110,7 +110,7 @@
                                  <div id="hydration-snacks-container" class="space-y-2 text-gray-300 list-disc list-inside">
                                     <!-- AI-generated tips will go here -->
                                     <p id="hydration-snacks-loader" class="text-gray-400">Loading personalized tips...</p>
-                                </div>
+                                 </div>
                                 <h4 class="text-lg font-bold mt-6 mb-2 text-red-400">To Avoid</h4>
                                 <div id="hydration-avoid-container" class="space-y-2 text-gray-300 list-disc list-inside">
                                     <!-- AI-generated avoid tips will go here -->
@@ -300,11 +300,13 @@
                         <div class="lg:col-span-2 space-y-8">
                             <!-- Breathing Visualizer -->
                             <div class="glass-card anim-card p-4 md:p-6">
-                                <h3 class="text-2xl font-bold mb-4">🌬️ Guided Breathing</h3>
+                                <!-- UPDATE: Changed "Guided" to "Gentle" -->
+                                <h3 class="text-2xl font-bold mb-4">🌬️ Gentle Breathing</h3>
                                 <div id="breathing-visualizer-container" class="relative w-full h-64 md:h-96 rounded-lg overflow-hidden flex items-center justify-center transition-colors duration-1000" style="background-color: #3a506b;">
                                     <div id="breathing-orb" class="w-32 h-32 bg-white/30 rounded-full transition-transform duration-3000 ease-in-out"></div>
                                     <div id="breathing-animation-element" class=""></div> <!-- For box/wave animations -->
-                                    <span id="breathing-text" class="absolute text-2xl font-semibold text-white z-10">Select an exercise</span>
+                                    <!-- UPDATE: Replaced #breathing-text with #breathing-visual-emoji -->
+                                    <span id="breathing-visual-emoji" class="absolute text-5xl text-white z-10">🧘‍♀️</span>
                                 </div>
                                 <div class="pt-4 mt-4 border-t border-white/10">
                                     <div class="flex flex-wrap items-center justify-between gap-4">
@@ -317,7 +319,7 @@
                                             <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-breath="energizer">Morning Energizer</button>
                                             <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-breath="sleep">Sleep Wind-Down</button>
                                         </div>
-                                        <button id="breathing-stop-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg hidden">Stop</button>
+                                        <!-- UPDATE: Removed hidden stop button. New buttons below -->
                                     </div>
                                     <div class="flex flex-wrap items-center justify-between gap-4 mt-4">
                                         <!-- FIX: Added id="breathing-timer-buttons" to the surrounding div -->
@@ -327,21 +329,26 @@
                                             <button class="btn-secondary text-sm w-12 py-2 rounded-lg" data-timer="300">5 min</button>
                                             <button class="btn-secondary text-sm w-12 py-2 rounded-lg" data-timer="600">10 min</button>
                                         </div>
+                                        <!-- UPDATE: New Play/Stop buttons -->
                                         <div class="flex items-center gap-3">
-                                            <button id="breathing-voice-btn" class="icon-btn p-2 rounded-full" title="Toggle Voice Guide">
-                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M20 4a9 9 0 010 12.728M6.717 3.342A.5.5 0 017.5 3.85v16.298a.5.5 0 01-.783.41l-4-3.5H1a1 1 0 01-1-1V7.94a1 1 0 011-1h1.717l4-3.5a.5.5 0 01.783-.088z"></path></svg>
-                                            </button>
+                                            <button id="breathing-play-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-5 rounded-lg w-20">Play</button>
+                                            <button id="breathing-stop-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-5 rounded-lg w-20 hidden">Stop</button>
+                                        </div>
+                                        <div class="flex items-center gap-3">
+                                            <!-- UPDATE: Removed unused breathing-voice-btn -->
                                             <!-- FIX: Renamed id to "breathing-silent-toggle" and changed to a checkbox -->
                                             <input type="checkbox" id="breathing-silent-toggle" class="hidden">
                                             <label for="breathing-silent-toggle" class="icon-btn p-2 rounded-full cursor-pointer" title="Toggle Silent Mode (Animation Only)">
-                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.866 3.866M21 21l-3.866-3.866"></path></svg>
+                                                <!-- This label will now show both states -->
+                                                <svg id="breathing-sound-on-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M20 4a9 9 0 010 12.728M6.717 3.342A.5.5 0 017.5 3.85v16.298a.5.5 0 01-.783.41l-4-3.5H1a1 1 0 01-1-1V7.94a1 1 0 011-1h1.717l4-3.5a.5.5 0 01.783-.088z"></path></svg>
+                                                <svg id="breathing-sound-off-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.866 3.866M21 21l-3.866-3.866"></path></svg>
                                             </label>
                                             <span id="breathing-timer-display" class="font-semibold text-lg ml-2">0:00</span>
                                         </div>
                                     </div>
                                     <!-- FIX: Renamed id to "breathing-instruction" and added a placeholder for steps -->
                                     <div id="breathing-instruction" class="ai-insight mt-4">
-                                        <p>Select an exercise to begin. Voice guidance is on by default.</p>
+                                        <p>Select an exercise and timer to begin.</p>
                                         <ul id="breathing-steps-list" class="list-disc list-inside mt-2"></ul>
                                     </div>
                                 </div>
@@ -349,11 +356,18 @@
 
                             <!-- Gentle Stretch & Posture -->
                             <div class="glass-card anim-card p-4 md:p-6">
-                                <h3 class="text-2xl font-bold mb-4">🧘‍♀️ Gentle Stretch Guide</h3>
+                                <!-- UPDATE: Added timer display -->
+                                <div class="flex justify-between items-center mb-4">
+                                    <h3 class="text-2xl font-bold">🧘‍♀️ Gentle Stretch Guide</h3>
+                                    <span id="stretch-timer-display" class="font-semibold text-2xl text-purple-300">0:00</span>
+                                </div>
                                 <div class="flex flex-col md:flex-row gap-6">
                                     <!-- FIX: Renamed id to "stretch-visual-container" -->
                                     <div id="stretch-visual-container" class="w-full md:w-1/2 h-64 bg-white/5 rounded-lg flex items-center justify-center relative overflow-hidden">
-                                        <div id="stretch-visual" class="transition-all duration-500"></div>
+                                        <!-- UPDATE: This will now hold an emoji -->
+                                        <div id="stretch-visual" class="transition-all duration-500 text-6xl">
+                                            <!-- JS will add emoji here -->
+                                        </div>
                                         <!-- FIX: Renamed id to "stretch-pose-display" -->
                                         <span id="stretch-pose-display" class="absolute bottom-4 text-lg font-semibold">Select a routine</span>
                                     </div>
@@ -376,7 +390,9 @@
                                             <!-- FIX: Renamed id to "stretch-voice-toggle" and changed to checkbox -->
                                             <input type="checkbox" id="stretch-voice-toggle" class="hidden">
                                             <label for="stretch-voice-toggle" class="icon-btn p-2 rounded-full cursor-pointer" title="Toggle Voice Guide">
-                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M20 4a9 9 0 010 12.728M6.717 3.342A.5.5 0 017.5 3.85v16.298a.5.5 0 01-.783.41l-4-3.5H1a1 1 0 01-1-1V7.94a1 1 0 011-1h1.717l4-3.5a.5.5 0 01.783-.088z"></path></svg>
+                                                <!-- This label will now show both states -->
+                                                <svg id="stretch-sound-on-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M20 4a9 9 0 010 12.728M6.717 3.342A.5.5 0 017.5 3.85v16.298a.5.5 0 01-.783.41l-4-3.5H1a1 1 0 01-1-1V7.94a1 1 0 011-1h1.717l4-3.5a.5.5 0 01.783-.088z"></path></svg>
+                                                <svg id="stretch-sound-off-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.866 3.866M21 21l-3.866-3.866"></path></svg>
                                             </label>
                                             <!-- FIX: Added "stretch-loop-toggle" checkbox -->
                                             <input type="checkbox" id="stretch-loop-toggle" class="hidden">
@@ -408,7 +424,8 @@
                             <!-- FIX: Renamed id to "meditation-visual-container" -->
                             <div id="meditation-visual-container" class="w-full h-48 bg-white/5 rounded-lg flex items-center justify-center mb-4 relative overflow-hidden">
                                 <div id="meditation-orb" class="w-24 h-24 bg-pink-400/30 rounded-full transition-all duration-3000 ease-in-out"></div>
-                                <span id="meditation-timer-display" class="absolute text-3xl font-semibold text-white z-10">0:00</span>
+                                <!-- UPDATE: Removed timer, added emoji -->
+                                <span id="meditation-visual-emoji" class="absolute text-5xl z-10">💖</span>
                             </div>
                             <div class="space-y-3">
                                 <div id="meditation-type-buttons" class="grid grid-cols-2 gap-3">
@@ -421,13 +438,23 @@
                                 <div class="flex items-center justify-between gap-4 pt-3 border-t border-white/10">
                                     <!-- FIX: Renamed id to "meditation-timer-input" and changed to input type="number" -->
                                     <input type="number" id="meditation-timer-input" class="meal-select text-sm flex-grow" placeholder="Minutes..." min="1" value="3">
+                                    
+                                    <!-- UPDATE: Moved timer display here -->
+                                    <span id="meditation-timer-display" class="font-semibold text-lg">0:00</span>
+
                                     <!-- FIX: Renamed id to "meditation-voice-toggle" and changed to checkbox -->
                                     <input type="checkbox" id="meditation-voice-toggle" class="hidden">
                                     <label for="meditation-voice-toggle" class="icon-btn p-2 rounded-full cursor-pointer" title="Toggle Voice Guide">
-                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M20 4a9 9 0 010 12.728M6.717 3.342A.5.5 0 017.5 3.85v16.298a.5.5 0 01-.783.41l-4-3.5H1a1 1 0 01-1-1V7.94a1 1 0 011-1h1.717l4-3.5a.5.5 0 01.783-.088z"></path></svg>
+                                        <!-- This label will now show both states -->
+                                        <svg id="meditation-sound-on-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M20 4a9 9 0 010 12.728M6.717 3.342A.5.5 0 017.5 3.85v16.298a.5.5 0 01-.783.41l-4-3.5H1a1 1 0 01-1-1V7.94a1 1 0 011-1h1.717l4-3.5a.5.5 0 01.783-.088z"></path></svg>
+                                        <svg id="meditation-sound-off-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.866 3.866M21 21l-3.866-3.866"></path></svg>
                                     </label>
                                 </div>
-                                <button id="start-meditation-btn" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Start Meditation</button>
+                                <!-- UPDATE: Added Stop button -->
+                                <div class="grid grid-cols-2 gap-3">
+                                    <button id="start-meditation-btn" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Start Meditation</button>
+                                    <button id="stop-meditation-btn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition-colors hidden">Stop Meditation</button>
+                                </div>
                                 <!-- FIX: Renamed id to "meditation-instruction" -->
                                 <div id="meditation-instruction" class="ai-insight mt-2">
                                     <p>Select a meditation type and duration to begin.</p>
