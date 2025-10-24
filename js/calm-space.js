@@ -1,15 +1,45 @@
 import { db } from './firebase.js';
 import { getCurrentUserId } from './auth.js';
 import { createSparkleAnimation } from './ui.js';
-import { doc, setDoc, addDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+// START: MODIFICATION - Import functions to read data
+import { 
+    doc, setDoc, addDoc, collection, serverTimestamp,
+    getDocs, query, where
+} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+// END: MODIFICATION
 
 // --- DOM Elements (Initialized as empty) ---
 let elements = {};
 
-// --- Helper Function ---
+// --- Helper Functions ---
 function formatTime(seconds) {
-    return `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, '0')}`;
+    // Ensure seconds is non-negative
+    const safeSeconds = Math.max(0, seconds);
+    return `${Math.floor(safeSeconds / 60)}:${(safeSeconds % 60).toString().padStart(2, '0')}`;
 }
+
+// START: MODIFICATION - Helpers for viewing reflections
+const moodMap = {
+    '1': '😣',
+    '2': '😐',
+    '3': '🙂',
+    '4': '😊',
+    '5': '🥰'
+};
+
+function formatReflectionTimestamp(timestamp) {
+    if (!timestamp) return 'Just now';
+    // Convert Firestore timestamp or JS Date to JS Date
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    return date.toLocaleDateString(undefined, {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+// END: MODIFICATION
 
 // --- Data from Instructions ---
 const breathingData = {
@@ -162,7 +192,7 @@ const stretchData = {
             { name: "Neck Circles", instruction: "Circle neck slowly, 3 times each way.", duration: 20000, visual: 'neck', emoji: '↪️' },
             { name: "Deep Breaths", instruction: "Finish with 3 deep breaths.", duration: 15000, visual: 'stand', emoji: '🧍‍♀️' }
         ],
-        safe: ['early', 'mid', 'late'] // This is now unused but kept for reference
+        safe: ['early', 'mid', 'late']
     },
     'back-hip': { // Corrected key from HTML
         name: 'Back & Hip Relief',
@@ -175,7 +205,7 @@ const stretchData = {
             { name: "Hip Circles (Reverse)", instruction: "Now circle counter-clockwise, 5 times.", duration: 15000, visual: 'hips', emoji: '🔄' },
             { name: "Child's Pose", instruction: "End in Child’s Pose (knees wide, arms forward). Breathe.", duration: 30000, visual: 'childs-pose', emoji: '🙇‍♀️' }
         ],
-        safe: ['early', 'mid']
+        safe: ['early', 'mid'] // Child's pose might be uncomfortable late
     },
     'leg-relax': { // Corrected key from HTML
         name: 'Leg & Foot Relax',
@@ -220,6 +250,16 @@ let utterance = new SpeechSynthesisUtterance();
 let femaleVoice = null; // For female voice
 let activeBreathingTimer = null;
 let activeMeditationTimer = null;
+
+// --- UPDATED Stretch State Variables ---
+let activeStretchTimer = null; // This will be the MAIN timer (e.g., 5 minutes)
+let stretchTimeLeft = 0; // Remaining time for the MAIN timer
+let currentStretchPoseTimer = null; // This will be the timer for *each pose*
+let currentStretchRoutine = [];
+let currentStretchPoseIndex = 0;
+let isStretchPaused = true; // Start in paused state
+// --- END UPDATED ---
+
 let currentBreathingCycle;
 let currentBreathingStep = 0;
 let currentMeditationInstructions = [];
@@ -227,16 +267,9 @@ let currentMeditationStep = 0;
 let reflectionData = { type: '', mood: '', note: '' };
 let isDomCached = false; // Flag to prevent re-caching
 
-// --- NEW STRETCH STATE ---
-let activeStretchRoutineTimer = null; // Main timer for the whole routine
-let activeStretchPoseTimer = null;  // Timer for the *current pose*
-let currentStretchRoutine = [];
-let currentStretchPoseIndex = 0;
-let isStretchPaused = true;
-let stretchTimeRemaining = 0; // Time left on the main routine timer
-let poseTimeRemaining = 0; // Time left on the current pose
-// --- END NEW STRETCH STATE ---
-
+// START: MODIFICATION - State for reflections
+let allCalmReflections = [];
+// END: MODIFICATION
 
 // --- NEW: Function to cache DOM elements ---
 function cacheDomElements() {
@@ -251,7 +284,11 @@ function cacheDomElements() {
         breathingTimerDisplay: document.getElementById('breathing-timer-display'),
         breathingAnimationElement: document.getElementById('breathing-animation-element'),
         breathingVisualEmoji: document.getElementById('breathing-visual-emoji'), // NEW
-        breathingTimerInput: document.getElementById('breathing-timer-input'), // UPDATED from buttons
+        
+        // START: MODIFICATION - Updated timer element
+        breathingTimerInput: document.getElementById('breathing-timer-input'), // Replaces buttons
+        // END: MODIFICATION
+
         breathingPlayBtn: document.getElementById('breathing-play-btn'), // NEW
         breathingStopBtn: document.getElementById('breathing-stop-btn'), // NEW
         breathingSilentToggle: document.getElementById('breathing-silent-toggle'), // Corrected ID from HTML
@@ -281,23 +318,41 @@ function cacheDomElements() {
         stretchInstruction: document.getElementById('stretch-instruction'), // Corrected ID from HTML
         stretchPoseDisplay: document.getElementById('stretch-pose-display'), // Corrected ID from HTML
         stretchTimerDisplay: document.getElementById('stretch-timer-display'), // NEW
-        stretchTimerInput: document.getElementById('stretch-timer-input'), // UPDATED from trimester selector
+        
+        // --- UPDATED: Replaced trimester selector with timer input ---
+        stretchTimerInput: document.getElementById('stretch-timer-input'), // Corrected ID
+        
         stretchVoiceToggle: document.getElementById('stretch-voice-toggle'), // Corrected ID from HTML
         stretchSoundOnIcon: document.getElementById('stretch-sound-on-icon'), // NEW
         stretchSoundOffIcon: document.getElementById('stretch-sound-off-icon'), // NEW
-        stretchLoopToggle: document.getElementById('stretch-loop-toggle'), // Added
+        
+        // --- REMOVED: Loop toggle is no longer needed, it's implied by the timer ---
+        // stretchLoopToggle: document.getElementById('stretch-loop-toggle'), 
+        
         stretchPrevPoseBtn: document.getElementById('stretch-prev-pose-btn'), // Corrected ID
         stretchPlayPauseBtn: document.getElementById('stretch-play-pause-btn'), // Corrected ID
         stretchPlayIcon: document.getElementById('stretch-play-icon'), // Added
         stretchPauseIcon: document.getElementById('stretch-pause-icon'), // Added
+        stretchNextPoseBtn: document.getElementById('stretch-next-pose-btn'), // Corrected ID
 
-        // Reflection Modal
+        // Reflection Modal (Save)
         mindfulReflectionModal: document.getElementById('mindful-reflection-modal'),
         mindfulReflectionCloseBtn: document.getElementById('mindful-reflection-close-btn'), // Corrected ID
         mindfulReflectionSaveBtn: document.getElementById('mindful-reflection-save-btn'),
         mindfulReflectionTextarea: document.getElementById('mindful-reflection-textarea'), // Corrected ID
         mindfulMoodButtons: document.getElementById('mindful-mood-buttons'),
         mindfulReflectionTitle: document.getElementById('mindful-reflection-title'), // Corrected ID
+
+        // START: MODIFICATION - New elements for viewing reflections
+        viewBreathingReflectionsBtn: document.getElementById('view-breathing-reflections-btn'),
+        viewStretchReflectionsBtn: document.getElementById('view-stretch-reflections-btn'),
+        viewMeditationReflectionsBtn: document.getElementById('view-meditation-reflections-btn'),
+        viewReflectionsModal: document.getElementById('view-reflections-modal'),
+        viewReflectionsTitle: document.getElementById('view-reflections-title'),
+        viewReflectionsContainer: document.getElementById('view-reflections-container'),
+        viewReflectionsEmpty: document.getElementById('view-reflections-empty'),
+        viewReflectionsCloseBtn: document.getElementById('view-reflections-close-btn'),
+        // END: MODIFICATION
     };
     
     isDomCached = true;
@@ -318,6 +373,10 @@ export function initializeCalmSpace(uid, aid) {
         console.error("Calm Space: Missing User ID or App ID. Saving will fail.");
     }
     
+    // START: MODIFICATION - Load all reflections on init
+    loadAllReflections();
+    // END: MODIFICATION
+
     // Check if elements were found before adding listeners
     if (elements.breathingExerciseButtons) {
         initBreathing();
@@ -342,6 +401,14 @@ export function initializeCalmSpace(uid, aid) {
     } else {
         console.error("Calm Space: Could not find reflection modal to initialize.");
     }
+
+    // START: MODIFICATION - Add listeners for new view modal
+    if (elements.viewReflectionsModal) {
+        initViewReflectionsModal();
+    } else {
+        console.error("Calm Space: Could not find VIEW reflection modal to initialize.");
+    }
+    // END: MODIFICATION
 }
 
 export function unloadCalmSpace() {
@@ -401,6 +468,9 @@ function initBreathing() {
             selectBreathing(button.dataset.breath);
         }
     });
+
+    // --- FIX: Removed listener for timer buttons ---
+    // elements.breathingTimerButtons.addEventListener('click', e => { ... });
 
     // --- NEW: Play/Stop button listeners ---
     if (elements.breathingPlayBtn) {
@@ -482,10 +552,11 @@ function selectBreathing(type) {
 }
 
 function startBreathing() {
-    // Get selected timer from input
-    const durationInMinutes = parseInt(elements.breathingTimerInput.value);
+    // START: MODIFICATION - Get timer from input field
+    const durationInput = elements.breathingTimerInput.value;
+    const durationMinutes = parseInt(durationInput);
     
-    if (isNaN(durationInMinutes) || durationInMinutes <= 0) {
+    if (isNaN(durationMinutes) || durationMinutes <= 0) {
         // Show an error
         if(elements.breathingInstruction) {
             elements.breathingInstruction.querySelector('p').textContent = "Please set a valid timer duration (in minutes).";
@@ -493,14 +564,15 @@ function startBreathing() {
         return;
     }
     
+    const duration = durationMinutes * 60; // Convert minutes to seconds
+    // END: MODIFICATION
+    
     if (!currentBreathingCycle) {
         if(elements.breathingInstruction) {
             elements.breathingInstruction.querySelector('p').textContent = "Please select an exercise first!";
         }
         return;
     }
-    
-    const duration = durationInMinutes * 60; // Convert to seconds
     
     stopBreathing(); // Clear any previous state
     
@@ -621,6 +693,10 @@ function stopBreathing() {
     }
     if (elements.breathingPlayBtn) elements.breathingPlayBtn.classList.remove('hidden');
     if (elements.breathingStopBtn) elements.breathingStopBtn.classList.add('hidden');
+    
+    // START: MODIFICATION - No timer buttons to reset
+    // document.querySelectorAll('#breathing-timer-buttons button').forEach(btn => btn.classList.remove('active'));
+    // END: MODIFICATION
 }
 
 // --- Meditation ---
@@ -824,23 +900,7 @@ function initStretches() {
         }
     });
 
-    // Event listener for the new timer input
-    elements.stretchTimerInput.addEventListener('change', () => {
-        if (!isStretchPaused) {
-            // If routine is playing, stop it and restart with new time
-            stopStretches(false); // Stop but don't reset index
-            playPauseStretches(); // This will read the new time
-        } else {
-            // If paused, just update the main timer display
-            const durationInMinutes = parseInt(elements.stretchTimerInput.value, 10);
-            if (!isNaN(durationInMinutes) && durationInMinutes > 0) {
-                stretchTimeRemaining = durationInMinutes * 60;
-                elements.stretchTimerDisplay.textContent = formatTime(stretchTimeRemaining);
-            } else {
-                elements.stretchTimerDisplay.textContent = '0:00';
-            }
-        }
-    });
+    // --- REMOVED: Trimester selector listener is no longer needed ---
     
     elements.stretchPlayPauseBtn.addEventListener('click', playPauseStretches);
     elements.stretchNextPoseBtn.addEventListener('click', nextPose);
@@ -852,13 +912,15 @@ function initStretches() {
         toggleStretchSoundIcon(); // Set initial state
     }
     
+    // --- REMOVED: Loop toggle listener ---
+    
     // Select first routine by default
     const defaultStretchButton = elements.stretchRoutineButtons.querySelector('button');
     if (defaultStretchButton) {
         defaultStretchButton.classList.add('active');
         selectStretchRoutine(defaultStretchButton.dataset.stretch);
     }
-    stopStretches(true); // Set initial stopped state and reset index
+    stopStretches(); // Set initial stopped state
 }
 
 function toggleStretchSoundIcon() {
@@ -875,43 +937,51 @@ function toggleStretchSoundIcon() {
 
 
 function selectStretchRoutine(type) {
-    stopStretches(true); // Stop any previous routine and reset index
+    stopStretches(); // Stop any previous routine
     const routine = stretchData[type];
+    
+    // --- REMOVED: All trimester filtering logic ---
     
     if (!routine) {
         console.error("Selected stretch routine not found:", type);
+        // FIX: Target the <p> tag inside the instruction element
         if (elements.stretchInstruction) {
             elements.stretchInstruction.querySelector('p').textContent = "Error: Could not find selected routine.";
         }
         return;
     }
     
-    // Routine is no longer filtered
+    // Load all poses for the routine
     currentStretchRoutine = routine.poses;
 
     if (currentStretchRoutine.length === 0) {
+        // FIX: Target the <p> tag inside the instruction element
         if (elements.stretchInstruction) {
-            elements.stretchInstruction.querySelector('p').textContent = "This routine has no poses.";
+            elements.stretchInstruction.querySelector('p').textContent = "This routine has no poses defined.";
         }
         if (elements.stretchPoseDisplay) elements.stretchPoseDisplay.textContent = "0 / 0";
-        if (elements.stretchVisual) elements.stretchVisual.textContent = '🧘‍♀️';
+        if (elements.stretchVisual) elements.stretchVisual.textContent = '🧘‍♀️'; // NEW
         currentStretchPoseIndex = 0; // Reset index
         return;
     }
     
     currentStretchPoseIndex = 0;
-    displayPose(true); // Display the first pose, set as 'new pose'
+    displayPose(); // Display the first pose (will NOT auto-play)
 }
 
-function displayPose(isNewPose = false) {
-    if (!currentStretchRoutine || currentStretchRoutine.length === 0) return; // Exit if no routine selected or empty
-    
-    // Ensure index is within bounds
-    if (currentStretchPoseIndex < 0) currentStretchPoseIndex = 0;
-    if (currentStretchPoseIndex >= currentStretchRoutine.length) currentStretchPoseIndex = currentStretchRoutine.length - 1;
+/**
+ * Helper function to ONLY update the UI for the current pose
+ */
+function displayPoseUI(pose) {
+    if (!pose) {
+        // Default state
+        if (elements.stretchInstruction) elements.stretchInstruction.querySelector('p').textContent = 'Select a routine and set a timer to begin.';
+        if (elements.stretchPoseDisplay) elements.stretchPoseDisplay.textContent = 'Select a routine';
+        if (elements.stretchVisual) elements.stretchVisual.textContent = '🧘‍♀️';
+        return;
+    }
 
-    const pose = currentStretchRoutine[currentStretchPoseIndex];
-    
+    // Update with pose data
     if (elements.stretchInstruction) {
         elements.stretchInstruction.querySelector('p').textContent = pose.instruction;
     }
@@ -920,171 +990,172 @@ function displayPose(isNewPose = false) {
     }
     
     if (elements.stretchVisual) {
-        elements.stretchVisual.className = 'transition-all duration-500 text-6xl';
-        elements.stretchVisual.innerHTML = ''; 
+        elements.stretchVisual.className = 'transition-all duration-500 text-6xl'; // Reset classes, add emoji size
+        elements.stretchVisual.innerHTML = ''; // Clear previous content
     
         if (pose.emoji) {
             elements.stretchVisual.textContent = pose.emoji;
         } else {
-            elements.stretchVisual.innerHTML = `<span class="text-3xl p-4">${pose.name}</span>`; // Default text
+            elements.stretchVisual.innerHTML = `<span class="text-3xl p-4">${pose.name}</span>`; // Default text if no visual
         }
     }
+}
+
+/**
+ * Displays the current pose UI and handles starting the pose timer if playing.
+ * This is called by selectStretchRoutine, nextPose, and prevPose.
+ */
+function displayPose() {
+    if (!currentStretchRoutine || currentStretchRoutine.length === 0) {
+        displayPoseUI(null); // Show default state
+        return;
+    }
+    
+    // Ensure index is within bounds
+    if (currentStretchPoseIndex < 0) currentStretchPoseIndex = 0;
+    if (currentStretchPoseIndex >= currentStretchRoutine.length) currentStretchPoseIndex = currentStretchRoutine.length - 1;
+
+    const pose = currentStretchRoutine[currentStretchPoseIndex];
+    displayPoseUI(pose); // Update the visuals and text
+
+    // If we are NOT paused (i.e., user clicked next/prev while playing),
+    // we must cancel the old pose timer and start the new one.
+    if (!isStretchPaused) { 
+        clearTimeout(currentStretchPoseTimer);
+        synth.cancel();
+        runCurrentStretchPose(); // This will speak and set the timer for the *new* current pose
+    } else {
+        // If we ARE paused, just show the main timer's current time.
+        // If stretchTimeLeft is 0 (we haven't started yet), show 0:00
+        elements.stretchTimerDisplay.textContent = formatTime(stretchTimeLeft);
+    }
+}
+
+/**
+ * This function RUNS the current pose (speaks, sets timer for next pose)
+ * It's called by playPauseStretches (to start) and by itself (to loop)
+ */
+function runCurrentStretchPose() {
+    // Stop if the main timer is stopped or we're paused
+    if (!activeStretchTimer || isStretchPaused) return; 
+    if (!currentStretchRoutine || currentStretchRoutine.length === 0) return;
+
+    // Loop index back to 0 if it goes past the end
+    if (currentStretchPoseIndex >= currentStretchRoutine.length) {
+        currentStretchPoseIndex = 0;
+    }
+
+    const pose = currentStretchRoutine[currentStretchPoseIndex];
+    displayPoseUI(pose); // Update UI to this pose
 
     const isSilent = elements.stretchVoiceToggle.checked;
     speak(pose.instruction, isSilent);
 
-    // --- Timer Logic ---
-    clearTimeout(activeStretchPoseTimer); // Clear any existing pose timer
+    // Clear any previous pose timer
+    clearTimeout(currentStretchPoseTimer);
     
-    if (isNewPose) {
-        // If it's a new pose (from play, next, prev), reset pose timer
-        poseTimeRemaining = (pose.duration || 15000) / 1000; // in seconds
-    }
-    // If resuming, poseTimeRemaining will already be set
-    
-    runPoseTimer(); // Start or resume the pose countdown
-}
+    const duration = pose.duration || 15000; // Default to 15s
 
-function runPoseTimer() {
-    if (isStretchPaused || !activeStretchRoutineTimer) return; // Don't run if paused or main timer is off
-
-    // Display current pose time
-    // We don't have a separate pose timer display anymore,
-    // but this logic is needed to advance the pose.
-    
-    // Clear any existing intervals
-    clearTimeout(activeStretchPoseTimer); 
-
-    activeStretchPoseTimer = setTimeout(() => {
-        // Pose duration finished
-        const shouldLoop = elements.stretchLoopToggle.checked;
-            
-        if (currentStretchPoseIndex < currentStretchRoutine.length - 1) {
-            // Go to next pose
-            currentStretchPoseIndex++;
-            displayPose(true); // true = isNewPose
-        } else if (shouldLoop) {
-            // Loop back to start
-            currentStretchPoseIndex = 0;
-            displayPose(true);
-        } else {
-            // End of routine, but main timer is still running?
-            // This shouldn't really happen if loop is off, but just in case
-            // We let the main timer run out. We'll just loop.
-            currentStretchPoseIndex = 0;
-            displayPose(true);
-        }
-    }, poseTimeRemaining * 1000); // Use remaining pose time
-}
-
-// This is the main timer for the whole routine
-function runRoutineTimer() {
-    clearInterval(activeStretchRoutineTimer); // Clear any existing *main* timer
-    
-    activeStretchRoutineTimer = setInterval(() => {
-        if (isStretchPaused) {
-            clearInterval(activeStretchRoutineTimer);
-            return;
-        }
-
-        stretchTimeRemaining--;
-        if (elements.stretchTimerDisplay) {
-            elements.stretchTimerDisplay.textContent = formatTime(stretchTimeRemaining);
-        }
-        
-        if (stretchTimeRemaining <= 0) {
-            // Main timer is up!
-            stopStretches(true);
-            const type = document.querySelector('#stretch-routine-buttons button.active')?.dataset.stretch;
-            if (type) {
-                openReflectionModal('stretch', stretchData[type]?.name || 'Stretch Routine');
-            }
-        }
-    }, 1000);
+    // Set a timeout to advance to the next pose
+    currentStretchPoseTimer = setTimeout(() => {
+        currentStretchPoseIndex++; // Advance index
+        runCurrentStretchPose(); // Call self to run the next pose
+    }, duration);
 }
 
 
 function playPauseStretches() {
     isStretchPaused = !isStretchPaused;
-    
+
     if (isStretchPaused) {
         // --- PAUSING ---
-        clearTimeout(activeStretchPoseTimer); // Stop pose advancement
-        clearInterval(activeStretchRoutineTimer); // Stop main timer
-        
-        // Save remaining pose time
-        // This requires tracking when the pose timer started.
-        // Simpler: just pause main timer. Pose timer will restart on resume.
-        // We already saved stretchTimeRemaining.
-        
+        clearInterval(activeStretchTimer); // Stop main timer
+        clearTimeout(currentStretchPoseTimer); // Stop pose timer
+        activeStretchTimer = null;
+        currentStretchPoseTimer = null;
         synth.cancel(); // Stop speech
         if(elements.stretchPlayIcon) elements.stretchPlayIcon.style.display = 'inline';
         if(elements.stretchPauseIcon) elements.stretchPauseIcon.style.display = 'none';
     } else {
         // --- PLAYING / RESUMING ---
-        if(elements.stretchPlayIcon) elements.stretchPlayIcon.style.display = 'none';
-        if(elements.stretchPauseIcon) elements.stretchPauseIcon.style.display = 'inline';
+        if (!currentStretchRoutine || currentStretchRoutine.length === 0) {
+            if (elements.stretchInstruction) elements.stretchInstruction.querySelector('p').textContent = "Please select a routine first!";
+            isStretchPaused = true; // Go back to paused state
+            return;
+        }
 
-        if (stretchTimeRemaining <= 0) { // Starting new
-            const durationInMinutes = parseInt(elements.stretchTimerInput.value, 10);
-            if (isNaN(durationInMinutes) || durationInMinutes <= 0) {
-                if(elements.stretchInstruction) elements.stretchInstruction.querySelector('p').textContent = "Please set a valid timer duration (in minutes).";
+        // If starting fresh (not resuming), get time from input
+        if (stretchTimeLeft <= 0) {
+            const duration = parseInt(elements.stretchTimerInput.value) * 60; // Get duration in seconds
+            if (isNaN(duration) || duration <= 0) {
+                if (elements.stretchInstruction) elements.stretchInstruction.querySelector('p').textContent = 'Please set a valid timer duration (in minutes).';
                 isStretchPaused = true; // Go back to paused state
-                if(elements.stretchPlayIcon) elements.stretchPlayIcon.style.display = 'inline';
-                if(elements.stretchPauseIcon) elements.stretchPauseIcon.style.display = 'none';
                 return;
             }
-            stretchTimeRemaining = durationInMinutes * 60;
-            elements.stretchTimerDisplay.textContent = formatTime(stretchTimeRemaining);
-            displayPose(true); // Start from current pose (it's new)
-        } else {
-            // Resuming
-            displayPose(false); // Resume current pose (not new)
+            stretchTimeLeft = duration;
         }
-        
-        runRoutineTimer(); // Start/resume main countdown
+
+        if(elements.stretchPlayIcon) elements.stretchPlayIcon.style.display = 'none'; 
+        if(elements.stretchPauseIcon) elements.stretchPauseIcon.style.display = 'inline';
+
+        // Update main timer display immediately
+        elements.stretchTimerDisplay.textContent = formatTime(stretchTimeLeft);
+
+        // Start the MAIN timer interval (ticks every second)
+        activeStretchTimer = setInterval(() => {
+            stretchTimeLeft--;
+            elements.stretchTimerDisplay.textContent = formatTime(stretchTimeLeft);
+            
+            if (stretchTimeLeft <= 0) {
+                // Timer finished!
+                const type = document.querySelector('#stretch-routine-buttons button.active').dataset.stretch;
+                stopStretches();
+                openReflectionModal('stretch', stretchData[type]?.name || 'Stretch Routine');
+            }
+        }, 1000);
+
+        // Start the pose sequence
+        runCurrentStretchPose(); 
     }
 }
 
 function nextPose() {
-    if (currentStretchRoutine.length === 0) return; // Don't do anything if no routine is loaded
+    if (!currentStretchRoutine || currentStretchRoutine.length === 0) return;
 
-    if (currentStretchPoseIndex < currentStretchRoutine.length - 1) {
-        currentStretchPoseIndex++;
-    } else { // Loop back to start
-        currentStretchPoseIndex = 0;
+    clearTimeout(currentStretchPoseTimer); // Stop current pose timer
+    synth.cancel(); // Stop current speech
+
+    currentStretchPoseIndex++;
+    if (currentStretchPoseIndex >= currentStretchRoutine.length) {
+        currentStretchPoseIndex = 0; // Loop to start
     }
     
-    displayPose(true); // Display the new pose
+    displayPose(); // Display the new pose (will restart timer if not paused)
 }
 
 function prevPose() {
-    if (currentStretchRoutine.length === 0) return; // Don't do anything if no routine is loaded
+    if (!currentStretchRoutine || currentStretchRoutine.length === 0) return;
 
-    if (currentStretchPoseIndex > 0) {
-        currentStretchPoseIndex--;
-    } else { // Loop back to end
-         currentStretchPoseIndex = currentStretchRoutine.length - 1;
+    clearTimeout(currentStretchPoseTimer); // Stop current pose timer
+    synth.cancel(); // Stop current speech
+
+    currentStretchPoseIndex--;
+    if (currentStretchPoseIndex < 0) {
+         currentStretchPoseIndex = currentStretchRoutine.length - 1; // Loop to end
     }
     
-    displayPose(true); // Display the new pose
+    displayPose(); // Display the new pose (will restart timer if not paused)
 }
 
 
-function stopStretches(resetIndex = true) {
-    clearTimeout(activeStretchPoseTimer);
-    clearInterval(activeStretchRoutineTimer);
-    activeStretchPoseTimer = null;
-    activeStretchRoutineTimer = null;
+function stopStretches() {
+    clearInterval(activeStretchTimer);
+    clearTimeout(currentStretchPoseTimer);
+    activeStretchTimer = null;
+    currentStretchPoseTimer = null;
+    stretchTimeLeft = 0; // Reset main timer
     synth.cancel();
-    
-    isStretchPaused = true;
-    stretchTimeRemaining = 0;
-    poseTimeRemaining = 0;
-
-    if (resetIndex) {
-        currentStretchPoseIndex = 0;
-    }
+    isStretchPaused = true; // Ensure state is paused
     
     if (elements.stretchPlayIcon) {
         elements.stretchPlayIcon.style.display = 'inline'; // Show Play
@@ -1094,15 +1165,16 @@ function stopStretches(resetIndex = true) {
     }
     
     // Reset displays
-    if (elements.stretchVisual) elements.stretchVisual.textContent = '🧘‍♀️';
-    if (elements.stretchPoseDisplay) elements.stretchPoseDisplay.textContent = 'Select a routine';
-    if (elements.stretchInstruction && elements.stretchInstruction.querySelector('p')) {
-        elements.stretchInstruction.querySelector('p').textContent = 'Select a routine and set your timer.';
-    }
+    displayPoseUI(null); // Use helper to reset UI
     if (elements.stretchTimerDisplay) elements.stretchTimerDisplay.textContent = '0:00';
+
+    // Reset instruction text
+    if (elements.stretchInstruction && elements.stretchInstruction.querySelector('p')) {
+        elements.stretchInstruction.querySelector('p').textContent = 'Select a routine and set a timer to begin.';
+    }
 }
 
-// --- Mindful Reflection Modal ---
+// --- Mindful Reflection Modal (SAVE) ---
 function initReflectionModal() {
     elements.mindfulReflectionCloseBtn.addEventListener('click', closeReflectionModal);
     elements.mindfulReflectionModal.addEventListener('click', (e) => {
@@ -1114,8 +1186,7 @@ function initReflectionModal() {
     elements.mindfulMoodButtons.addEventListener('click', e => {
         const button = e.target.closest('button');
         if (button && button.dataset.mood) {
-            // Save the *emoji text*
-            reflectionData.mood = button.textContent; 
+            reflectionData.mood = button.dataset.mood;
             document.querySelectorAll('#mindful-mood-buttons button').forEach(btn => btn.classList.remove('selected'));
             button.classList.add('selected');
         }
@@ -1144,14 +1215,26 @@ function closeReflectionModal() {
 async function saveReflection() {
     if (!userId || !appId) {
         console.error("Cannot save reflection: User ID or App ID is missing.");
+        // Use a less obtrusive error message
         elements.mindfulReflectionTitle.textContent = "Error: Could not save. User not found.";
         elements.mindfulReflectionTitle.classList.add('text-red-400');
-        // (rest of error handling)
+        setTimeout(() => {
+             // Attempt to restore original title after showing error
+             if (reflectionData.name) {
+                 elements.mindfulReflectionTitle.textContent = `Reflection for ${reflectionData.name}`;
+                 elements.mindfulReflectionTitle.classList.remove('text-red-400');
+             } else {
+                 // Fallback if name wasn't set somehow
+                 elements.mindfulReflectionTitle.textContent = "Reflection"; 
+                 elements.mindfulReflectionTitle.classList.remove('text-red-400');
+             }
+        }, 3000);
         return;
     }
     
     reflectionData.note = elements.mindfulReflectionTextarea.value;
     if (!reflectionData.mood) {
+        // Use a non-blocking way to show error
         const originalText = elements.mindfulReflectionTitle.textContent;
         elements.mindfulReflectionTitle.textContent = "Please select a mood first!";
         elements.mindfulReflectionTitle.classList.add('text-red-400');
@@ -1163,26 +1246,27 @@ async function saveReflection() {
     }
 
     try {
-        // ******** FIX: Save to the 'reflections' collection *********
-        // This is the same collection used by the "Tiny Reflections" feature in journey.js
-        const reflectionsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/reflections`);
-        
-        // Map data to match the "Tiny Reflections" structure
-        const noteContent = reflectionData.note 
-            ? `${reflectionData.mood} ${reflectionData.note}` 
-            : `${reflectionData.mood} Felt good after my ${reflectionData.type} session.`;
-
-        await addDoc(reflectionsCollectionRef, {
-            title: reflectionData.name, // e.g., "Reflection for 4-7-8 Breathing"
-            content: noteContent,
-            color: 'pink', // Assign a default color
-            type: reflectionData.type, // 'breathing', 'meditation', or 'stretch'
+        const dataToSave = {
+            ...reflectionData,
             createdAt: serverTimestamp()
+        };
+
+        // Use the correct Firestore path structure
+        const reflectionsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/calmReflections`);
+        // START: MODIFICATION - Get the doc reference after adding
+        const docRef = await addDoc(reflectionsCollectionRef, dataToSave);
+        
+        // Add to our local state so the view modal is updated instantly
+        allCalmReflections.unshift({
+            ...dataToSave,
+            id: docRef.id,
+            createdAt: new Date() // Use a JS date for local state
         });
-        // ******** END FIX *********
+        // END: MODIFICATION
         
         // Show sparkle animation on success!
         const btnRect = elements.mindfulReflectionSaveBtn.getBoundingClientRect();
+        // Calculate center relative to viewport
         const sparkleX = window.scrollX + btnRect.left + btnRect.width / 2;
         const sparkleY = window.scrollY + btnRect.top + btnRect.height / 2;
         createSparkleAnimation(sparkleX, sparkleY);
@@ -1200,3 +1284,124 @@ async function saveReflection() {
         }, 3000);
     }
 }
+
+
+// START: MODIFICATION - New functions for VIEWING reflections
+
+/**
+ * Initializes listeners for the "View Reflections" modal
+ */
+function initViewReflectionsModal() {
+    elements.viewBreathingReflectionsBtn.addEventListener('click', () => {
+        openViewReflectionsModal('breathing');
+    });
+    elements.viewStretchReflectionsBtn.addEventListener('click', () => {
+        openViewReflectionsModal('stretch');
+    });
+    elements.viewMeditationReflectionsBtn.addEventListener('click', () => {
+        openViewReflectionsModal('meditation');
+    });
+
+    elements.viewReflectionsCloseBtn.addEventListener('click', closeViewReflectionsModal);
+    elements.viewReflectionsModal.addEventListener('click', (e) => {
+        if (e.target === elements.viewReflectionsModal) {
+            closeViewReflectionsModal();
+        }
+    });
+}
+
+/**
+ * Fetches all calm reflections for the user from Firestore
+ */
+async function loadAllReflections() {
+    if (!userId || !appId) return;
+
+    try {
+        const reflectionsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/calmReflections`);
+        const q = query(reflectionsCollectionRef); // Simple query to get all
+        const querySnapshot = await getDocs(q);
+        
+        allCalmReflections = [];
+        querySnapshot.forEach((doc) => {
+            allCalmReflections.push({ id: doc.id, ...doc.data() });
+        });
+
+        // Sort by date, newest first (descending)
+        allCalmReflections.sort((a, b) => {
+            const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
+            const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
+            return dateB - dateA;
+        });
+
+    } catch (error) {
+        console.error("Error loading reflections: ", error);
+        allCalmReflections = []; // Reset on error
+    }
+}
+
+/**
+ * Opens the "View Reflections" modal and populates it with filtered data
+ * @param {string} type - 'breathing', 'stretch', or 'meditation'
+ */
+function openViewReflectionsModal(type) {
+    const typeNameMap = {
+        breathing: 'Breathing',
+        stretch: 'Stretch',
+        meditation: 'Baby Connection'
+    };
+    
+    elements.viewReflectionsTitle.textContent = `Your ${typeNameMap[type]} Reflections`;
+
+    // Filter the locally stored reflections
+    const filteredReflections = allCalmReflections.filter(ref => ref.type === type);
+
+    renderReflections(filteredReflections);
+
+    // Show/hide the modal
+    elements.viewReflectionsModal.classList.remove('hidden');
+    setTimeout(() => elements.viewReflectionsModal.classList.add('active'), 10);
+}
+
+/**
+ * Renders the list of reflections into the modal
+ * @param {Array} reflections - The filtered list of reflection objects
+ */
+function renderReflections(reflections) {
+    if (reflections.length === 0) {
+        elements.viewReflectionsContainer.innerHTML = ''; // Clear previous
+        elements.viewReflectionsEmpty.classList.remove('hidden');
+        return;
+    }
+
+    elements.viewReflectionsEmpty.classList.add('hidden');
+    let html = '';
+
+    reflections.forEach(ref => {
+        const moodEmoji = moodMap[ref.mood] || '🙂';
+        const formattedDate = formatReflectionTimestamp(ref.createdAt);
+        const noteHtml = ref.note 
+            ? `<p class="text-gray-300 text-sm mt-2">${ref.note.replace(/\n/g, '<br>')}</p>` 
+            : '<p class="text-gray-400 text-sm mt-2 italic">No note added.</p>';
+
+        html += `
+            <div class="bg-white/5 rounded-lg p-4 border-l-4 border-indigo-400">
+                <div class="flex justify-between items-center">
+                    <span class="font-semibold text-lg">${moodEmoji} ${ref.name}</span>
+                    <span class="text-xs text-gray-400">${formattedDate}</span>
+                </div>
+                ${noteHtml}
+            </div>
+        `;
+    });
+
+    elements.viewReflectionsContainer.innerHTML = html;
+}
+
+/**
+ * Closes the "View Reflections" modal
+ */
+function closeViewReflectionsModal() {
+    elements.viewReflectionsModal.classList.remove('active');
+    setTimeout(() => elements.viewReflectionsModal.classList.add('hidden'), 300);
+}
+// END: MODIFICATION
