@@ -6,9 +6,96 @@
     <title>Pregnancy Wellness Planner</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- ADDED Tone.js for sound -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Updated path to /css/style.css -->
     <link rel="stylesheet" href="./css/style.css">
+    <!-- ADDED Styles for Calm Space animations -->
+    <style>
+        /* Sparkle Animation */
+        .sparkle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background-color: #fde047; /* yellow-300 */
+            border-radius: 50%;
+            pointer-events: none;
+            animation: sparkle-anim 0.8s forwards;
+            opacity: 0;
+            transform: scale(0);
+        }
+        @keyframes sparkle-anim {
+            0% { transform: scale(0) rotate(0deg); opacity: 0.5; }
+            50% { transform: scale(1.5) rotate(180deg); opacity: 1; }
+            100% { transform: scale(0) rotate(360deg); opacity: 0; }
+        }
+
+        /* Breathing Orb Animation */
+        #breathing-orb {
+            transition: transform 3s ease-in-out, background-color 3s ease-in-out;
+        }
+
+        /* Box Breathing Animation */
+        @keyframes draw-box {
+            0% { top: 0; left: 0; } /* Top-left */
+            25% { top: 0; left: 100%; } /* Top-right */
+            50% { top: 100%; left: 100%; } /* Bottom-right */
+            75% { top: 100%; left: 0; } /* Bottom-left */
+            100% { top: 0; left: 0; } /* Back to Top-left */
+        }
+        #breathing-box-tracer {
+            transform: translate(-50%, -50%);
+            animation-duration: 16s; /* 4s per side */
+            animation-timing-function: linear;
+            animation-iteration-count: infinite;
+        }
+
+        /* Wave Animation */
+        @keyframes rise-fall {
+            0% { transform: translateY(100%) scaleY(1); }
+            50% { transform: translateY(0%) scaleY(2); }
+            100% { transform: translateY(100%) scaleY(1); }
+        }
+        #breathing-wave {
+            transform-origin: bottom;
+            animation: rise-fall 10s ease-in-out infinite;
+        }
+
+        /* Heartbeat Animation */
+        @keyframes heartbeat-pulse {
+            0% { transform: scale(1); opacity: 0.7; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.7; }
+        }
+        #breathing-heart {
+            animation: heartbeat-pulse 1s ease-in-out infinite;
+        }
+
+        /* Sun Burst Animation */
+        @keyframes sun-burst {
+            0% { transform: scale(0.8); opacity: 0.7; box-shadow: 0 0 20px 10px rgba(253, 224, 71, 0.3); }
+            50% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 40px 20px rgba(253, 224, 71, 0.5); }
+            100% { transform: scale(0.8); opacity: 0.7; box-shadow: 0 0 20px 10px rgba(253, 224, 71, 0.3); }
+        }
+        #breathing-sun {
+             animation: sun-burst 3s ease-in-out infinite;
+        }
+
+        /* Fading Stars Animation */
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 5s infinite ease-in-out;
+        }
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+    </style>
 </head>
 <body class="antialiased text-gray-200">
 
@@ -47,6 +134,8 @@
                 <button id="tab-meal-plan" class="tab-btn active">🥣 Meal Plan</button>
                 <button id="tab-symptom-tracker" class="tab-btn">💗 Wellness</button>
                 <button id="tab-journey" class="tab-btn">✨ Journey</button>
+                <!-- ADDED Calm Space Tab -->
+                <button id="tab-calm-space" class="tab-btn">🧘‍♀️ Calm Space</button>
             </div>
 
             <!-- Main Content -->
@@ -398,6 +487,47 @@
                     </div>
                 </div>
 
+                <!-- ADDED Calm Space Tab Content -->
+                <div id="content-calm-space" class="tab-content">
+                    <div class="space-y-8">
+                        <!-- Section 1: Guided Breathing -->
+                        <div class="glass-card anim-card p-4 md:p-6">
+                            <h3 class="text-2xl font-bold mb-4 flex items-center">🌬️ Guided Breathing</h3>
+                            <p class="text-gray-300 mb-6">Calm your nervous system, reduce anxiety, and prepare for rest with guided breathing exercises.</p>
+                            <div id="breathing-exercise-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <!-- Breathing exercises will be populated by JS -->
+                            </div>
+                        </div>
+            
+                        <!-- Section 2: Baby Connection Meditation -->
+                        <div class="glass-card anim-card p-4 md:p-6">
+                            <h3 class="text-2xl font-bold mb-4 flex items-center">💖 Baby Connection Meditation</h3>
+                            <p class="text-gray-300 mb-6">Build a daily bonding habit through mindfulness and find emotional calm.</p>
+                            <div id="meditation-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <!-- Meditation types will be populated by JS -->
+                            </div>
+                        </div>
+            
+                        <!-- Section 3: Gentle Stretch & Posture -->
+                        <div class="glass-card anim-card p-4 md:p-6">
+                            <h3 class="text-2xl font-bold mb-4 flex items-center">🧘‍♀️ Gentle Stretch & Posture</h3>
+                            <p class="text-gray-300 mb-6">Relieve tension, support circulation, and stay flexible with safe, gentle yoga routines.</p>
+                            <div class="mb-4">
+                                <label for="trimester-select" class="text-sm font-medium text-gray-300 mr-2">Filter by Trimester:</label>
+                                <select id="trimester-select" class="meal-select w-auto">
+                                    <option value="all">All Trimesters</option>
+                                    <option value="early">Early (1-13 wks)</option>
+                                    <option value="mid">Mid (14-27 wks)</option>
+                                    <option value="late">Late (28+ wks)</option>
+                                </select>
+                            </div>
+                            <div id="stretch-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <!-- Stretch routines will be populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </main>
         </div>
     </div>
@@ -710,6 +840,113 @@
         </div>
     </div>
 
+    <!-- ADDED Calm Space Activity Modal -->
+    <div id="calm-activity-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
+        <div id="calm-activity-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-3xl transform scale-95 opacity-0 transition-transform transition-opacity duration-300 flex flex-col max-h-[90vh]">
+            <h3 id="calm-activity-title" class="text-2xl font-bold mb-4 text-center">Activity Title</h3>
+            
+            <!-- Main Content Area -->
+            <div class="flex-grow overflow-y-auto modal-scroll pr-2 space-y-4">
+                <!-- Visualizer Area -->
+                <div id="calm-visualizer-container" class="hidden h-64 w-full flex items-center justify-center relative overflow-hidden rounded-lg bg-gray-900">
+                    <!-- Breathing Orb -->
+                    <div id="breathing-orb" class="w-24 h-24 bg-purple-500 rounded-full shadow-lg"></div>
+                    <!-- Box Breathing Square -->
+                    <div id="breathing-box" class="hidden absolute w-48 h-48 border-4 border-transparent rounded-lg">
+                        <div id="breathing-box-tracer" class="absolute top-0 left-0 w-4 h-4 bg-white rounded-full shadow-lg"></div>
+                    </div>
+                    <!-- Wave -->
+                    <div id="breathing-wave" class="hidden absolute bottom-0 left-0 w-full h-3/4 bg-blue-500 opacity-50"></div>
+                     <!-- Heartbeat -->
+                    <div id="breathing-heart" class="hidden w-24 h-24 rounded-full bg-pink-500 opacity-70"></div>
+                    <!-- Stars -->
+                    <div id="breathing-stars" class="hidden absolute inset-0"></div>
+                    <!-- Sun Burst -->
+                    <div id="breathing-sun" class="hidden w-32 h-32 rounded-full bg-yellow-400 opacity-70"></div>
+                    
+                    <div id="calm-visualizer-prompt" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-3xl font-bold z-10"></div>
+                </div>
+
+                <!-- Instructions Area -->
+                <div id="calm-instructions" class="text-gray-300 space-y-2">
+                    <!-- Instructions will be populated by JS -->
+                </div>
+            </div>
+
+            <!-- Timer Display -->
+            <div id="calm-timer-display" class="text-center text-4xl font-bold my-4">00:00</div>
+
+            <!-- Controls Area -->
+            <div class="flex-shrink-0 pt-4 border-t border-gray-700 space-y-4">
+                <!-- Timer/Sound Options -->
+                <div class="flex flex-wrap justify-between items-center gap-4">
+                    <div class="flex items-center gap-2">
+                        <label for="calm-timer-select" class="text-sm">Timer:</label>
+                        <select id="calm-timer-select" class="meal-select text-sm">
+                            <option value="120">2 min</option>
+                            <option value="180">3 min</option>
+                            <option value="240">4 min</option>
+                            <option value="300">5 min</option>
+                            <option value="480">8 min</option>
+                            <option value="600">10 min</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label for="calm-sound-select" class="text-sm">Sound:</label>
+                        <select id="calm-sound-select" class="meal-select text-sm">
+                            <option value="silent">Silent</option>
+                            <option value="ocean">Ocean Waves</option>
+                            <option value="wind">Wind</option>
+                            <option value="chime">Chime</option>
+                            <option value="heartbeat">Heartbeat</option>
+                        </select>
+                    </div>
+                    <button id="calm-voice-guide-btn" class="icon-btn" title="Play Voice Guide">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M20 4a9 9 0 010 12.728M6.758 15.243l-2.536 1.9A.75.75 0 013 16.51V7.49a.75.75 0 011.222-.653l2.536 1.903a.75.75 0 010 1.306z"></path></svg>
+                    </button>
+                </div>
+                
+                <!-- Play/Pause/Next Controls -->
+                <div class="flex items-center justify-center gap-6">
+                    <button id="calm-activity-prev-btn" class="icon-btn p-3 rounded-full bg-white/10 hidden">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                    </button>
+                    <button id="calm-activity-play-pause-btn" class="icon-btn p-4 rounded-full bg-purple-600 text-white text-2xl w-16 h-16 flex items-center justify-center">
+                        <!-- Play Icon -->
+                        <svg id="calm-play-icon" class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
+                        <!-- Pause Icon -->
+                        <svg id="calm-pause-icon" class="w-8 h-8 hidden" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h1a1 1 0 001-1V8a1 1 0 00-1-1H8zm5 0a1 1 0 00-1 1v4a1 1 0 001 1h1a1 1 0 001-1V8a1 1 0 00-1-1h-1z" clip-rule="evenodd"></path></svg>
+                    </button>
+                    <button id="calm-activity-next-btn" class="icon-btn p-3 rounded-full bg-white/10 hidden">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
+                </div>
+                
+                <button id="calm-activity-close-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg transition-colors mt-4">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADDED Mindful Journal Modal -->
+    <div id="reflection-popup-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
+        <div id="reflection-popup-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-md transform scale-95 opacity-0 transition-transform transition-opacity duration-300 relative overflow-hidden">
+            <div id="reflection-sparkle-container" class="absolute inset-0 overflow-hidden rounded-lg pointer-events-none z-10"></div>
+            <h3 class="text-2xl font-bold mb-4 text-center relative z-20">Great Job!</h3>
+            <p class="text-gray-300 mb-4 text-center relative z-20">How do you feel right now?</p>
+            <div id="reflection-mood-scale" class="flex justify-around mb-6 relative z-20">
+                <button class="text-4xl hover:scale-125 transition-transform reflection-mood-btn" data-mood="1" data-emoji="😣">😣</button>
+                <button class="text-4xl hover:scale-125 transition-transform reflection-mood-btn" data-mood="2" data-emoji="😐">😐</button>
+                <button class="text-4xl hover:scale-125 transition-transform reflection-mood-btn" data-mood="3" data-emoji="🙂">🙂</button>
+                <button class="text-4xl hover:scale-125 transition-transform reflection-mood-btn" data-mood="4" data-emoji="😊">😊</button>
+                <button class="text-4xl hover:scale-125 transition-transform reflection-mood-btn" data-mood="5" data-emoji="🥰">🥰</button>
+            </div>
+            <textarea id="reflection-popup-note" class="symptom-input min-h-[80px] mb-4 relative z-20" placeholder="Add a quick note... (optional)"></textarea>
+            <div class="flex gap-4 relative z-20">
+                <button id="reflection-popup-skip-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg">Skip</button>
+                <button id="reflection-popup-save-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg disabled:opacity-50" disabled>Save</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Updated paths to /js/ folder -->
     <script type="module" src="./js/main.js"></script>
@@ -719,5 +956,7 @@
     <script type="module" src="./js/meal-planner.js"></script>
     <script type="module" src="./js/wellness.js"></script>
     <script type="module" src="./js/journey.js"></script>
+    <!-- ADDED new script file -->
+    <script type="module" src="./js/calm-space.js"></script>
 </body>
 </html>
