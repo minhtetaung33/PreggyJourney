@@ -170,23 +170,57 @@ async function initializeCustomMealNutrients() {
     if (!docSnap.exists()) await setDoc(customMealNutrientsRef, {});
 }
 
-function loadMealPlan(onMealPlanUpdate) {
+// --- NEW HELPER FUNCTION ---
+// This function checks if the weekly meal plan doc exists and creates it if not.
+// This is safer than creating it inside the onSnapshot listener.
+async function initializeMealPlanDoc() {
+    if (!mealPlanRef) return false;
+    try {
+        const docSnap = await getDoc(mealPlanRef);
+        if (!docSnap.exists()) {
+            await setDoc(mealPlanRef, defaultMealPlan);
+        }
+        return true;
+    } catch (error) {
+        console.error("Error initializing meal plan doc:", error);
+        return false;
+    }
+}
+
+// --- UPDATED loadMealPlan FUNCTION ---
+async function loadMealPlan(onMealPlanUpdate) {
     if (!mealPlanRef) return;
     if (unsubscribeMealPlan) unsubscribeMealPlan();
     
     loadingSpinner.style.display = 'flex';
     mealPlanGrid.style.display = 'none';
 
-    unsubscribeMealPlan = onSnapshot(mealPlanRef, async (docSnap) => {
-        loadingSpinner.style.display = 'none'; 
+    // Ensure the document exists *before* listening
+    const docInitialized = await initializeMealPlanDoc();
+
+    if (!docInitialized) {
+        loadingSpinner.style.display = 'none';
         mealPlanGrid.style.display = 'grid';
+        mealPlanGrid.innerHTML = '<p class="text-red-400 text-center col-span-8">Error: Could not initialize meal plan.</p>';
+        return;
+    }
+
+    unsubscribeMealPlan = onSnapshot(mealPlanRef, (docSnap) => {
+        loadingSpinner.style.display = 'none';
+        mealPlanGrid.style.display = 'grid';
+        // We can be more confident the doc exists, but still good to check
         let data = docSnap.exists() ? docSnap.data() : defaultMealPlan;
-        if (!docSnap.exists()) await setDoc(mealPlanRef, defaultMealPlan);
         currentMealPlanData = data;
         renderMealPlan(data);
         onMealPlanUpdate(data);
-    }, (error) => console.error("Error listening to meal plan:", error));
+    }, (error) => {
+        console.error("Error listening to meal plan:", error);
+        loadingSpinner.style.display = 'none';
+        mealPlanGrid.style.display = 'grid';
+        mealPlanGrid.innerHTML = '<p class="text-red-400 text-center col-span-8">Error: Could not load meal plan data.</p>';
+    });
 }
+
 
 function loadMealOptions() {
     if (!mealOptionsRef) return;
