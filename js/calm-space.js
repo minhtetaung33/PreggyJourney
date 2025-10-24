@@ -120,7 +120,7 @@ const meditationData = {
             "Stay with this feeling."
         ],
         color: 'bg-red-500',
-        audio: 'https://cdn.pixabay.com/audio/2022/05/12/audio_1cba11019d.mp3', // Example sound
+        audio: 'https://archive.org/download/human-heartbeat-sound-effect/Human%20Heartbeat%20Sound%20Effect.mp3', // Example sound
         emoji: '❤️'
     },
     'peaceful-night': {
