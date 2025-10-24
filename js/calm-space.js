@@ -8,7 +8,9 @@ let elements = {};
 
 // --- Helper Function ---
 function formatTime(seconds) {
-    return `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, '0')}`;
+    // Ensure seconds is non-negative
+    const safeSeconds = Math.max(0, seconds);
+    return `${Math.floor(safeSeconds / 60)}:${(safeSeconds % 60).toString().padStart(2, '0')}`;
 }
 
 // --- Data from Instructions ---
@@ -220,15 +222,20 @@ let utterance = new SpeechSynthesisUtterance();
 let femaleVoice = null; // For female voice
 let activeBreathingTimer = null;
 let activeMeditationTimer = null;
-let activeStretchTimer = null;
-let currentStretchPoseTimer = null; // For pose countdown
+
+// --- UPDATED Stretch State Variables ---
+let activeStretchTimer = null; // This will be the MAIN timer (e.g., 5 minutes)
+let stretchTimeLeft = 0; // Remaining time for the MAIN timer
+let currentStretchPoseTimer = null; // This will be the timer for *each pose*
+let currentStretchRoutine = [];
+let currentStretchPoseIndex = 0;
+let isStretchPaused = true; // Start in paused state
+// --- END UPDATED ---
+
 let currentBreathingCycle;
 let currentBreathingStep = 0;
 let currentMeditationInstructions = [];
 let currentMeditationStep = 0;
-let currentStretchRoutine = [];
-let currentStretchPoseIndex = 0;
-let isStretchPaused = true;
 let reflectionData = { type: '', mood: '', note: '' };
 let isDomCached = false; // Flag to prevent re-caching
 
@@ -275,11 +282,17 @@ function cacheDomElements() {
         stretchInstruction: document.getElementById('stretch-instruction'), // Corrected ID from HTML
         stretchPoseDisplay: document.getElementById('stretch-pose-display'), // Corrected ID from HTML
         stretchTimerDisplay: document.getElementById('stretch-timer-display'), // NEW
-        stretchTrimesterSelector: document.getElementById('stretch-trimester-selector'), // Corrected ID from HTML
+        
+        // --- UPDATED: Replaced trimester selector with timer input ---
+        stretchTimerInput: document.getElementById('stretch-timer-input'), // Corrected ID
+        
         stretchVoiceToggle: document.getElementById('stretch-voice-toggle'), // Corrected ID from HTML
         stretchSoundOnIcon: document.getElementById('stretch-sound-on-icon'), // NEW
         stretchSoundOffIcon: document.getElementById('stretch-sound-off-icon'), // NEW
-        stretchLoopToggle: document.getElementById('stretch-loop-toggle'), // Added
+        
+        // --- REMOVED: Loop toggle is no longer needed, it's implied by the timer ---
+        // stretchLoopToggle: document.getElementById('stretch-loop-toggle'), 
+        
         stretchPrevPoseBtn: document.getElementById('stretch-prev-pose-btn'), // Corrected ID
         stretchPlayPauseBtn: document.getElementById('stretch-play-pause-btn'), // Corrected ID
         stretchPlayIcon: document.getElementById('stretch-play-icon'), // Added
@@ -829,12 +842,7 @@ function initStretches() {
         }
     });
 
-    elements.stretchTrimesterSelector.addEventListener('change', () => {
-        const selectedRoutine = document.querySelector('#stretch-routine-buttons button.active')?.dataset.stretch;
-        if (selectedRoutine) {
-            selectStretchRoutine(selectedRoutine);
-        }
-    });
+    // --- REMOVED: Trimester selector listener is no longer needed ---
     
     elements.stretchPlayPauseBtn.addEventListener('click', playPauseStretches);
     elements.stretchNextPoseBtn.addEventListener('click', nextPose);
@@ -845,6 +853,8 @@ function initStretches() {
         elements.stretchVoiceToggle.addEventListener('change', toggleStretchSoundIcon);
         toggleStretchSoundIcon(); // Set initial state
     }
+    
+    // --- REMOVED: Loop toggle listener ---
     
     // Select first routine by default
     const defaultStretchButton = elements.stretchRoutineButtons.querySelector('button');
@@ -871,7 +881,8 @@ function toggleStretchSoundIcon() {
 function selectStretchRoutine(type) {
     stopStretches(); // Stop any previous routine
     const routine = stretchData[type];
-    const trimester = elements.stretchTrimesterSelector.value;
+    
+    // --- REMOVED: All trimester filtering logic ---
     
     if (!routine) {
         console.error("Selected stretch routine not found:", type);
@@ -882,16 +893,13 @@ function selectStretchRoutine(type) {
         return;
     }
     
-    // Filter poses by trimester
-    currentStretchRoutine = routine.poses.filter(pose => {
-        // Use the `safe` array on the *routine* level for filtering
-        return routine.safe.includes(trimester) || trimester === 'all';
-    });
+    // Load all poses for the routine
+    currentStretchRoutine = routine.poses;
 
     if (currentStretchRoutine.length === 0) {
         // FIX: Target the <p> tag inside the instruction element
         if (elements.stretchInstruction) {
-            elements.stretchInstruction.querySelector('p').textContent = "This routine isn't recommended for your selected trimester. Please choose another.";
+            elements.stretchInstruction.querySelector('p').textContent = "This routine has no poses defined.";
         }
         if (elements.stretchPoseDisplay) elements.stretchPoseDisplay.textContent = "0 / 0";
         if (elements.stretchVisual) elements.stretchVisual.textContent = '🧘‍♀️'; // NEW
@@ -900,18 +908,22 @@ function selectStretchRoutine(type) {
     }
     
     currentStretchPoseIndex = 0;
-    displayPose(); // Display the first pose of the selected routine
+    displayPose(); // Display the first pose (will NOT auto-play)
 }
 
-function displayPose() {
-    if (!currentStretchRoutine || currentStretchRoutine.length === 0) return; // Exit if no routine selected or empty
-    
-    // Ensure index is within bounds
-    if (currentStretchPoseIndex < 0) currentStretchPoseIndex = 0;
-    if (currentStretchPoseIndex >= currentStretchRoutine.length) currentStretchPoseIndex = currentStretchRoutine.length - 1;
+/**
+ * Helper function to ONLY update the UI for the current pose
+ */
+function displayPoseUI(pose) {
+    if (!pose) {
+        // Default state
+        if (elements.stretchInstruction) elements.stretchInstruction.querySelector('p').textContent = 'Select a routine and set a timer to begin.';
+        if (elements.stretchPoseDisplay) elements.stretchPoseDisplay.textContent = 'Select a routine';
+        if (elements.stretchVisual) elements.stretchVisual.textContent = '🧘‍♀️';
+        return;
+    }
 
-    const pose = currentStretchRoutine[currentStretchPoseIndex];
-    // FIX: Target the <p> tag inside the instruction element
+    // Update with pose data
     if (elements.stretchInstruction) {
         elements.stretchInstruction.querySelector('p').textContent = pose.instruction;
     }
@@ -919,7 +931,6 @@ function displayPose() {
         elements.stretchPoseDisplay.textContent = `${pose.name} (${currentStretchPoseIndex + 1}/${currentStretchRoutine.length})`;
     }
     
-    // NEW: Update visual with emoji
     if (elements.stretchVisual) {
         elements.stretchVisual.className = 'transition-all duration-500 text-6xl'; // Reset classes, add emoji size
         elements.stretchVisual.innerHTML = ''; // Clear previous content
@@ -930,117 +941,149 @@ function displayPose() {
             elements.stretchVisual.innerHTML = `<span class="text-3xl p-4">${pose.name}</span>`; // Default text if no visual
         }
     }
+}
 
+/**
+ * Displays the current pose UI and handles starting the pose timer if playing.
+ * This is called by selectStretchRoutine, nextPose, and prevPose.
+ */
+function displayPose() {
+    if (!currentStretchRoutine || currentStretchRoutine.length === 0) {
+        displayPoseUI(null); // Show default state
+        return;
+    }
+    
+    // Ensure index is within bounds
+    if (currentStretchPoseIndex < 0) currentStretchPoseIndex = 0;
+    if (currentStretchPoseIndex >= currentStretchRoutine.length) currentStretchPoseIndex = currentStretchRoutine.length - 1;
+
+    const pose = currentStretchRoutine[currentStretchPoseIndex];
+    displayPoseUI(pose); // Update the visuals and text
+
+    // If we are NOT paused (i.e., user clicked next/prev while playing),
+    // we must cancel the old pose timer and start the new one.
+    if (!isStretchPaused) { 
+        clearTimeout(currentStretchPoseTimer);
+        synth.cancel();
+        runCurrentStretchPose(); // This will speak and set the timer for the *new* current pose
+    } else {
+        // If we ARE paused, just show the main timer's current time.
+        // If stretchTimeLeft is 0 (we haven't started yet), show 0:00
+        elements.stretchTimerDisplay.textContent = formatTime(stretchTimeLeft);
+    }
+}
+
+/**
+ * This function RUNS the current pose (speaks, sets timer for next pose)
+ * It's called by playPauseStretches (to start) and by itself (to loop)
+ */
+function runCurrentStretchPose() {
+    // Stop if the main timer is stopped or we're paused
+    if (!activeStretchTimer || isStretchPaused) return; 
+    if (!currentStretchRoutine || currentStretchRoutine.length === 0) return;
+
+    // Loop index back to 0 if it goes past the end
+    if (currentStretchPoseIndex >= currentStretchRoutine.length) {
+        currentStretchPoseIndex = 0;
+    }
+
+    const pose = currentStretchRoutine[currentStretchPoseIndex];
+    displayPoseUI(pose); // Update UI to this pose
 
     const isSilent = elements.stretchVoiceToggle.checked;
     speak(pose.instruction, isSilent);
 
-    // --- Timer Logic for advancing poses ---
-    clearTimeout(activeStretchTimer); // Clear any existing timeout
-    clearInterval(currentStretchPoseTimer); // Clear any existing interval
-    activeStretchTimer = null; // Reset timer variable
-    currentStretchPoseTimer = null;
+    // Clear any previous pose timer
+    clearTimeout(currentStretchPoseTimer);
+    
+    const duration = pose.duration || 15000; // Default to 15s
 
-    if (!isStretchPaused) { // Only set a timer if not paused
-        const duration = pose.duration || 15000; // Default to 15s if duration missing
-        let timeLeft = duration / 1000; // Time in seconds
-        
-        if (elements.stretchTimerDisplay) elements.stretchTimerDisplay.textContent = formatTime(timeLeft);
-        
-        // Interval for countdown timer
-        currentStretchPoseTimer = setInterval(() => {
-            timeLeft--;
-            if (elements.stretchTimerDisplay) elements.stretchTimerDisplay.textContent = formatTime(timeLeft);
-            if (timeLeft <= 0) {
-                clearInterval(currentStretchPoseTimer);
-            }
-        }, 1000);
-
-        // Timeout to advance to next pose
-        activeStretchTimer = setTimeout(() => {
-            const shouldLoop = elements.stretchLoopToggle.checked;
-            
-            if (currentStretchPoseIndex < currentStretchRoutine.length - 1) {
-                // Go to next pose
-                currentStretchPoseIndex++;
-                displayPose();
-            } else if (shouldLoop) {
-                 // Loop back to start
-                currentStretchPoseIndex = 0;
-                displayPose();
-            } else {
-                // End of routine (not looping)
-                stopStretches();
-                const type = document.querySelector('#stretch-routine-buttons button.active').dataset.stretch;
-                openReflectionModal('stretch', stretchData[type]?.name || 'Stretch Routine'); // Use ?. for safety
-            }
-        }, duration);
-    } else {
-        // If paused, show the duration of the current pose instead of 0:00
-        const duration = (pose.duration || 15000) / 1000;
-        if (elements.stretchTimerDisplay) elements.stretchTimerDisplay.textContent = formatTime(duration);
-    }
+    // Set a timeout to advance to the next pose
+    currentStretchPoseTimer = setTimeout(() => {
+        currentStretchPoseIndex++; // Advance index
+        runCurrentStretchPose(); // Call self to run the next pose
+    }, duration);
 }
 
 
 function playPauseStretches() {
     isStretchPaused = !isStretchPaused;
+
     if (isStretchPaused) {
-        clearTimeout(activeStretchTimer);
-        clearInterval(currentStretchPoseTimer); // NEW
+        // --- PAUSING ---
+        clearInterval(activeStretchTimer); // Stop main timer
+        clearTimeout(currentStretchPoseTimer); // Stop pose timer
         activeStretchTimer = null;
-        currentStretchPoseTimer = null; // NEW
+        currentStretchPoseTimer = null;
         synth.cancel(); // Stop speech
-        if(elements.stretchPlayIcon) elements.stretchPlayIcon.style.display = 'inline'; // Show Play text/icon
-        if(elements.stretchPauseIcon) elements.stretchPauseIcon.style.display = 'none'; // Hide Pause text/icon
+        if(elements.stretchPlayIcon) elements.stretchPlayIcon.style.display = 'inline';
+        if(elements.stretchPauseIcon) elements.stretchPauseIcon.style.display = 'none';
     } else {
-        if(elements.stretchPlayIcon) elements.stretchPlayIcon.style.display = 'none'; // Hide Play
-        if(elements.stretchPauseIcon) elements.stretchPauseIcon.style.display = 'inline'; // Show Pause
-        // Resume/start from the current pose
-        displayPose(); // This will speak the instruction and set the timer if not paused
+        // --- PLAYING / RESUMING ---
+        if (!currentStretchRoutine || currentStretchRoutine.length === 0) {
+            if (elements.stretchInstruction) elements.stretchInstruction.querySelector('p').textContent = "Please select a routine first!";
+            isStretchPaused = true; // Go back to paused state
+            return;
+        }
+
+        // If starting fresh (not resuming), get time from input
+        if (stretchTimeLeft <= 0) {
+            const duration = parseInt(elements.stretchTimerInput.value) * 60; // Get duration in seconds
+            if (isNaN(duration) || duration <= 0) {
+                if (elements.stretchInstruction) elements.stretchInstruction.querySelector('p').textContent = 'Please set a valid timer duration (in minutes).';
+                isStretchPaused = true; // Go back to paused state
+                return;
+            }
+            stretchTimeLeft = duration;
+        }
+
+        if(elements.stretchPlayIcon) elements.stretchPlayIcon.style.display = 'none'; 
+        if(elements.stretchPauseIcon) elements.stretchPauseIcon.style.display = 'inline';
+
+        // Update main timer display immediately
+        elements.stretchTimerDisplay.textContent = formatTime(stretchTimeLeft);
+
+        // Start the MAIN timer interval (ticks every second)
+        activeStretchTimer = setInterval(() => {
+            stretchTimeLeft--;
+            elements.stretchTimerDisplay.textContent = formatTime(stretchTimeLeft);
+            
+            if (stretchTimeLeft <= 0) {
+                // Timer finished!
+                const type = document.querySelector('#stretch-routine-buttons button.active').dataset.stretch;
+                stopStretches();
+                openReflectionModal('stretch', stretchData[type]?.name || 'Stretch Routine');
+            }
+        }, 1000);
+
+        // Start the pose sequence
+        runCurrentStretchPose(); 
     }
 }
 
 function nextPose() {
-    clearTimeout(activeStretchTimer); // Stop current timer
-    clearInterval(currentStretchPoseTimer); // NEW
-    activeStretchTimer = null;
-    currentStretchPoseTimer = null; // NEW
+    if (!currentStretchRoutine || currentStretchRoutine.length === 0) return;
+
+    clearTimeout(currentStretchPoseTimer); // Stop current pose timer
     synth.cancel(); // Stop current speech
 
-    if (currentStretchRoutine.length === 0) return; // Don't do anything if no routine is loaded
-
-    if (currentStretchPoseIndex < currentStretchRoutine.length - 1) {
-        currentStretchPoseIndex++;
-    } else if (elements.stretchLoopToggle.checked) { // Loop if enabled
-        currentStretchPoseIndex = 0;
-    } else {
-        // Already at the last pose and not looping, do nothing or provide feedback
-        console.log("End of routine.");
-        stopStretches(); // Ensure stopped state
-        return; // Don't proceed
+    currentStretchPoseIndex++;
+    if (currentStretchPoseIndex >= currentStretchRoutine.length) {
+        currentStretchPoseIndex = 0; // Loop to start
     }
     
     displayPose(); // Display the new pose (will restart timer if not paused)
 }
 
 function prevPose() {
-    clearTimeout(activeStretchTimer); // Stop current timer
-    clearInterval(currentStretchPoseTimer); // NEW
-    activeStretchTimer = null;
-    currentStretchPoseTimer = null; // NEW
-    synth.cancel(); // Stop current speech
-    
-    if (currentStretchRoutine.length === 0) return; // Don't do anything if no routine is loaded
+    if (!currentStretchRoutine || currentStretchRoutine.length === 0) return;
 
-    if (currentStretchPoseIndex > 0) {
-        currentStretchPoseIndex--;
-    } else if (elements.stretchLoopToggle.checked) { // Loop back to end if enabled
-         currentStretchPoseIndex = currentStretchRoutine.length - 1;
-    } else {
-        // Already at the first pose and not looping
-        console.log("Start of routine.");
-        return; // Don't proceed
+    clearTimeout(currentStretchPoseTimer); // Stop current pose timer
+    synth.cancel(); // Stop current speech
+
+    currentStretchPoseIndex--;
+    if (currentStretchPoseIndex < 0) {
+         currentStretchPoseIndex = currentStretchRoutine.length - 1; // Loop to end
     }
     
     displayPose(); // Display the new pose (will restart timer if not paused)
@@ -1048,26 +1091,29 @@ function prevPose() {
 
 
 function stopStretches() {
-    clearTimeout(activeStretchTimer);
-    clearInterval(currentStretchPoseTimer); // NEW
+    clearInterval(activeStretchTimer);
+    clearTimeout(currentStretchPoseTimer);
     activeStretchTimer = null;
-    currentStretchPoseTimer = null; // NEW
+    currentStretchPoseTimer = null;
+    stretchTimeLeft = 0; // Reset main timer
     synth.cancel();
     isStretchPaused = true; // Ensure state is paused
+    
     if (elements.stretchPlayIcon) {
         elements.stretchPlayIcon.style.display = 'inline'; // Show Play
     }
     if (elements.stretchPauseIcon) {
         elements.stretchPauseIcon.style.display = 'none'; // Hide Pause
     }
-    // NEW: Reset displays
-    if (elements.stretchVisual) elements.stretchVisual.textContent = '🧘‍♀️';
-    if (elements.stretchPoseDisplay) elements.stretchPoseDisplay.textContent = 'Select a routine';
-    // FIX: Target the <p> tag inside the instruction element
-    if (elements.stretchInstruction && elements.stretchInstruction.querySelector('p')) {
-        elements.stretchInstruction.querySelector('p').textContent = 'Select a routine. Stretches are filtered by trimester for your safety.';
-    }
+    
+    // Reset displays
+    displayPoseUI(null); // Use helper to reset UI
     if (elements.stretchTimerDisplay) elements.stretchTimerDisplay.textContent = '0:00';
+
+    // Reset instruction text
+    if (elements.stretchInstruction && elements.stretchInstruction.querySelector('p')) {
+        elements.stretchInstruction.querySelector('p').textContent = 'Select a routine and set a timer to begin.';
+    }
 }
 
 // --- Mindful Reflection Modal ---
