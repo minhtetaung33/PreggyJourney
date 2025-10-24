@@ -1,7 +1,8 @@
 // Firebase Imports
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+// Import setLogLevel for debugging
+import { getFirestore, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 // Firebase Setup
 const firebaseConfig = {
@@ -16,8 +17,8 @@ const firebaseConfig = {
 
 let configError = false;
 
-if (!firebaseConfig) {
-    console.error("Error: Firebase configuration is missing.");
+if (!firebaseConfig || !firebaseConfig.apiKey) { // Added a check for apiKey to be safe
+    console.error("Error: Firebase configuration is missing or incomplete.");
     configError = true;
 }
 
@@ -27,6 +28,8 @@ if (!configError) {
     app = initializeApp(firebaseConfig);
     auth = getAuth(app);
     db = getFirestore(app);
+    // Enable debug logging for Firestore to help troubleshoot
+    setLogLevel('debug');
 }
 
-export { auth, db, configError };
+export { auth, db, configError, app }; // Export 'app'
