@@ -6,6 +6,11 @@ import { doc, setDoc, addDoc, collection, serverTimestamp } from "https://www.gs
 // --- DOM Elements (Initialized as empty) ---
 let elements = {};
 
+// --- Helper Function ---
+function formatTime(seconds) {
+    return `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, '0')}`;
+}
+
 // --- Data from Instructions ---
 const breathingData = {
     '4-7-8': {
@@ -87,6 +92,7 @@ const meditationData = {
         ],
         color: 'bg-pink-500',
         audio: null,
+        emoji: '💞'
     },
     'love-visualization': {
         name: 'Love Visualization',
@@ -99,6 +105,7 @@ const meditationData = {
         ],
         color: 'bg-rose-500',
         audio: null,
+        emoji: '🥰'
     },
     'heartbeat-harmony': {
         name: 'Heartbeat Harmony',
@@ -112,6 +119,7 @@ const meditationData = {
         ],
         color: 'bg-red-500',
         audio: 'https://cdn.pixabay.com/audio/2022/05/12/audio_1cba11019d.mp3', // Example sound
+        emoji: '❤️'
     },
     'peaceful-night': {
         name: 'Peaceful Night Bond',
@@ -125,6 +133,7 @@ const meditationData = {
         ],
         color: 'bg-indigo-600',
         audio: null,
+        emoji: '😴'
     },
     'morning-gratitude': {
         name: 'Morning Gratitude',
@@ -138,6 +147,7 @@ const meditationData = {
         ],
         color: 'bg-yellow-500',
         audio: null,
+        emoji: '☀️'
     }
 };
 
@@ -145,58 +155,58 @@ const stretchData = {
     'morning-flow': { // Corrected key from HTML
         name: 'Morning Energizer Flow',
         poses: [
-            { name: "Stand Tall", instruction: "Stand tall, feet hip-width apart. Breathe deeply.", duration: 10000, visual: 'stand' },
-            { name: "Overhead Reach", instruction: "Inhale — raise arms overhead.", duration: 10000, visual: 'reach' },
-            { name: "Slight Forward Bend", instruction: "Exhale — bend slightly forward with a flat back.", duration: 10000, visual: 'bend' },
-            { name: "Shoulder Rolls", instruction: "Roll shoulders up and back slowly, 5 times.", duration: 15000, visual: 'shoulders' },
-            { name: "Neck Circles", instruction: "Circle neck slowly, 3 times each way.", duration: 20000, visual: 'neck' },
-            { name: "Deep Breaths", instruction: "Finish with 3 deep breaths.", duration: 15000, visual: 'stand' }
+            { name: "Stand Tall", instruction: "Stand tall, feet hip-width apart. Breathe deeply.", duration: 10000, visual: 'stand', emoji: '🧍‍♀️' },
+            { name: "Overhead Reach", instruction: "Inhale — raise arms overhead.", duration: 10000, visual: 'reach', emoji: '🙌' },
+            { name: "Slight Forward Bend", instruction: "Exhale — bend slightly forward with a flat back.", duration: 10000, visual: 'bend', emoji: '🙇‍♀️' },
+            { name: "Shoulder Rolls", instruction: "Roll shoulders up and back slowly, 5 times.", duration: 15000, visual: 'shoulders', emoji: '🙆‍♀️' },
+            { name: "Neck Circles", instruction: "Circle neck slowly, 3 times each way.", duration: 20000, visual: 'neck', emoji: '↪️' },
+            { name: "Deep Breaths", instruction: "Finish with 3 deep breaths.", duration: 15000, visual: 'stand', emoji: '🧍‍♀️' }
         ],
         safe: ['early', 'mid', 'late']
     },
     'back-hip': { // Corrected key from HTML
         name: 'Back & Hip Relief',
         poses: [
-            { name: "Tabletop", instruction: "Get on hands and knees (tabletop position).", duration: 10000, visual: 'tabletop' },
-            { name: "Cow Pose", instruction: "Inhale — drop your belly, lift your gaze (cow pose).", duration: 10000, visual: 'cow-pose' },
-            { name: "Cat Pose", instruction: "Exhale — round your back, tuck your chin (cat pose).", duration: 10000, visual: 'cat-pose' },
-            { name: "Repeat Cat/Cow", instruction: "Flow between Cat and Cow 3 more times.", duration: 30000, visual: 'cat-cow-flow' },
-            { name: "Hip Circles", instruction: "Do gentle hip circles clockwise, 5 times.", duration: 15000, visual: 'hips' },
-            { name: "Hip Circles (Reverse)", instruction: "Now circle counter-clockwise, 5 times.", duration: 15000, visual: 'hips' },
-            { name: "Child's Pose", instruction: "End in Child’s Pose (knees wide, arms forward). Breathe.", duration: 30000, visual: 'childs-pose' }
+            { name: "Tabletop", instruction: "Get on hands and knees (tabletop position).", duration: 10000, visual: 'tabletop', emoji: '🐾' },
+            { name: "Cow Pose", instruction: "Inhale — drop your belly, lift your gaze (cow pose).", duration: 10000, visual: 'cow-pose', emoji: '🐄' },
+            { name: "Cat Pose", instruction: "Exhale — round your back, tuck your chin (cat pose).", duration: 10000, visual: 'cat-pose', emoji: '🐈' },
+            { name: "Repeat Cat/Cow", instruction: "Flow between Cat and Cow 3 more times.", duration: 30000, visual: 'cat-cow-flow', emoji: '🔄' },
+            { name: "Hip Circles", instruction: "Do gentle hip circles clockwise, 5 times.", duration: 15000, visual: 'hips', emoji: '🔄' },
+            { name: "Hip Circles (Reverse)", instruction: "Now circle counter-clockwise, 5 times.", duration: 15000, visual: 'hips', emoji: '🔄' },
+            { name: "Child's Pose", instruction: "End in Child’s Pose (knees wide, arms forward). Breathe.", duration: 30000, visual: 'childs-pose', emoji: '🙇‍♀️' }
         ],
         safe: ['early', 'mid'] // Child's pose might be uncomfortable late
     },
     'leg-relax': { // Corrected key from HTML
         name: 'Leg & Foot Relax',
         poses: [
-            { name: "Sit Comfortably", instruction: "Sit comfortably with legs extended.", duration: 5000, visual: 'sit' },
-            { name: "Ankle Rotations", instruction: "Rotate ankles 5 times each direction.", duration: 20000, visual: 'ankles' },
-            { name: "Point and Flex", instruction: "Point and flex toes slowly, 10 times.", duration: 20000, visual: 'toes' },
-            { name: "Calf Massage", instruction: "Massage calves lightly while breathing deep.", duration: 30000, visual: 'calf' }
+            { name: "Sit Comfortably", instruction: "Sit comfortably with legs extended.", duration: 5000, visual: 'sit', emoji: '🧘‍♀️' },
+            { name: "Ankle Rotations", instruction: "Rotate ankles 5 times each direction.", duration: 20000, visual: 'ankles', emoji: '👟' },
+            { name: "Point and Flex", instruction: "Point and flex toes slowly, 10 times.", duration: 20000, visual: 'toes', emoji: '🦶' },
+            { name: "Calf Massage", instruction: "Massage calves lightly while breathing deep.", duration: 30000, visual: 'calf', emoji: '🦵' }
         ],
         safe: ['early', 'mid', 'late']
     },
     'shoulder-neck': { // Corrected key from HTML
         name: 'Shoulder & Neck Release',
         poses: [
-            { name: "Sit Tall", instruction: "Sit cross-legged, spine straight.", duration: 5000, visual: 'sit-cross' },
-            { name: "Shoulder Rolls", instruction: "Roll shoulders backward 5 times.", duration: 15000, visual: 'shoulders' },
-            { name: "Side Neck Tilt", instruction: "Tilt head gently to the right. Hold.", duration: 15000, visual: 'neck-tilt' },
-            { name: "Side Neck Tilt", instruction: "Tilt head gently to the left. Hold.", duration: 15000, visual: 'neck-tilt' },
-            { name: "Chest Opener", instruction: "Interlace fingers behind back and open chest.", duration: 20000, visual: 'chest' }
+            { name: "Sit Tall", instruction: "Sit cross-legged, spine straight.", duration: 5000, visual: 'sit-cross', emoji: '🧘‍♀️' },
+            { name: "Shoulder Rolls", instruction: "Roll shoulders backward 5 times.", duration: 15000, visual: 'shoulders', emoji: '🙆‍♀️' },
+            { name: "Side Neck Tilt", instruction: "Tilt head gently to the right. Hold.", duration: 15000, visual: 'neck-tilt', emoji: '↪️' },
+            { name: "Side Neck Tilt", instruction: "Tilt head gently to the left. Hold.", duration: 15000, visual: 'neck-tilt', emoji: '↪️' },
+            { name: "Chest Opener", instruction: "Interlace fingers behind back and open chest.", duration: 20000, visual: 'chest', emoji: '💖' }
         ],
         safe: ['early', 'mid', 'late']
     },
     'sleep-wind': { // Corrected key from HTML
         name: 'Sleep Wind-Down Yoga',
         poses: [
-            { name: "Lie Comfortably", instruction: "Lie on your side with pillow support.", duration: 10000, visual: 'side-lie' },
-            { name: "Gentle Butterfly", instruction: "Sitting up, do a gentle butterfly pose (soles of feet together).", duration: 30000, visual: 'butterfly' },
-            { name: "Slow Breaths", instruction: "Return to side. Inhale slowly.", duration: 10000, visual: 'side-lie' },
-            { name: "Humming Exhale", instruction: "Exhale with a gentle hum.", duration: 10000, visual: 'side-lie' },
-            { name: "Relax", instruction: "Imagine each breath melting away tension.", duration: 30000, visual: 'side-lie' },
-            { name: "Rest", instruction: "Stay still for 1 min, breathing deeply.", duration: 60000, visual: 'side-lie' }
+            { name: "Lie Comfortably", instruction: "Lie on your side with pillow support.", duration: 10000, visual: 'side-lie', emoji: '😴' },
+            { name: "Gentle Butterfly", instruction: "Sitting up, do a gentle butterfly pose (soles of feet together).", duration: 30000, visual: 'butterfly', emoji: '🦋' },
+            { name: "Slow Breaths", instruction: "Return to side. Inhale slowly.", duration: 10000, visual: 'side-lie', emoji: '😴' },
+            { name: "Humming Exhale", instruction: "Exhale with a gentle hum.", duration: 10000, visual: 'side-lie', emoji: '😴' },
+            { name: "Relax", instruction: "Imagine each breath melting away tension.", duration: 30000, visual: 'side-lie', emoji: '😴' },
+            { name: "Rest", instruction: "Stay still for 1 min, breathing deeply.", duration: 60000, visual: 'side-lie', emoji: '😴' }
         ],
         safe: ['early', 'mid', 'late']
     }
@@ -207,9 +217,11 @@ let userId = null;
 let appId = null;
 let synth = window.speechSynthesis;
 let utterance = new SpeechSynthesisUtterance();
+let femaleVoice = null; // For female voice
 let activeBreathingTimer = null;
 let activeMeditationTimer = null;
 let activeStretchTimer = null;
+let currentStretchPoseTimer = null; // For pose countdown
 let currentBreathingCycle;
 let currentBreathingStep = 0;
 let currentMeditationInstructions = [];
@@ -232,19 +244,28 @@ function cacheDomElements() {
         breathingInstruction: document.getElementById('breathing-instruction'), // Corrected ID from HTML
         breathingTimerDisplay: document.getElementById('breathing-timer-display'),
         breathingAnimationElement: document.getElementById('breathing-animation-element'),
+        breathingVisualEmoji: document.getElementById('breathing-visual-emoji'), // NEW
         breathingTimerButtons: document.getElementById('breathing-timer-buttons'), // Corrected ID from HTML
+        breathingPlayBtn: document.getElementById('breathing-play-btn'), // NEW
+        breathingStopBtn: document.getElementById('breathing-stop-btn'), // NEW
         breathingSilentToggle: document.getElementById('breathing-silent-toggle'), // Corrected ID from HTML
+        breathingSoundOnIcon: document.getElementById('breathing-sound-on-icon'), // NEW
+        breathingSoundOffIcon: document.getElementById('breathing-sound-off-icon'), // NEW
         breathingStepsList: document.getElementById('breathing-steps-list'), // Added
 
         // Meditation
         meditationTypeButtons: document.getElementById('meditation-type-buttons'),
         meditationVisualContainer: document.getElementById('meditation-visual-container'), // Corrected ID from HTML
         meditationOrb: document.getElementById('meditation-orb'),
+        meditationVisualEmoji: document.getElementById('meditation-visual-emoji'), // NEW
         meditationInstruction: document.getElementById('meditation-instruction'), // Corrected ID from HTML
         meditationTimerDisplay: document.getElementById('meditation-timer-display'),
         meditationVoiceToggle: document.getElementById('meditation-voice-toggle'), // Corrected ID from HTML
+        meditationSoundOnIcon: document.getElementById('meditation-sound-on-icon'), // NEW
+        meditationSoundOffIcon: document.getElementById('meditation-sound-off-icon'), // NEW
         meditationTimerInput: document.getElementById('meditation-timer-input'), // Corrected ID from HTML
         startMeditationBtn: document.getElementById('start-meditation-btn'),
+        stopMeditationBtn: document.getElementById('stop-meditation-btn'), // NEW
         meditationAudioPlayer: document.getElementById('meditation-audio-player'), // Corrected ID from HTML
 
         // Stretches
@@ -253,8 +274,11 @@ function cacheDomElements() {
         stretchVisual: document.getElementById('stretch-visual'),
         stretchInstruction: document.getElementById('stretch-instruction'), // Corrected ID from HTML
         stretchPoseDisplay: document.getElementById('stretch-pose-display'), // Corrected ID from HTML
+        stretchTimerDisplay: document.getElementById('stretch-timer-display'), // NEW
         stretchTrimesterSelector: document.getElementById('stretch-trimester-selector'), // Corrected ID from HTML
         stretchVoiceToggle: document.getElementById('stretch-voice-toggle'), // Corrected ID from HTML
+        stretchSoundOnIcon: document.getElementById('stretch-sound-on-icon'), // NEW
+        stretchSoundOffIcon: document.getElementById('stretch-sound-off-icon'), // NEW
         stretchLoopToggle: document.getElementById('stretch-loop-toggle'), // Added
         stretchPrevPoseBtn: document.getElementById('stretch-prev-pose-btn'), // Corrected ID
         stretchPlayPauseBtn: document.getElementById('stretch-play-pause-btn'), // Corrected ID
@@ -283,6 +307,7 @@ export function initializeCalmSpace(uid, aid) {
     
     // NEW: Cache DOM elements now that we know the DOM is loaded
     cacheDomElements();
+    loadVoices(); // Load speech synthesis voices
 
     if (!userId || !appId) {
         console.error("Calm Space: Missing User ID or App ID. Saving will fail.");
@@ -323,12 +348,41 @@ export function unloadCalmSpace() {
 }
 
 // --- Speech Synthesis ---
+function loadVoices() {
+    // getVoices() is tricky, it might be empty on first call.
+    const setVoice = () => {
+        const voices = synth.getVoices();
+        if (voices.length > 0) {
+            // Try to find a common female voice
+            femaleVoice = voices.find(v => v.name.includes('Female') && v.lang.startsWith('en'));
+            if (!femaleVoice) femaleVoice = voices.find(v => v.name.includes('Google US English') && v.gender === 'female'); // Common fallback
+            if (!femaleVoice) femaleVoice = voices.find(v => v.name.includes('Samantha') || v.name.includes('Google UK English Female')); // Other common names
+            if (!femaleVoice) femaleVoice = voices.find(v => v.lang.startsWith('en-US') && v.gender === 'female'); // Any US English female
+            if (!femaleVoice) femaleVoice = voices.find(v => v.lang.startsWith('en-US')); // Any US English
+        }
+    };
+
+    setVoice();
+    if (synth.onvoiceschanged !== undefined) {
+        synth.onvoiceschanged = setVoice;
+    }
+}
+
 function speak(text, isSilent) {
     if (isSilent || !text) return;
     synth.cancel(); // Stop any previous speech
     utterance.text = text;
     utterance.rate = 0.9;
-    utterance.pitch = 1;
+    
+    // --- VOICE CHANGE ---
+    if (femaleVoice) {
+        utterance.voice = femaleVoice;
+        utterance.pitch = 1; // Use natural pitch if voice is found
+    } else {
+        utterance.pitch = 1.2; // Fallback to higher pitch
+    }
+    // --- END VOICE CHANGE ---
+    
     synth.speak(utterance);
 }
 
@@ -343,28 +397,43 @@ function initBreathing() {
         }
     });
 
-    // --- FIX: Use elements cache instead of getElementById ---
-    if (elements.breathingTimerButtons) {
-        elements.breathingTimerButtons.addEventListener('click', e => {
-            const button = e.target.closest('button');
-            if (button && button.dataset.timer) {
-                document.querySelectorAll('#breathing-timer-buttons button').forEach(btn => btn.classList.remove('active'));
-                button.classList.add('active');
-                // Pass duration in seconds (original had * 60 which made it minutes)
-                startBreathingTimer(parseInt(button.dataset.timer)); 
-            }
-        });
-    } else {
-        console.error("Breathing timer buttons container not found!");
+    // --- NEW: Play/Stop button listeners ---
+    if (elements.breathingPlayBtn) {
+        elements.breathingPlayBtn.addEventListener('click', startBreathing);
     }
-    // --- END FIX ---
+    if (elements.breathingStopBtn) {
+        elements.breathingStopBtn.addEventListener('click', stopBreathing);
+    }
+    // --- END NEW ---
 
+    // --- NEW: Silent Toggle Listener ---
+    if (elements.breathingSilentToggle) {
+        elements.breathingSilentToggle.addEventListener('change', toggleBreathingSoundIcon);
+        toggleBreathingSoundIcon(); // Set initial state
+    }
 
     // Select 4-7-8 by default
     const defaultBreathButton = elements.breathingExerciseButtons.querySelector('button[data-breath="4-7-8"]');
     if (defaultBreathButton) {
         defaultBreathButton.classList.add('active');
         selectBreathing('4-7-8');
+    }
+    
+    stopBreathing(); // Reset to default "stopped" state with emoji
+}
+
+function toggleBreathingSoundIcon() {
+    if (!elements.breathingSilentToggle || !elements.breathingSoundOnIcon || !elements.breathingSoundOffIcon) return;
+    
+    if (elements.breathingSilentToggle.checked) {
+        // Silent mode is ON
+        elements.breathingSoundOnIcon.classList.add('hidden');
+        elements.breathingSoundOffIcon.classList.remove('hidden');
+        synth.cancel(); // Stop any current speech
+    } else {
+        // Silent mode is OFF
+        elements.breathingSoundOnIcon.classList.remove('hidden');
+        elements.breathingSoundOffIcon.classList.add('hidden');
     }
 }
 
@@ -374,8 +443,12 @@ function selectBreathing(type) {
     currentBreathingStep = 0;
 
     // Reset visuals
-    elements.breathingOrb.className = 'w-40 h-40 rounded-full transition-all duration-3000 ease-in-out';
+    elements.breathingOrb.style.display = 'none';
+    elements.breathingVisualEmoji.style.display = 'none';
+    elements.breathingAnimationElement.style.display = 'none';
     elements.breathingAnimationElement.className = 'w-full h-full absolute inset-0';
+    
+    elements.breathingOrb.className = 'w-40 h-40 rounded-full transition-all duration-3000 ease-in-out';
     
     // Remove previous color classes before adding new one
     elements.breathingOrb.classList.remove('bg-blue-400', 'bg-green-400', 'bg-cyan-400', 'bg-pink-400', 'bg-yellow-400', 'bg-indigo-400');
@@ -383,9 +456,7 @@ function selectBreathing(type) {
 
     if (currentBreathingCycle.visual === 'orb-glow') {
         elements.breathingOrb.style.display = 'block';
-        elements.breathingAnimationElement.style.display = 'none';
     } else {
-        elements.breathingOrb.style.display = 'none';
         elements.breathingAnimationElement.style.display = 'block';
         elements.breathingAnimationElement.classList.add(currentBreathingCycle.visual);
     }
@@ -398,16 +469,47 @@ function selectBreathing(type) {
     if (stepsList) {
         stepsList.innerHTML = instructionHtml;
     }
+    
+    // Hide the emoji again after selecting
+    elements.breathingVisualEmoji.style.display = 'none';
 }
 
-function startBreathingTimer(duration) { // Duration is now in seconds
-    stopBreathing();
+function startBreathing() {
+    // Get selected timer
+    const timerButton = elements.breathingTimerButtons.querySelector('button.active');
+    if (!timerButton) {
+        // Show an error
+        elements.breathingInstruction.querySelector('p').textContent = "Please select a timer duration first!";
+        return;
+    }
+    
+    if (!currentBreathingCycle) {
+        elements.breathingInstruction.querySelector('p').textContent = "Please select an exercise first!";
+        return;
+    }
+    
+    const duration = parseInt(timerButton.dataset.timer);
+    
+    stopBreathing(); // Clear any previous state
+    
+    // Update UI
+    elements.breathingPlayBtn.classList.add('hidden');
+    elements.breathingStopBtn.classList.remove('hidden');
+    if (elements.breathingVisualEmoji) elements.breathingVisualEmoji.style.display = 'none';
+    
+    // Show the correct visual for the selected exercise
+    if (currentBreathingCycle.visual === 'orb-glow') {
+        elements.breathingOrb.style.display = 'block';
+    } else {
+        elements.breathingAnimationElement.style.display = 'block';
+    }
+
     let timeLeft = duration;
-    elements.breathingTimerDisplay.textContent = `${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}`;
+    elements.breathingTimerDisplay.textContent = formatTime(timeLeft);
     
     activeBreathingTimer = setInterval(() => {
         timeLeft--;
-        elements.breathingTimerDisplay.textContent = `${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}`;
+        elements.breathingTimerDisplay.textContent = formatTime(timeLeft);
         if (timeLeft <= 0) {
             stopBreathing();
             openReflectionModal('breathing', currentBreathingCycle.name);
@@ -416,6 +518,7 @@ function startBreathingTimer(duration) { // Duration is now in seconds
 
     runBreathingAnimation();
 }
+
 
 function runBreathingAnimation() {
     if (!currentBreathingCycle || !activeBreathingTimer) return; // Check timer too
@@ -491,7 +594,20 @@ function stopBreathing() {
         elements.breathingOrb.style.transform = 'scale(1)';
         elements.breathingOrb.style.opacity = '0.7';
         elements.breathingOrb.classList.remove('heartbeat');
+        elements.breathingOrb.style.display = 'none'; // Hide orb
     }
+    // NEW: Reset UI
+    if (elements.breathingAnimationElement) {
+        elements.breathingAnimationElement.style.display = 'none'; // Hide animations
+        elements.breathingAnimationElement.className = 'w-full h-full absolute inset-0';
+    }
+    if (elements.breathingVisualEmoji) {
+        elements.breathingVisualEmoji.textContent = '🧘‍♀️'; // Show default emoji
+        elements.breathingVisualEmoji.style.display = 'block';
+    }
+    if (elements.breathingPlayBtn) elements.breathingPlayBtn.classList.remove('hidden');
+    if (elements.breathingStopBtn) elements.breathingStopBtn.classList.add('hidden');
+    
     document.querySelectorAll('#breathing-timer-buttons button').forEach(btn => btn.classList.remove('active'));
 }
 
@@ -507,6 +623,13 @@ function initMeditation() {
     });
 
     elements.startMeditationBtn.addEventListener('click', startMeditation);
+    elements.stopMeditationBtn.addEventListener('click', stopMeditation); // NEW
+
+    // NEW: Silent Toggle Listener
+    if (elements.meditationVoiceToggle) {
+        elements.meditationVoiceToggle.addEventListener('change', toggleMeditationSoundIcon);
+        toggleMeditationSoundIcon(); // Set initial state
+    }
 
     // Select first one by default
     const defaultMeditationButton = elements.meditationTypeButtons.querySelector('button');
@@ -515,6 +638,19 @@ function initMeditation() {
         selectMeditation(defaultMeditationButton.dataset.meditation);
     }
 }
+
+function toggleMeditationSoundIcon() {
+    if (!elements.meditationVoiceToggle || !elements.meditationSoundOnIcon || !elements.meditationSoundOffIcon) return;
+    if (elements.meditationVoiceToggle.checked) { // Silent is ON
+        elements.meditationSoundOnIcon.classList.add('hidden');
+        elements.meditationSoundOffIcon.classList.remove('hidden');
+        synth.cancel();
+    } else { // Silent is OFF
+        elements.meditationSoundOnIcon.classList.remove('hidden');
+        elements.meditationSoundOffIcon.classList.add('hidden');
+    }
+}
+
 
 function selectMeditation(type) {
     stopMeditation();
@@ -527,6 +663,11 @@ function selectMeditation(type) {
     elements.meditationOrb.classList.add(meditation.color);
     elements.meditationInstruction.textContent = 'Set your timer and press play to begin.';
     
+    // NEW: Set emoji
+    if (elements.meditationVisualEmoji) {
+        elements.meditationVisualEmoji.textContent = meditation.emoji || '💖';
+    }
+    
     if (meditation.audio) {
         elements.meditationAudioPlayer.src = meditation.audio;
     } else {
@@ -535,6 +676,15 @@ function selectMeditation(type) {
 }
 
 function startMeditation() {
+    // FIX: Get meditation type *before* starting
+    const selectedButton = document.querySelector('#meditation-type-buttons button.active');
+    if (!selectedButton) {
+        elements.meditationInstruction.textContent = 'Please select a meditation type first.';
+        return;
+    }
+    const type = selectedButton.dataset.meditation;
+    const meditation = meditationData[type];
+    
     stopMeditation();
     const duration = parseInt(elements.meditationTimerInput.value) * 60; // Get duration in seconds
     if (isNaN(duration) || duration <= 0) {
@@ -542,23 +692,30 @@ function startMeditation() {
         return;
     }
 
+    // NEW: Update button UI
+    elements.startMeditationBtn.classList.add('hidden');
+    elements.stopMeditationBtn.classList.remove('hidden');
+    // Ensure parent grid is 2-col (it is by default, but good to be sure)
+    elements.stopMeditationBtn.parentElement.classList.add('grid-cols-2');
+    elements.stopMeditationBtn.parentElement.classList.remove('grid-cols-1');
+
+
     let timeLeft = duration;
-    elements.meditationTimerDisplay.textContent = `${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}`;
+    elements.meditationTimerDisplay.textContent = formatTime(timeLeft);
     elements.meditationOrb.classList.add('active'); // Start glow animation
 
     activeMeditationTimer = setInterval(() => {
         timeLeft--;
-        elements.meditationTimerDisplay.textContent = `${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}`;
+        elements.meditationTimerDisplay.textContent = formatTime(timeLeft);
         if (timeLeft <= 0) {
             stopMeditation();
-            const type = document.querySelector('#meditation-type-buttons button.active').dataset.meditation;
-            openReflectionModal('meditation', meditationData[type].name);
+            openReflectionModal('meditation', meditation.name); // Use stored meditation name
         }
     }, 1000);
     
-    // Play audio if src is set
-    if (elements.meditationAudioPlayer.src) {
-       elements.meditationAudioPlayer.play().catch(e => console.error("Audio play failed:", e)); // Add catch for safety
+    // FIX: Check meditation.audio, not src
+    if (meditation && meditation.audio) {
+       elements.meditationAudioPlayer.play().catch(e => console.error("Audio play failed:", e)); 
        elements.meditationAudioPlayer.loop = true;
     }
 
@@ -598,17 +755,13 @@ function runMeditationGuide() {
         }
     };
     
-    // Safety fallback if speak doesn't trigger onend (e.g., if isSilent is true)
-    if (isSilent) {
-        utterance.onend = null; // Clear handler
-         if (activeMeditationTimer) {
-             currentMeditationStep++;
-             if (currentMeditationStep < currentMeditationInstructions.length) {
-                 setTimeout(runMeditationGuide, 3000 + 1000); // Add a bit more delay for silent mode
-             } else {
-                 elements.meditationInstruction.textContent = "Continue breathing and resting in this space.";
-             }
-         }
+    // Safety fallback if speak doesn't trigger onend (e.g., if isSilent is true or speech fails)
+    if (isSilent || !synth.speaking) {
+         // Use a timeout approximation
+         const instructionDuration = (instruction.length * 60) + 3000; // rough guess: 60ms per char + 3s pause
+         setTimeout(() => {
+             if (utterance.onend) utterance.onend(); // Manually trigger onend if it's still set
+         }, instructionDuration);
     }
 }
 
@@ -632,6 +785,17 @@ function stopMeditation() {
     }
     if (elements.meditationOrb) {
         elements.meditationOrb.classList.remove('active'); // Stop glow
+    }
+    // NEW: Reset button UI
+    if (elements.startMeditationBtn) {
+        elements.startMeditationBtn.classList.remove('hidden');
+    }
+    if (elements.stopMeditationBtn) {
+        elements.stopMeditationBtn.classList.add('hidden');
+    }
+    // NEW: Reset emoji
+    if (elements.meditationVisualEmoji) {
+        elements.meditationVisualEmoji.textContent = '💖';
     }
 }
 
@@ -657,13 +821,33 @@ function initStretches() {
     elements.stretchNextPoseBtn.addEventListener('click', nextPose);
     elements.stretchPrevPoseBtn.addEventListener('click', prevPose);
     
+    // NEW: Silent Toggle Listener
+    if (elements.stretchVoiceToggle) {
+        elements.stretchVoiceToggle.addEventListener('change', toggleStretchSoundIcon);
+        toggleStretchSoundIcon(); // Set initial state
+    }
+    
     // Select first routine by default
     const defaultStretchButton = elements.stretchRoutineButtons.querySelector('button');
     if (defaultStretchButton) {
         defaultStretchButton.classList.add('active');
         selectStretchRoutine(defaultStretchButton.dataset.stretch);
     }
+    stopStretches(); // Set initial stopped state
 }
+
+function toggleStretchSoundIcon() {
+    if (!elements.stretchVoiceToggle || !elements.stretchSoundOnIcon || !elements.stretchSoundOffIcon) return;
+    if (elements.stretchVoiceToggle.checked) { // Silent is ON
+        elements.stretchSoundOnIcon.classList.add('hidden');
+        elements.stretchSoundOffIcon.classList.remove('hidden');
+        synth.cancel();
+    } else { // Silent is OFF
+        elements.stretchSoundOnIcon.classList.remove('hidden');
+        elements.stretchSoundOffIcon.classList.add('hidden');
+    }
+}
+
 
 function selectStretchRoutine(type) {
     stopStretches(); // Stop any previous routine
@@ -685,6 +869,7 @@ function selectStretchRoutine(type) {
     if (currentStretchRoutine.length === 0) {
         elements.stretchInstruction.textContent = "This routine isn't recommended for your selected trimester. Please choose another.";
         elements.stretchPoseDisplay.textContent = "0 / 0";
+        elements.stretchVisual.textContent = '🧘‍♀️'; // NEW
         currentStretchPoseIndex = 0; // Reset index
         return;
     }
@@ -704,15 +889,12 @@ function displayPose() {
     elements.stretchInstruction.textContent = pose.instruction;
     elements.stretchPoseDisplay.textContent = `${pose.name} (${currentStretchPoseIndex + 1}/${currentStretchRoutine.length})`;
     
-    // Update visual (simple text/class for now, assuming CSS handles visuals)
-    elements.stretchVisual.className = 'transition-all duration-1000'; // Reset classes
+    // NEW: Update visual with emoji
+    elements.stretchVisual.className = 'transition-all duration-500 text-6xl'; // Reset classes, add emoji size
     elements.stretchVisual.innerHTML = ''; // Clear previous content
     
-    if (pose.visual) {
-         // Add class based on visual name if CSS exists for it
-        elements.stretchVisual.classList.add(pose.visual); 
-        // Fallback or additional text
-        elements.stretchVisual.innerHTML = `<span class="text-xl p-4 opacity-50">${pose.name} Visual</span>`; // Placeholder text
+    if (pose.emoji) {
+        elements.stretchVisual.textContent = pose.emoji;
     } else {
         elements.stretchVisual.innerHTML = `<span class="text-3xl p-4">${pose.name}</span>`; // Default text if no visual
     }
@@ -722,12 +904,27 @@ function displayPose() {
     speak(pose.instruction, isSilent);
 
     // --- Timer Logic for advancing poses ---
-    clearTimeout(activeStretchTimer); // Clear any existing timer before setting a new one
+    clearTimeout(activeStretchTimer); // Clear any existing timeout
+    clearInterval(currentStretchPoseTimer); // Clear any existing interval
     activeStretchTimer = null; // Reset timer variable
+    currentStretchPoseTimer = null;
 
     if (!isStretchPaused) { // Only set a timer if not paused
         const duration = pose.duration || 15000; // Default to 15s if duration missing
+        let timeLeft = duration / 1000; // Time in seconds
+        
+        elements.stretchTimerDisplay.textContent = formatTime(timeLeft);
+        
+        // Interval for countdown timer
+        currentStretchPoseTimer = setInterval(() => {
+            timeLeft--;
+            elements.stretchTimerDisplay.textContent = formatTime(timeLeft);
+            if (timeLeft <= 0) {
+                clearInterval(currentStretchPoseTimer);
+            }
+        }, 1000);
 
+        // Timeout to advance to next pose
         activeStretchTimer = setTimeout(() => {
             const shouldLoop = elements.stretchLoopToggle.checked;
             
@@ -735,13 +932,10 @@ function displayPose() {
                 // Go to next pose
                 currentStretchPoseIndex++;
                 displayPose();
-                // Optionally play a sound (chime) - requires setup not included here
-                // if (window.chime) window.chime.play();
             } else if (shouldLoop) {
                  // Loop back to start
                 currentStretchPoseIndex = 0;
                 displayPose();
-                // if (window.chime) window.chime.play();
             } else {
                 // End of routine (not looping)
                 stopStretches();
@@ -749,6 +943,10 @@ function displayPose() {
                 openReflectionModal('stretch', stretchData[type]?.name || 'Stretch Routine'); // Use ?. for safety
             }
         }, duration);
+    } else {
+        // If paused, show the duration of the current pose instead of 0:00
+        const duration = (pose.duration || 15000) / 1000;
+        elements.stretchTimerDisplay.textContent = formatTime(duration);
     }
 }
 
@@ -757,7 +955,9 @@ function playPauseStretches() {
     isStretchPaused = !isStretchPaused;
     if (isStretchPaused) {
         clearTimeout(activeStretchTimer);
+        clearInterval(currentStretchPoseTimer); // NEW
         activeStretchTimer = null;
+        currentStretchPoseTimer = null; // NEW
         synth.cancel(); // Stop speech
         elements.stretchPlayIcon.style.display = 'inline'; // Show Play text/icon
         elements.stretchPauseIcon.style.display = 'none'; // Hide Pause text/icon
@@ -771,8 +971,12 @@ function playPauseStretches() {
 
 function nextPose() {
     clearTimeout(activeStretchTimer); // Stop current timer
+    clearInterval(currentStretchPoseTimer); // NEW
     activeStretchTimer = null;
+    currentStretchPoseTimer = null; // NEW
     synth.cancel(); // Stop current speech
+
+    if (currentStretchRoutine.length === 0) return; // Don't do anything if no routine is loaded
 
     if (currentStretchPoseIndex < currentStretchRoutine.length - 1) {
         currentStretchPoseIndex++;
@@ -786,14 +990,17 @@ function nextPose() {
     }
     
     displayPose(); // Display the new pose (will restart timer if not paused)
-    // if (window.chime) window.chime.play(); // Optional chime
 }
 
 function prevPose() {
     clearTimeout(activeStretchTimer); // Stop current timer
+    clearInterval(currentStretchPoseTimer); // NEW
     activeStretchTimer = null;
+    currentStretchPoseTimer = null; // NEW
     synth.cancel(); // Stop current speech
     
+    if (currentStretchRoutine.length === 0) return; // Don't do anything if no routine is loaded
+
     if (currentStretchPoseIndex > 0) {
         currentStretchPoseIndex--;
     } else if (elements.stretchLoopToggle.checked) { // Loop back to end if enabled
@@ -805,13 +1012,14 @@ function prevPose() {
     }
     
     displayPose(); // Display the new pose (will restart timer if not paused)
-    // if (window.chime) window.chime.play(); // Optional chime
 }
 
 
 function stopStretches() {
     clearTimeout(activeStretchTimer);
+    clearInterval(currentStretchPoseTimer); // NEW
     activeStretchTimer = null;
+    currentStretchPoseTimer = null; // NEW
     synth.cancel();
     isStretchPaused = true; // Ensure state is paused
     if (elements.stretchPlayIcon) {
@@ -820,8 +1028,11 @@ function stopStretches() {
     if (elements.stretchPauseIcon) {
         elements.stretchPauseIcon.style.display = 'none'; // Hide Pause
     }
-    // Maybe reset instruction text?
-    // elements.stretchInstruction.textContent = "Routine stopped. Select a routine to begin.";
+    // NEW: Reset displays
+    if (elements.stretchVisual) elements.stretchVisual.textContent = '🧘‍♀️';
+    if (elements.stretchPoseDisplay) elements.stretchPoseDisplay.textContent = 'Select a routine';
+    if (elements.stretchInstruction) elements.stretchInstruction.querySelector('p').textContent = 'Select a routine. Stretches are filtered by trimester for your safety.';
+    if (elements.stretchTimerDisplay) elements.stretchTimerDisplay.textContent = '0:00';
 }
 
 // --- Mindful Reflection Modal ---
