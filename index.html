@@ -299,7 +299,16 @@
                         <!-- Left Column: Breathing Visualizer -->
                         <div class="lg:col-span-2 space-y-8">
                             <!-- Breathing Visualizer -->
-                            <div class="glass-card anim-card p-4 md:p-6">
+                            <!-- START: MODIFICATION -->
+                            <div class="glass-card anim-card p-4 md:p-6 relative">
+                                <!-- New View Reflections Icon -->
+                                <button id="view-breathing-reflections-btn" class="absolute top-4 right-4 icon-btn p-2 rounded-full hover:bg-white/20 transition-colors z-10" title="View Breathing Reflections">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                    </svg>
+                                </button>
+                            <!-- END: MODIFICATION -->
+
                                 <!-- UPDATE: Changed "Guided" to "Gentle" -->
                                 <h3 class="text-2xl font-bold mb-4">🌬️ Gentle Breathing</h3>
                                 <div id="breathing-visualizer-container" class="relative w-full h-64 md:h-96 rounded-lg overflow-hidden flex items-center justify-center transition-colors duration-1000" style="background-color: #3a506b;">
@@ -322,14 +331,13 @@
                                         <!-- UPDATE: Removed hidden stop button. New buttons below -->
                                     </div>
                                     <div class="flex flex-wrap items-center justify-between gap-4 mt-4">
-                                        
-                                        <!-- ******** UPDATE: Replaced timer buttons with a number input ******** -->
-                                        <div class="flex items-center gap-3 flex-grow" id="breathing-timer-container">
+                                        <!-- START: MODIFICATION - Replaced timer buttons with number input -->
+                                        <div class="flex items-center gap-2" id="breathing-timer-container">
                                             <span class="font-semibold">Timer:</span>
-                                            <input type="number" id="breathing-timer-input" class="meal-select text-sm flex-grow" placeholder="Minutes..." min="1" value="3">
+                                            <input type="number" id="breathing-timer-input" class="meal-select text-sm w-24 py-2 px-3" placeholder="Minutes..." min="1" value="3">
                                         </div>
-                                        <!-- ******** END UPDATE ******** -->
-
+                                        <!-- END: MODIFICATION -->
+                                        
                                         <!-- UPDATE: New Play/Stop buttons -->
                                         <div class="flex items-center gap-3">
                                             <button id="breathing-play-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-5 rounded-lg w-20">Play</button>
@@ -356,7 +364,16 @@
                             </div>
 
                             <!-- Gentle Stretch & Posture -->
-                            <div class="glass-card anim-card p-4 md:p-6">
+                            <!-- START: MODIFICATION -->
+                            <div class="glass-card anim-card p-4 md:p-6 relative">
+                                <!-- New View Reflections Icon -->
+                                <button id="view-stretch-reflections-btn" class="absolute top-4 right-4 icon-btn p-2 rounded-full hover:bg-white/20 transition-colors z-10" title="View Stretch Reflections">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                    </svg>
+                                </button>
+                            <!-- END: MODIFICATION -->
+                            
                                 <!-- UPDATE: Added timer display -->
                                 <div class="flex justify-between items-center mb-4">
                                     <h3 class="text-2xl font-bold">🧘‍♀️ Gentle Stretch Guide</h3>
@@ -381,10 +398,10 @@
                                             <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-stretch="sleep-wind">Sleep Wind-Down</button>
                                         </div>
                                         <div class="flex items-center justify-between gap-4 mb-4">
-                                            
-                                            <!-- ******** UPDATE: Replaced trimester selector with timer input ******** -->
+                                            <!-- 
+                                                *** UPDATE: Replaced trimester selector with timer input ***
+                                            -->
                                             <input type="number" id="stretch-timer-input" class="meal-select text-sm flex-grow" placeholder="Minutes..." min="1" value="5">
-                                            <!-- ******** END UPDATE ******** -->
 
                                             <!-- FIX: Renamed id to "stretch-voice-toggle" and changed to checkbox -->
                                             <input type="checkbox" id="stretch-voice-toggle" class="hidden">
@@ -393,9 +410,11 @@
                                                 <svg id="stretch-sound-on-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M20 4a9 9 0 010 12.728M6.717 3.342A.5.5 0 017.5 3.85v16.298a.5.5 0 01-.783.41l-4-3.5H1a1 1 0 01-1-1V7.94a1 1 0 011-1h1.717l4-3.5a.5.5 0 01.783-.088z"></path></svg>
                                                 <svg id="stretch-sound-off-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.866 3.866M21 21l-3.866-3.866"></path></svg>
                                             </label>
-                                            <!-- FIX: Added "stretch-loop-toggle" checkbox -->
+                                            <!-- 
+                                                *** UPDATE: Hid loop toggle as it's now implicit with the timer ***
+                                            -->
                                             <input type="checkbox" id="stretch-loop-toggle" class="hidden">
-                                            <label for="stretch-loop-toggle" class="icon-btn p-2 rounded-full cursor-pointer" title="Toggle Loop">
+                                            <label for="stretch-loop-toggle" class="icon-btn p-2 rounded-full cursor-pointer hidden" title="Toggle Loop">
                                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9.5m0 5a8.001 8.001 0 0014.836 2.5m.582 5v-5h-.582"></path></svg>
                                             </label>
                                         </div>
@@ -418,7 +437,16 @@
                         </div>
 
                         <!-- Right Column: Baby Connection -->
-                        <div class="glass-card anim-card p-4 md:p-6">
+                        <!-- START: MODIFICATION -->
+                        <div class="glass-card anim-card p-4 md:p-6 relative">
+                            <!-- New View Reflections Icon -->
+                            <button id="view-meditation-reflections-btn" class="absolute top-4 right-4 icon-btn p-2 rounded-full hover:bg-white/20 transition-colors z-10" title="View Baby Connection Reflections">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                </svg>
+                            </button>
+                        <!-- END: MODIFICATION -->
+                        
                             <h3 class="text-2xl font-bold mb-4">💖 Baby Connection</h3>
                             <!-- FIX: Renamed id to "meditation-visual-container" -->
                             <div id="meditation-visual-container" class="w-full h-48 bg-white/5 rounded-lg flex items-center justify-center mb-4 relative overflow-hidden">
@@ -911,6 +939,19 @@
             </div>
         </div>
     </div>
+
+    <!-- START: MODIFICATION - New View Reflections Modal -->
+    <div id="view-reflections-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
+        <div id="view-reflections-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
+            <h3 id="view-reflections-title" class="text-2xl font-bold mb-4 text-center">Your Reflections</h3>
+            <div id="view-reflections-container" class="space-y-4 max-h-96 overflow-y-auto modal-scroll pr-2">
+                <!-- Reflections will be populated here by JS -->
+                <p id="view-reflections-empty" class="text-center text-gray-400">You have no reflections for this activity yet.</p>
+            </div>
+            <button id="view-reflections-close-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors mt-6">Close</button>
+        </div>
+    </div>
+    <!-- END: MODIFICATION -->
 
 
     <!-- Updated paths to /js/ folder -->
