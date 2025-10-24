@@ -17,6 +17,9 @@
     <!-- Background for rising bubbles -->
     <div id="bubble-background"></div>
 
+    <!-- Sparkle Animation Container -->
+    <div id="sparkle-container" class="fixed inset-0 pointer-events-none z-[100]"></div>
+
     <div id="app-container" class="container mx-auto p-4 md:p-8 max-w-7xl">
         <!-- New Hero Section -->
         <section id="hero-section" class="hero-section text-center py-16 md:py-24">
@@ -46,6 +49,8 @@
             <div class="flex flex-wrap justify-center gap-2 md:gap-4 mb-8">
                 <button id="tab-meal-plan" class="tab-btn active">🥣 Meal Plan</button>
                 <button id="tab-symptom-tracker" class="tab-btn">💗 Wellness</button>
+                <!-- NEW CALM SPACE TAB -->
+                <button id="tab-calm-space" class="tab-btn">🧘‍♀️ Calm Space</button>
                 <button id="tab-journey" class="tab-btn">✨ Journey</button>
             </div>
 
@@ -284,6 +289,130 @@
 
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- NEW CALM SPACE TAB CONTENT -->
+                <div id="content-calm-space" class="tab-content">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        
+                        <!-- Left Column: Breathing Visualizer -->
+                        <div class="lg:col-span-2 space-y-8">
+                            <!-- Breathing Visualizer -->
+                            <div class="glass-card anim-card p-4 md:p-6">
+                                <h3 class="text-2xl font-bold mb-4">🌬️ Guided Breathing</h3>
+                                <div id="breathing-visualizer-container" class="relative w-full h-64 md:h-96 rounded-lg overflow-hidden flex items-center justify-center transition-colors duration-1000" style="background-color: #3a506b;">
+                                    <div id="breathing-orb" class="w-32 h-32 bg-white/30 rounded-full transition-transform duration-3000 ease-in-out"></div>
+                                    <div id="breathing-animation-element" class=""></div> <!-- For box/wave animations -->
+                                    <span id="breathing-text" class="absolute text-2xl font-semibold text-white z-10">Select an exercise</span>
+                                </div>
+                                <div class="pt-4 mt-4 border-t border-white/10">
+                                    <div class="flex flex-wrap items-center justify-between gap-4">
+                                        <div class="flex flex-wrap gap-2" id="breathing-exercise-buttons">
+                                            <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-exercise="4-7-8">4-7-8 Breathing</button>
+                                            <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-exercise="box">Box Breathing</button>
+                                            <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-exercise="wave">Wave Breathing</button>
+                                            <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-exercise="heartbeat">Heartbeat Sync</button>
+                                            <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-exercise="morning">Morning Energizer</button>
+                                            <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-exercise="sleep">Sleep Wind-Down</button>
+                                        </div>
+                                        <button id="breathing-stop-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg hidden">Stop</button>
+                                    </div>
+                                    <div class="flex flex-wrap items-center justify-between gap-4 mt-4">
+                                        <div class="flex items-center gap-3">
+                                            <span class="font-semibold">Timer:</span>
+                                            <button class="btn-secondary text-sm w-12 py-2 rounded-lg" data-timer="120">2 min</button>
+                                            <button class="btn-secondary text-sm w-12 py-2 rounded-lg" data-timer="300">5 min</button>
+                                            <button class="btn-secondary text-sm w-12 py-2 rounded-lg" data-timer="600">10 min</button>
+                                        </div>
+                                        <div class="flex items-center gap-3">
+                                            <button id="breathing-voice-btn" class="icon-btn p-2 rounded-full" title="Toggle Voice Guide">
+                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M20 4a9 9 0 010 12.728M6.717 3.342A.5.5 0 017.5 3.85v16.298a.5.5 0 01-.783.41l-4-3.5H1a1 1 0 01-1-1V7.94a1 1 0 011-1h1.717l4-3.5a.5.5 0 01.783-.088z"></path></svg>
+                                            </button>
+                                            <button id="breathing-silent-btn" class="icon-btn p-2 rounded-full" title="Toggle Silent Mode (Animation Only)">
+                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.866 3.866M21 21l-3.866-3.866"></path></svg>
+                                            </button>
+                                            <span id="breathing-timer-display" class="font-semibold text-lg ml-2">0:00</span>
+                                        </div>
+                                    </div>
+                                    <div id="breathing-instructions" class="ai-insight mt-4">
+                                        <p>Select an exercise to begin. Voice guidance is on by default.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Gentle Stretch & Posture -->
+                            <div class="glass-card anim-card p-4 md:p-6">
+                                <h3 class="text-2xl font-bold mb-4">🧘‍♀️ Gentle Stretch Guide</h3>
+                                <div class="flex flex-col md:flex-row gap-6">
+                                    <div id="stretch-animation-container" class="w-full md:w-1/2 h-64 bg-white/5 rounded-lg flex items-center justify-center relative overflow-hidden">
+                                        <div id="stretch-visual" class="transition-all duration-500"></div>
+                                        <span id="stretch-pose-name" class="absolute bottom-4 text-lg font-semibold">Select a routine</span>
+                                    </div>
+                                    <div class="w-full md:w-1/2">
+                                        <div class="flex flex-wrap gap-2 mb-4" id="stretch-routine-buttons">
+                                            <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-stretch="morning">Morning Flow</button>
+                                            <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-stretch="back">Back & Hip</button>
+                                            <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-stretch="leg">Leg Relax</button>
+                                            <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-stretch="shoulder">Shoulder Release</button>
+                                            <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-stretch="sleep">Sleep Wind-Down</button>
+                                        </div>
+                                        <div class="flex items-center justify-between gap-4 mb-4">
+                                            <select id="stretch-trimester-select" class="meal-select text-sm flex-grow">
+                                                <option value="all">All Trimesters</option>
+                                                <option value="early">Early (1-13 wks)</option>
+                                                <option value="mid">Mid (14-27 wks)</option>
+                                                <option value="late">Late (28+ wks)</option>
+                                            </select>
+                                            <button id="stretch-voice-btn" class="icon-btn p-2 rounded-full" title="Toggle Voice Guide">
+                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M20 4a9 9 0 010 12.728M6.717 3.342A.5.5 0 017.5 3.85v16.298a.5.5 0 01-.783.41l-4-3.5H1a1 1 0 01-1-1V7.94a1 1 0 011-1h1.717l4-3.5a.5.5 0 01.783-.088z"></path></svg>
+                                            </button>
+                                        </div>
+                                        <div class="flex items-center justify-center gap-4" id="stretch-controls">
+                                            <button id="stretch-prev-btn" class="btn-secondary py-2 px-4 rounded-lg">Prev</button>
+                                            <button id="stretch-play-pause-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-5 rounded-lg">Play</button>
+                                            <button id="stretch-next-btn" class="btn-secondary py-2 px-4 rounded-lg">Next</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="stretch-instructions" class="ai-insight mt-4">
+                                    <p>Select a routine. Stretches are filtered by trimester for your safety.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Baby Connection -->
+                        <div class="glass-card anim-card p-4 md:p-6">
+                            <h3 class="text-2xl font-bold mb-4">💖 Baby Connection</h3>
+                            <div id="meditation-visual" class="w-full h-48 bg-white/5 rounded-lg flex items-center justify-center mb-4 relative overflow-hidden">
+                                <div id="meditation-orb" class="w-24 h-24 bg-pink-400/30 rounded-full transition-all duration-3000 ease-in-out"></div>
+                                <span id="meditation-timer-display" class="absolute text-3xl font-semibold text-white z-10">0:00</span>
+                            </div>
+                            <div class="space-y-3">
+                                <div id="meditation-type-buttons" class="grid grid-cols-2 gap-3">
+                                    <button class="btn-secondary py-3 px-2 rounded-lg text-sm" data-meditation="first">First Connection</button>
+                                    <button class="btn-secondary py-3 px-2 rounded-lg text-sm" data-meditation="love">Love Visualization</button>
+                                    <button class="btn-secondary py-3 px-2 rounded-lg text-sm" data-meditation="harmony">Heartbeat Harmony</button>
+                                    <button class="btn-secondary py-3 px-2 rounded-lg text-sm" data-meditation="night">Peaceful Night</button>
+                                    <button class="btn-secondary py-3 px-2 rounded-lg text-sm" data-meditation="morning">Morning Gratitude</button>
+                                </div>
+                                <div class="flex items-center justify-between gap-4 pt-3 border-t border-white/10">
+                                    <select id="meditation-timer-select" class="meal-select text-sm flex-grow">
+                                        <option value="120">2 min</option>
+                                        <option value="180">3 min</option>
+                                        <option value="300">5 min</option>
+                                    </select>
+                                    <button id="meditation-voice-btn" class="icon-btn p-2 rounded-full" title="Toggle Voice Guide">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M20 4a9 9 0 010 12.728M6.717 3.342A.5.5 0 017.5 3.85v16.298a.5.5 0 01-.783.41l-4-3.5H1a1 1 0 01-1-1V7.94a1 1 0 011-1h1.717l4-3.5a.5.5 0 01.783-.088z"></path></svg>
+                                    </button>
+                                </div>
+                                <button id="meditation-start-btn" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Start Meditation</button>
+                                <div id="meditation-instructions" class="ai-insight mt-2">
+                                    <p>Select a meditation type and duration to begin.</p>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
@@ -581,7 +710,7 @@
         <div id="nutrition-history-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-2xl transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
             <div class="flex items-center justify-between mb-4">
                 <button id="nutrition-history-prev-week-btn" class="icon-btn p-2 rounded-full hover:bg-white/20 transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                 </button>
                 <div class="text-center">
                      <h3 class="text-2xl font-bold">Nutrition History</h3>
@@ -710,14 +839,36 @@
         </div>
     </div>
 
+    <!-- CALM SPACE: Mindful Reflection Modal -->
+    <div id="mindful-reflection-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
+        <div id="mindful-reflection-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-md transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
+            <h3 class="text-2xl font-bold mb-4 text-center">How do you feel?</h3>
+            <p class="text-center text-gray-300 mb-6">Take a moment to check in after your session.</p>
+            <div class="flex justify-around mb-6" id="mindful-mood-buttons">
+                <button class="text-4xl hover:scale-125 transition-transform mindful-mood-btn" data-mood="1">😣</button>
+                <button class="text-4xl hover:scale-125 transition-transform mindful-mood-btn" data-mood="2">😐</button>
+                <button class="text-4xl hover:scale-125 transition-transform mindful-mood-btn" data-mood="3">🙂</button>
+                <button class="text-4xl hover:scale-125 transition-transform mindful-mood-btn" data-mood="4">😊</button>
+                <button class="text-4xl hover:scale-125 transition-transform mindful-mood-btn" data-mood="5">🥰</button>
+            </div>
+            <textarea id="mindful-reflection-note" class="symptom-input min-h-[100px] mb-4" placeholder="A quick thought... (optional)"></textarea>
+            <div class="flex gap-4">
+                <button id="mindful-reflection-skip-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg">Skip</button>
+                <button id="mindful-reflection-save-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg">Save</button>
+            </div>
+        </div>
+    </div>
+
 
     <!-- Updated paths to /js/ folder -->
     <script type="module" src="./js/main.js"></script>
     <script type="module" src="./js/ui.js"></script>
     <script type="module" src="./js/auth.js"></script>
     <script type="module" src="./js/firebase.js"></script>
-    <script type="module" src="./js/meal-planner.js"></script>
+    <script type(="module" src="./js/meal-planner.js"></script>
     <script type="module" src="./js/wellness.js"></script>
     <script type="module" src="./js/journey.js"></script>
+    <!-- NEW SCRIPT TAG -->
+    <script type="module" src="./js/calm-space.js"></script>
 </body>
 </html>
