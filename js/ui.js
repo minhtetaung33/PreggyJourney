@@ -21,6 +21,11 @@ export const elements = {
     symptomTrackerContent: document.getElementById('content-symptom-tracker'),
     journeyContent: document.getElementById('content-journey'),
 
+    // --- NEW CALM SPACE Elements ---
+    calmSpaceTab: document.getElementById('tab-calm-space'),
+    calmSpaceContent: document.getElementById('content-calm-space'),
+    sparkleContainer: document.getElementById('sparkle-container'), // For sparkle animation
+
     // --- NEW Animation Elements ---
     bubbleBackground: document.getElementById('bubble-background'),
     pageLoadOverlay: document.getElementById('page-load-overlay'),
@@ -56,7 +61,6 @@ export function createBubbleBackground() {
     
     // Update keyframes in CSS to use drift (we can't, but we can slightly modify the animation)
     // We'll modify the `rise` keyframe in CSS to include a horizontal movement.
-    // Let's assume the CSS `rise` keyframe is updated to handle horizontal movement.
     // For simplicity, we'll stick to the vertical rise defined in CSS.
 }
 
@@ -103,6 +107,29 @@ function playTabEntranceAnimation(tabContentElement) {
     }, totalAnimationTime);
 }
 
+// --- NEW SPARKLE ANIMATION ---
+/**
+ * Creates a sparkle animation at a specific (x, y) coordinate.
+ * @param {number} x - The x coordinate.
+ * @param {number} y - The y coordinate.
+ */
+export function createSparkleAnimation(x, y) {
+    if (!elements.sparkleContainer) return;
+
+    const sparkle = document.createElement('div');
+    sparkle.className = 'sparkle';
+    sparkle.style.left = `${x}px`;
+    sparkle.style.top = `${y}px`;
+
+    elements.sparkleContainer.appendChild(sparkle);
+
+    // Remove the sparkle element after the animation completes
+    setTimeout(() => {
+        sparkle.remove();
+    }, 1000); // Animation duration is 1s
+}
+
+
 export function showMainApp() {
     elements.authButtons.classList.add('hidden');
     elements.userInfo.classList.add('flex');
@@ -146,6 +173,11 @@ export function setupTabs(onTabSwitch) {
         switchTab('symptom');
         onTabSwitch('symptom');
     });
+    // --- NEW CALM SPACE TAB ---
+    elements.calmSpaceTab.addEventListener('click', () => {
+        switchTab('calm');
+        onTabSwitch('calm');
+    });
     elements.journeyTab.addEventListener('click', () => {
         switchTab('journey');
         onTabSwitch('journey');
@@ -156,6 +188,7 @@ function switchTab(activeTab) {
     const tabs = {
         meal: { btn: elements.mealPlanTab, content: elements.mealPlanContent },
         symptom: { btn: elements.symptomTrackerTab, content: elements.symptomTrackerContent },
+        calm: { btn: elements.calmSpaceTab, content: elements.calmSpaceContent }, // NEW
         journey: { btn: elements.journeyTab, content: elements.journeyContent }
     };
 
