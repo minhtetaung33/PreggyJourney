@@ -13,6 +13,8 @@ import {
     wellnessChart 
 } from './wellness.js';
 import { initializeJourney, unloadJourney, updateWellnessDataForJourney } from './journey.js';
+// NEW IMPORT for Calm Space
+import { initializeCalmSpace, unloadCalmSpace } from './calm-space.js';
 
 let wellnessData = {};
 let currentMealPlan = {};
@@ -56,12 +58,18 @@ export const loadAllDataForUser = (userId) => {
     initializeMealPlanner(userId, onMealPlanUpdate, wellnessData);
     initializeWellness(userId, onWellnessDataUpdate);
     initializeJourney(userId, wellnessData);
+
+    // NEW: Initialize Calm Space
+    // Get app ID for Firebase paths in calm-space
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    initializeCalmSpace(userId, appId);
 };
 
 export const unloadAllData = () => {
     unloadMealPlanner();
     unloadWellness();
     unloadJourney();
+    unloadCalmSpace(); // NEW
 };
 
 
@@ -97,4 +105,6 @@ function handleTabSwitch(activeTab) {
         updateWellnessChartData();
         updateDashboardUI();
     }
+    // No specific action needed for 'calm' or 'journey' tab switches, 
+    // they are initialized on load and handle their own state.
 }
