@@ -397,6 +397,15 @@ function initBreathing() {
         }
     });
 
+    // --- FIX: Added listener for timer buttons ---
+    elements.breathingTimerButtons.addEventListener('click', e => {
+        const button = e.target.closest('button');
+        if (button && button.dataset.timer) {
+            document.querySelectorAll('#breathing-timer-buttons button').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+        }
+    });
+
     // --- NEW: Play/Stop button listeners ---
     if (elements.breathingPlayBtn) {
         elements.breathingPlayBtn.addEventListener('click', startBreathing);
@@ -462,7 +471,9 @@ function selectBreathing(type) {
     }
     
     // Set instructions text
-    elements.breathingInstruction.querySelector('p').textContent = `Now showing: ${currentBreathingCycle.name}`;
+    if(elements.breathingInstruction) {
+        elements.breathingInstruction.querySelector('p').textContent = `Now showing: ${currentBreathingCycle.name}`;
+    }
     // Set instructions steps list
     const instructionHtml = currentBreathingCycle.instructions.map(step => `<li>${step}</li>`).join('');
     const stepsList = elements.breathingStepsList; // Use cached element
@@ -479,12 +490,16 @@ function startBreathing() {
     const timerButton = elements.breathingTimerButtons.querySelector('button.active');
     if (!timerButton) {
         // Show an error
-        elements.breathingInstruction.querySelector('p').textContent = "Please select a timer duration first!";
+        if(elements.breathingInstruction) {
+            elements.breathingInstruction.querySelector('p').textContent = "Please select a timer duration first!";
+        }
         return;
     }
     
     if (!currentBreathingCycle) {
-        elements.breathingInstruction.querySelector('p').textContent = "Please select an exercise first!";
+        if(elements.breathingInstruction) {
+            elements.breathingInstruction.querySelector('p').textContent = "Please select an exercise first!";
+        }
         return;
     }
     
@@ -526,7 +541,9 @@ function runBreathingAnimation() {
     
     const step = currentBreathingCycle.steps[currentBreathingStep];
     speak(step.instruction, isSilent);
-    elements.breathingInstruction.querySelector('p').textContent = step.instruction; // Update instruction text
+    if(elements.breathingInstruction) {
+        elements.breathingInstruction.querySelector('p').textContent = step.instruction; // Update instruction text
+    }
 
     // Handle animation
     const orb = elements.breathingOrb;
@@ -661,7 +678,9 @@ function selectMeditation(type) {
     // Remove previous color classes before adding new one
     elements.meditationOrb.classList.remove('bg-pink-500', 'bg-rose-500', 'bg-red-500', 'bg-indigo-600', 'bg-yellow-500');
     elements.meditationOrb.classList.add(meditation.color);
-    elements.meditationInstruction.textContent = 'Set your timer and press play to begin.';
+    if(elements.meditationInstruction) {
+        elements.meditationInstruction.textContent = 'Set your timer and press play to begin.';
+    }
     
     // NEW: Set emoji
     if (elements.meditationVisualEmoji) {
@@ -679,7 +698,7 @@ function startMeditation() {
     // FIX: Get meditation type *before* starting
     const selectedButton = document.querySelector('#meditation-type-buttons button.active');
     if (!selectedButton) {
-        elements.meditationInstruction.textContent = 'Please select a meditation type first.';
+        if (elements.meditationInstruction) elements.meditationInstruction.textContent = 'Please select a meditation type first.';
         return;
     }
     const type = selectedButton.dataset.meditation;
@@ -688,7 +707,7 @@ function startMeditation() {
     stopMeditation();
     const duration = parseInt(elements.meditationTimerInput.value) * 60; // Get duration in seconds
     if (isNaN(duration) || duration <= 0) {
-        elements.meditationInstruction.textContent = 'Please set a valid timer duration (in minutes).';
+        if (elements.meditationInstruction) elements.meditationInstruction.textContent = 'Please set a valid timer duration (in minutes).';
         return;
     }
 
@@ -728,7 +747,7 @@ function runMeditationGuide() {
     if (!activeMeditationTimer) return; // Stop if timer ended
     
     if (currentMeditationStep >= currentMeditationInstructions.length) {
-        elements.meditationInstruction.textContent = "Continue breathing and resting in this space.";
+        if (elements.meditationInstruction) elements.meditationInstruction.textContent = "Continue breathing and resting in this space.";
         // Stop looping instructions, but let timer run out
         utterance.onend = null; 
         return; 
@@ -736,7 +755,7 @@ function runMeditationGuide() {
     
     const isSilent = elements.meditationVoiceToggle.checked;
     const instruction = currentMeditationInstructions[currentMeditationStep];
-    elements.meditationInstruction.textContent = instruction;
+    if (elements.meditationInstruction) elements.meditationInstruction.textContent = instruction;
     speak(instruction, isSilent);
 
     // Set onend handler *before* speaking
@@ -750,7 +769,7 @@ function runMeditationGuide() {
                  setTimeout(runMeditationGuide, 3000); 
             } else {
                  // Last instruction finished, let the timer run out with final message
-                 elements.meditationInstruction.textContent = "Continue breathing and resting in this space.";
+                 if (elements.meditationInstruction) elements.meditationInstruction.textContent = "Continue breathing and resting in this space.";
             }
         }
     };
@@ -856,7 +875,10 @@ function selectStretchRoutine(type) {
     
     if (!routine) {
         console.error("Selected stretch routine not found:", type);
-        elements.stretchInstruction.textContent = "Error: Could not find selected routine.";
+        // FIX: Target the <p> tag inside the instruction element
+        if (elements.stretchInstruction) {
+            elements.stretchInstruction.querySelector('p').textContent = "Error: Could not find selected routine.";
+        }
         return;
     }
     
@@ -867,9 +889,12 @@ function selectStretchRoutine(type) {
     });
 
     if (currentStretchRoutine.length === 0) {
-        elements.stretchInstruction.textContent = "This routine isn't recommended for your selected trimester. Please choose another.";
-        elements.stretchPoseDisplay.textContent = "0 / 0";
-        elements.stretchVisual.textContent = '🧘‍♀️'; // NEW
+        // FIX: Target the <p> tag inside the instruction element
+        if (elements.stretchInstruction) {
+            elements.stretchInstruction.querySelector('p').textContent = "This routine isn't recommended for your selected trimester. Please choose another.";
+        }
+        if (elements.stretchPoseDisplay) elements.stretchPoseDisplay.textContent = "0 / 0";
+        if (elements.stretchVisual) elements.stretchVisual.textContent = '🧘‍♀️'; // NEW
         currentStretchPoseIndex = 0; // Reset index
         return;
     }
@@ -886,17 +911,24 @@ function displayPose() {
     if (currentStretchPoseIndex >= currentStretchRoutine.length) currentStretchPoseIndex = currentStretchRoutine.length - 1;
 
     const pose = currentStretchRoutine[currentStretchPoseIndex];
-    elements.stretchInstruction.textContent = pose.instruction;
-    elements.stretchPoseDisplay.textContent = `${pose.name} (${currentStretchPoseIndex + 1}/${currentStretchRoutine.length})`;
+    // FIX: Target the <p> tag inside the instruction element
+    if (elements.stretchInstruction) {
+        elements.stretchInstruction.querySelector('p').textContent = pose.instruction;
+    }
+    if (elements.stretchPoseDisplay) {
+        elements.stretchPoseDisplay.textContent = `${pose.name} (${currentStretchPoseIndex + 1}/${currentStretchRoutine.length})`;
+    }
     
     // NEW: Update visual with emoji
-    elements.stretchVisual.className = 'transition-all duration-500 text-6xl'; // Reset classes, add emoji size
-    elements.stretchVisual.innerHTML = ''; // Clear previous content
+    if (elements.stretchVisual) {
+        elements.stretchVisual.className = 'transition-all duration-500 text-6xl'; // Reset classes, add emoji size
+        elements.stretchVisual.innerHTML = ''; // Clear previous content
     
-    if (pose.emoji) {
-        elements.stretchVisual.textContent = pose.emoji;
-    } else {
-        elements.stretchVisual.innerHTML = `<span class="text-3xl p-4">${pose.name}</span>`; // Default text if no visual
+        if (pose.emoji) {
+            elements.stretchVisual.textContent = pose.emoji;
+        } else {
+            elements.stretchVisual.innerHTML = `<span class="text-3xl p-4">${pose.name}</span>`; // Default text if no visual
+        }
     }
 
 
@@ -913,12 +945,12 @@ function displayPose() {
         const duration = pose.duration || 15000; // Default to 15s if duration missing
         let timeLeft = duration / 1000; // Time in seconds
         
-        elements.stretchTimerDisplay.textContent = formatTime(timeLeft);
+        if (elements.stretchTimerDisplay) elements.stretchTimerDisplay.textContent = formatTime(timeLeft);
         
         // Interval for countdown timer
         currentStretchPoseTimer = setInterval(() => {
             timeLeft--;
-            elements.stretchTimerDisplay.textContent = formatTime(timeLeft);
+            if (elements.stretchTimerDisplay) elements.stretchTimerDisplay.textContent = formatTime(timeLeft);
             if (timeLeft <= 0) {
                 clearInterval(currentStretchPoseTimer);
             }
@@ -946,7 +978,7 @@ function displayPose() {
     } else {
         // If paused, show the duration of the current pose instead of 0:00
         const duration = (pose.duration || 15000) / 1000;
-        elements.stretchTimerDisplay.textContent = formatTime(duration);
+        if (elements.stretchTimerDisplay) elements.stretchTimerDisplay.textContent = formatTime(duration);
     }
 }
 
@@ -959,11 +991,11 @@ function playPauseStretches() {
         activeStretchTimer = null;
         currentStretchPoseTimer = null; // NEW
         synth.cancel(); // Stop speech
-        elements.stretchPlayIcon.style.display = 'inline'; // Show Play text/icon
-        elements.stretchPauseIcon.style.display = 'none'; // Hide Pause text/icon
+        if(elements.stretchPlayIcon) elements.stretchPlayIcon.style.display = 'inline'; // Show Play text/icon
+        if(elements.stretchPauseIcon) elements.stretchPauseIcon.style.display = 'none'; // Hide Pause text/icon
     } else {
-        elements.stretchPlayIcon.style.display = 'none'; // Hide Play
-        elements.stretchPauseIcon.style.display = 'inline'; // Show Pause
+        if(elements.stretchPlayIcon) elements.stretchPlayIcon.style.display = 'none'; // Hide Play
+        if(elements.stretchPauseIcon) elements.stretchPauseIcon.style.display = 'inline'; // Show Pause
         // Resume/start from the current pose
         displayPose(); // This will speak the instruction and set the timer if not paused
     }
@@ -1031,7 +1063,10 @@ function stopStretches() {
     // NEW: Reset displays
     if (elements.stretchVisual) elements.stretchVisual.textContent = '🧘‍♀️';
     if (elements.stretchPoseDisplay) elements.stretchPoseDisplay.textContent = 'Select a routine';
-    if (elements.stretchInstruction) elements.stretchInstruction.querySelector('p').textContent = 'Select a routine. Stretches are filtered by trimester for your safety.';
+    // FIX: Target the <p> tag inside the instruction element
+    if (elements.stretchInstruction && elements.stretchInstruction.querySelector('p')) {
+        elements.stretchInstruction.querySelector('p').textContent = 'Select a routine. Stretches are filtered by trimester for your safety.';
+    }
     if (elements.stretchTimerDisplay) elements.stretchTimerDisplay.textContent = '0:00';
 }
 
