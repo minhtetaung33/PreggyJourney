@@ -322,13 +322,15 @@
                                         <!-- UPDATE: Removed hidden stop button. New buttons below -->
                                     </div>
                                     <div class="flex flex-wrap items-center justify-between gap-4 mt-4">
-                                        <!-- FIX: Added id="breathing-timer-buttons" to the surrounding div -->
-                                        <div class="flex items-center gap-3" id="breathing-timer-buttons">
-                                            <span class="font-semibold">Timer:</span>
-                                            <button class="btn-secondary text-sm w-12 py-2 rounded-lg" data-timer="120">2 min</button>
-                                            <button class="btn-secondary text-sm w-12 py-2 rounded-lg" data-timer="300">5 min</button>
-                                            <button class="btn-secondary text-sm w-12 py-2 rounded-lg" data-timer="600">10 min</button>
+                                        
+                                        <!-- 
+                                        *** UPDATE: Replaced timer buttons with a number input ***
+                                        -->
+                                        <div class="flex items-center gap-3 flex-grow">
+                                            <label for="breathing-timer-input" class="font-semibold">Timer (min):</label>
+                                            <input type="number" id="breathing-timer-input" class="meal-select text-sm flex-grow" placeholder="Minutes..." min="1" value="3">
                                         </div>
+                                        
                                         <!-- UPDATE: New Play/Stop buttons -->
                                         <div class="flex items-center gap-3">
                                             <button id="breathing-play-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-5 rounded-lg w-20">Play</button>
