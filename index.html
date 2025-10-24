@@ -322,13 +322,14 @@
                                         <!-- UPDATE: Removed hidden stop button. New buttons below -->
                                     </div>
                                     <div class="flex flex-wrap items-center justify-between gap-4 mt-4">
-                                        <!-- FIX: Added id="breathing-timer-buttons" to the surrounding div -->
-                                        <div class="flex items-center gap-3" id="breathing-timer-buttons">
+                                        
+                                        <!-- ******** UPDATE: Replaced timer buttons with a number input ******** -->
+                                        <div class="flex items-center gap-3 flex-grow" id="breathing-timer-container">
                                             <span class="font-semibold">Timer:</span>
-                                            <button class="btn-secondary text-sm w-12 py-2 rounded-lg" data-timer="120">2 min</button>
-                                            <button class="btn-secondary text-sm w-12 py-2 rounded-lg" data-timer="300">5 min</button>
-                                            <button class="btn-secondary text-sm w-12 py-2 rounded-lg" data-timer="600">10 min</button>
+                                            <input type="number" id="breathing-timer-input" class="meal-select text-sm flex-grow" placeholder="Minutes..." min="1" value="3">
                                         </div>
+                                        <!-- ******** END UPDATE ******** -->
+
                                         <!-- UPDATE: New Play/Stop buttons -->
                                         <div class="flex items-center gap-3">
                                             <button id="breathing-play-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-5 rounded-lg w-20">Play</button>
@@ -380,10 +381,10 @@
                                             <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-stretch="sleep-wind">Sleep Wind-Down</button>
                                         </div>
                                         <div class="flex items-center justify-between gap-4 mb-4">
-                                            <!-- 
-                                                *** UPDATE: Replaced trimester selector with timer input ***
-                                            -->
+                                            
+                                            <!-- ******** UPDATE: Replaced trimester selector with timer input ******** -->
                                             <input type="number" id="stretch-timer-input" class="meal-select text-sm flex-grow" placeholder="Minutes..." min="1" value="5">
+                                            <!-- ******** END UPDATE ******** -->
 
                                             <!-- FIX: Renamed id to "stretch-voice-toggle" and changed to checkbox -->
                                             <input type="checkbox" id="stretch-voice-toggle" class="hidden">
@@ -392,11 +393,9 @@
                                                 <svg id="stretch-sound-on-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M20 4a9 9 0 010 12.728M6.717 3.342A.5.5 0 017.5 3.85v16.298a.5.5 0 01-.783.41l-4-3.5H1a1 1 0 01-1-1V7.94a1 1 0 011-1h1.717l4-3.5a.5.5 0 01.783-.088z"></path></svg>
                                                 <svg id="stretch-sound-off-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.866 3.866M21 21l-3.866-3.866"></path></svg>
                                             </label>
-                                            <!-- 
-                                                *** UPDATE: Hid loop toggle as it's now implicit with the timer ***
-                                            -->
+                                            <!-- FIX: Added "stretch-loop-toggle" checkbox -->
                                             <input type="checkbox" id="stretch-loop-toggle" class="hidden">
-                                            <label for="stretch-loop-toggle" class="icon-btn p-2 rounded-full cursor-pointer hidden" title="Toggle Loop">
+                                            <label for="stretch-loop-toggle" class="icon-btn p-2 rounded-full cursor-pointer" title="Toggle Loop">
                                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9.5m0 5a8.001 8.001 0 0014.836 2.5m.582 5v-5h-.582"></path></svg>
                                             </label>
                                         </div>
