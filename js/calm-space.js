@@ -18,9 +18,9 @@ const breathingData = {
     '4-7-8': {
         name: '4-7-8 Breathing',
         steps: [
-            { instruction: 'Inhale through your nose for 4', duration: 4000, type: 'inhale' },
-            { instruction: 'Hold your breath for 7', duration: 7000, type: 'hold' },
-            { instruction: 'Exhale through your mouth for 8', duration: 8000, type: 'exhale' },
+            { instruction: 'Inhale through your nose for 4 seconds', duration: 4000, type: 'inhale' },
+            { instruction: 'Hold your breath for 7 seconds', duration: 7000, type: 'hold' },
+            { instruction: 'Exhale through your mouth for 8 seconds', duration: 8000, type: 'exhale' },
         ],
         visual: 'orb-glow',
         color: 'bg-blue-400', // Example color
@@ -29,10 +29,10 @@ const breathingData = {
     'box': {
         name: 'Box Breathing',
         steps: [
-            { instruction: 'Inhale for 4', duration: 4000, type: 'inhale' },
-            { instruction: 'Hold for 4', duration: 4000, type: 'hold' },
-            { instruction: 'Exhale for 4', duration: 4000, type: 'exhale' },
-            { instruction: 'Hold for 4', duration: 4000, type: 'hold' },
+            { instruction: 'Inhale for 4 seconds', duration: 4000, type: 'inhale' },
+            { instruction: 'Hold for 4 seconds', duration: 4000, type: 'hold' },
+            { instruction: 'Exhale for 4 seconds', duration: 4000, type: 'exhale' },
+            { instruction: 'Hold for 4 seconds', duration: 4000, type: 'hold' },
         ],
         visual: 'box-glow',
         color: 'bg-green-400', // Example color
@@ -61,8 +61,8 @@ const breathingData = {
     'energizer': { // Corrected key from HTML
         name: 'Morning Energizer',
         steps: [
-            { instruction: 'Inhale for 3', duration: 3000, type: 'inhale' },
-            { instruction: 'Exhale for 3', duration: 3000, type: 'exhale' },
+            { instruction: 'Inhale for 3 seconds', duration: 3000, type: 'inhale' },
+            { instruction: 'Exhale for 3 seconds', duration: 3000, type: 'exhale' },
         ],
         visual: 'orb-glow',
         color: 'bg-yellow-400', // Example color
@@ -71,9 +71,9 @@ const breathingData = {
     'sleep': {
         name: 'Sleep Wind-Down',
         steps: [
-            { instruction: 'Inhale for 5', duration: 5000, type: 'inhale' },
-            { instruction: 'Hold for 2', duration: 2000, type: 'hold' },
-            { instruction: 'Exhale for 7', duration: 7000, type: 'exhale' },
+            { instruction: 'Inhale for 5 seconds', duration: 5000, type: 'inhale' },
+            { instruction: 'Hold for 2 seconds', duration: 2000, type: 'hold' },
+            { instruction: 'Exhale for 7 seconds', duration: 7000, type: 'exhale' },
         ],
         visual: 'orb-glow',
         color: 'bg-indigo-400', // Example color
