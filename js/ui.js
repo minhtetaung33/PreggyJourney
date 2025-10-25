@@ -99,8 +99,8 @@ export const cacheDomElements = () => {
     elements.summaryStreakBadge = document.getElementById('summary-streak-badge');
     elements.summaryBarChart = document.getElementById('summary-bar-chart');
 
-    // --- NEW JOURNEY TAB APPOINTMENT FIELDS ---
-    // New To-Do Form
+    // --- JOURNEY TAB ELEMENTS ---
+    // Appointments
     elements.newAppointmentFields = document.getElementById('new-appointment-fields');
     elements.newAppointmentFname = document.getElementById('new-appointment-fname');
     elements.newAppointmentLname = document.getElementById('new-appointment-lname');
@@ -109,8 +109,6 @@ export const cacheDomElements = () => {
     elements.newAppointmentEmail = document.getElementById('new-appointment-email');
     elements.newAppointmentType = document.getElementById('new-appointment-type');
     elements.newAppointmentCustomType = document.getElementById('new-appointment-custom-type');
-
-    // Edit To-Do Modal
     elements.editAppointmentFields = document.getElementById('edit-appointment-fields');
     elements.editAppointmentFname = document.getElementById('edit-appointment-fname');
     elements.editAppointmentLname = document.getElementById('edit-appointment-lname');
@@ -119,7 +117,12 @@ export const cacheDomElements = () => {
     elements.editAppointmentEmail = document.getElementById('edit-appointment-email');
     elements.editAppointmentType = document.getElementById('edit-appointment-type');
     elements.editAppointmentCustomType = document.getElementById('edit-appointment-custom-type');
-    // --- END NEW JOURNEY FIELDS ---
+
+    // NEW: Wishlist Food Fields
+    elements.newWishFoodFields = document.getElementById('new-wish-food-fields');
+    elements.newWishFoodType = document.getElementById('new-wish-food-type');
+    elements.newWishFoodExpiry = document.getElementById('new-wish-food-expiry');
+    // --- END JOURNEY TAB ELEMENTS ---
 
     // --- NEW AI RECIPE ASSISTANT FIELDS ---
     elements.aiRecipePrompt = document.getElementById('ai-recipe-prompt');
