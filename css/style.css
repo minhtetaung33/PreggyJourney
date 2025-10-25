@@ -248,10 +248,12 @@ h1, h2, h3 {
 #image-link-modal.active #image-link-modal-content,
 #baby-message-modal.active #baby-message-modal-content, /* Ensure animation applies */
 #ai-meal-modal.active #ai-meal-modal-content,
-#mindful-reflection-modal.active #mindful-reflection-modal-content { /* NEW MODAL */
+#mindful-reflection-modal.active #mindful-reflection-modal-content, /* NEW MODAL */
+#edit-wish-modal.active #edit-wish-modal-content { /* ADDED THIS LINE FOR EDIT WISH MODAL */
     transform: scale(1);
     opacity: 1;
 }
+
 
 /* Custom scrollbar for webkit browsers */
 .horizontal-scroll::-webkit-scrollbar {
