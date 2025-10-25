@@ -3,74 +3,8 @@
  import { getCurrentUserId } from "./auth.js";
  import { elements } from './ui.js'; // Import elements from ui.js
  
- // DOM Elements (using elements object from ui.js)
- const todoListContainer = elements.todoListContainer; // Example, ensure all relevant elements are cached in ui.js
- const newTodoInput = elements.newTodoInput;
- const newTodoCategory = elements.newTodoCategory;
- const addTodoBtn = elements.addTodoBtn;
- const aiGenerateTodosBtn = elements.aiGenerateTodosBtn;
- const wishlistContainer = elements.wishlistContainer;
- const wishlistProgressText = elements.wishlistProgressText;
- const wishlistProgressBar = elements.wishlistProgressBar;
- const newWishItem = elements.newWishItem;
- const newWishCategory = elements.newWishCategory;
- const newWishPrice = elements.newWishPrice;
- const newWishLink = elements.newWishLink;
- const addWishBtn = elements.addWishBtn;
- const aiWishForm = elements.aiWishForm;
- const aiWishPrompt = elements.aiWishPrompt;
- const reflectionsContainer = elements.reflectionsContainer;
- const addReflectionBtn = elements.addReflectionBtn;
- const reflectionModal = elements.reflectionModal;
- const reflectionModalTitle = elements.reflectionModalTitle;
- const reflectionTitleInput = elements.reflectionTitleInput;
- const reflectionContentInput = elements.reflectionContentInput;
- const reflectionColorTags = elements.reflectionColorTags;
- const reflectionModalCancelBtn = elements.reflectionModalCancelBtn;
- const reflectionModalSaveBtn = elements.reflectionModalSaveBtn;
- const aiSummarizeReflectionsBtn = elements.aiSummarizeReflectionsBtn;
- const aiSummaryModal = elements.aiSummaryModal;
- const aiSummaryContent = elements.aiSummaryContent;
- const aiSummaryCloseBtn = elements.aiSummaryCloseBtn;
- const customCategoryInput = elements.customCategoryInput; // Wish custom category
- const todoHeader = elements.todoHeader;
- const collapsibleTodoContent = elements.collapsibleTodoContent;
- const todoToggleIcon = elements.todoToggleIcon;
- const wishlistHeader = elements.wishlistHeader;
- const collapsibleWishlistContent = elements.collapsibleWishlistContent;
- const wishlistToggleIcon = elements.wishlistToggleIcon;
- const newTodoDate = elements.newTodoDate;
- const newTodoTime = elements.newTodoTime;
- const customTodoCategoryInput = elements.customTodoCategoryInput; // Todo custom category
- const editTodoModal = elements.editTodoModal;
- const editTodoInput = elements.editTodoInput;
- const editTodoDate = elements.editTodoDate;
- const editTodoTime = elements.editTodoTime;
- const editTodoCategory = elements.editTodoCategory;
- const editCustomTodoCategoryInput = elements.editCustomTodoCategoryInput;
- const editTodoModalCancelBtn = elements.editTodoModalCancelBtn;
- const editTodoModalSaveBtn = elements.editTodoModalSaveBtn;
- const reflectionHeader = elements.reflectionHeader;
- const collapsibleReflectionContent = elements.collapsibleReflectionContent;
- const reflectionToggleIcon = elements.reflectionToggleIcon;
- const toggleReflectionsContainer = elements.toggleReflectionsContainer;
- const toggleReflectionsBtn = elements.toggleReflectionsBtn;
- 
- // New DOM Elements for Reflection Image Feature
- const addReflectionImageBtn = elements.addReflectionImageBtn;
- const imageLinkModal = elements.imageLinkModal;
- const imageLinkInput = elements.imageLinkInput;
- const imageLinkCancelBtn = elements.imageLinkCancelBtn;
- const imageLinkSaveBtn = elements.imageLinkSaveBtn;
- const reflectionImagePreviewContainer = elements.reflectionImagePreviewContainer;
- const reflectionImagePreview = elements.reflectionImagePreview;
- 
- // --- NEW: Notification Elements (from ui.js) ---
- const notificationPermissionArea = elements.notificationPermissionArea;
- const enableNotificationsBtn = elements.enableNotificationsBtn;
- const notificationStatusText = elements.notificationStatusText;
- // --- End NEW ---
- 
+ // --- REMOVED ALL 'const ... = elements...' ASSIGNMENTS ---
+ // We will now access elements directly, e.g., elements.todoListContainer
  
  let todosRef, wishesRef, reflectionsRef;
  let unsubscribeTodos, unsubscribeWishes, unsubscribeReflections;
@@ -89,29 +23,30 @@
  
  // --- NEW: Update Notification Button UI ---
  function updateNotificationButtonUI() {
-     if (!notificationPermissionArea || !enableNotificationsBtn || !notificationStatusText) return;
+     // Access elements directly
+     if (!elements.notificationPermissionArea || !elements.enableNotificationsBtn || !elements.notificationStatusText) return;
  
      // Check if Notifications are supported first
      if (!('Notification' in window)) {
-         notificationPermissionArea.innerHTML = '<p class="text-xs text-yellow-400">Browser notifications not supported.</p>';
+         elements.notificationPermissionArea.innerHTML = '<p class="text-xs text-yellow-400">Browser notifications not supported.</p>';
          return;
      }
  
      if (Notification.permission === 'granted') {
-         enableNotificationsBtn.classList.add('hidden');
-         notificationStatusText.textContent = 'Reminders Enabled';
-         notificationStatusText.classList.remove('hidden', 'text-red-400');
-         notificationStatusText.classList.add('text-green-400');
+         elements.enableNotificationsBtn.classList.add('hidden');
+         elements.notificationStatusText.textContent = 'Reminders Enabled';
+         elements.notificationStatusText.classList.remove('hidden', 'text-red-400');
+         elements.notificationStatusText.classList.add('text-green-400');
          notificationPermissionGranted = true;
      } else if (Notification.permission === 'denied') {
-         enableNotificationsBtn.classList.add('hidden');
-         notificationStatusText.textContent = 'Reminders Blocked (Check Browser Settings)';
-         notificationStatusText.classList.remove('hidden', 'text-green-400');
-         notificationStatusText.classList.add('text-red-400');
+         elements.enableNotificationsBtn.classList.add('hidden');
+         elements.notificationStatusText.textContent = 'Reminders Blocked (Check Browser Settings)';
+         elements.notificationStatusText.classList.remove('hidden', 'text-green-400');
+         elements.notificationStatusText.classList.add('text-red-400');
          notificationPermissionGranted = false;
      } else { // 'default' state (permission not yet asked or dismissed)
-         enableNotificationsBtn.classList.remove('hidden');
-         notificationStatusText.classList.add('hidden');
+         elements.enableNotificationsBtn.classList.remove('hidden');
+         elements.notificationStatusText.classList.add('hidden');
          notificationPermissionGranted = false;
      }
  }
@@ -239,9 +174,12 @@
  // --- End NEW ---
  
  function renderTodos(todos) {
-     todoListContainer.innerHTML = '';
+     // Access element directly and add guard clause
+     if (!elements.todoListContainer) return; 
+ 
+     elements.todoListContainer.innerHTML = '';
      if (todos.length === 0) {
-         todoListContainer.innerHTML = `<p class="text-center text-gray-400">No tasks yet. Add one below!</p>`;
+         elements.todoListContainer.innerHTML = `<p class="text-center text-gray-400">No tasks yet. Add one below!</p>`;
          return;
      }
      const categoryIcons = { Health: '🧘‍♀️', Baby: '🍼', Home: '🏡', Reminder: '💬' };
@@ -322,7 +260,7 @@
              await deleteDoc(todoDocRef);
          });
  
-         todoListContainer.appendChild(item);
+         elements.todoListContainer.appendChild(item);
      });
  }
  
@@ -331,7 +269,10 @@
   * @param {Array} wishes - The array of wish items from Firestore.
   */
  function renderWishes(wishes) {
-     wishlistContainer.innerHTML = '';
+     // Access elements directly and add guard clauses
+     if (!elements.wishlistContainer || !elements.wishlistProgressText || !elements.wishlistProgressBar) return;
+ 
+     elements.wishlistContainer.innerHTML = '';
  
      const sortedWishes = [...wishes].sort((a, b) => {
          if (a.purchased !== b.purchased) {
@@ -343,9 +284,9 @@
      });
  
      if (sortedWishes.length === 0) {
-         wishlistContainer.innerHTML = `<p class="text-center text-gray-400">No wishes yet. Add one below!</p>`;
-         wishlistProgressText.textContent = `0/0 Items`;
-         wishlistProgressBar.style.width = '0%';
+         elements.wishlistContainer.innerHTML = `<p class="text-center text-gray-400">No wishes yet. Add one below!</p>`;
+         elements.wishlistProgressText.textContent = `0/0 Items`;
+         elements.wishlistProgressBar.style.width = '0%';
          return;
      }
  
@@ -376,27 +317,30 @@
              const wishDocRef = doc(db, `users/${getCurrentUserId()}/wishes`, wish.id);
              await deleteDoc(wishDocRef);
          });
-         wishlistContainer.appendChild(item);
+         elements.wishlistContainer.appendChild(item);
      });
  
      const purchasedCount = wishes.filter(w => w.purchased).length;
-     wishlistProgressText.textContent = `${purchasedCount}/${wishes.length} Items`;
-     wishlistProgressBar.style.width = wishes.length > 0 ? `${(purchasedCount / wishes.length) * 100}%` : '0%';
+     elements.wishlistProgressText.textContent = `${purchasedCount}/${wishes.length} Items`;
+     elements.wishlistProgressBar.style.width = wishes.length > 0 ? `${(purchasedCount / wishes.length) * 100}%` : '0%';
  }
  
  
  function renderReflections(reflections) {
-     reflectionsContainer.innerHTML = '';
+     // Access elements directly and add guard clauses
+     if (!elements.reflectionsContainer || !elements.toggleReflectionsContainer || !elements.toggleReflectionsBtn) return;
+ 
+     elements.reflectionsContainer.innerHTML = '';
      const notesToRender = showAllReflections ? reflections : reflections.slice(0, 3);
  
      if (reflections.length === 0) {
-         reflectionsContainer.innerHTML = `<p class="text-center text-gray-400 col-span-full">No reflections yet. Add a new note to begin!</p>`;
-         toggleReflectionsContainer.classList.add('hidden');
+         elements.reflectionsContainer.innerHTML = `<p class="text-center text-gray-400 col-span-full">No reflections yet. Add a new note to begin!</p>`;
+         elements.toggleReflectionsContainer.classList.add('hidden');
          return;
      }
  
      if (notesToRender.length === 0 && reflections.length > 0) {
-         reflectionsContainer.innerHTML = `<p class="text-center text-gray-400 col-span-full">All notes are hidden. Click "Show All" to see them.</p>`;
+         elements.reflectionsContainer.innerHTML = `<p class="text-center text-gray-400 col-span-full">All notes are hidden. Click "Show All" to see them.</p>`;
      }
  
      notesToRender.forEach(note => {
@@ -423,20 +367,20 @@
              deleteReflection(note.id);
          });
  
-         reflectionsContainer.appendChild(item);
+         elements.reflectionsContainer.appendChild(item);
      });
  
      if (reflections.length > 3) {
-         toggleReflectionsContainer.classList.remove('hidden');
-         toggleReflectionsBtn.textContent = showAllReflections ? 'Show Less' : `Show All (${reflections.length})`;
+         elements.toggleReflectionsContainer.classList.remove('hidden');
+         elements.toggleReflectionsBtn.textContent = showAllReflections ? 'Show Less' : `Show All (${reflections.length})`;
      } else {
-         toggleReflectionsContainer.classList.add('hidden');
+         elements.toggleReflectionsContainer.classList.add('hidden');
      }
  }
  
  
  function renderAiWishSuggestions(suggestions) {
-     const container = document.getElementById('ai-wish-suggestions-container');
+     const container = document.getElementById('ai-wish-suggestions-container'); // This one is fine as it's self-contained
      container.innerHTML = '';
  
      if (!suggestions || suggestions.length === 0) {
@@ -467,21 +411,22 @@
              <button class="btn-secondary text-xs font-semibold py-1.5 px-3 rounded-md add-suggestion-btn flex-shrink-0 self-center">Add</button>
          `;
          card.querySelector('.add-suggestion-btn').addEventListener('click', () => {
-             newWishItem.value = suggestion.productName;
-             newWishPrice.value = suggestion.price || '';
-             newWishLink.value = suggestion.productUrl || '';
+             // Access elements directly
+             elements.newWishItem.value = suggestion.productName;
+             elements.newWishPrice.value = suggestion.price || '';
+             elements.newWishLink.value = suggestion.productUrl || '';
  
-             const categoryOption = Array.from(newWishCategory.options).find(opt => opt.value === suggestion.category);
+             const categoryOption = Array.from(elements.newWishCategory.options).find(opt => opt.value === suggestion.category);
              if (categoryOption) {
-                 newWishCategory.value = suggestion.category;
-                 customCategoryInput.classList.add('hidden'); // Wish custom input
+                 elements.newWishCategory.value = suggestion.category;
+                 elements.customCategoryInput.classList.add('hidden'); // Wish custom input
              } else {
-                 newWishCategory.value = 'Custom';
-                 customCategoryInput.classList.remove('hidden'); // Wish custom input
-                 customCategoryInput.value = suggestion.category; // Wish custom input
+                 elements.newWishCategory.value = 'Custom';
+                 elements.customCategoryInput.classList.remove('hidden'); // Wish custom input
+                 elements.customCategoryInput.value = suggestion.category; // Wish custom input
              }
-             newWishItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
-             newWishItem.focus();
+             elements.newWishItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+             elements.newWishItem.focus();
          });
          container.appendChild(card);
      });
@@ -526,290 +471,341 @@
  }
  
  function setupEventListeners() {
-     addTodoBtn.addEventListener('click', async () => {
-         const text = newTodoInput.value.trim();
-         let category = newTodoCategory.value;
-         if (category === 'Custom') {
-             category = customTodoCategoryInput.value.trim(); // Todo custom input
-         }
- 
-         if (!text || !category || !todosRef) return;
- 
-         // --- Request permission before adding if needed ---
-         let hasPermission = notificationPermissionGranted; // Use current state
-         // Only ask if date/time are set AND permission is 'default' (not yet granted/denied)
-         if (newTodoDate.value && newTodoTime.value && Notification.permission === 'default') {
-              hasPermission = await requestNotificationPermission();
-         }
-         // --- End permission request ---
- 
-         const newTodoData = {
-             text,
-             category,
-             date: newTodoDate.value,
-             time: newTodoTime.value,
-             completed: false,
-             createdAt: serverTimestamp()
-         };
- 
-         const docRef = await addDoc(todosRef, newTodoData);
- 
-         // --- Schedule notification after adding ---
-         // Use the *potentially updated* permission status
-         if (notificationPermissionGranted) {
-            scheduleNotification({ id: docRef.id, ...newTodoData });
-         }
-         // --- End scheduling ---
- 
-         newTodoInput.value = '';
-         newTodoDate.value = '';
-         newTodoTime.value = '';
-         newTodoCategory.value = 'Health';
-         customTodoCategoryInput.value = ''; // Todo custom input
-         customTodoCategoryInput.classList.add('hidden'); // Todo custom input
-     });
- 
-     aiGenerateTodosBtn.addEventListener('click', async () => {
-         const pregnancyWeek = Math.floor(Math.abs(new Date() - new Date(wellnessDataForJourney.pregnancyStartDate)) / (1000 * 60 * 60 * 24 * 7)) || 1; // Default to 1
-         const systemPrompt = `You are a helpful assistant. Generate a to-do list of 4-5 tasks for week ${pregnancyWeek} of pregnancy. Categorize each task as 'Health', 'Baby', 'Home', or 'Reminder'. Your response MUST be ONLY a valid JSON array of objects, where each object has "task" (string) and "category" (string) keys.`;
-         const userQuery = `Generate a weekly to-do list for week ${pregnancyWeek}.`;
-         const apiKey = ""; // Leave empty
-         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-         const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json" } };
-         try {
-             const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-             if (!response.ok) throw new Error(`API error: ${response.statusText}`);
-             const result = await response.json();
-             const jsonString = result.candidates[0].content.parts[0].text;
-             const data = JSON.parse(jsonString);
-             for (const item of data) {
-                 if (item.task && item.category && todosRef) {
-                     await addDoc(todosRef, { text: item.task, category: item.category, completed: false, createdAt: serverTimestamp() });
-                 }
+     // Add guard clauses to ensure elements exist before adding listeners
+     if (elements.addTodoBtn) {
+         elements.addTodoBtn.addEventListener('click', async () => {
+             const text = elements.newTodoInput.value.trim();
+             let category = elements.newTodoCategory.value;
+             if (category === 'Custom') {
+                 category = elements.customTodoCategoryInput.value.trim(); // Todo custom input
              }
-         } catch (error) { console.error("AI To-do generation failed:", error); }
-     });
  
-     addWishBtn.addEventListener('click', async () => {
-         const item = newWishItem.value.trim();
-         let category = newWishCategory.value;
-         if (category === 'Custom') {
-             category = customCategoryInput.value.trim(); // Wish custom input
-         }
-         if (!item || !wishesRef || !category) return;
+             if (!text || !category || !todosRef) return;
  
-         await addDoc(wishesRef, {
-             item,
-             category: category,
-             price: newWishPrice.value.trim(),
-             link: newWishLink.value.trim(),
-             purchased: false,
-             createdAt: serverTimestamp()
+             // --- Request permission before adding if needed ---
+             let hasPermission = notificationPermissionGranted; // Use current state
+             // Only ask if date/time are set AND permission is 'default' (not yet granted/denied)
+             if (elements.newTodoDate.value && elements.newTodoTime.value && Notification.permission === 'default') {
+                 hasPermission = await requestNotificationPermission();
+             }
+             // --- End permission request ---
+ 
+             const newTodoData = {
+                 text,
+                 category,
+                 date: elements.newTodoDate.value,
+                 time: elements.newTodoTime.value,
+                 completed: false,
+                 createdAt: serverTimestamp()
+             };
+ 
+             const docRef = await addDoc(todosRef, newTodoData);
+ 
+             // --- Schedule notification after adding ---
+             // Use the *potentially updated* permission status
+             if (notificationPermissionGranted) {
+                 scheduleNotification({ id: docRef.id, ...newTodoData });
+             }
+             // --- End scheduling ---
+ 
+             elements.newTodoInput.value = '';
+             elements.newTodoDate.value = '';
+             elements.newTodoTime.value = '';
+             elements.newTodoCategory.value = 'Health';
+             elements.customTodoCategoryInput.value = ''; // Todo custom input
+             elements.customTodoCategoryInput.classList.add('hidden'); // Todo custom input
          });
-         newWishItem.value = newWishPrice.value = newWishLink.value = '';
-         customCategoryInput.value = ''; // Wish custom input
-         newWishCategory.value = 'Baby Care';
-         customCategoryInput.classList.add('hidden'); // Wish custom input
-     });
+     }
  
-     aiWishForm.addEventListener('submit', async (e) => {
-         e.preventDefault();
-         const prompt = aiWishPrompt.value.trim();
-         if(!prompt) return;
+     if (elements.aiGenerateTodosBtn) {
+         elements.aiGenerateTodosBtn.addEventListener('click', async () => {
+             const pregnancyWeek = Math.floor(Math.abs(new Date() - new Date(wellnessDataForJourney.pregnancyStartDate)) / (1000 * 60 * 60 * 24 * 7)) || 1; // Default to 1
+             const systemPrompt = `You are a helpful assistant. Generate a to-do list of 4-5 tasks for week ${pregnancyWeek} of pregnancy. Categorize each task as 'Health', 'Baby', 'Home', or 'Reminder'. Your response MUST be ONLY a valid JSON array of objects, where each object has "task" (string) and "category" (string) keys.`;
+             const userQuery = `Generate a weekly to-do list for week ${pregnancyWeek}.`;
+             const apiKey = ""; // Leave empty
+             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+             const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json" } };
+             try {
+                 const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                 if (!response.ok) throw new Error(`API error: ${response.statusText}`);
+                 const result = await response.json();
+                 const jsonString = result.candidates[0].content.parts[0].text;
+                 const data = JSON.parse(jsonString);
+                 for (const item of data) {
+                     if (item.task && item.category && todosRef) {
+                         await addDoc(todosRef, { text: item.task, category: item.category, completed: false, createdAt: serverTimestamp() });
+                     }
+                 }
+             } catch (error) { console.error("AI To-do generation failed:", error); }
+         });
+     }
  
-         const suggestionsContainer = document.getElementById('ai-wish-suggestions-container');
-         suggestionsContainer.innerHTML = `<div class="text-center p-4">
-             <svg class="animate-spin mx-auto h-6 w-6 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-             <p class="mt-2 text-sm text-gray-300">Finding suggestions...</p>
-         </div>`;
+     if (elements.addWishBtn) {
+         elements.addWishBtn.addEventListener('click', async () => {
+             const item = elements.newWishItem.value.trim();
+             let category = elements.newWishCategory.value;
+             if (category === 'Custom') {
+                 category = elements.customCategoryInput.value.trim(); // Wish custom input
+             }
+             if (!item || !wishesRef || !category) return;
  
-         const pregnancyWeek = Math.floor(Math.abs(new Date() - new Date(wellnessDataForJourney.pregnancyStartDate)) / (1000 * 60 * 60 * 24 * 7)) || 1;
-         const systemPrompt = `You are a helpful shopping assistant for a pregnant woman. Based on the user's request and their pregnancy week (${pregnancyWeek}), use the Google Search tool to find 3-4 real, relevant products. For each item, you MUST extract the actual product name, a relevant category (from "Baby Care", "Nursery", "Hospital Bag", "Health", "Postpartum"), price (as a number or string, just the value), and a working URL to the product page. Your response MUST be ONLY a valid JSON array of objects, with no other text or formatting. Each object must have these keys: "productName", "category", "price", "productUrl".`;
-         const userQuery = `My request: "${prompt}". I am in week ${pregnancyWeek} of pregnancy.`;
-         const apiKey = "";
-         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-         const payload = {
-             contents: [{ parts: [{ text: userQuery }] }],
-             tools: [{ "google_search": {} }],
-             systemInstruction: { parts: [{ text: systemPrompt }] },
-             generationConfig: { responseMimeType: "application/json" }
-         };
-         try {
-             const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-             if (!response.ok) throw new Error(`API error: ${response.statusText}`);
-             const result = await response.json();
-             let jsonString = result.candidates[0].content.parts[0].text;
-             jsonString = jsonString.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
-             const data = JSON.parse(jsonString);
-             renderAiWishSuggestions(data);
-         } catch (error) {
-             console.error("AI Wishlist generation failed:", error);
-             suggestionsContainer.innerHTML = `<p class="text-center text-red-300 p-4">Sorry, couldn't generate suggestions right now.</p>`;
-         }
-     });
+             await addDoc(wishesRef, {
+                 item,
+                 category: category,
+                 price: elements.newWishPrice.value.trim(),
+                 link: elements.newWishLink.value.trim(),
+                 purchased: false,
+                 createdAt: serverTimestamp()
+             });
+             elements.newWishItem.value = elements.newWishPrice.value = elements.newWishLink.value = '';
+             elements.customCategoryInput.value = ''; // Wish custom input
+             elements.newWishCategory.value = 'Baby Care';
+             elements.customCategoryInput.classList.add('hidden'); // Wish custom input
+         });
+     }
  
-     newWishCategory.addEventListener('change', () => {
-         // Wish custom input
-         if (newWishCategory.value === 'Custom') {
-             customCategoryInput.classList.remove('hidden');
-         } else {
-             customCategoryInput.classList.add('hidden');
-         }
-     });
+     if (elements.aiWishForm) {
+         elements.aiWishForm.addEventListener('submit', async (e) => {
+             e.preventDefault();
+             const prompt = elements.aiWishPrompt.value.trim();
+             if (!prompt) return;
  
-     newTodoCategory.addEventListener('change', () => {
-         // Todo custom input
-         if (newTodoCategory.value === 'Custom') {
-             customTodoCategoryInput.classList.remove('hidden');
-         } else {
-             customTodoCategoryInput.classList.add('hidden');
-         }
-     });
+             const suggestionsContainer = document.getElementById('ai-wish-suggestions-container');
+             suggestionsContainer.innerHTML = `<div class="text-center p-4">
+                 <svg class="animate-spin mx-auto h-6 w-6 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                 <p class="mt-2 text-sm text-gray-300">Finding suggestions...</p>
+             </div>`;
  
-     editTodoCategory.addEventListener('change', () => {
-         if (editTodoCategory.value === 'Custom') {
-             editCustomTodoCategoryInput.classList.remove('hidden');
-         } else {
-             editCustomTodoCategoryInput.classList.add('hidden');
-         }
-     });
+             const pregnancyWeek = Math.floor(Math.abs(new Date() - new Date(wellnessDataForJourney.pregnancyStartDate)) / (1000 * 60 * 60 * 24 * 7)) || 1;
+             const systemPrompt = `You are a helpful shopping assistant for a pregnant woman. Based on the user's request and their pregnancy week (${pregnancyWeek}), use the Google Search tool to find 3-4 real, relevant products. For each item, you MUST extract the actual product name, a relevant category (from "Baby Care", "Nursery", "Hospital Bag", "Health", "Postpartum"), price (as a number or string, just the value), and a working URL to the product page. Your response MUST be ONLY a valid JSON array of objects, with no other text or formatting. Each object must have these keys: "productName", "category", "price", "productUrl".`;
+             const userQuery = `My request: "${prompt}". I am in week ${pregnancyWeek} of pregnancy.`;
+             const apiKey = "";
+             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+             const payload = {
+                 contents: [{ parts: [{ text: userQuery }] }],
+                 tools: [{ "google_search": {} }],
+                 systemInstruction: { parts: [{ text: systemPrompt }] },
+                 generationConfig: { responseMimeType: "application/json" }
+             };
+             try {
+                 const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                 if (!response.ok) throw new Error(`API error: ${response.statusText}`);
+                 const result = await response.json();
+                 let jsonString = result.candidates[0].content.parts[0].text;
+                 jsonString = jsonString.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
+                 const data = JSON.parse(jsonString);
+                 renderAiWishSuggestions(data);
+             } catch (error) {
+                 console.error("AI Wishlist generation failed:", error);
+                 suggestionsContainer.innerHTML = `<p class="text-center text-red-300 p-4">Sorry, couldn't generate suggestions right now.</p>`;
+             }
+         });
+     }
  
-     wishlistHeader.addEventListener('click', () => {
-         collapsibleWishlistContent.classList.toggle('hidden');
-         wishlistToggleIcon.classList.toggle('rotate-180');
-     });
+     if (elements.newWishCategory) {
+         elements.newWishCategory.addEventListener('change', () => {
+             // Wish custom input
+             if (elements.newWishCategory.value === 'Custom') {
+                 elements.customCategoryInput.classList.remove('hidden');
+             } else {
+                 elements.customCategoryInput.classList.add('hidden');
+             }
+         });
+     }
  
-     todoHeader.addEventListener('click', () => {
-         collapsibleTodoContent.classList.toggle('hidden');
-         todoToggleIcon.classList.toggle('rotate-180');
-     });
+     if (elements.newTodoCategory) {
+         elements.newTodoCategory.addEventListener('change', () => {
+             // Todo custom input
+             if (elements.newTodoCategory.value === 'Custom') {
+                 elements.customTodoCategoryInput.classList.remove('hidden');
+             } else {
+                 elements.customTodoCategoryInput.classList.add('hidden');
+             }
+         });
+     }
  
-     reflectionHeader.addEventListener('click', () => {
-         collapsibleReflectionContent.classList.toggle('hidden');
-         reflectionToggleIcon.classList.toggle('rotate-180');
-     });
+     if (elements.editTodoCategory) {
+         elements.editTodoCategory.addEventListener('change', () => {
+             if (elements.editTodoCategory.value === 'Custom') {
+                 elements.editCustomTodoCategoryInput.classList.remove('hidden');
+             } else {
+                 elements.editCustomTodoCategoryInput.classList.add('hidden');
+             }
+         });
+     }
  
-     toggleReflectionsBtn.addEventListener('click', () => {
-         showAllReflections = !showAllReflections;
-         renderReflections(currentReflections);
-     });
+     if (elements.wishlistHeader) {
+         elements.wishlistHeader.addEventListener('click', () => {
+             elements.collapsibleWishlistContent.classList.toggle('hidden');
+             elements.wishlistToggleIcon.classList.toggle('rotate-180');
+         });
+     }
  
-     addReflectionBtn.addEventListener('click', () => openReflectionModal());
-     reflectionModalCancelBtn.addEventListener('click', closeReflectionModal);
-     reflectionModal.addEventListener('click', e => e.target === reflectionModal && closeReflectionModal());
+     if (elements.todoHeader) {
+         elements.todoHeader.addEventListener('click', () => {
+             elements.collapsibleTodoContent.classList.toggle('hidden');
+             elements.todoToggleIcon.classList.toggle('rotate-180');
+         });
+     }
  
-     reflectionColorTags.addEventListener('click', (e) => {
-         if (e.target.tagName === 'BUTTON') {
-             activeColor = e.target.dataset.color;
-             updateColorTags();
-         }
-     });
+     if (elements.reflectionHeader) {
+         elements.reflectionHeader.addEventListener('click', () => {
+             elements.collapsibleReflectionContent.classList.toggle('hidden');
+             elements.reflectionToggleIcon.classList.toggle('rotate-180');
+         });
+     }
  
-     reflectionModalSaveBtn.addEventListener('click', async () => {
-         const title = reflectionTitleInput.value.trim();
-         const content = reflectionContentInput.value.trim();
-         if (!title || !content) return;
+     if (elements.toggleReflectionsBtn) {
+         elements.toggleReflectionsBtn.addEventListener('click', () => {
+             showAllReflections = !showAllReflections;
+             renderReflections(currentReflections);
+         });
+     }
  
-         const reflectionData = {
-             title,
-             content,
-             color: activeColor,
-             imageUrl: activeReflectionImageUrl
-         };
+     if (elements.addReflectionBtn) {
+         elements.addReflectionBtn.addEventListener('click', () => openReflectionModal());
+     }
+     if (elements.reflectionModalCancelBtn) {
+         elements.reflectionModalCancelBtn.addEventListener('click', closeReflectionModal);
+     }
+     if (elements.reflectionModal) {
+         elements.reflectionModal.addEventListener('click', e => e.target === elements.reflectionModal && closeReflectionModal());
+     }
  
-         if (activeReflectionId) {
-             const noteDocRef = doc(db, `users/${getCurrentUserId()}/reflections`, activeReflectionId);
-             await updateDoc(noteDocRef, reflectionData);
-         } else {
-             reflectionData.createdAt = serverTimestamp();
-             await addDoc(reflectionsRef, reflectionData);
-         }
-         closeReflectionModal();
-     });
+     if (elements.reflectionColorTags) {
+         elements.reflectionColorTags.addEventListener('click', (e) => {
+             if (e.target.tagName === 'BUTTON') {
+                 activeColor = e.target.dataset.color;
+                 updateColorTags();
+             }
+         });
+     }
  
-     aiSummarizeReflectionsBtn.addEventListener('click', async () => {
-         if (currentReflections.length < 2) {
-             aiSummaryContent.textContent = "You need at least two notes for a summary.";
-             aiSummaryModal.classList.remove('hidden');
-             setTimeout(() => aiSummaryModal.classList.add('active'), 10);
-             return;
-         }
-         const notesToSummarize = currentReflections.slice(0, 3).map(n => `Title: ${n.title}\nContent: ${n.content}`).join('\n\n---\n\n');
-         const systemPrompt = "You are an empathetic assistant. Summarize the user's reflection notes into one short, insightful, and emotional paragraph. Focus on the underlying feelings and themes.";
-         const userQuery = `Here are my last few notes:\n${notesToSummarize}`;
-         const apiKey = "";
-         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-         const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }};
+     if (elements.reflectionModalSaveBtn) {
+         elements.reflectionModalSaveBtn.addEventListener('click', async () => {
+             const title = elements.reflectionTitleInput.value.trim();
+             const content = elements.reflectionContentInput.value.trim();
+             if (!title || !content) return;
  
-         aiSummaryContent.textContent = "Summarizing your thoughts...";
-         aiSummaryModal.classList.remove('hidden');
-         setTimeout(() => aiSummaryModal.classList.add('active'), 10);
+             const reflectionData = {
+                 title,
+                 content,
+                 color: activeColor,
+                 imageUrl: activeReflectionImageUrl
+             };
  
-         try {
-             const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-             if (!response.ok) throw new Error(`API error: ${response.statusText}`);
-             const result = await response.json();
-             aiSummaryContent.textContent = result.candidates[0].content.parts[0].text;
-         } catch (error) {
-             console.error("AI Summary failed:", error);
-             aiSummaryContent.textContent = "Sorry, I couldn't generate a summary right now.";
-         }
-     });
+             if (activeReflectionId) {
+                 const noteDocRef = doc(db, `users/${getCurrentUserId()}/reflections`, activeReflectionId);
+                 await updateDoc(noteDocRef, reflectionData);
+             } else {
+                 reflectionData.createdAt = serverTimestamp();
+                 await addDoc(reflectionsRef, reflectionData);
+             }
+             closeReflectionModal();
+         });
+     }
  
-     aiSummaryCloseBtn.addEventListener('click', () => {
-         aiSummaryModal.classList.remove('active');
-         setTimeout(() => aiSummaryModal.classList.add('hidden'), 300);
-     });
+     if (elements.aiSummarizeReflectionsBtn) {
+         elements.aiSummarizeReflectionsBtn.addEventListener('click', async () => {
+             if (currentReflections.length < 2) {
+                 elements.aiSummaryContent.textContent = "You need at least two notes for a summary.";
+                 elements.aiSummaryModal.classList.remove('hidden');
+                 setTimeout(() => elements.aiSummaryModal.classList.add('active'), 10);
+                 return;
+             }
+             const notesToSummarize = currentReflections.slice(0, 3).map(n => `Title: ${n.title}\nContent: ${n.content}`).join('\n\n---\n\n');
+             const systemPrompt = "You are an empathetic assistant. Summarize the user's reflection notes into one short, insightful, and emotional paragraph. Focus on the underlying feelings and themes.";
+             const userQuery = `Here are my last few notes:\n${notesToSummarize}`;
+             const apiKey = "";
+             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+             const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] } };
  
-     editTodoModalSaveBtn.addEventListener('click', handleSaveTodo);
-     editTodoModalCancelBtn.addEventListener('click', closeEditTodoModal);
-     editTodoModal.addEventListener('click', e => e.target === editTodoModal && closeEditTodoModal());
+             elements.aiSummaryContent.textContent = "Summarizing your thoughts...";
+             elements.aiSummaryModal.classList.remove('hidden');
+             setTimeout(() => elements.aiSummaryModal.classList.add('active'), 10);
+ 
+             try {
+                 const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                 if (!response.ok) throw new Error(`API error: ${response.statusText}`);
+                 const result = await response.json();
+                 elements.aiSummaryContent.textContent = result.candidates[0].content.parts[0].text;
+             } catch (error) {
+                 console.error("AI Summary failed:", error);
+                 elements.aiSummaryContent.textContent = "Sorry, I couldn't generate a summary right now.";
+             }
+         });
+     }
+ 
+     if (elements.aiSummaryCloseBtn) {
+         elements.aiSummaryCloseBtn.addEventListener('click', () => {
+             elements.aiSummaryModal.classList.remove('active');
+             setTimeout(() => elements.aiSummaryModal.classList.add('hidden'), 300);
+         });
+     }
+ 
+     if (elements.editTodoModalSaveBtn) {
+         elements.editTodoModalSaveBtn.addEventListener('click', handleSaveTodo);
+     }
+     if (elements.editTodoModalCancelBtn) {
+         elements.editTodoModalCancelBtn.addEventListener('click', closeEditTodoModal);
+     }
+     if (elements.editTodoModal) {
+         elements.editTodoModal.addEventListener('click', e => e.target === elements.editTodoModal && closeEditTodoModal());
+     }
  
      // --- Event Listeners for Image Link Modal ---
      const openImageLinkModal = () => {
-         imageLinkModal.classList.remove('hidden');
-         setTimeout(() => imageLinkModal.classList.add('active'), 10);
+         elements.imageLinkModal.classList.remove('hidden');
+         setTimeout(() => elements.imageLinkModal.classList.add('active'), 10);
      };
      const closeImageLinkModal = () => {
-         imageLinkModal.classList.remove('active');
-         setTimeout(() => imageLinkModal.classList.add('hidden'), 300);
+         elements.imageLinkModal.classList.remove('active');
+         setTimeout(() => elements.imageLinkModal.classList.add('hidden'), 300);
      };
  
-     addReflectionImageBtn.addEventListener('click', openImageLinkModal);
-     imageLinkCancelBtn.addEventListener('click', closeImageLinkModal);
-     imageLinkModal.addEventListener('click', e => e.target === imageLinkModal && closeImageLinkModal());
+     if (elements.addReflectionImageBtn) {
+         elements.addReflectionImageBtn.addEventListener('click', openImageLinkModal);
+     }
+     if (elements.imageLinkCancelBtn) {
+         elements.imageLinkCancelBtn.addEventListener('click', closeImageLinkModal);
+     }
+     if (elements.imageLinkModal) {
+         elements.imageLinkModal.addEventListener('click', e => e.target === elements.imageLinkModal && closeImageLinkModal());
+     }
  
-     imageLinkSaveBtn.addEventListener('click', () => {
-         const url = imageLinkInput.value.trim();
-         // Basic URL validation (optional, but good practice)
-         if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
-             activeReflectionImageUrl = url;
-             reflectionImagePreview.src = url;
-             reflectionImagePreviewContainer.classList.remove('hidden');
-         } else {
-             // Handle invalid URL - maybe clear the image or show feedback
-             console.warn("Invalid image URL provided");
-             activeReflectionImageUrl = null;
-             reflectionImagePreview.src = '';
-             reflectionImagePreviewContainer.classList.add('hidden');
-         }
-         closeImageLinkModal();
-     });
+     if (elements.imageLinkSaveBtn) {
+         elements.imageLinkSaveBtn.addEventListener('click', () => {
+             const url = elements.imageLinkInput.value.trim();
+             // Basic URL validation (optional, but good practice)
+             if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+                 activeReflectionImageUrl = url;
+                 elements.reflectionImagePreview.src = url;
+                 elements.reflectionImagePreviewContainer.classList.remove('hidden');
+             } else {
+                 // Handle invalid URL - maybe clear the image or show feedback
+                 console.warn("Invalid image URL provided");
+                 activeReflectionImageUrl = null;
+                 elements.reflectionImagePreview.src = '';
+                 elements.reflectionImagePreviewContainer.classList.add('hidden');
+             }
+             closeImageLinkModal();
+         });
+     }
  
      // --- NEW: Event listener for Enable Notifications Button ---
-     if (enableNotificationsBtn) {
-         enableNotificationsBtn.addEventListener('click', async () => {
+     if (elements.enableNotificationsBtn) {
+         elements.enableNotificationsBtn.addEventListener('click', async () => {
              const granted = await requestNotificationPermission();
              if (granted) {
                  console.log("Notification permission granted by user action.");
                  // Re-schedule notifications for existing todos now that permission is granted
-                  currentTodos.forEach(todo => {
+                 currentTodos.forEach(todo => {
                      if (!todo.completed) { // Only schedule for incomplete tasks
                          scheduleNotification(todo);
                      }
                  });
              } else {
-                  console.log("Notification permission denied or dismissed by user action.");
+                 console.log("Notification permission denied or dismissed by user action.");
              }
          });
      }
@@ -818,37 +814,39 @@
  
  function openEditTodoModal(todo) {
      activeTodoId = todo.id;
-     editTodoInput.value = todo.text;
-     editTodoDate.value = todo.date || '';
-     editTodoTime.value = todo.time || '';
+     // Access elements directly
+     elements.editTodoInput.value = todo.text;
+     elements.editTodoDate.value = todo.date || '';
+     elements.editTodoTime.value = todo.time || '';
  
      const standardCategories = ['Health', 'Baby', 'Home', 'Reminder'];
      if (standardCategories.includes(todo.category)) {
-         editTodoCategory.value = todo.category;
-         editCustomTodoCategoryInput.classList.add('hidden');
-         editCustomTodoCategoryInput.value = '';
+         elements.editTodoCategory.value = todo.category;
+         elements.editCustomTodoCategoryInput.classList.add('hidden');
+         elements.editCustomTodoCategoryInput.value = '';
      } else {
-         editTodoCategory.value = 'Custom';
-         editCustomTodoCategoryInput.classList.remove('hidden');
-         editCustomTodoCategoryInput.value = todo.category;
+         elements.editTodoCategory.value = 'Custom';
+         elements.editCustomTodoCategoryInput.classList.remove('hidden');
+         elements.editCustomTodoCategoryInput.value = todo.category;
      }
  
-     editTodoModal.classList.remove('hidden');
-     setTimeout(() => editTodoModal.classList.add('active'), 10);
+     elements.editTodoModal.classList.remove('hidden');
+     setTimeout(() => elements.editTodoModal.classList.add('active'), 10);
  }
  
  function closeEditTodoModal() {
-     editTodoModal.classList.remove('active');
-     setTimeout(() => editTodoModal.classList.add('hidden'), 300);
+     elements.editTodoModal.classList.remove('active');
+     setTimeout(() => elements.editTodoModal.classList.add('hidden'), 300);
  }
  
  async function handleSaveTodo() {
      if (!activeTodoId) return;
  
-     const text = editTodoInput.value.trim();
-     let category = editTodoCategory.value;
+     // Access elements directly
+     const text = elements.editTodoInput.value.trim();
+     let category = elements.editTodoCategory.value;
      if (category === 'Custom') {
-         category = editCustomTodoCategoryInput.value.trim();
+         category = elements.editCustomTodoCategoryInput.value.trim();
      }
  
      if (!text || !category) {
@@ -860,8 +858,8 @@
      const updatedData = {
          text: text,
          category: category,
-         date: editTodoDate.value,
-         time: editTodoTime.value
+         date: elements.editTodoDate.value,
+         time: elements.editTodoTime.value
          // NOTE: We don't update 'completed' status here, toggleTodo handles that
      };
      await updateDoc(todoDocRef, updatedData);
@@ -871,10 +869,10 @@
      const updatedTodoSnap = await getDoc(todoDocRef);
      if (updatedTodoSnap.exists()) {
          const updatedTodoFullData = { id: activeTodoId, ...updatedTodoSnap.data() };
-          // Request permission again ONLY if date/time added AND permission is 'default'
-          if (updatedTodoFullData.date && updatedTodoFullData.time && !updatedTodoFullData.completed && Notification.permission === 'default') {
+         // Request permission again ONLY if date/time added AND permission is 'default'
+         if (updatedTodoFullData.date && updatedTodoFullData.time && !updatedTodoFullData.completed && Notification.permission === 'default') {
              await requestNotificationPermission(); // Ask only if needed and not already denied
-          }
+         }
          // Schedule (or clear if needed) based on the full, updated data
          scheduleNotification(updatedTodoFullData);
      }
@@ -892,57 +890,63 @@
  function openReflectionModal(note = null) {
      if (note) {
          activeReflectionId = note.id;
-         reflectionModalTitle.textContent = "Edit Reflection";
-         reflectionTitleInput.value = note.title;
-         reflectionContentInput.value = note.content;
+         // Access elements directly
+         elements.reflectionModalTitle.textContent = "Edit Reflection";
+         elements.reflectionTitleInput.value = note.title;
+         elements.reflectionContentInput.value = note.content;
          activeColor = note.color;
          // Handle image
          if (note.imageUrl) {
              activeReflectionImageUrl = note.imageUrl;
-             reflectionImagePreview.src = note.imageUrl;
-             reflectionImagePreviewContainer.classList.remove('hidden');
-             imageLinkInput.value = note.imageUrl;
+             elements.reflectionImagePreview.src = note.imageUrl;
+             elements.reflectionImagePreviewContainer.classList.remove('hidden');
+             elements.imageLinkInput.value = note.imageUrl;
          } else {
              activeReflectionImageUrl = null;
-             reflectionImagePreviewContainer.classList.add('hidden');
-             reflectionImagePreview.src = '';
-             imageLinkInput.value = '';
+             elements.reflectionImagePreviewContainer.classList.add('hidden');
+             elements.reflectionImagePreview.src = '';
+             elements.imageLinkInput.value = '';
          }
      } else {
          activeReflectionId = null;
-         reflectionModalTitle.textContent = "New Reflection";
-         reflectionTitleInput.value = '';
-         reflectionContentInput.value = '';
+         // Access elements directly
+         elements.reflectionModalTitle.textContent = "New Reflection";
+         elements.reflectionTitleInput.value = '';
+         elements.reflectionContentInput.value = '';
          activeColor = 'pink';
          // Reset image for new note
          activeReflectionImageUrl = null;
-         reflectionImagePreviewContainer.classList.add('hidden');
-         reflectionImagePreview.src = '';
-         imageLinkInput.value = ''; // Also clear the input for next time
+         elements.reflectionImagePreviewContainer.classList.add('hidden');
+         elements.reflectionImagePreview.src = '';
+         elements.imageLinkInput.value = ''; // Also clear the input for next time
      }
      updateColorTags();
-     reflectionModal.classList.remove('hidden');
-     setTimeout(() => reflectionModal.classList.add('active'), 10);
+     elements.reflectionModal.classList.remove('hidden');
+    setTimeout(() => elements.reflectionModal.classList.add('active'), 10);
  }
  
  function closeReflectionModal() {
-     reflectionModal.classList.remove('active');
+     // Access elements directly
+     elements.reflectionModal.classList.remove('active');
      setTimeout(() => {
-         reflectionModal.classList.add('hidden');
+         elements.reflectionModal.classList.add('hidden');
          // Also reset image state when modal is fully closed
          activeReflectionImageUrl = null;
-         reflectionImagePreviewContainer.classList.add('hidden');
-         reflectionImagePreview.src = '';
-         imageLinkInput.value = '';
+         elements.reflectionImagePreviewContainer.classList.add('hidden');
+         elements.reflectionImagePreview.src = '';
+         elements.imageLinkInput.value = '';
      }, 300);
  }
  
  function updateColorTags() {
-     reflectionColorTags.querySelectorAll('button').forEach(btn => {
+     // Access element directly and add guard clause
+     if (!elements.reflectionColorTags) return;
+     elements.reflectionColorTags.querySelectorAll('button').forEach(btn => {
          if (btn.dataset.color === activeColor) {
              btn.classList.add('border-white');
          } else {
              btn.classList.remove('border-white');
+
          }
      });
  }
