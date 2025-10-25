@@ -292,246 +292,245 @@
                     </div>
                 </div>
 
-                <!-- NEW CALM SPACE TAB CONTENT -->
+                <!-- 
+                ============================================================
+                === NEW CALM SPACE TAB CONTENT (RE-ORGANIZED) ===
+                ============================================================
+                -->
                 <div id="content-calm-space" class="tab-content">
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- CHANGED: from lg:grid-cols-3 to lg:grid-cols-2 to create a 2x2 grid -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         
-                        <!-- Left Column: Breathing Visualizer -->
-                        <div class="lg:col-span-2 space-y-8">
-                            <!-- Breathing Visualizer -->
-                            <div class="glass-card anim-card p-4 md:p-6">
-                                <!-- UPDATE: Changed "Guided" to "Gentle" -->
-                                <h3 class="text-2xl font-bold mb-4">🌬️ Gentle Breathing</h3>
-                                <div id="breathing-visualizer-container" class="relative w-full h-64 md:h-96 rounded-lg overflow-hidden flex items-center justify-center transition-colors duration-1000" style="background-color: #3a506b;">
-                                    <div id="breathing-orb" class="w-32 h-32 bg-white/30 rounded-full transition-transform duration-3000 ease-in-out"></div>
-                                    <div id="breathing-animation-element" class=""></div> <!-- For box/wave animations -->
-                                    <!-- UPDATE: Replaced #breathing-text with #breathing-visual-emoji -->
-                                    <span id="breathing-visual-emoji" class="absolute text-5xl text-white z-10">🧘‍♀️</span>
-                                </div>
-                                <div class="pt-4 mt-4 border-t border-white/10">
-                                    <div class="flex flex-wrap items-center justify-between gap-4">
-                                        <div class="flex flex-wrap gap-2" id="breathing-exercise-buttons">
-                                            <!-- FIX: Renamed data-exercise to data-breath to match JS -->
-                                            <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-breath="4-7-8">4-7-8 Breathing</button>
-                                            <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-breath="box">Box Breathing</button>
-                                            <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-breath="wave">Wave Breathing</button>
-                                            <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-breath="heartbeat">Heartbeat Sync</button>
-                                            <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-breath="energizer">Morning Energizer</button>
-                                            <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-breath="sleep">Sleep Wind-Down</button>
-                                        </div>
-                                        <!-- UPDATE: Removed hidden stop button. New buttons below -->
-                                    </div>
-                                    <div class="flex flex-wrap items-center justify-between gap-4 mt-4">
-                                        
-                                        <!-- 
-                                        *** UPDATE: Replaced timer buttons with a number input ***
-                                        -->
-                                        <div class="flex items-center gap-3 flex-grow">
-                                            <label for="breathing-timer-input" class="font-semibold">Timer (min):</label>
-                                            <input type="number" id="breathing-timer-input" class="meal-select text-sm flex-grow" placeholder="Minutes..." min="1" value="3">
-                                        </div>
-                                        
-                                        <!-- UPDATE: New Play/Stop buttons -->
-                                        <div class="flex items-center gap-3">
-                                            <button id="breathing-play-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-5 rounded-lg w-20">Play</button>
-                                            <button id="breathing-stop-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-5 rounded-lg w-20 hidden">Stop</button>
-                                        </div>
-                                        <div class="flex items-center gap-3">
-                                            <!-- UPDATE: Removed unused breathing-voice-btn -->
-                                            <!-- FIX: Renamed id to "breathing-silent-toggle" and changed to a checkbox -->
-                                            <input type="checkbox" id="breathing-silent-toggle" class="hidden">
-                                            <label for="breathing-silent-toggle" class="icon-btn p-2 rounded-full cursor-pointer" title="Toggle Silent Mode (Animation Only)">
-                                                <!-- This label will now show both states -->
-                                                <svg id="breathing-sound-on-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M20 4a9 9 0 010 12.728M6.717 3.342A.5.5 0 017.5 3.85v16.298a.5.5 0 01-.783.41l-4-3.5H1a1 1 0 01-1-1V7.94a1 1 0 011-1h1.717l4-3.5a.5.5 0 01.783-.088z"></path></svg>
-                                                <svg id="breathing-sound-off-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.866 3.866M21 21l-3.866-3.866"></path></svg>
-                                            </label>
-                                            <span id="breathing-timer-display" class="font-semibold text-lg ml-2">0:00</span>
-                                        </div>
-                                    </div>
-                                    <!-- FIX: Renamed id to "breathing-instruction" and added a placeholder for steps -->
-                                    <div id="breathing-instruction" class="ai-insight mt-4">
-                                        <p>Select an exercise and timer to begin.</p>
-                                        <ul id="breathing-steps-list" class="list-disc list-inside mt-2"></ul>
-                                    </div>
-                                </div>
+                        <!-- Item 1: Breathing Visualizer -->
+                        <div class="glass-card anim-card p-4 md:p-6">
+                            <!-- UPDATE: Changed "Guided" to "Gentle" -->
+                            <h3 class="text-2xl font-bold mb-4">🌬️ Gentle Breathing</h3>
+                            <div id="breathing-visualizer-container" class="relative w-full h-64 md:h-96 rounded-lg overflow-hidden flex items-center justify-center transition-colors duration-1000" style="background-color: #3a506b;">
+                                <div id="breathing-orb" class="w-32 h-32 bg-white/30 rounded-full transition-transform duration-3000 ease-in-out"></div>
+                                <div id="breathing-animation-element" class=""></div> <!-- For box/wave animations -->
+                                <!-- UPDATE: Replaced #breathing-text with #breathing-visual-emoji -->
+                                <span id="breathing-visual-emoji" class="absolute text-5xl text-white z-10">🧘‍♀️</span>
                             </div>
-
-                            <!-- Gentle Stretch & Posture -->
-                            <div class="glass-card anim-card p-4 md:p-6">
-                                <!-- UPDATE: Added timer display -->
-                                <div class="flex justify-between items-center mb-4">
-                                    <h3 class="text-2xl font-bold">🧘‍♀️ Gentle Stretch Guide</h3>
-                                    <span id="stretch-timer-display" class="font-semibold text-2xl text-purple-300">0:00</span>
-                                </div>
-                                <div class="flex flex-col md:flex-row gap-6">
-                                    <!-- FIX: Renamed id to "stretch-visual-container" -->
-                                    <div id="stretch-visual-container" class="w-full md:w-1/2 h-64 bg-white/5 rounded-lg flex items-center justify-center relative overflow-hidden">
-                                        <!-- UPDATE: This will now hold an emoji -->
-                                        <div id="stretch-visual" class="transition-all duration-500 text-6xl">
-                                            <!-- JS will add emoji here -->
-                                        </div>
-                                        <!-- FIX: Renamed id to "stretch-pose-display" -->
-                                        <span id="stretch-pose-display" class="absolute bottom-4 text-lg font-semibold">Select a routine</span>
+                            <div class="pt-4 mt-4 border-t border-white/10">
+                                <div class="flex flex-wrap items-center justify-between gap-4">
+                                    <div class="flex flex-wrap gap-2" id="breathing-exercise-buttons">
+                                        <!-- FIX: Renamed data-exercise to data-breath to match JS -->
+                                        <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-breath="4-7-8">4-7-8 Breathing</button>
+                                        <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-breath="box">Box Breathing</button>
+                                        <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-breath="wave">Wave Breathing</button>
+                                        <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-breath="heartbeat">Heartbeat Sync</button>
+                                        <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-breath="energizer">Morning Energizer</button>
+                                        <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-breath="sleep">Sleep Wind-Down</button>
                                     </div>
-                                    <div class="w-full md:w-1/2">
-                                        <div class="flex flex-wrap gap-2 mb-4" id="stretch-routine-buttons">
-                                            <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-stretch="morning-flow">Morning Flow</button>
-                                            <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-stretch="back-hip">Back & Hip</button>
-                                            <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-stretch="leg-relax">Leg Relax</button>
-                                            <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-stretch="shoulder-neck">Shoulder Release</button>
-                                            <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-stretch="sleep-wind">Sleep Wind-Down</button>
-                                        </div>
-                                        <div class="flex items-center justify-between gap-4 mb-4">
-                                            <!-- 
-                                                *** UPDATE: Replaced trimester selector with timer input ***
-                                            -->
-                                            <input type="number" id="stretch-timer-input" class="meal-select text-sm flex-grow" placeholder="Minutes..." min="1" value="5">
-
-                                            <!-- FIX: Renamed id to "stretch-voice-toggle" and changed to checkbox -->
-                                            <input type="checkbox" id="stretch-voice-toggle" class="hidden">
-                                            <label for="stretch-voice-toggle" class="icon-btn p-2 rounded-full cursor-pointer" title="Toggle Voice Guide">
-                                                <!-- This label will now show both states -->
-                                                <svg id="stretch-sound-on-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M20 4a9 9 0 010 12.728M6.717 3.342A.5.5 0 017.5 3.85v16.298a.5.5 0 01-.783.41l-4-3.5H1a1 1 0 01-1-1V7.94a1 1 0 011-1h1.717l4-3.5a.5.5 0 01.783-.088z"></path></svg>
-                                                <svg id="stretch-sound-off-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.866 3.866M21 21l-3.866-3.866"></path></svg>
-                                            </label>
-                                            <!-- 
-                                                *** UPDATE: Hid loop toggle as it's now implicit with the timer ***
-                                            -->
-                                            <input type="checkbox" id="stretch-loop-toggle" class="hidden">
-                                            <label for="stretch-loop-toggle" class="icon-btn p-2 rounded-full cursor-pointer hidden" title="Toggle Loop">
-                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9.5m0 5a8.001 8.001 0 0014.836 2.5m.582 5v-5h-.582"></path></svg>
-                                            </label>
-                                        </div>
-                                        <div class="flex items-center justify-center gap-4" id="stretch-controls">
-                                            <button id="stretch-prev-pose-btn" class="btn-secondary py-2 px-4 rounded-lg">Prev</button>
-                                            <button id="stretch-play-pause-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-5 rounded-lg w-20">
-                                                <!-- FIX: Added play/pause icons -->
-                                                <span id="stretch-play-icon">Play</span>
-                                                <span id="stretch-pause-icon" style="display: none;">Pause</span>
-                                            </button>
-                                            <button id="stretch-next-pose-btn" class="btn-secondary py-2 px-4 rounded-lg">Next</button>
-                                        </div>
+                                    <!-- UPDATE: Removed hidden stop button. New buttons below -->
+                                </div>
+                                <div class="flex flex-wrap items-center justify-between gap-4 mt-4">
+                                    
+                                    <!-- 
+                                    *** UPDATE: Replaced timer buttons with a number input ***
+                                    -->
+                                    <div class="flex items-center gap-3 flex-grow">
+                                        <label for="breathing-timer-input" class="font-semibold">Timer (min):</label>
+                                        <input type="number" id="breathing-timer-input" class="meal-select text-sm flex-grow" placeholder="Minutes..." min="1" value="3">
+                                    </div>
+                                    
+                                    <!-- UPDATE: New Play/Stop buttons -->
+                                    <div class="flex items-center gap-3">
+                                        <button id="breathing-play-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-5 rounded-lg w-20">Play</button>
+                                        <button id="breathing-stop-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-5 rounded-lg w-20 hidden">Stop</button>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <!-- UPDATE: Removed unused breathing-voice-btn -->
+                                        <!-- FIX: Renamed id to "breathing-silent-toggle" and changed to a checkbox -->
+                                        <input type="checkbox" id="breathing-silent-toggle" class="hidden">
+                                        <label for="breathing-silent-toggle" class="icon-btn p-2 rounded-full cursor-pointer" title="Toggle Silent Mode (Animation Only)">
+                                            <!-- This label will now show both states -->
+                                            <svg id="breathing-sound-on-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M20 4a9 9 0 010 12.728M6.717 3.342A.5.5 0 017.5 3.85v16.298a.5.5 0 01-.783.41l-4-3.5H1a1 1 0 01-1-1V7.94a1 1 0 011-1h1.717l4-3.5a.5.5 0 01.783-.088z"></path></svg>
+                                            <svg id="breathing-sound-off-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.866 3.866M21 21l-3.866-3.866"></path></svg>
+                                        </label>
+                                        <span id="breathing-timer-display" class="font-semibold text-lg ml-2">0:00</span>
                                     </div>
                                 </div>
-                                <!-- FIX: Renamed id to "stretch-instruction" -->
-                                <div id="stretch-instruction" class="ai-insight mt-4">
-                                    <p>Select a routine. Stretches are filtered by trimester for your safety.</p>
+                                <!-- FIX: Renamed id to "breathing-instruction" and added a placeholder for steps -->
+                                <div id="breathing-instruction" class="ai-insight mt-4">
+                                    <p>Select an exercise and timer to begin.</p>
+                                    <ul id="breathing-steps-list" class="list-disc list-inside mt-2"></ul>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Right Column: Baby Connection & Daily Summary -->
-                        <!-- UPDATE: Wrapped this column in a space-y-8 -->
-                        <div class="space-y-8">
-                            <!-- Baby Connection -->
-                            <div class="glass-card anim-card p-4 md:p-6">
-                                <h3 class="text-2xl font-bold mb-4">💖 Baby Connection</h3>
-                                <!-- FIX: Renamed id to "meditation-visual-container" -->
-                                <div id="meditation-visual-container" class="w-full h-48 bg-white/5 rounded-lg flex items-center justify-center mb-4 relative overflow-hidden">
-                                    <div id="meditation-orb" class="w-24 h-24 bg-pink-400/30 rounded-full transition-all duration-3000 ease-in-out"></div>
-                                    <!-- UPDATE: Removed timer, added emoji -->
-                                    <span id="meditation-visual-emoji" class="absolute text-5xl z-10">💖</span>
+                        <!-- Item 2: Baby Connection -->
+                        <div class="glass-card anim-card p-4 md:p-6">
+                            <h3 class="text-2xl font-bold mb-4">💖 Baby Connection</h3>
+                            <!-- FIX: Renamed id to "meditation-visual-container" -->
+                            <div id="meditation-visual-container" class="w-full h-48 bg-white/5 rounded-lg flex items-center justify-center mb-4 relative overflow-hidden">
+                                <div id="meditation-orb" class="w-24 h-24 bg-pink-400/30 rounded-full transition-all duration-3000 ease-in-out"></div>
+                                <!-- UPDATE: Removed timer, added emoji -->
+                                <span id="meditation-visual-emoji" class="absolute text-5xl z-10">💖</span>
+                            </div>
+                            <div class="space-y-3">
+                                <div id="meditation-type-buttons" class="grid grid-cols-2 gap-3">
+                                    <button class="btn-secondary py-3 px-2 rounded-lg text-sm" data-meditation="first-connection">First Connection</button>
+                                    <button class="btn-secondary py-3 px-2 rounded-lg text-sm" data-meditation="love-visualization">Love Visualization</button>
+                                    <button class="btn-secondary py-3 px-2 rounded-lg text-sm" data-meditation="heartbeat-harmony">Heartbeat Harmony</button>
+                                    <button class="btn-secondary py-3 px-2 rounded-lg text-sm" data-meditation="peaceful-night">Peaceful Night</button>
+                                    <button class="btn-secondary py-3 px-2 rounded-lg text-sm" data-meditation="morning-gratitude">Morning Gratitude</button>
                                 </div>
-                                <div class="space-y-3">
-                                    <div id="meditation-type-buttons" class="grid grid-cols-2 gap-3">
-                                        <button class="btn-secondary py-3 px-2 rounded-lg text-sm" data-meditation="first-connection">First Connection</button>
-                                        <button class="btn-secondary py-3 px-2 rounded-lg text-sm" data-meditation="love-visualization">Love Visualization</button>
-                                        <button class="btn-secondary py-3 px-2 rounded-lg text-sm" data-meditation="heartbeat-harmony">Heartbeat Harmony</button>
-                                        <button class="btn-secondary py-3 px-2 rounded-lg text-sm" data-meditation="peaceful-night">Peaceful Night</button>
-                                        <button class="btn-secondary py-3 px-2 rounded-lg text-sm" data-meditation="morning-gratitude">Morning Gratitude</button>
-                                    </div>
-                                    <div class="flex items-center justify-between gap-4 pt-3 border-t border-white/10">
-                                        <!-- FIX: Renamed id to "meditation-timer-input" and changed to input type="number" -->
-                                        <input type="number" id="meditation-timer-input" class="meal-select text-sm flex-grow" placeholder="Minutes..." min="1" value="3">
-                                        
-                                        <!-- UPDATE: Moved timer display here -->
-                                        <span id="meditation-timer-display" class="font-semibold text-lg">0:00</span>
+                                <div class="flex items-center justify-between gap-4 pt-3 border-t border-white/10">
+                                    <!-- FIX: Renamed id to "meditation-timer-input" and changed to input type="number" -->
+                                    <input type="number" id="meditation-timer-input" class="meal-select text-sm flex-grow" placeholder="Minutes..." min="1" value="3">
+                                    
+                                    <!-- UPDATE: Moved timer display here -->
+                                    <span id="meditation-timer-display" class="font-semibold text-lg">0:00</span>
 
-                                        <!-- FIX: Renamed id to "meditation-voice-toggle" and changed to checkbox -->
-                                        <input type="checkbox" id="meditation-voice-toggle" class="hidden">
-                                        <label for="meditation-voice-toggle" class="icon-btn p-2 rounded-full cursor-pointer" title="Toggle Voice Guide">
+                                    <!-- FIX: Renamed id to "meditation-voice-toggle" and changed to checkbox -->
+                                    <input type="checkbox" id="meditation-voice-toggle" class="hidden">
+                                    <label for="meditation-voice-toggle" class="icon-btn p-2 rounded-full cursor-pointer" title="Toggle Voice Guide">
+                                        <!-- This label will now show both states -->
+                                        <svg id="meditation-sound-on-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M20 4a9 9 0 010 12.728M6.717 3.342A.5.5 0 017.5 3.85v16.298a.5.5 0 01-.783.41l-4-3.5H1a1 1 0 01-1-1V7.94a1 1 0 011-1h1.717l4-3.5a.5.5 0 01.783-.088z"></path></svg>
+                                        <svg id="meditation-sound-off-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.866 3.866M21 21l-3.866-3.866"></path></svg>
+                                    </label>
+                                </div>
+                                <!-- UPDATE: Added Stop button -->
+                                <div class="grid grid-cols-2 gap-3">
+                                    <button id="start-meditation-btn" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Start Meditation</button>
+                                    <button id="stop-meditation-btn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition-colors hidden">Stop Meditation</button>
+                                </div>
+                                <!-- FIX: Renamed id to "meditation-instruction" -->
+                                <div id="meditation-instruction" class="ai-insight mt-2">
+                                    <p>Select a meditation type and duration to begin.</p>
+                                </div>
+                            </div>
+                            <!-- FIX: Added hidden audio player -->
+                            <audio id="meditation-audio-player" loop class="hidden"></audio>
+                        </div>
+
+                        <!-- Item 3: Gentle Stretch & Posture -->
+                        <div class="glass-card anim-card p-4 md:p-6">
+                            <!-- UPDATE: Added timer display -->
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-2xl font-bold">🧘‍♀️ Gentle Stretch Guide</h3>
+                                <span id="stretch-timer-display" class="font-semibold text-2xl text-purple-300">0:00</span>
+                            </div>
+                            <div class="flex flex-col md:flex-row gap-6">
+                                <!-- FIX: Renamed id to "stretch-visual-container" -->
+                                <div id="stretch-visual-container" class="w-full md:w-1/2 h-64 bg-white/5 rounded-lg flex items-center justify-center relative overflow-hidden">
+                                    <!-- UPDATE: This will now hold an emoji -->
+                                    <div id="stretch-visual" class="transition-all duration-500 text-6xl">
+                                        <!-- JS will add emoji here -->
+                                    </div>
+                                    <!-- FIX: Renamed id to "stretch-pose-display" -->
+                                    <span id="stretch-pose-display" class="absolute bottom-4 text-lg font-semibold">Select a routine</span>
+                                </div>
+                                <div class="w-full md:w-1/2">
+                                    <div class="flex flex-wrap gap-2 mb-4" id="stretch-routine-buttons">
+                                        <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-stretch="morning-flow">Morning Flow</button>
+                                        <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-stretch="back-hip">Back & Hip</button>
+                                        <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-stretch="leg-relax">Leg Relax</button>
+                                        <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-stretch="shoulder-neck">Shoulder Release</button>
+                                        <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-stretch="sleep-wind">Sleep Wind-Down</button>
+                                    </div>
+                                    <div class="flex items-center justify-between gap-4 mb-4">
+                                        <!-- 
+                                            *** UPDATE: Replaced trimester selector with timer input ***
+                                        -->
+                                        <input type="number" id="stretch-timer-input" class="meal-select text-sm flex-grow" placeholder="Minutes..." min="1" value="5">
+
+                                        <!-- FIX: Renamed id to "stretch-voice-toggle" and changed to checkbox -->
+                                        <input type="checkbox" id="stretch-voice-toggle" class="hidden">
+                                        <label for="stretch-voice-toggle" class="icon-btn p-2 rounded-full cursor-pointer" title="Toggle Voice Guide">
                                             <!-- This label will now show both states -->
-                                            <svg id="meditation-sound-on-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M20 4a9 9 0 010 12.728M6.717 3.342A.5.5 0 017.5 3.85v16.298a.5.5 0 01-.783.41l-4-3.5H1a1 1 0 01-1-1V7.94a1 1 0 011-1h1.717l4-3.5a.5.5 0 01.783-.088z"></path></svg>
-                                            <svg id="meditation-sound-off-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.866 3.866M21 21l-3.866-3.866"></path></svg>
+                                            <svg id="stretch-sound-on-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M20 4a9 9 0 010 12.728M6.717 3.342A.5.5 0 017.5 3.85v16.298a.5.5 0 01-.783.41l-4-3.5H1a1 1 0 01-1-1V7.94a1 1 0 011-1h1.717l4-3.5a.5.5 0 01.783-.088z"></path></svg>
+                                            <svg id="stretch-sound-off-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.866 3.866M21 21l-3.866-3.866"></path></svg>
+                                        </label>
+                                        <!-- 
+                                            *** UPDATE: Hid loop toggle as it's now implicit with the timer ***
+                                        -->
+                                        <input type="checkbox" id="stretch-loop-toggle" class="hidden">
+                                        <label for="stretch-loop-toggle" class="icon-btn p-2 rounded-full cursor-pointer hidden" title="Toggle Loop">
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9.5m0 5a8.001 8.001 0 0014.836 2.5m.582 5v-5h-.582"></path></svg>
                                         </label>
                                     </div>
-                                    <!-- UPDATE: Added Stop button -->
-                                    <div class="grid grid-cols-2 gap-3">
-                                        <button id="start-meditation-btn" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Start Meditation</button>
-                                        <button id="stop-meditation-btn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition-colors hidden">Stop Meditation</button>
-                                    </div>
-                                    <!-- FIX: Renamed id to "meditation-instruction" -->
-                                    <div id="meditation-instruction" class="ai-insight mt-2">
-                                        <p>Select a meditation type and duration to begin.</p>
+                                    <div class="flex items-center justify-center gap-4" id="stretch-controls">
+                                        <button id="stretch-prev-pose-btn" class="btn-secondary py-2 px-4 rounded-lg">Prev</button>
+                                        <button id="stretch-play-pause-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-5 rounded-lg w-20">
+                                            <!-- FIX: Added play/pause icons -->
+                                            <span id="stretch-play-icon">Play</span>
+                                            <span id="stretch-pause-icon" style="display: none;">Pause</span>
+                                        </button>
+                                        <button id="stretch-next-pose-btn" class="btn-secondary py-2 px-4 rounded-lg">Next</button>
                                     </div>
                                 </div>
-                                <!-- FIX: Added hidden audio player -->
-                                <audio id="meditation-audio-player" loop class="hidden"></audio>
                             </div>
-
-                            <!-- *** NEW DAILY SUMMARY CARD *** -->
-                            <div id="daily-summary-card" class="glass-card anim-card p-4 md:p-6 transition-colors duration-1000">
-                                <h3 class="text-2xl font-bold mb-4">📅 Daily Summary</h3>
-                                
-                                <div class="relative w-full h-56 flex items-center justify-center mb-4">
-                                    <!-- Mood Meter Gauge -->
-                                    <div id="summary-mood-gauge" class="w-56 h-56 rounded-full p-4" style="background-image: conic-gradient(from 0deg, #4d5bf9 0%, #00d4ff 0%, #1a203c 0%);">
-                                        <div class="w-full h-full bg-gray-900 rounded-full flex items-center justify-center">
-                                            <!-- Central Emoji & Text -->
-                                            <div class="text-center">
-                                                <span id="summary-mood-emoji" class="text-6xl">😌</span>
-                                                <p id="summary-mood-label" class="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">Finding Balance</p>
-                                            </div>
+                            <!-- FIX: Renamed id to "stretch-instruction" -->
+                            <div id="stretch-instruction" class="ai-insight mt-4">
+                                <p>Select a routine. Stretches are filtered by trimester for your safety.</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Item 4: Daily Summary -->
+                        <div id="daily-summary-card" class="glass-card anim-card p-4 md:p-6 transition-colors duration-1000">
+                            <h3 class="text-2xl font-bold mb-4">📅 Daily Summary</h3>
+                            
+                            <div class="relative w-full h-56 flex items-center justify-center mb-4">
+                                <!-- Mood Meter Gauge -->
+                                <div id="summary-mood-gauge" class="w-56 h-56 rounded-full p-4" style="background-image: conic-gradient(from 0deg, #4d5bf9 0%, #00d4ff 0%, #1a203c 0%);">
+                                    <div class="w-full h-full bg-gray-900 rounded-full flex items-center justify-center">
+                                        <!-- Central Emoji & Text -->
+                                        <div class="text-center">
+                                            <span id="summary-mood-emoji" class="text-6xl">😌</span>
+                                            <p id="summary-mood-label" class="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">Finding Balance</p>
                                         </div>
                                     </div>
-                                    <!-- Sparkle/Glow Effect -->
-                                    <div id="summary-glow-effect" class="absolute inset-0"></div>
                                 </div>
+                                <!-- Sparkle/Glow Effect -->
+                                <div id="summary-glow-effect" class="absolute inset-0"></div>
+                            </div>
 
-                                <!-- Activity Levels -->
-                                <div classs="space-y-3 mb-4">
-                                    <div class="flex justify-between items-center text-sm">
-                                        <span class="font-semibold">🌬️ Breathing:</span>
-                                        <span id="summary-breath-level" class="font-bold text-lg text-blue-300">0 min</span>
-                                    </div>
-                                    <div class="flex justify-between items-center text-sm">
-                                        <span class="font-semibold">🧘‍♀️ Stretching:</span>
-                                        <span id="summary-stretch-level" class="font-bold text-lg text-purple-300">0 min</span>
-                                    </div>
-                                    <div class="flex justify-between items-center text-sm">
-                                        <span class="font-semibold">💖 Connection:</span>
-                                        <span id="summary-meditation-level" class="font-bold text-lg text-pink-300">0 min</span>
-                                    </div>
+                            <!-- Activity Levels -->
+                            <div classs="space-y-3 mb-4">
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="font-semibold">🌬️ Breathing:</span>
+                                    <span id="summary-breath-level" class="font-bold text-lg text-blue-300">0 min</span>
                                 </div>
-
-                                <!-- Positive Message -->
-                                <div id="summary-positive-message" class="ai-insight text-center my-4">
-                                    Your calm energy is shining bright ✨
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="font-semibold">🧘‍♀️ Stretching:</span>
+                                    <span id="summary-stretch-level" class="font-bold text-lg text-purple-300">0 min</span>
                                 </div>
-
-                                <!-- Streak & 7-Day Chart -->
-                                <div class="pt-4 border-t border-white/10">
-                                    <div class="flex justify-between items-center mb-3">
-                                        <h4 class="font-semibold">Your 7-Day Trend</h4>
-                                        <span id="summary-streak-badge" class="text-xs font-bold bg-yellow-500/30 text-yellow-300 py-1 px-3 rounded-full">🔥 0 Day Streak</span>
-                                    </div>
-                                    <div id="summary-bar-chart" class="flex justify-between items-end h-16 w-full gap-1">
-                                        <!-- Bars will be generated by JS -->
-                                        <div class="summary-bar" style="height: 20%;" title="Mon: 😌"></div>
-                                        <div class="summary-bar" style="height: 40%;" title="Tue: 🙂"></div>
-                                        <div class="summary-bar" style="height: 60%;" title="Wed: 😊"></div>
-                                        <div class="summary-bar" style="height: 80%;" title="Thu: 🥰"></div>
-                                        <div class="summary-bar" style="height: 50%;" title="Fri: 🙂"></div>
-                                        <div class="summary-bar" style="height: 30%;" title="Sat: 😌"></div>
-                                        <div class="summary-bar" style="height: 70%;" title="Sun: 😊"></div>
-                                    </div>
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="font-semibold">💖 Connection:</span>
+                                    <span id="summary-meditation-level" class="font-bold text-lg text-pink-300">0 min</span>
                                 </div>
                             </div>
-                            <!-- *** END NEW CARD *** -->
 
+                            <!-- Positive Message -->
+                            <div id="summary-positive-message" class="ai-insight text-center my-4">
+                                Your calm energy is shining bright ✨
+                            </div>
+
+                            <!-- Streak & 7-Day Chart -->
+                            <div class="pt-4 border-t border-white/10">
+                                <div class="flex justify-between items-center mb-3">
+                                    <h4 class="font-semibold">Your 7-Day Trend</h4>
+                                    <span id="summary-streak-badge" class="text-xs font-bold bg-yellow-500/30 text-yellow-300 py-1 px-3 rounded-full">🔥 0 Day Streak</span>
+                                </div>
+                                <div id="summary-bar-chart" class="flex justify-between items-end h-16 w-full gap-1">
+                                    <!-- Bars will be generated by JS -->
+                                    <div class="summary-bar" style="height: 20%;" title="Mon: 😌"></div>
+                                    <div class="summary-bar" style="height: 40%;" title="Tue: 🙂"></div>
+                                    <div class="summary-bar" style="height: 60%;" title="Wed: 😊"></div>
+                                    <div class="summary-bar" style="height: 80%;" title="Thu: 🥰"></div>
+                                    <div class="summary-bar" style="height: 50%;" title="Fri: 🙂"></div>
+                                    <div class="summary-bar" style="height: 30%;" title="Sat: 😌"></div>
+                                    <div class="summary-bar" style="height: 70%;" title="Sun: 😊"></div>
+                                </div>
+                            </div>
                         </div>
+
                     </div>
                 </div>
+                <!-- === END RE-ORGANIZED CALM SPACE === -->
+
 
                  <!-- Journey Tab -->
                 <div id="content-journey" class="tab-content">
