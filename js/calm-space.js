@@ -1573,4 +1573,5 @@ function playSummaryAnimation(averageMood) {
             setTimeout(() => sparkle.remove(), 1000); // Remove after anim (1s duration)
         }, Math.random() * 300); // Start within 0.3s
     }
+
 }
