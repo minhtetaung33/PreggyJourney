@@ -30,9 +30,9 @@ const breathingData = {
     '4-7-8': {
         name: '4-7-8 Breathing',
         steps: [
-            { instruction: 'Begin. Inhale softly through your nose for 4... 3... 2... 1...', duration: 4000, type: 'inhale' },
-            { instruction: 'Now, gently hold that breath for 7... 6... 5... 4... 3... 2... 1...', duration: 7000, type: 'hold' },
-            { instruction: 'And exhale slowly through your mouth with a soft "whoosh" sound for 8... 7... 6... 5... 4... 3... 2... 1...', duration: 8000, type: 'exhale' },
+            { instruction: 'Begin. Inhale softly through your nose for... 4... 3... 2... 1...', duration: 6000, type: 'inhale' },
+            { instruction: 'Now, gently hold that breath for... 7... 6... 5... 4... 3... 2... 1...', duration: 9000, type: 'hold' },
+            { instruction: 'And exhale slowly through your mouth with a soft "whoosh" sound for... 8... 7... 6... 5... 4... 3... 2... 1...', duration: 10000, type: 'exhale' },
         ],
         visual: 'orb-glow',
         color: 'bg-blue-400',
@@ -47,10 +47,10 @@ const breathingData = {
     'box': {
         name: 'Box Breathing',
         steps: [
-            { instruction: 'Inhale through your nose for 4... 3... 2... 1...', duration: 4000, type: 'inhale' },
-            { instruction: 'Gently hold the breath at the top for 4... 3... 2... 1...', duration: 4000, type: 'hold' },
-            { instruction: 'Exhale slowly through your mouth for 4... 3... 2... 1...', duration: 4000, type: 'exhale' },
-            { instruction: 'And hold the breath at the bottom, empty and relaxed, for 4... 3... 2... 1...', duration: 4000, type: 'hold' },
+            { instruction: 'Inhale through your nose for... 4... 3... 2... 1...', duration: 6000, type: 'inhale' },
+            { instruction: 'Gently hold the breath at the top for... 4... 3... 2... 1...', duration: 6000, type: 'hold' },
+            { instruction: 'Exhale slowly through your mouth for... 4... 3... 2... 1...', duration: 6000, type: 'exhale' },
+            { instruction: 'And hold the breath at the bottom, empty and relaxed, for... 4... 3... 2... 1...', duration: 6000, type: 'hold' },
         ],
         visual: 'box-glow',
         color: 'bg-green-400',
@@ -65,8 +65,8 @@ const breathingData = {
     'wave': {
         name: 'Wave Breathing',
         steps: [
-            { instruction: 'Inhale... watch the wave rise as you breathe in for 5... 4... 3... 2... 1...', duration: 5000, type: 'inhale' },
-            { instruction: 'Exhale... watch the wave fall as you breathe out for 5... 4... 3... 2... 1...', duration: 5000, type: 'exhale' },
+            { instruction: 'Inhale... watch the wave rise as you breathe in for... 5... 4... 3... 2... 1...', duration: 7000, type: 'inhale' },
+            { instruction: 'Exhale... watch the wave fall as you breathe out for... 5... 4... 3... 2... 1...', duration: 7000, type: 'exhale' },
         ],
         visual: 'wave-glow',
         color: 'bg-cyan-400',
@@ -81,8 +81,8 @@ const breathingData = {
     'heartbeat': {
         name: 'Heartbeat Sync',
         steps: [
-            { instruction: 'Inhale gently, feeling your belly and chest expand. 4... 3... 2... 1...', duration: 4000, type: 'inhale' },
-            { instruction: 'Exhale slowly, letting everything soften. 6... 5... 4... 3... 2... 1...', duration: 6000, type: 'exhale' },
+            { instruction: 'Inhale gently, feeling your belly and chest expand... 4... 3... 2... 1...', duration: 6000, type: 'inhale' },
+            { instruction: 'Exhale slowly, letting everything soften... 6... 5... 4... 3... 2... 1...', duration: 8000, type: 'exhale' },
         ],
         visual: 'heartbeat-pulse',
         color: 'bg-pink-400',
@@ -97,8 +97,8 @@ const breathingData = {
     'energizer': {
         name: 'Morning Energizer',
         steps: [
-            { instruction: 'Take a bright inhale for 3... 2... 1...', duration: 3000, type: 'inhale' },
-            { instruction: 'And a matching exhale, letting it go. 3... 2... 1...', duration: 3000, type: 'exhale' },
+            { instruction: 'Take a bright inhale for... 3... 2... 1...', duration: 5000, type: 'inhale' },
+            { instruction: 'And a matching exhale, letting it go... 3... 2... 1...', duration: 5000, type: 'exhale' },
         ],
         visual: 'orb-glow',
         color: 'bg-yellow-400',
@@ -113,9 +113,9 @@ const breathingData = {
     'sleep': {
         name: 'Sleep Wind-Down',
         steps: [
-            { instruction: 'Inhale slowly and deeply for 5... 4... 3... 2... 1...', duration: 5000, type: 'inhale' },
-            { instruction: 'A soft pause at the top... just for 2... 1...', duration: 2000, type: 'hold' },
-            { instruction: 'And a long, slow exhale, releasing the day... 7... 6... 5... 4... 3... 2... 1...', duration: 7000, type: 'exhale' },
+            { instruction: 'Inhale slowly and deeply for... 5... 4... 3... 2... 1...', duration: 7000, type: 'inhale' },
+            { instruction: 'A soft pause at the top... just for... 2... 1...', duration: 4000, type: 'hold' },
+            { instruction: 'And a long, slow exhale, releasing the day... 7... 6... 5... 4... 3... 2... 1...', duration: 9000, type: 'exhale' },
         ],
         visual: 'orb-glow',
         color: 'bg-indigo-400',
@@ -1575,3 +1575,4 @@ function playSummaryAnimation(averageMood) {
     }
 
 }
+
