@@ -557,10 +557,37 @@
                                         <option value="Health">🧘‍♀️ Health</option>
                                         <option value="Baby">🍼 Baby Prep</option>
                                         <option value="Home">🏡 Home</option>
+                                        <option value="Appointment">🗓️ Appointment</option> <!-- NEW CATEGORY -->
                                         <option value="Reminder">💬 Reminder</option>
                                         <option value="Custom">✨ Custom</option>
                                     </select>
                                     <input type="text" id="custom-todo-category-input" class="meal-select text-sm hidden" placeholder="Your custom category...">
+                                    
+                                    <!-- NEW APPOINTMENT FIELDS -->
+                                    <div id="new-appointment-fields" class="hidden space-y-3 pt-3 mt-3 border-t border-white/10">
+                                        <p class="text-sm font-semibold text-indigo-200">Appointment Details</p>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                            <input type="text" id="new-appointment-fname" class="meal-select text-sm" placeholder="First Name">
+                                            <input type="text" id="new-appointment-lname" class="meal-select text-sm" placeholder="Last Name">
+                                        </div>
+                                        <input type="text" id="new-appointment-address" class="meal-select text-sm" placeholder="Address">
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                            <input type="tel" id="new-appointment-contact" class="meal-select text-sm" placeholder="Contact Number">
+                                            <input type="email" id="new-appointment-email" class="meal-select text-sm" placeholder="Email">
+                                        </div>
+                                        <div class="flex gap-3">
+                                            <select id="new-appointment-type" class="meal-select text-sm flex-grow">
+                                                <option value="">Appointment Type</option>
+                                                <option value="OB/GYN">OB/GYN</option>
+                                                <option value="Ultrasound">Ultrasound</option>
+                                                <option value="Pediatrician">Pediatrician</option>
+                                                <option value="Custom">Custom Type</option>
+                                            </select>
+                                            <input type="text" id="new-appointment-custom-type" class="meal-select text-sm flex-grow hidden" placeholder="Custom Appointment Type">
+                                        </div>
+                                    </div>
+                                    <!-- END NEW APPOINTMENT FIELDS -->
+                                    
                                     <button id="add-todo-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Add Task</button>
                                 </div>
                                 <div class="mt-6 text-center">
@@ -804,10 +831,37 @@
                     <option value="Health">🧘‍♀️ Health</option>
                     <option value="Baby">🍼 Baby Prep</option>
                     <option value="Home">🏡 Home</option>
+                    <option value="Appointment">🗓️ Appointment</option> <!-- NEW CATEGORY -->
                     <option value="Reminder">💬 Reminder</option>
                     <option value="Custom">✨ Custom</option>
                 </select>
                 <input type="text" id="edit-custom-todo-category-input" class="meal-select text-sm hidden" placeholder="Your custom category...">
+            
+                <!-- NEW EDIT APPOINTMENT FIELDS -->
+                <div id="edit-appointment-fields" class="hidden space-y-3 pt-3 mt-3 border-t border-white/10">
+                    <p class="text-sm font-semibold text-indigo-200">Appointment Details</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <input type="text" id="edit-appointment-fname" class="meal-select text-sm" placeholder="First Name">
+                        <input type="text" id="edit-appointment-lname" class="meal-select text-sm" placeholder="Last Name">
+                    </div>
+                    <input type="text" id="edit-appointment-address" class="meal-select text-sm" placeholder="Address">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <input type="tel" id="edit-appointment-contact" class="meal-select text-sm" placeholder="Contact Number">
+                        <input type="email" id="edit-appointment-email" class="meal-select text-sm" placeholder="Email">
+                    </div>
+                    <div class="flex gap-3">
+                        <select id="edit-appointment-type" class="meal-select text-sm flex-grow">
+                            <option value="">Appointment Type</option>
+                            <option value="OB/GYN">OB/GYN</option>
+                            <option value="Ultrasound">Ultrasound</option>
+                            <option value="Pediatrician">Pediatrician</option>
+                            <option value="Custom">Custom Type</option>
+                        </select>
+                        <input type="text" id="edit-appointment-custom-type" class="meal-select text-sm flex-grow hidden" placeholder="Custom Appointment Type">
+                    </div>
+                </div>
+                <!-- END NEW EDIT APPOINTMENT FIELDS -->
+
             </div>
             <div class="flex gap-4 mt-6">
                 <button id="edit-todo-modal-cancel-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg">Cancel</button>
