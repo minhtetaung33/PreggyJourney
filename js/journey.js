@@ -1,19 +1,21 @@
 import { collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { db } from './firebase.js';
 import { getCurrentUserId } from "./auth.js";
-import { elements } from './ui.js'; // Import elements from ui.js
+// Import all elements from ui.js
+import { elements } from './ui.js';
 
-// DOM Elements (Original)
+// DOM Elements
 const todoListContainer = document.getElementById('todo-list-container');
 const newTodoInput = document.getElementById('new-todo-input');
-const newTodoCategory = document.getElementById('new-todo-category');
+const newTodoDate = document.getElementById('new-todo-date');
+const newTodoTime = document.getElementById('new-todo-time');
 const addTodoBtn = document.getElementById('add-todo-btn');
-const aiGenerateTodosBtn = document.getElementById('ai-generate-todos-btn');
 const wishlistContainer = document.getElementById('wishlist-container');
 const wishlistProgressText = document.getElementById('wishlist-progress-text');
 const wishlistProgressBar = document.getElementById('wishlist-progress-bar');
 const newWishItem = document.getElementById('new-wish-item');
 const newWishCategory = document.getElementById('new-wish-category');
+const customCategoryInput = document.getElementById('custom-category-input');
 const newWishPrice = document.getElementById('new-wish-price');
 const newWishLink = document.getElementById('new-wish-link');
 const addWishBtn = document.getElementById('add-wish-btn');
@@ -32,31 +34,17 @@ const aiSummarizeReflectionsBtn = document.getElementById('ai-summarize-reflecti
 const aiSummaryModal = document.getElementById('ai-summary-modal');
 const aiSummaryContent = document.getElementById('ai-summary-content');
 const aiSummaryCloseBtn = document.getElementById('ai-summary-close-btn');
-const customCategoryInput = document.getElementById('custom-category-input');
 const todoHeader = document.getElementById('todo-header');
 const collapsibleTodoContent = document.getElementById('collapsible-todo-content');
 const todoToggleIcon = document.getElementById('todo-toggle-icon');
 const wishlistHeader = document.getElementById('wishlist-header');
 const collapsibleWishlistContent = document.getElementById('collapsible-wishlist-content');
 const wishlistToggleIcon = document.getElementById('wishlist-toggle-icon');
-const newTodoDate = document.getElementById('new-todo-date');
-const newTodoTime = document.getElementById('new-todo-time');
-const customTodoCategoryInput = document.getElementById('custom-todo-category-input');
-const editTodoModal = document.getElementById('edit-todo-modal');
-const editTodoInput = document.getElementById('edit-todo-input');
-const editTodoDate = document.getElementById('edit-todo-date');
-const editTodoTime = document.getElementById('edit-todo-time');
-const editTodoCategory = document.getElementById('edit-todo-category');
-const editCustomTodoCategoryInput = document.getElementById('edit-custom-todo-category-input');
-const editTodoModalCancelBtn = document.getElementById('edit-todo-modal-cancel-btn');
-const editTodoModalSaveBtn = document.getElementById('edit-todo-modal-save-btn');
 const reflectionHeader = document.getElementById('reflection-header');
 const collapsibleReflectionContent = document.getElementById('collapsible-reflection-content');
 const reflectionToggleIcon = document.getElementById('reflection-toggle-icon');
 const toggleReflectionsContainer = document.getElementById('toggle-reflections-container');
 const toggleReflectionsBtn = document.getElementById('toggle-reflections-btn');
-
-// New DOM Elements for Reflection Image Feature
 const addReflectionImageBtn = document.getElementById('add-reflection-image-btn');
 const imageLinkModal = document.getElementById('image-link-modal');
 const imageLinkInput = document.getElementById('image-link-input');
@@ -74,14 +62,17 @@ let activeReflectionId = null;
 let activeColor = 'pink';
 let activeTodoId = null;
 let showAllReflections = false;
-let activeReflectionImageUrl = null; // Variable to hold the image URL for the current reflection
-
+let activeReflectionImageUrl = null;
+let aiAssistantMode = 'todo'; // 'todo' or 'recipe'
 
 export function initializeJourney(userId, initialWellnessData) {
     wellnessDataForJourney = initialWellnessData;
-    todosRef = collection(db, `users/${userId}/todos`);
-    wishesRef = collection(db, `users/${userId}/wishes`);
-    reflectionsRef = collection(db, `users/${userId}/reflections`);
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    
+    // Use dynamic paths based on appId and userId
+    todosRef = collection(db, `artifacts/${appId}/users/${userId}/todos`);
+    wishesRef = collection(db, `artifacts/${appId}/users/${userId}/wishes`);
+    reflectionsRef = collection(db, `artifacts/${appId}/users/${userId}/reflections`);
 
     loadTodos();
     loadWishes();
@@ -113,54 +104,56 @@ function renderTodos(todos) {
         todoListContainer.innerHTML = `<p class="text-center text-gray-400">No tasks yet. Add one below!</p>`;
         return;
     }
-    // ADDED 'Appointment'
     const categoryIcons = { Health: '🧘‍♀️', Baby: '🍼', Home: '🏡', Reminder: '💬', Appointment: '🗓️' };
     
-    todos.forEach(todo => {
+    // Sort todos: incomplete first, then by date/time
+    const sortedTodos = [...todos].sort((a, b) => {
+        if (a.completed !== b.completed) {
+            return a.completed ? 1 : -1;
+        }
+        const aDateTime = new Date(`${a.date || '1970-01-01'}T${a.time || '00:00:00'}`);
+        const bDateTime = new Date(`${b.date || '1970-01-01'}T${b.time || '00:00:00'}`);
+        
+        // If one has a date and the other doesn't, the one with the date comes first
+        if (a.date && !b.date) return -1;
+        if (!a.date && b.date) return 1;
+
+        // If both or neither have dates, sort by creation time
+        if (aDateTime.getTime() === bDateTime.getTime()) {
+             const dateA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
+             const dateB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
+             return dateB - dateA; // Newest created first
+        }
+        
+        return aDateTime.getTime() - bDateTime.getTime(); // Earliest date/time first
+    });
+
+    sortedTodos.forEach(todo => {
         const item = document.createElement('div');
-        item.className = `todo-item flex items-start justify-between p-3 bg-white/5 rounded-lg ${todo.completed ? 'completed' : ''}`;
+        const isAppointment = todo.category === 'Appointment';
+        
+        item.className = `todo-item flex flex-col p-3 bg-white/5 rounded-lg ${todo.completed ? 'completed' : ''}`;
         
         const displayDate = formatDate(todo.date);
         const displayTime = formatTime(todo.time);
+        const categoryIcon = categoryIcons[todo.category] || '✨';
 
-        // NEW: Check if it's an Appointment
-        if (todo.category === 'Appointment' && todo.appointment) {
-            const appt = todo.appointment;
-            const apptType = appt.customType || appt.type || '';
-            const apptName = [appt.fname, appt.lname].filter(Boolean).join(' ');
-
-            item.innerHTML = `
-                <div class="flex items-start flex-1 min-w-0">
-                    <label for="todo-${todo.id}" class="flex items-center cursor-pointer pt-1">
-                        <input type="checkbox" id="todo-${todo.id}" class="hidden todo-checkbox">
-                        <div class="w-6 h-6 border-2 border-purple-400 rounded-md mr-3 flex-shrink-0 flex items-center justify-center check-label">
-                            ${todo.completed ? '<svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>' : ''}
-                        </div>
-                    </label>
-                    <div class="flex-1">
-                        <p class="font-semibold break-words">${todo.text}</p>
-                        <div class="text-xs text-gray-400 mt-1">
-                            <span class="font-bold text-indigo-300 text-sm">${categoryIcons[todo.category] || '✨'} ${apptType}</span>
-                            ${(displayDate || displayTime) ? `<span class="text-lg font-semibold text-white ml-2">| ${displayDate} at ${displayTime}</span>` : ''}
-                        </div>
-                        <div class="mt-2 p-2 bg-black/20 rounded-md space-y-1 text-sm">
-                            ${apptName ? `<p><span class="font-semibold text-gray-300">With:</span> ${apptName}</p>` : ''}
-                            ${appt.address ? `<p><span class="font-semibold text-gray-300">At:</span> ${appt.address}</p>` : ''}
-                            <div class="flex flex-wrap gap-x-4">
-                                ${appt.contact ? `<p><span class="font-semibold text-gray-300">Call:</span> ${appt.contact}</p>` : ''}
-                                ${appt.email ? `<p><span class="font-semibold text-gray-300">Email:</span> ${appt.email}</p>` : ''}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="flex items-center flex-shrink-0">
-                    <button class="icon-btn edit-todo-btn"><svg class="w-5 h-5 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L14.732 3.732z"></path></svg></button>
-                    <button class="icon-btn delete-todo-btn ml-1"><svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+        let appointmentDetails = '';
+        if (isAppointment) {
+            const apptType = todo.appointmentType === 'Custom' ? todo.customAppointmentType : todo.appointmentType;
+            appointmentDetails = `
+                <div class="mt-3 pt-3 border-t border-white/10 text-sm text-gray-300 space-y-2">
+                    <p class="font-semibold text-indigo-300">${apptType || 'Appointment'}</p>
+                    ${(todo.firstName || todo.lastName) ? `<p><strong>With:</strong> ${todo.firstName || ''} ${todo.lastName || ''}</p>` : ''}
+                    ${todo.address ? `<p><strong>At:</strong> ${todo.address}</p>` : ''}
+                    ${todo.contact ? `<p><strong>Contact:</strong> ${todo.contact}</p>` : ''}
+                    ${todo.email ? `<p><strong>Email:</strong> ${todo.email}</p>` : ''}
                 </div>
             `;
-        } else {
-            // Original HTML for other categories
-            item.innerHTML = `
+        }
+
+        item.innerHTML = `
+            <div class="flex items-start justify-between">
                 <div class="flex items-start flex-1 min-w-0">
                     <label for="todo-${todo.id}" class="flex items-center cursor-pointer pt-1">
                         <input type="checkbox" id="todo-${todo.id}" class="hidden todo-checkbox">
@@ -171,7 +164,7 @@ function renderTodos(todos) {
                     <div class="flex-1">
                         <p class="font-semibold break-words">${todo.text}</p>
                         <div class="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs text-gray-400 mt-1">
-                            <span>${categoryIcons[todo.category] || '✨'} ${todo.category}</span>
+                            <span>${categoryIcon} ${isAppointment ? 'Appointment' : todo.category}</span>
                             ${displayDate ? `<span>🗓️ ${displayDate}</span>` : ''}
                             ${displayTime ? `<span>⏰ ${displayTime}</span>` : ''}
                         </div>
@@ -181,12 +174,13 @@ function renderTodos(todos) {
                     <button class="icon-btn edit-todo-btn"><svg class="w-5 h-5 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L14.732 3.732z"></path></svg></button>
                     <button class="icon-btn delete-todo-btn ml-1"><svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
                 </div>
-            `;
-        }
+            </div>
+            ${appointmentDetails}
+        `;
         
         const toggleTodo = async () => {
              if (!todosRef) return;
-             const todoDocRef = doc(db, `users/${getCurrentUserId()}/todos`, todo.id);
+             const todoDocRef = doc(todosRef, todo.id);
              await updateDoc(todoDocRef, { completed: !todo.completed });
         };
         
@@ -199,7 +193,7 @@ function renderTodos(todos) {
 
         item.querySelector('.delete-todo-btn').addEventListener('click', async () => {
             if (!todosRef) return;
-            const todoDocRef = doc(db, `users/${getCurrentUserId()}/todos`, todo.id);
+            const todoDocRef = doc(todosRef, todo.id);
             await deleteDoc(todoDocRef);
         });
 
@@ -207,21 +201,12 @@ function renderTodos(todos) {
     });
 }
 
-/**
- * Renders the wish list, sorting un-purchased items to the top.
- * @param {Array} wishes - The array of wish items from Firestore.
- */
 function renderWishes(wishes) {
     wishlistContainer.innerHTML = '';
-
-    // Sort wishes:
-    // 1. Un-purchased (false) items first.
-    // 2. Within purchased/un-purchased groups, sort by creation date (newest first).
     const sortedWishes = [...wishes].sort((a, b) => {
         if (a.purchased !== b.purchased) {
             return a.purchased - b.purchased; // false (0) comes before true (1)
         }
-        // If 'purchased' status is the same, sort by 'createdAt' descending
         const dateA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
         const dateB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
         return dateB - dateA; // Newest first
@@ -229,13 +214,11 @@ function renderWishes(wishes) {
 
     if (sortedWishes.length === 0) {
         wishlistContainer.innerHTML = `<p class="text-center text-gray-400">No wishes yet. Add one below!</p>`;
-        // Reset progress bar for empty list
         wishlistProgressText.textContent = `0/0 Items`;
         wishlistProgressBar.style.width = '0%';
-        return; // Exit function
+        return;
     }
 
-    // Iterate over the newly sorted list
     sortedWishes.forEach(wish => {
         const item = document.createElement('div');
         item.className = `wish-item-card p-3 bg-white/5 rounded-lg border border-transparent ${wish.purchased ? 'purchased opacity-60' : ''}`;
@@ -256,17 +239,16 @@ function renderWishes(wishes) {
             </div>
         `;
         item.querySelector('input[type="checkbox"]').addEventListener('change', async (e) => {
-            const wishDocRef = doc(db, `users/${getCurrentUserId()}/wishes`, wish.id);
+            const wishDocRef = doc(wishesRef, wish.id);
             await updateDoc(wishDocRef, { purchased: e.target.checked });
         });
         item.querySelector('.delete-wish-btn').addEventListener('click', async () => {
-            const wishDocRef = doc(db, `users/${getCurrentUserId()}/wishes`, wish.id);
+            const wishDocRef = doc(wishesRef, wish.id);
             await deleteDoc(wishDocRef);
         });
         wishlistContainer.appendChild(item);
     });
     
-    // This calculation remains correct as it's based on the original full 'wishes' array
     const purchasedCount = wishes.filter(w => w.purchased).length;
     wishlistProgressText.textContent = `${purchasedCount}/${wishes.length} Items`;
     wishlistProgressBar.style.width = wishes.length > 0 ? `${(purchasedCount / wishes.length) * 100}%` : '0%';
@@ -291,9 +273,8 @@ function renderReflections(reflections) {
         const item = document.createElement('div');
         item.className = `reflection-note relative p-4 rounded-lg border-l-4 note-color-${note.color} cursor-pointer flex flex-col`;
         
-        // Conditionally add image
         const imageHtml = note.imageUrl ? 
-            `<img src="${note.imageUrl}" alt="Reflection image" class="mb-3 rounded-md object-cover h-40 w-full">` : '';
+            `<img src="${note.imageUrl}" alt="Reflection image" class="mb-3 rounded-md object-cover h-40 w-full" onerror="this.style.display='none'">` : '';
 
         item.innerHTML = `
             ${imageHtml}
@@ -409,17 +390,85 @@ function loadReflections() {
     });
 }
 
+async function addTodoFromSuggestion(suggestion) {
+    if (!suggestion || !suggestion.task || !suggestion.category || !todosRef) return;
+
+    await addDoc(todosRef, {
+        text: suggestion.task,
+        category: suggestion.category,
+        completed: false,
+        createdAt: serverTimestamp()
+    });
+}
+
+function renderAiTodoSuggestions(suggestions) {
+    elements.aiAssistantResults.innerHTML = '';
+    if (!suggestions || suggestions.length === 0) {
+        elements.aiAssistantResults.innerHTML = `<p class="text-center text-gray-400">No suggestions found.</p>`;
+        return;
+    }
+    
+    suggestions.forEach((suggestion, index) => {
+        const card = document.createElement('div');
+        card.className = 'ai-suggestion-card flex items-start justify-between gap-3';
+        
+        card.innerHTML = `
+            <div class="flex-grow min-w-0">
+                <p class="font-bold text-sm break-words">${suggestion.task}</p>
+                <p class="text-xs text-gray-400 mt-1">${suggestion.category}</p>
+            </div>
+            <button id="add-ai-todo-${index}" class="btn-secondary text-xs font-semibold py-1.5 px-3 rounded-md add-suggestion-btn flex-shrink-0 self-center">Add</button>
+        `;
+        
+        card.querySelector(`#add-ai-todo-${index}`).addEventListener('click', (e) => {
+            addTodoFromSuggestion(suggestion);
+            e.target.textContent = 'Added!';
+            e.target.disabled = true;
+            e.target.classList.add('opacity-50', 'cursor-not-allowed');
+        });
+        
+        elements.aiAssistantResults.appendChild(card);
+    });
+}
+
+function renderAiRecipeSuggestion(recipe) {
+    elements.aiAssistantResults.innerHTML = '';
+    if (!recipe || !recipe.recipeName) {
+        elements.aiAssistantResults.innerHTML = `<p class="text-center text-gray-400">Sorry, I couldn't find a recipe for that.</p>`;
+        return;
+    }
+
+    const ingredientsHtml = recipe.ingredients.map(ing => `<li>${ing}</li>`).join('');
+    const instructionsHtml = recipe.instructions.map(step => `<li>${step}</li>`).join('');
+
+    elements.aiAssistantResults.innerHTML = `
+        <div class="p-3 bg-white/5 rounded-lg">
+            <h4 class="text-xl font-bold text-purple-300 mb-3">${recipe.recipeName}</h4>
+            
+            <h5 class="font-semibold text-lg mb-2">Ingredients:</h5>
+            <ul class="list-disc list-inside space-y-1 text-gray-300 mb-4">
+                ${ingredientsHtml}
+            </ul>
+            
+            <h5 class="font-semibold text-lg mb-2">Instructions:</h5>
+            <ol class="list-decimal list-inside space-y-2 text-gray-300">
+                ${instructionsHtml}
+            </ol>
+        </div>
+    `;
+}
+
+
 function setupEventListeners() {
     addTodoBtn.addEventListener('click', async () => {
         const text = newTodoInput.value.trim();
-        let category = newTodoCategory.value;
+        let category = elements.newTodoCategory.value;
         if (category === 'Custom') {
-            category = customTodoCategoryInput.value.trim();
+            category = elements.customTodoCategoryInput.value.trim();
         }
 
         if (!text || !category || !todosRef) return;
-
-        // NEW: Create data payload
+        
         const todoData = {
             text,
             category,
@@ -429,35 +478,30 @@ function setupEventListeners() {
             createdAt: serverTimestamp()
         };
 
-        // NEW: Add appointment data if category is correct
+        // Add appointment details if category is 'Appointment'
         if (category === 'Appointment') {
             let apptType = elements.newAppointmentType.value;
             if (apptType === 'Custom') {
-                apptType = elements.newAppointmentCustomType.value.trim();
+                apptType = elements.newAppointmentCustomType.value.trim() || 'Custom';
             }
-
-            todoData.appointment = {
-                fname: elements.newAppointmentFname.value.trim(),
-                lname: elements.newAppointmentLname.value.trim(),
-                address: elements.newAppointmentAddress.value.trim(),
-                contact: elements.newAppointmentContact.value.trim(),
-                email: elements.newAppointmentEmail.value.trim(),
-                type: elements.newAppointmentType.value === 'Custom' ? '' : elements.newAppointmentType.value,
-                customType: apptType
-            };
+            todoData.firstName = elements.newAppointmentFname.value.trim();
+            todoData.lastName = elements.newAppointmentLname.value.trim();
+            todoData.address = elements.newAppointmentAddress.value.trim();
+            todoData.contact = elements.newAppointmentContact.value.trim();
+            todoData.email = elements.newAppointmentEmail.value.trim();
+            todoData.appointmentType = elements.newAppointmentType.value;
+            todoData.customAppointmentType = elements.newAppointmentCustomType.value.trim();
         }
 
         await addDoc(todosRef, todoData);
-
+        
         // Reset fields
         newTodoInput.value = '';
         newTodoDate.value = '';
         newTodoTime.value = '';
-        newTodoCategory.value = 'Health';
-        customTodoCategoryInput.value = '';
-        customTodoCategoryInput.classList.add('hidden');
-        
-        // NEW: Reset appointment fields
+        elements.newTodoCategory.value = 'Health';
+        elements.customTodoCategoryInput.value = '';
+        elements.customTodoCategoryInput.classList.add('hidden');
         elements.newAppointmentFields.classList.add('hidden');
         elements.newAppointmentFname.value = '';
         elements.newAppointmentLname.value = '';
@@ -469,22 +513,96 @@ function setupEventListeners() {
         elements.newAppointmentCustomType.classList.add('hidden');
     });
 
-    aiGenerateTodosBtn.addEventListener('click', async () => {
-        const pregnancyWeek = Math.floor(Math.abs(new Date() - new Date(wellnessDataForJourney.pregnancyStartDate)) / (1000 * 60 * 60 * 24 * 7));
-        const systemPrompt = `You are a helpful assistant. Generate a to-do list of 4-5 tasks for week ${pregnancyWeek} of pregnancy. Categorize each task as 'Health', 'Baby', 'Home', or 'Reminder'. Your response MUST be ONLY a valid JSON array of objects, where each object has "task" (string) and "category" (string) keys.`;
-        const userQuery = `Generate a weekly to-do list for week ${pregnancyWeek}.`;
-        const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-        const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json" } };
+    // NEW AI Assistant Modal Listeners
+    elements.openAiAssistantBtn.addEventListener('click', () => {
+        elements.aiAssistantModal.classList.remove('hidden');
+        setTimeout(() => elements.aiAssistantModal.classList.add('active'), 10);
+    });
+
+    elements.aiAssistantCloseBtn.addEventListener('click', () => {
+        elements.aiAssistantModal.classList.remove('active');
+        setTimeout(() => elements.aiAssistantModal.classList.add('hidden'), 300);
+    });
+
+    elements.aiAssistantToggleTodo.addEventListener('click', () => {
+        aiAssistantMode = 'todo';
+        elements.aiAssistantToggleTodo.classList.add('active');
+        elements.aiAssistantToggleRecipe.classList.remove('active');
+        elements.aiAssistantPromptLabel.textContent = "What's on your mind?";
+        elements.aiAssistantPrompt.placeholder = "e.g., What should I pack for the hospital?";
+        elements.aiAssistantResults.innerHTML = '';
+    });
+
+    elements.aiAssistantToggleRecipe.addEventListener('click', () => {
+        aiAssistantMode = 'recipe';
+        elements.aiAssistantToggleRecipe.classList.add('active');
+        elements.aiAssistantToggleTodo.classList.remove('active');
+        elements.aiAssistantPromptLabel.textContent = "What recipe are you looking for?";
+        elements.aiAssistantPrompt.placeholder = "e.g., healthy chicken and avocado salad";
+        elements.aiAssistantResults.innerHTML = '';
+    });
+
+    elements.aiAssistantGenerateBtn.addEventListener('click', async () => {
+        const prompt = elements.aiAssistantPrompt.value.trim();
+        const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; 
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+        
+        elements.aiAssistantLoader.classList.remove('hidden');
+        elements.aiAssistantGenerateBtn.disabled = true;
+        elements.aiAssistantResults.innerHTML = '';
+
+        let systemPrompt = '';
+        let userQuery = '';
+        let payload = {};
+
         try {
-            const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-            if (!response.ok) throw new Error(`API error: ${response.statusText}`);
-            const result = await response.json(); const data = JSON.parse(result.candidates[0].content.parts[0].text);
-            for (const item of data) {
-                if (item.task && item.category && todosRef) {
-                    await addDoc(todosRef, { text: item.task, category: item.category, completed: false, createdAt: serverTimestamp() });
+            if (aiAssistantMode === 'todo') {
+                systemPrompt = `You are a helpful assistant for a pregnant user. Generate a list of tasks based on their query. Your response MUST be ONLY a valid JSON array of objects, where each object has "task" (string) and "category" (string) keys. The category must be one of: 'Health', 'Baby', 'Home', 'Appointment', 'Reminder', or 'Custom'.`;
+                userQuery = prompt;
+                if (!prompt) {
+                    const pregnancyWeek = Math.floor(Math.abs(new Date() - new Date(wellnessDataForJourney.pregnancyStartDate)) / (1000 * 60 * 60 * 24 * 7));
+                    userQuery = `Generate a weekly to-do list for week ${pregnancyWeek} of pregnancy.`;
                 }
+                
+                payload = { 
+                    contents: [{ parts: [{ text: userQuery }] }], 
+                    systemInstruction: { parts: [{ text: systemPrompt }] },
+                    generationConfig: { responseMimeType: "application/json" } 
+                };
+                
+                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) throw new Error(`API error: ${response.statusText}`);
+                const result = await response.json(); 
+                const data = JSON.parse(result.candidates[0].content.parts[0].text);
+                renderAiTodoSuggestions(data);
+
+            } else if (aiAssistantMode === 'recipe') {
+                systemPrompt = `You are a world-class chef, like Gordon Ramsay, but encouraging and focused on healthy, pregnancy-safe meals. Provide a single, delicious recipe based on the user's request. Your response MUST be ONLY a valid JSON object with these exact keys: "recipeName" (string), "ingredients" (array of strings), and "instructions" (array of strings).`;
+                userQuery = prompt;
+                if (!prompt) {
+                    userQuery = "a simple, healthy pregnancy-safe snack recipe";
+                }
+                
+                payload = { 
+                    contents: [{ parts: [{ text: userQuery }] }], 
+                    systemInstruction: { parts: [{ text: systemPrompt }] },
+                    generationConfig: { responseMimeType: "application/json" }
+                };
+
+                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) throw new Error(`API error: ${response.statusText}`);
+                const result = await response.json();
+                const data = JSON.parse(result.candidates[0].content.parts[0].text);
+                renderAiRecipeSuggestion(data);
             }
-        } catch (error) { console.error("AI To-do generation failed:", error); }
+
+        } catch (error) {
+            console.error("AI Assistant generation failed:", error);
+            elements.aiAssistantResults.innerHTML = `<p class="text-center text-red-300 p-4">Sorry, an error occurred. Please try again.</p>`;
+        } finally {
+            elements.aiAssistantLoader.classList.add('hidden');
+            elements.aiAssistantGenerateBtn.disabled = false;
+        }
     });
 
     addWishBtn.addEventListener('click', async () => {
@@ -551,21 +669,20 @@ function setupEventListeners() {
         }
     });
 
-    newTodoCategory.addEventListener('change', () => {
-        if (newTodoCategory.value === 'Custom') {
-            customTodoCategoryInput.classList.remove('hidden');
+    // --- To-Do Category Listeners ---
+    elements.newTodoCategory.addEventListener('change', () => {
+        if (elements.newTodoCategory.value === 'Custom') {
+            elements.customTodoCategoryInput.classList.remove('hidden');
         } else {
-            customTodoCategoryInput.classList.add('hidden');
+            elements.customTodoCategoryInput.classList.add('hidden');
         }
-        // NEW: Show/hide appointment fields
-        if (newTodoCategory.value === 'Appointment') {
+        if (elements.newTodoCategory.value === 'Appointment') {
             elements.newAppointmentFields.classList.remove('hidden');
         } else {
             elements.newAppointmentFields.classList.add('hidden');
         }
     });
 
-    // NEW: Show/hide custom appointment type fields
     elements.newAppointmentType.addEventListener('change', () => {
         if (elements.newAppointmentType.value === 'Custom') {
             elements.newAppointmentCustomType.classList.remove('hidden');
@@ -574,6 +691,19 @@ function setupEventListeners() {
         }
     });
 
+    elements.editTodoCategory.addEventListener('change', () => {
+        if (elements.editTodoCategory.value === 'Custom') {
+            elements.editCustomTodoCategoryInput.classList.remove('hidden');
+        } else {
+            elements.editCustomTodoCategoryInput.classList.add('hidden');
+        }
+        if (elements.editTodoCategory.value === 'Appointment') {
+            elements.editAppointmentFields.classList.remove('hidden');
+        } else {
+            elements.editAppointmentFields.classList.add('hidden');
+        }
+    });
+    
     elements.editAppointmentType.addEventListener('change', () => {
         if (elements.editAppointmentType.value === 'Custom') {
             elements.editAppointmentCustomType.classList.remove('hidden');
@@ -583,20 +713,7 @@ function setupEventListeners() {
     });
 
 
-    editTodoCategory.addEventListener('change', () => {
-        if (editTodoCategory.value === 'Custom') {
-            editCustomTodoCategoryInput.classList.remove('hidden');
-        } else {
-            editCustomTodoCategoryInput.classList.add('hidden');
-        }
-        // NEW: Show/hide edit appointment fields
-        if (editTodoCategory.value === 'Appointment') {
-            elements.editAppointmentFields.classList.remove('hidden');
-        } else {
-            elements.editAppointmentFields.classList.add('hidden');
-        }
-    });
-
+    // --- Collapsible Section Listeners ---
     wishlistHeader.addEventListener('click', () => {
         collapsibleWishlistContent.classList.toggle('hidden');
         wishlistToggleIcon.classList.toggle('rotate-180');
@@ -617,6 +734,7 @@ function setupEventListeners() {
         renderReflections(currentReflections);
     });
 
+    // --- Reflection Modal Listeners ---
     addReflectionBtn.addEventListener('click', () => openReflectionModal());
     reflectionModalCancelBtn.addEventListener('click', closeReflectionModal);
     reflectionModal.addEventListener('click', e => e.target === reflectionModal && closeReflectionModal());
@@ -631,7 +749,7 @@ function setupEventListeners() {
     reflectionModalSaveBtn.addEventListener('click', async () => {
         const title = reflectionTitleInput.value.trim();
         const content = reflectionContentInput.value.trim();
-        if (!title || !content) return;
+        if (!title && !content) return; // Allow saving if at least one is filled
 
         const reflectionData = {
             title,
@@ -641,7 +759,7 @@ function setupEventListeners() {
         };
 
         if (activeReflectionId) {
-            const noteDocRef = doc(db, `users/${getCurrentUserId()}/reflections`, activeReflectionId);
+            const noteDocRef = doc(reflectionsRef, activeReflectionId);
             await updateDoc(noteDocRef, reflectionData);
         } else {
             reflectionData.createdAt = serverTimestamp();
@@ -683,11 +801,12 @@ function setupEventListeners() {
         setTimeout(() => aiSummaryModal.classList.add('hidden'), 300);
     });
 
-    editTodoModalSaveBtn.addEventListener('click', handleSaveTodo);
-    editTodoModalCancelBtn.addEventListener('click', closeEditTodoModal);
-    editTodoModal.addEventListener('click', e => e.target === editTodoModal && closeEditTodoModal());
+    // --- Edit To-Do Modal Listeners ---
+    elements.editTodoModalSaveBtn.addEventListener('click', handleSaveTodo);
+    elements.editTodoModalCancelBtn.addEventListener('click', closeEditTodoModal);
+    elements.editTodoModal.addEventListener('click', e => e.target === elements.editTodoModal && closeEditTodoModal());
 
-    // --- New Event Listeners for Image Link Modal ---
+    // --- Image Link Modal Listeners ---
     const openImageLinkModal = () => {
         imageLinkModal.classList.remove('hidden');
         setTimeout(() => imageLinkModal.classList.add('active'), 10);
@@ -714,64 +833,58 @@ function setupEventListeners() {
 
 function openEditTodoModal(todo) {
     activeTodoId = todo.id;
-    editTodoInput.value = todo.text;
-    editTodoDate.value = todo.date || '';
-    editTodoTime.value = todo.time || '';
+    elements.editTodoInput.value = todo.text;
+    elements.editTodoDate.value = todo.date || '';
+    elements.editTodoTime.value = todo.time || '';
 
-   // NEW: Added Appointment
-   const standardCategories = ['Health', 'Baby', 'Home', 'Reminder', 'Appointment'];
+    const standardCategories = ['Health', 'Baby', 'Home', 'Reminder', 'Appointment'];
     if (standardCategories.includes(todo.category)) {
-        editTodoCategory.value = todo.category;
-        editCustomTodoCategoryInput.classList.add('hidden');
-        editCustomTodoCategoryInput.value = '';
+        elements.editTodoCategory.value = todo.category;
+        elements.editCustomTodoCategoryInput.classList.add('hidden');
+        elements.editCustomTodoCategoryInput.value = '';
     } else {
-        editTodoCategory.value = 'Custom';
-        editCustomTodoCategoryInput.classList.remove('hidden');
-        editCustomTodoCategoryInput.value = todo.category;
+        elements.editTodoCategory.value = 'Custom';
+        elements.editCustomTodoCategoryInput.classList.remove('hidden');
+        elements.editCustomTodoCategoryInput.value = todo.category;
     }
 
-    // NEW: Handle Appointment Fields
+    // Show/Hide appointment fields
     if (todo.category === 'Appointment') {
         elements.editAppointmentFields.classList.remove('hidden');
-        const appt = todo.appointment || {};
-        elements.editAppointmentFname.value = appt.fname || '';
-        elements.editAppointmentLname.value = appt.lname || '';
-        elements.editAppointmentAddress.value = appt.address || '';
-        elements.editAppointmentContact.value = appt.contact || '';
-        elements.editAppointmentEmail.value = appt.email || '';
-        
-        // Handle custom type dropdown
-        const standardTypes = ['OB/GYN', 'Ultrasound', 'Pediatrician'];
-        if (standardTypes.includes(appt.type)) {
-            elements.editAppointmentType.value = appt.type;
+        elements.editAppointmentFname.value = todo.firstName || '';
+        elements.editAppointmentLname.value = todo.lastName || '';
+        elements.editAppointmentAddress.value = todo.address || '';
+        elements.editAppointmentContact.value = todo.contact || '';
+        elements.editAppointmentEmail.value = todo.email || '';
+        elements.editAppointmentType.value = todo.appointmentType || '';
+
+        if (todo.appointmentType === 'Custom') {
+            elements.editAppointmentCustomType.classList.remove('hidden');
+            elements.editAppointmentCustomType.value = todo.customAppointmentType || '';
+        } else {
             elements.editAppointmentCustomType.classList.add('hidden');
             elements.editAppointmentCustomType.value = '';
-        } else {
-            elements.editAppointmentType.value = 'Custom';
-            elements.editAppointmentCustomType.classList.remove('hidden');
-            elements.editAppointmentCustomType.value = appt.customType || '';
         }
-
     } else {
         elements.editAppointmentFields.classList.add('hidden');
     }
 
-    editTodoModal.classList.remove('hidden');
-    setTimeout(() => editTodoModal.classList.add('active'), 10);
+    elements.editTodoModal.classList.remove('hidden');
+    setTimeout(() => elements.editTodoModal.classList.add('active'), 10);
 }
 
 function closeEditTodoModal() {
-    editTodoModal.classList.remove('active');
-    setTimeout(() => editTodoModal.classList.add('hidden'), 300);
+    elements.editTodoModal.classList.remove('active');
+    setTimeout(() => elements.editTodoModal.classList.add('hidden'), 300);
 }
 
 async function handleSaveTodo() {
     if (!activeTodoId) return;
 
-    const text = editTodoInput.value.trim();
-    let category = editTodoCategory.value;
+    const text = elements.editTodoInput.value.trim();
+    let category = elements.editTodoCategory.value;
     if (category === 'Custom') {
-        category = editCustomTodoCategoryInput.value.trim();
+        category = elements.editCustomTodoCategoryInput.value.trim();
     }
 
     if (!text || !category) {
@@ -779,43 +892,45 @@ async function handleSaveTodo() {
         return;
     }
 
-    const todoDocRef = doc(db, `users/${getCurrentUserId()}/todos`, activeTodoId);
+    const todoDocRef = doc(todosRef, activeTodoId);
     
-    // NEW: Create data payload
     const todoData = {
-        text: text,
-        category: category,
-        date: editTodoDate.value,
-        time: editTodoTime.value,
-        appointment: null // Default to null
+        text,
+        category,
+        date: elements.editTodoDate.value,
+        time: elements.editTodoTime.value
     };
 
-    // NEW: Add appointment data if category is correct
     if (category === 'Appointment') {
         let apptType = elements.editAppointmentType.value;
-        let customApptType = '';
         if (apptType === 'Custom') {
-            customApptType = elements.editAppointmentCustomType.value.trim();
+            apptType = elements.editAppointmentCustomType.value.trim() || 'Custom';
         }
-
-        todoData.appointment = {
-            fname: elements.editAppointmentFname.value.trim(),
-            lname: elements.editAppointmentLname.value.trim(),
-            address: elements.editAppointmentAddress.value.trim(),
-            contact: elements.editAppointmentContact.value.trim(),
-            email: elements.editAppointmentEmail.value.trim(),
-            type: apptType === 'Custom' ? '' : apptType,
-            customType: customApptType
-        };
+        todoData.firstName = elements.editAppointmentFname.value.trim();
+        todoData.lastName = elements.editAppointmentLname.value.trim();
+        todoData.address = elements.editAppointmentAddress.value.trim();
+        todoData.contact = elements.editAppointmentContact.value.trim();
+        todoData.email = elements.editAppointmentEmail.value.trim();
+        todoData.appointmentType = elements.editAppointmentType.value;
+        todoData.customAppointmentType = elements.editAppointmentCustomType.value.trim();
+    } else {
+        // If category is *changed from* Appointment, we should clear old fields
+        todoData.firstName = '';
+        todoData.lastName = '';
+        todoData.address = '';
+        todoData.contact = '';
+        todoData.email = '';
+        todoData.appointmentType = '';
+        todoData.customAppointmentType = '';
     }
-    
+
     await updateDoc(todoDocRef, todoData);
     closeEditTodoModal();
 }
 
 async function deleteReflection(noteId) {
     if (!reflectionsRef) return;
-    const noteDocRef = doc(db, `users/${getCurrentUserId()}/reflections`, noteId);
+    const noteDocRef = doc(reflectionsRef, noteId);
     await deleteDoc(noteDocRef);
 }
 
