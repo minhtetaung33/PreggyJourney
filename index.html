@@ -548,6 +548,7 @@
                                     <div id="todo-list-container" class="space-y-3 max-h-72 overflow-y-auto modal-scroll pr-2 mb-4"></div>
                                 </div>
                                 <div class="pt-4 border-t border-white/10 space-y-3">
+                                    <p class="text-lg font-semibold text-white">Add New Task</p>
                                     <textarea id="new-todo-input" class="symptom-input text-sm min-h-[60px]" placeholder="New task or note..."></textarea>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                         <input type="date" id="new-todo-date" class="date-input text-sm">
@@ -557,7 +558,9 @@
                                         <option value="Health">🧘‍♀️ Health</option>
                                         <option value="Baby">🍼 Baby Prep</option>
                                         <option value="Home">🏡 Home</option>
-                                        <option value="Appointment">🗓️ Appointment</option> <!-- NEW CATEGORY -->
+                                        <option value="Appointment">🗓️ Appointment</option>
+                                        <!-- NEW RECIPE CATEGORY -->
+                                        <option value="Recipes">🍳 Recipes</option>
                                         <option value="Reminder">💬 Reminder</option>
                                         <option value="Custom">✨ Custom</option>
                                     </select>
@@ -590,11 +593,28 @@
                                     
                                     <button id="add-todo-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Add Task</button>
                                 </div>
-                                <div class="mt-6 text-center">
+                                <div class="mt-6 pt-6 border-t border-white/10 text-center">
                                     <p class="mb-2 text-indigo-200">Need ideas? Let AI help!</p>
-                                    <!-- UPDATED: This button now opens the new AI modal -->
-                                    <button id="open-ai-assistant-btn" class="btn-secondary font-semibold py-2 px-5 rounded-lg">Open AI Assistant</button>
+                                    <button id="ai-generate-todos-btn" class="btn-secondary font-semibold py-2 px-5 rounded-lg">Generate Weekly To-Do List</button>
                                 </div>
+                                
+                                <!-- =============================== -->
+                                <!-- === NEW AI RECIPE ASSISTANT === -->
+                                <!-- =============================== -->
+                                <div class="mt-8 pt-6 border-t border-white/10 space-y-3">
+                                    <h3 class="text-xl font-bold text-center">🧑‍🍳 AI Recipe Assistant</h3>
+                                    <p class="text-sm text-center text-gray-300">Craving something specific? Ask for recipes from the world's best chefs!</p>
+                                    <textarea id="ai-recipe-prompt" class="symptom-input min-h-[80px]" placeholder="e.g., I'm craving a simple, healthy pasta dish..."></textarea>
+                                    <button id="ai-generate-recipe-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
+                                        <span id="ai-recipe-btn-text">Find Recipes</span>
+                                        <svg id="ai-recipe-loader" class="animate-spin ml-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                    </button>
+                                    <div id="ai-recipe-results-container" class="mt-4 space-y-4">
+                                        <!-- AI Recipes will be injected here by journey.js -->
+                                    </div>
+                                </div>
+                                <!-- === END AI RECIPE ASSISTANT === -->
+
                             </div>
 
                             <!-- Tiny Reflections -->
@@ -832,12 +852,14 @@
                     <option value="Health">🧘‍♀️ Health</option>
                     <option value="Baby">🍼 Baby Prep</option>
                     <option value="Home">🏡 Home</option>
-                    <option value="Appointment">🗓️ Appointment</option> <!-- NEW CATEGORY -->
+                    <option value="Appointment">🗓️ Appointment</option>
+                    <!-- NEW RECIPE CATEGORY -->
+                    <option value="Recipes">🍳 Recipes</option>
                     <option value="Reminder">💬 Reminder</option>
                     <option value="Custom">✨ Custom</option>
                 </select>
                 <input type="text" id="edit-custom-todo-category-input" class="meal-select text-sm hidden" placeholder="Your custom category...">
-
+            
                 <!-- NEW EDIT APPOINTMENT FIELDS -->
                 <div id="edit-appointment-fields" class="hidden space-y-3 pt-3 mt-3 border-t border-white/10">
                     <p class="text-sm font-semibold text-indigo-200">Appointment Details</p>
@@ -1007,34 +1029,6 @@
                 Hi Mama, I’m just a tiny speck now, but I already feel your love 💕
              </div>
              <!-- Close button removed (Task 1) -->
-        </div>
-    </div>
-
-    <!-- New AI Assistant Modal -->
-    <div id="ai-assistant-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
-        <div id="ai-assistant-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300 flex flex-col">
-            <h3 class="text-2xl font-bold mb-4 text-center">AI Assistant</h3>
-            
-            <!-- Toggle Buttons -->
-            <div class="flex items-center justify-center bg-white/10 rounded-lg p-1 mb-4">
-                <button id="ai-assistant-toggle-todo" class="tab-btn active text-sm flex-1 !rounded-md">To-Do Ideas</button>
-                <button id="ai-assistant-toggle-recipe" class="tab-btn text-sm flex-1 !rounded-md">Recipe Finder</button>
-            </div>
-
-            <!-- Prompt Input -->
-            <label id="ai-assistant-prompt-label" for="ai-assistant-prompt" class="block text-sm font-medium text-gray-300 mb-2">What's on your mind?</label>
-            <textarea id="ai-assistant-prompt" class="symptom-input min-h-[80px] mb-4" placeholder="e.g., What should I pack for the hospital?"></textarea>
-            <button id="ai-assistant-generate-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
-                <span>Generate</span>
-                <svg id="ai-assistant-loader" class="animate-spin ml-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-            </button>
-            
-            <!-- Results Area -->
-            <div id="ai-assistant-results" class="mt-6 space-y-3 max-h-60 overflow-y-auto modal-scroll pr-2">
-                <!-- AI results will be injected here -->
-            </div>
-
-             <button id="ai-assistant-close-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg transition-colors mt-6">Close</button>
         </div>
     </div>
 
