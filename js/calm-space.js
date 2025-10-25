@@ -18,7 +18,7 @@ import {
 // We will use the 'elements' object imported from ui.js directly.
 
 // --- Helper Function ---
-function formatTime(seconds) {
+const formatTime = (seconds) => {
     // Ensure seconds is non-negative
     const safeSeconds = Math.max(0, seconds);
     return `${Math.floor(safeSeconds / 60)}:${(safeSeconds % 60).toString().padStart(2, '0')}`;
@@ -294,7 +294,7 @@ let isDomCached = false; // Flag to prevent re-caching
 let summaryListenerUnsubscribe = null; // For Firestore listener
 
 // --- NEW: Helper to get YYYY-MM-DD date string ---
-function getTodayDateString() {
+const getTodayDateString = () => {
     const today = new Date();
     const year = today.getFullYear();
     const month = (today.getMonth() + 1).toString().padStart(2, '0');
@@ -303,7 +303,7 @@ function getTodayDateString() {
 }
 
 // --- NEW: Helper to get yesterday's date string ---
-function getYesterdayDateString(date) {
+const getYesterdayDateString = (date) => {
     const yesterday = new Date(date);
     yesterday.setDate(yesterday.getDate() - 1);
     const year = yesterday.getFullYear();
@@ -314,7 +314,7 @@ function getYesterdayDateString(date) {
 
 
 // --- Main Initialization ---
-export function initializeCalmSpace(uid, aid) {
+export const initializeCalmSpace = (uid, aid) => {
     userId = uid;
     // Use __app_id if available, otherwise fall back
     appId = typeof __app_id !== 'undefined' ? __app_id : aid;
@@ -323,8 +323,8 @@ export function initializeCalmSpace(uid, aid) {
     isDomCached = true; // Mark as "cached"
     loadVoices(); // Load speech synthesis voices
 
-    if (!userId || !appId) {
-        console.warn("Calm Space: Missing User ID or App ID. Saving will fail."); // Changed to warn
+    if (!userId) { // We no longer need appId for the check
+        console.warn("Calm Space: Missing User ID. Saving will fail."); // Changed to warn
     }
     
     // Check if elements were found before adding listeners
@@ -356,7 +356,7 @@ export function initializeCalmSpace(uid, aid) {
     initDailySummaryListener();
 }
 
-export function unloadCalmSpace() {
+export const unloadCalmSpace = () => {
     stopBreathing();
     stopMeditation();
     stopStretches();
@@ -372,7 +372,7 @@ export function unloadCalmSpace() {
 }
 
 // --- Speech Synthesis ---
-function loadVoices() {
+const loadVoices = () => {
     // getVoices() is tricky, it might be empty on first call.
     const setVoice = () => {
         const voices = synth.getVoices();
@@ -392,7 +392,7 @@ function loadVoices() {
     }
 }
 
-function speak(text, isSilent) {
+const speak = (text, isSilent) => {
     if (isSilent || !text) return;
     synth.cancel(); // Stop any previous speech
     utterance.text = text;
@@ -411,7 +411,7 @@ function speak(text, isSilent) {
 }
 
 // --- Breathing Visualizer ---
-function initBreathing() {
+const initBreathing = () => {
     elements.breathingExerciseButtons.addEventListener('click', e => {
         const button = e.target.closest('button');
         if (button && button.dataset.breath) {
@@ -443,7 +443,7 @@ function initBreathing() {
     stopBreathing(); // Reset to default "stopped" state with emoji
 }
 
-function toggleBreathingSoundIcon() {
+const toggleBreathingSoundIcon = () => {
     if (!elements.breathingSilentToggle || !elements.breathingSoundOnIcon || !elements.breathingSoundOffIcon) return;
     
     if (elements.breathingSilentToggle.checked) {
@@ -458,7 +458,7 @@ function toggleBreathingSoundIcon() {
     }
 }
 
-function selectBreathing(type) {
+const selectBreathing = (type) => {
     stopBreathing();
     currentBreathingCycle = breathingData[type];
     currentBreathingStep = 0;
@@ -497,7 +497,7 @@ function selectBreathing(type) {
     elements.breathingVisualEmoji.style.display = 'none';
 }
 
-function startBreathing() {
+const startBreathing = () => {
     const durationMinutes = parseInt(elements.breathingTimerInput.value);
     if (isNaN(durationMinutes) || durationMinutes <= 0) {
         if(elements.breathingInstruction) {
@@ -546,7 +546,7 @@ function startBreathing() {
 }
 
 
-function runBreathingAnimation() {
+const runBreathingAnimation = () => {
     if (!currentBreathingCycle || !activeBreathingTimer) return; // Check timer too
     const isSilent = elements.breathingSilentToggle.checked;
     
@@ -606,7 +606,7 @@ function runBreathingAnimation() {
     }, step.duration);
 }
 
-function stopBreathing() {
+const stopBreathing = () => {
     clearInterval(activeBreathingTimer);
     activeBreathingTimer = null;
     synth.cancel();
@@ -638,7 +638,7 @@ function stopBreathing() {
 }
 
 // --- Meditation ---
-function initMeditation() {
+const initMeditation = () => {
     elements.meditationTypeButtons.addEventListener('click', e => {
         const button = e.target.closest('button');
         if (button && button.dataset.meditation) {
@@ -665,7 +665,7 @@ function initMeditation() {
     }
 }
 
-function toggleMeditationSoundIcon() {
+const toggleMeditationSoundIcon = () => {
     if (!elements.meditationVoiceToggle || !elements.meditationSoundOnIcon || !elements.meditationSoundOffIcon) return;
     if (elements.meditationVoiceToggle.checked) { // Silent is ON
         elements.meditationSoundOnIcon.classList.add('hidden');
@@ -678,7 +678,7 @@ function toggleMeditationSoundIcon() {
 }
 
 
-function selectMeditation(type) {
+const selectMeditation = (type) => {
     stopMeditation();
     const meditation = meditationData[type];
     currentMeditationInstructions = meditation.instructions;
@@ -703,7 +703,7 @@ function selectMeditation(type) {
     }
 }
 
-function startMeditation() {
+const startMeditation = () => {
     // FIX: Get meditation type *before* starting
     const selectedButton = document.querySelector('#meditation-type-buttons button.active');
     if (!selectedButton) {
@@ -753,7 +753,7 @@ function startMeditation() {
     runMeditationGuide();
 }
 
-function runMeditationGuide() {
+const runMeditationGuide = () => {
     if (!activeMeditationTimer) return; // Stop if timer ended
     
     if (currentMeditationStep >= currentMeditationInstructions.length) {
@@ -784,7 +784,7 @@ function runMeditationGuide() {
 }
 
 
-function stopMeditation() {
+const stopMeditation = () => {
     clearInterval(activeMeditationTimer);
     activeMeditationTimer = null;
     synth.cancel();
@@ -816,7 +816,7 @@ function stopMeditation() {
 }
 
 // --- Stretches ---
-function initStretches() {
+const initStretches = () => {
     elements.stretchRoutineButtons.addEventListener('click', e => {
         const button = e.target.closest('button');
         if (button && button.dataset.stretch) {
@@ -843,7 +843,7 @@ function initStretches() {
     stopStretches(); // Set initial stopped state
 }
 
-function toggleStretchSoundIcon() {
+const toggleStretchSoundIcon = () => {
     if (!elements.stretchVoiceToggle || !elements.stretchSoundOnIcon || !elements.stretchSoundOffIcon) return;
     if (elements.stretchVoiceToggle.checked) { // Silent is ON
         elements.stretchSoundOnIcon.classList.add('hidden');
@@ -856,7 +856,7 @@ function toggleStretchSoundIcon() {
 }
 
 
-function selectStretchRoutine(type) {
+const selectStretchRoutine = (type) => {
     stopStretches(); // Stop any previous routine
     const routine = stretchData[type];
     
@@ -884,7 +884,7 @@ function selectStretchRoutine(type) {
     displayPose(); // Display the first pose (will NOT auto-play)
 }
 
-function displayPoseUI(pose) {
+const displayPoseUI = (pose) => {
     if (!pose) {
         // Default state
         if (elements.stretchInstruction) elements.stretchInstruction.querySelector('p').textContent = 'Select a routine and set a timer to begin.';
@@ -913,7 +913,7 @@ function displayPoseUI(pose) {
     }
 }
 
-function displayPose() {
+const displayPose = () => {
     if (!currentStretchRoutine || currentStretchRoutine.length === 0) {
         displayPoseUI(null); // Show default state
         return;
@@ -934,7 +934,7 @@ function displayPose() {
     }
 }
 
-function runCurrentStretchPose() {
+const runCurrentStretchPose = () => {
     if (!activeStretchTimer || isStretchPaused) return; 
     if (!currentStretchRoutine || currentStretchRoutine.length === 0) return;
 
@@ -959,7 +959,7 @@ function runCurrentStretchPose() {
 }
 
 
-function playPauseStretches() {
+const playPauseStretches = () => {
     isStretchPaused = !isStretchPaused;
 
     if (isStretchPaused) {
@@ -1016,7 +1016,7 @@ function playPauseStretches() {
     }
 }
 
-function nextPose() {
+const nextPose = () => {
     if (!currentStretchRoutine || currentStretchRoutine.length === 0) return;
 
     clearTimeout(currentStretchPoseTimer); // Stop current pose timer
@@ -1030,7 +1030,7 @@ function nextPose() {
     displayPose(); // Display the new pose (will restart timer if not paused)
 }
 
-function prevPose() {
+const prevPose = () => {
     if (!currentStretchRoutine || currentStretchRoutine.length === 0) return;
 
     clearTimeout(currentStretchPoseTimer); // Stop current pose timer
@@ -1045,7 +1045,7 @@ function prevPose() {
 }
 
 
-function stopStretches() {
+const stopStretches = () => {
     clearInterval(activeStretchTimer);
     clearTimeout(currentStretchPoseTimer);
     activeStretchTimer = null;
@@ -1072,7 +1072,7 @@ function stopStretches() {
 }
 
 // --- Mindful Reflection Modal ---
-function initReflectionModal() {
+const initReflectionModal = () => {
     elements.mindfulReflectionCloseBtn.addEventListener('click', closeReflectionModal);
     elements.mindfulReflectionModal.addEventListener('click', (e) => {
         if (e.target === elements.mindfulReflectionModal) {
@@ -1093,7 +1093,7 @@ function initReflectionModal() {
 }
 
 // UPDATED: Now accepts durationMinutes
-function openReflectionModal(type, name, durationMinutes = 0) {
+const openReflectionModal = (type, name, durationMinutes = 0) => {
     reflectionData = { type: type, name: name, mood: '', durationMinutes: parseInt(durationMinutes) };
     
     elements.mindfulReflectionTitle.textContent = `Reflection for ${name}`;
@@ -1105,27 +1105,28 @@ function openReflectionModal(type, name, durationMinutes = 0) {
     setTimeout(() => elements.mindfulReflectionModal.classList.add('active'), 10);
 }
 
-function closeReflectionModal() {
+const closeReflectionModal = () => {
     elements.mindfulReflectionModal.classList.remove('active');
     setTimeout(() => elements.mindfulReflectionModal.classList.add('hidden'), 300);
 }
 
 // *** NEW: REBUILT saveReflection FUNCTION ***
-async function saveReflection() {
+const saveReflection = async () => {
     if (!reflectionData.mood) {
         elements.mindfulReflectionTitle.textContent = "Please select a mood";
         elements.mindfulReflectionTitle.classList.add('text-red-400');
         return;
     }
 
-    if (!userId || !appId) {
-        console.error("Cannot save reflection: Missing userId or appId.");
+    if (!userId) { // No longer need appId here
+        console.error("Cannot save reflection: Missing userId.");
         closeReflectionModal();
         return;
     }
 
     const todayId = getTodayDateString(); // "YYYY-MM-DD"
-    const docPath = `/artifacts/${appId}/users/${userId}/calmSummary/${todayId}`;
+    // *** PATH FIX: Removed /artifacts/${appId} prefix ***
+    const docPath = `users/${userId}/calmSummary/${todayId}`;
     const docRef = doc(db, docPath);
 
     try {
@@ -1189,14 +1190,15 @@ async function saveReflection() {
 /**
  * Attaches a Firestore listener to the user's calmSummary collection
  */
-function initDailySummaryListener() {
+const initDailySummaryListener = () => {
     if (summaryListenerUnsubscribe) {
         summaryListenerUnsubscribe(); // Unsubscribe from any old listener
     }
     
-    if (!userId || !appId) return; // Wait for auth
+    if (!userId) return; // Wait for auth. No longer need appId
 
-    const collectionPath = `/artifacts/${appId}/users/${userId}/calmSummary`;
+    // *** PATH FIX: Removed /artifacts/${appId} prefix ***
+    const collectionPath = `users/${userId}/calmSummary`;
     const q = query(
         collection(db, collectionPath), 
         orderBy("date", "desc"), 
@@ -1232,7 +1234,7 @@ function initDailySummaryListener() {
  * Main function to update the entire Daily Summary card
  * @param {Array} summaryData - Array of the last 7 days of summary objects, sorted desc
  */
-function updateDailySummaryUI(summaryData) {
+const updateDailySummaryUI = (summaryData) => {
     if (!elements.dailySummaryCard || !summaryData || summaryData.length === 0) return;
 
     const todaySummary = summaryData[0];
@@ -1283,7 +1285,7 @@ function updateDailySummaryUI(summaryData) {
 /**
  * Calculates the total score and average mood for the day
  */
-function calculateTodayScore(todaySummary) {
+const calculateTodayScore = (todaySummary) => {
     let totalScore = 0;
     // Boosts: Breathing: 5pts/min, Stretch: 3pts/min, Meditation: 4pts/min
     totalScore += (todaySummary.breathingMinutes || 0) * 5;
@@ -1319,7 +1321,7 @@ function calculateTodayScore(todaySummary) {
 /**
  * Gets the mood level string from a 0-100 percentage
  */
-function getMoodLevel(percentage) {
+const getMoodLevel = (percentage) => {
     if (percentage <= 30) return 'low';
     if (percentage <= 60) return 'balanced';
     if (percentage <= 80) return 'flow';
@@ -1329,7 +1331,7 @@ function getMoodLevel(percentage) {
 /**
  * Updates the CSS conic-gradient for the mood gauge
  */
-function updateMoodGauge(percentage, color) {
+const updateMoodGauge = (percentage, color) => {
     const deg = (percentage / 100) * 360;
     const gradient = `conic-gradient(from 0deg, ${color} ${deg}deg, #1a203c ${deg}deg)`;
     elements.summaryMoodGauge.style.backgroundImage = gradient;
@@ -1338,7 +1340,7 @@ function updateMoodGauge(percentage, color) {
 /**
  * Renders the 7-day bar chart
  */
-function renderSummaryChart(summaryData) {
+const renderSummaryChart = (summaryData) => {
     elements.summaryBarChart.innerHTML = ''; // Clear old bars
     
     // We need 7 days, even if empty. Data is sorted desc.
@@ -1394,7 +1396,7 @@ function renderSummaryChart(summaryData) {
 /**
  * Calculates the current streak
  */
-function calculateStreak(summaryData) {
+const calculateStreak = (summaryData) => {
     let streak = 0;
     let todayId = getTodayDateString();
     
@@ -1422,7 +1424,7 @@ function calculateStreak(summaryData) {
 /**
  * Triggers the glow/sparkle animation on card update
  */
-function playSummaryAnimation(averageMood) {
+const playSummaryAnimation = (averageMood) => {
     // This is called from saveReflection now, not updateUI
     const colorTheme = moodColors[Math.round(averageMood) || 3];
     elements.summaryGlowEffect.innerHTML = ''; // Clear old ones
