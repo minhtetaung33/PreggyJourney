@@ -133,22 +133,22 @@ const meditationData = {
     'first-connection': {
         name: 'First Connection',
         instructions: [
-            "Welcome. Find a comfortable position, either sitting or lying down.",
-            "Gently rest your hands on your belly. Close your eyes.",
-            "Take a deep, cleansing breath in through your nose... and let it all go with a soft sigh out.",
-            "Bring all your awareness to your hands. Feel the warmth they create.",
-            "Feel the gentle rise and fall of your belly with each breath.",
-            "Now, bring your attention inward, beneath your hands, to the space where your baby is growing.",
-            "You don't need to feel for movement, just bring your loving awareness to this space.",
-            "As you breathe in, imagine you are sending a wave of warmth and welcome to your baby.",
-            "As you breathe out, feel a sense of peace settling over you both.",
-            "In your mind, or in a soft whisper, say the words: 'I am here, my little one.'",
-            "'I am so happy you are here.'",
-            "Feel the connection, this invisible, unbreakable bond between you.",
-            "It's a bond of love, a bond of life.",
-            "Continue to breathe, just resting in this shared space.",
-            "Know that you are already connected, already communicating in the most profound way.",
-            "Stay here for a few more moments, just feeling. Just being. Together."
+            "Welcome. Find a comfortable position, either sitting or lying down...",
+            "Gently rest your hands on your belly.. Close your eyes...",
+            "Take a deep, cleansing breath in through your nose.... and let it all go with a soft sigh out...",
+            "Bring all your awareness to your hands.. Feel the warmth they create...",
+            "Feel the gentle rise and fall of your belly with each breath...",
+            "Now, bring your attention inward., beneath your hands., to the space where your baby is growing...",
+            "You don't need to feel for movement., just bring your loving awareness to this space...",
+            "As you breathe in, imagine you are sending a wave of warmth and welcome to your baby...",
+            "As you breathe out, feel a sense of peace settling over you both...",
+            "In your mind, or in a soft whisper., say the words: 'I am here, my little one...'",
+            "'I am so happy you are here...'",
+            "Feel the connection, this invisible., unbreakable bond between you...",
+            "It's a bond of love, a bond of life...",
+            "Continue to breathe., just resting in this shared space...",
+            "Know that you are already connected, already communicating in the most profound way...",
+            "Stay here for a few more moments, just feeling.. Just being.. Together..."
         ],
         color: 'bg-pink-500',
         audio: null,
@@ -157,24 +157,24 @@ const meditationData = {
     'love-visualization': {
         name: 'Love Visualization',
         instructions: [
-            "Settle in and close your eyes. Place your hands on your belly.",
-            "Take a deep breath in, filling your lungs... and as you exhale, release any tension from your day.",
-            "Let your shoulders drop, your jaw soften.",
-            "Now, begin to imagine a soft, warm light. Perhaps it's a glowing pink, or a gentle golden color.",
-            "See this light glowing brightly right in your heart center.",
-            "This is a light of pure, unconditional love.",
-            "With your next inhale, feel this light grow brighter, filling your entire chest.",
-            "As you exhale, visualize this warm light traveling from your heart, down through your body...",
-            "...and through your hands, flowing directly into your baby.",
-            "Imagine your baby being surrounded, held, and nourished by this beautiful, loving light.",
-            "With each breath, you are sending waves of love, safety, and peace.",
-            "Inhale, drawing in love for yourself.",
-            "Exhale, sending that love to your baby.",
-            "Whisper in your mind, 'You are loved. You are safe. You are welcome.'",
-            "Continue this pattern, breathing in love, and breathing out love.",
-            "See your baby floating peacefully in this warm, protective glow you are creating.",
-            "You are their safe harbor. You are their world.",
-            "Rest in this visualization, knowing you are wrapping your baby in pure love."
+            "Settle in and close your eyes... Place your hands on your belly...",
+            "Take a deep breath in., filling your lungs... and as you exhale, release any tension from your day...",
+            "Let your shoulders drop., your jaw soften...",
+            "Now, begin to imagine a soft., warm light... Perhaps it's a glowing pink, or a gentle golden color...",
+            "See this light glowing brightly right in your heart center...",
+            "This is a light of pure., unconditional love...",
+            "With your next inhale, feel this light grow brighter, filling your entire chest...",
+            "As you exhale., visualize this warm light traveling from your heart, down through your body.",
+            "...and through your hands., flowing directly into your baby...",
+            "Imagine your baby being surrounded., held., and nourished by this beautiful., loving light...",
+            "With each breath, you are sending waves of love., safety., and peace...",
+            "Inhale, drawing in love for yourself...",
+            "Exhale, sending that love to your baby...",
+            "Whisper in your mind., 'You are loved.. You are safe.. You are welcome...'",
+            "Continue this pattern., breathing in love., and breathing out love...",
+            "See your baby floating peacefully in this warm., protective glow you are creating...",
+            "You are their safe harbor.. You are their world...",
+            "Rest in this visualization., knowing you are wrapping your baby in pure love..."
         ],
         color: 'bg-rose-500',
         audio: null,
@@ -183,22 +183,22 @@ const meditationData = {
     'heartbeat-harmony': {
         name: 'Heartbeat Harmony',
         instructions: [
-            "Begin by finding your comfortable resting position.",
-            "Place one hand over your heart, and the other gently on your belly.",
-            "Close your eyes and first, just listen. Listen to the quiet sounds around you.",
-            "Now, bring your attention to the hand on your heart. Feel its gentle, steady rhythm.",
-            "This is your life force, your constant companion.",
-            "Breathe with it. In for 4 counts... and out for 6.",
-            "We will now play a gentle heartbeat sound. Let it blend with your own.",
-            "Imagine this is the rhythm of the universe, a rhythm of safety and life.",
-            "Now, bring your awareness to the hand on your belly.",
-            "Feel the connection between these two points. Your heart, and this new life.",
-            "Visualize a soft, golden thread of light flowing from your heart... down to your baby.",
-            "With every beat, this thread pulses with love, with strength, with connection.",
-            "Your heartbeat and their developing one, already in harmony.",
-            "Your body is a symphony, and your baby is its newest, most precious note.",
-            "Stay with this feeling. The feeling of two hearts, one journey.",
-            "Breathing in calm. Breathing out love. Beating as one."
+            "Begin by finding your comfortable resting position...",
+            "Place one hand over your heart., and the other gently on your belly...",
+            "Close your eyes and first., just listen. Listen to the quiet sounds around you...",
+            "Now, bring your attention to the hand on your heart.. Feel its gentle., steady rhythm...",
+            "This is your life force, your constant companion...",
+            "Breathe with it.. In for 4 counts.... and out for 6...",
+            "We will now play a gentle heartbeat sound.. Let it blend with your own...",
+            "Imagine this is the rhythm of the universe., a rhythm of safety and life...",
+            "Now, bring your awareness to the hand on your belly...",
+            "Feel the connection between these two points... Your heart., and this new life...",
+            "Visualize a soft., golden thread of light flowing from your heart... down to your baby...",
+            "With every beat., this thread pulses with love., with strength., with connection...",
+            "Your heartbeat and their developing one., already in harmony...",
+            "Your body is a symphony., and your baby is its newest, most precious note...",
+            "Stay with this feeling.. The feeling of two hearts., one journey...",
+            "Breathing in calm.. Breathing out love.. Beating as one..."
         ],
         color: 'bg-red-500',
         audio: 'https://archive.org/download/human-heartbeat-sound-effect/Human%20Heartbeat%20Sound%20Effect.mp3', // Example sound
@@ -207,24 +207,24 @@ const meditationData = {
     'peaceful-night': {
         name: 'Peaceful Night Bond',
         instructions: [
-            "Lie down in your most comfortable position for sleep. Use pillows for support wherever you need them.",
-            "Let your body feel heavy and fully supported.",
-            "Close your eyes and take a long, slow breath in...",
-            "...and as you exhale, let out a sigh, releasing the entire day.",
-            "Let it all go. Nothing else matters right now.",
-            "Gently rest your hands on your belly.",
-            "Imagine you and your baby are floating in a calm, quiet sea under a sky full of soft, twinkling stars.",
-            "With every breath you take, imagine one of those stars glowing a little brighter.",
-            "Breathe in peace. Breathe out and let your body sink deeper into relaxation.",
-            "Feel your toes and feet become heavy and warm.",
-            "Feel your legs relax completely.",
-            "Feel your hips and belly soften, holding your baby in perfect peace.",
-            "Let your back, shoulders, and arms melt into the bed.",
-            "Relax your jaw, your cheeks, and the space between your eyebrows.",
-            "You are safe. Your baby is safe.",
-            "Whisper good night, little one. We are resting together.",
-            "Allow your mind to drift, feeling nothing but peace and gratitude.",
-            "Good night... sleep well."
+            "Lie down in your most comfortable position for sleep.. Use pillows for support wherever you need them.",
+            "Let your body feel heavy and fully supported...",
+            "Close your eyes and take a long., slow breath in...",
+            "...and as you exhale., let out a sigh, releasing the entire day...",
+            "Let it all go.. Nothing else matters right now...",
+            "Gently rest your hands on your belly..",
+            "Imagine you and your baby are floating in a calm., quiet sea under a sky full of soft., twinkling stars...",
+            "With every breath you take., imagine one of those stars glowing a little brighter...",
+            "Breathe in peace. Breathe out and let your body sink deeper into relaxation...",
+            "Feel your toes and feet become heavy and warm...",
+            "Feel your legs relax completely...",
+            "Feel your hips and belly soften., holding your baby in perfect peace...",
+            "Let your back, shoulders., and arms melt into the bed...",
+            "Relax your jaw., your cheeks., and the space between your eyebrows...",
+            "You are safe.. Your baby is safe...",
+            "Whisper good night., little one.. We are resting together...",
+            "Allow your mind to drift.., feeling nothing but peace and gratitude...",
+            "Good night... sleep well.."
         ],
         color: 'bg-indigo-600',
         audio: null,
@@ -233,22 +233,22 @@ const meditationData = {
     'morning-gratitude': {
         name: 'Morning Gratitude',
         instructions: [
-            "Good morning. Begin by sitting up, perhaps by a window or in a softly lit room.",
-            "Sit tall, but comfortably. Rest your hands on your belly or in your lap.",
-            "Close your eyes and take a deep, fresh breath of morning air. Fill your lungs completely.",
-            "Exhale with a sigh, welcoming the new day.",
-            "Let's set an intention for this day, for both you and your baby.",
-            "As you breathe in, think 'I welcome peace.'",
-            "As you breathe out, think 'I release worry.'",
-            "Now, bring a gentle smile to your face and send a 'good morning' to your baby.",
-            "Feel the miracle of this new life, growing and changing every moment.",
-            "Whisper, 'Thank you, body. Thank you for the incredible work you are doing.'",
-            "Feel gratitude for your body, for its strength and wisdom.",
-            "Feel gratitude for this baby, for the joy and love they already bring.",
-            "Feel gratitude for this day, a fresh start, a new opportunity for peace and connection.",
-            "Imagine a warm, gentle light filling you and your baby, a light of health and calm.",
-            "Carry this light with you as you open your eyes and move into your day.",
-            "Good morning, little one. We are ready for today."
+            "Good morning... Begin by sitting up., perhaps by a window or in a softly lit room...",
+            "Sit tall., but comfortably.. Rest your hands on your belly or in your lap...",
+            "Close your eyes and take a deep., fresh breath of morning air.. Fill your lungs completely...",
+            "Exhale with a sigh, welcoming the new day...",
+            "Let's set an intention for this day., for both you and your baby...",
+            "As you breathe in., think 'I welcome peace...'",
+            "As you breathe out., think 'I release worry...'",
+            "Now, bring a gentle smile to your face and send a 'good morning' to your baby...",
+            "Feel the miracle of this new life, growing and changing every moment...",
+            "Whisper, 'Thank you, body. Thank you for the incredible work you are doing...'",
+            "Feel gratitude for your body., for its strength and wisdom...",
+            "Feel gratitude for this baby., for the joy and love they already bring...",
+            "Feel gratitude for this day., a fresh start., a new opportunity for peace and connection...",
+            "Imagine a warm., gentle light filling you and your baby., a light of health and calm...",
+            "Carry this light with you as you open your eyes and move into your day...",
+            "Good morning.., little one.. We are ready for today.."
         ],
         color: 'bg-yellow-500',
         audio: null,
@@ -260,57 +260,57 @@ const stretchData = {
     'morning-flow': {
         name: 'Morning Energizer Flow',
         poses: [
-            { name: "Stand Tall", instruction: "Stand tall, feet hip-width apart. Root your feet into the ground. Roll your shoulders back and down. Take a deep, grounding breath.", duration: 10000, visual: 'stand', emoji: '🧍‍♀️' },
-            { name: "Overhead Reach", instruction: "Inhale, sweeping your arms wide and reaching up overhead. Look up if it feels good. Feel the length in your spine.", duration: 10000, visual: 'reach', emoji: '🙌' },
-            { name: "Slight Forward Bend", instruction: "Exhale, soften your knees, and hinge at your hips. Fold forward only as far as is comfortable, keeping your back flat. Rest hands on thighs.", duration: 10000, visual: 'bend', emoji: '🙇‍♀️' },
-            { name: "Shoulder Rolls", instruction: "Slowly roll your shoulders up toward your ears, and then back and down. Feel the tension melting. Repeat 5 times.", duration: 15000, visual: 'shoulders', emoji: '🙆‍♀️' },
-            { name: "Neck Circles", instruction: "Gently drop your chin to your chest. Slowly roll your right ear to your right shoulder. Pause. Roll back to center, and over to the left. Be very gentle. 3 times each way.", duration: 20000, visual: 'neck', emoji: '↪️' },
-            { name: "Deep Breaths", instruction: "Return to standing tall. Take 3 final, deep breaths, filling your belly and chest. You are ready for the day.", duration: 15000, visual: 'stand', emoji: '🧍‍♀️' }
+            { name: "Stand Tall", instruction: "Stand tall, feet hip-width apart. Root your feet into the ground. Roll your shoulders back and down. Take a deep, grounding breath.", duration: 15000, visual: 'stand', emoji: '🧍‍♀️' },
+            { name: "Overhead Reach", instruction: "Inhale, sweeping your arms wide and reaching up overhead. Look up if it feels good. Feel the length in your spine.", duration: 15000, visual: 'reach', emoji: '🙌' },
+            { name: "Slight Forward Bend", instruction: "Exhale, soften your knees, and hinge at your hips. Fold forward only as far as is comfortable, keeping your back flat. Rest hands on thighs.", duration: 15000, visual: 'bend', emoji: '🙇‍♀️' },
+            { name: "Shoulder Rolls", instruction: "Slowly roll your shoulders up toward your ears, and then back and down. Feel the tension melting. Repeat 5 times.", duration: 20000, visual: 'shoulders', emoji: '🙆‍♀️' },
+            { name: "Neck Circles", instruction: "Gently drop your chin to your chest. Slowly roll your right ear to your right shoulder. Pause. Roll back to center, and over to the left. Be very gentle. 3 times each way.", duration: 25000, visual: 'neck', emoji: '↪️' },
+            { name: "Deep Breaths", instruction: "Return to standing tall. Take 3 final, deep breaths, filling your belly and chest. You are ready for the day.", duration: 20000, visual: 'stand', emoji: '🧍‍♀️' }
         ],
         safe: ['early', 'mid', 'late']
     },
     'back-hip': {
         name: 'Back & Hip Relief',
         poses: [
-            { name: "Tabletop", instruction: "Come onto your hands and knees. Place wrists directly under shoulders, and knees directly under hips. Your back is flat like a table.", duration: 10000, visual: 'tabletop', emoji: '🐾' },
-            { name: "Cow Pose", instruction: "Inhale. Drop your belly, lift your tailbone, and draw your heart forward. Gaze gently upward. Feel the stretch in your front body.", duration: 10000, visual: 'cow-pose', emoji: '🐄' },
-            { name: "Cat Pose", instruction: "Exhale. Press into your hands, round your upper back toward the sky. Tuck your chin and tailbone. Feel the release in your spine.", duration: 10000, visual: 'cat-pose', emoji: '🐈' },
-            { name: "Repeat Cat/Cow", instruction: "Flow with your own breath. Inhale for Cow pose, exhale for Cat pose. Let the movement be fluid and nourishing for your back.", duration: 30000, visual: 'cat-cow-flow', emoji: '🔄' },
-            { name: "Hip Circles", instruction: "From tabletop, begin to circle your hips back, to the right, forward, and to the left. Make the circles as big or small as feels good. 5 times clockwise.", duration: 15000, visual: 'hips', emoji: '🔄' },
-            { name: "Hip Circles (Reverse)", instruction: "Now, pause and reverse direction. Circle your hips counter-clockwise, 5 times. Releasing tension in the hip joints.", duration: 15000, visual: 'hips', emoji: '🔄' },
-            { name: "Child's Pose", instruction: "Bring your big toes to touch and take your knees wide apart to make space for your belly. Sink your hips back toward your heels. Rest your forehead on the mat. Breathe deeply into your back.", duration: 30000, visual: 'childs-pose', emoji: '🙇‍♀️' }
+            { name: "Tabletop", instruction: "Come onto your hands and knees. Place wrists directly under shoulders, and knees directly under hips. Your back is flat like a table.", duration: 15000, visual: 'tabletop', emoji: '🐾' },
+            { name: "Cow Pose", instruction: "Inhale. Drop your belly, lift your tailbone, and draw your heart forward. Gaze gently upward. Feel the stretch in your front body.", duration: 15000, visual: 'cow-pose', emoji: '🐄' },
+            { name: "Cat Pose", instruction: "Exhale. Press into your hands, round your upper back toward the sky. Tuck your chin and tailbone. Feel the release in your spine.", duration: 15000, visual: 'cat-pose', emoji: '🐈' },
+            { name: "Repeat Cat/Cow", instruction: "Flow with your own breath. Inhale for Cow pose, exhale for Cat pose. Let the movement be fluid and nourishing for your back.", duration: 35000, visual: 'cat-cow-flow', emoji: '🔄' },
+            { name: "Hip Circles", instruction: "From tabletop, begin to circle your hips back, to the right, forward, and to the left. Make the circles as big or small as feels good. 5 times clockwise.", duration: 20000, visual: 'hips', emoji: '🔄' },
+            { name: "Hip Circles (Reverse)", instruction: "Now, pause and reverse direction. Circle your hips counter-clockwise, 5 times. Releasing tension in the hip joints.", duration: 20000, visual: 'hips', emoji: '🔄' },
+            { name: "Child's Pose", instruction: "Bring your big toes to touch and take your knees wide apart to make space for your belly. Sink your hips back toward your heels. Rest your forehead on the mat. Breathe deeply into your back.", duration: 40000, visual: 'childs-pose', emoji: '🙇‍♀️' }
         ],
         safe: ['early', 'mid']
     },
     'leg-relax': {
         name: 'Leg & Foot Relax',
         poses: [
-            { name: "Sit Comfortably", instruction: "Sit on the floor, perhaps on a cushion, with your legs extended out in front of you. Sit tall through your spine.", duration: 5000, visual: 'sit', emoji: '🧘‍♀️' },
-            { name: "Ankle Rotations", instruction: "Lift one foot slightly and slowly rotate your ankle 5 times in one direction, then 5 times in the other. Repeat with the other foot.", duration: 20000, visual: 'ankles', emoji: '👟' },
-            { name: "Point and Flex", instruction: "With both legs extended, point your toes forward, feeling a stretch in your shins. Hold. Then, flex your feet, pulling your toes back toward you. Feel the stretch in your calves. Repeat 10 times.", duration: 20000, visual: 'toes', emoji: '🦶' },
-            { name: "Calf Massage", instruction: "Bend one knee and gently use your hands to massage your opposite calf muscle, from the ankle up toward the knee. Breathe deeply. Switch legs.", duration: 30000, visual: 'calf', emoji: '🦵' }
+            { name: "Sit Comfortably", instruction: "Sit on the floor, perhaps on a cushion, with your legs extended out in front of you. Sit tall through your spine.", duration: 10000, visual: 'sit', emoji: '🧘‍♀️' },
+            { name: "Ankle Rotations", instruction: "Lift one foot slightly and slowly rotate your ankle 5 times in one direction, then 5 times in the other. Repeat with the other foot.", duration: 25000, visual: 'ankles', emoji: '👟' },
+            { name: "Point and Flex", instruction: "With both legs extended, point your toes forward, feeling a stretch in your shins. Hold. Then, flex your feet, pulling your toes back toward you. Feel the stretch in your calves. Repeat 10 times.", duration: 30000, visual: 'toes', emoji: '🦶' },
+            { name: "Calf Massage", instruction: "Bend one knee and gently use your hands to massage your opposite calf muscle, from the ankle up toward the knee. Breathe deeply. Switch legs.", duration: 35000, visual: 'calf', emoji: '🦵' }
         ],
         safe: ['early', 'mid', 'late']
     },
     'shoulder-neck': {
         name: 'Shoulder & Neck Release',
         poses: [
-            { name: "Sit Tall", instruction: "Sit comfortably, cross-legged or on a chair. Lengthen your spine and relax your shoulders down and back.", duration: 5000, visual: 'sit-cross', emoji: '🧘‍♀️' },
-            { name: "Shoulder Rolls", instruction: "Inhale and shrug your shoulders up to your ears. Exhale and roll them back and down. Feel the shoulder blades slide down your back. Repeat 5 times.", duration: 15000, visual: 'shoulders', emoji: '🙆‍♀️' },
-            { name: "Side Neck Tilt", instruction: "Gently tilt your right ear toward your right shoulder. Don't force it. Feel a gentle stretch along the left side of your neck. Breathe. Hold.", duration: 15000, visual: 'neck-tilt', emoji: '↪️' },
-            { name: "Side Neck Tilt", instruction: "Slowly bring your head back to center. Now, gently tilt your left ear toward your left shoulder. Breathe into the right side of your neck. Hold.", duration: 15000, visual: 'neck-tilt', emoji: '↪️' },
-            { name: "Chest Opener", instruction: "Interlace your fingers behind your back. Straighten your arms (or keep them bent) and lift your hands away from your body, opening your chest. Lift your gaze. Breathe into your heart.", duration: 20000, visual: 'chest', emoji: '💖' }
+            { name: "Sit Tall", instruction: "Sit comfortably, cross-legged or on a chair. Lengthen your spine and relax your shoulders down and back.", duration: 10000, visual: 'sit-cross', emoji: '🧘‍♀️' },
+            { name: "Shoulder Rolls", instruction: "Inhale and shrug your shoulders up to your ears. Exhale and roll them back and down. Feel the shoulder blades slide down your back. Repeat 5 times.", duration: 20000, visual: 'shoulders', emoji: '🙆‍♀️' },
+            { name: "Side Neck Tilt", instruction: "Gently tilt your right ear toward your right shoulder. Don't force it. Feel a gentle stretch along the left side of your neck. Breathe. Hold.", duration: 20000, visual: 'neck-tilt', emoji: '↪️' },
+            { name: "Side Neck Tilt", instruction: "Slowly bring your head back to center. Now, gently tilt your left ear toward your left shoulder. Breathe into the right side of your neck. Hold.", duration: 20000, visual: 'neck-tilt', emoji: '↪️' },
+            { name: "Chest Opener", instruction: "Interlace your fingers behind your back. Straighten your arms (or keep them bent) and lift your hands away from your body, opening your chest. Lift your gaze. Breathe into your heart.", duration: 30000, visual: 'chest', emoji: '💖' }
         ],
         safe: ['early', 'mid', 'late']
     },
     'sleep-wind': {
         name: 'Sleep Wind-Down Yoga',
         poses: [
-            { name: "Lie Comfortably", instruction: "Lie on your side with pillows supporting your head, belly, and between your knees. Settle in and get comfortable.", duration: 10000, visual: 'side-lie', emoji: '😴' },
-            { name: "Gentle Butterfly", instruction: "Slowly come to a seated position. Bring the soles of your feet together, letting your knees fall open. Sit tall, or fold forward gently if that feels better. Breathe.", duration: 30000, visual: 'butterfly', emoji: '🦋' },
-            { name: "Slow Breaths", instruction: "Return to your comfortable side-lying position. Close your eyes. Take a slow, deep inhale, filling your belly.", duration: 10000, visual: 'side-lie', emoji: '😴' },
-            { name: "Humming Exhale", instruction: "Now, as you exhale, create a gentle humming sound. Feel the vibration in your chest and face. This is very calming for the nervous system.", duration: 10000, visual: 'side-lie', emoji: '😴' },
-            { name: "Relax", instruction: "Continue breathing, perhaps humming on each exhale. Imagine each breath is a wave of relaxation, melting away any remaining tension.", duration: 30000, visual: 'side-lie', emoji: '😴' },
+            { name: "Lie Comfortably", instruction: "Lie on your side with pillows supporting your head, belly, and between your knees. Settle in and get comfortable.", duration: 20000, visual: 'side-lie', emoji: '😴' },
+            { name: "Gentle Butterfly", instruction: "Slowly come to a seated position. Bring the soles of your feet together, letting your knees fall open. Sit tall, or fold forward gently if that feels better. Breathe.", duration: 40000, visual: 'butterfly', emoji: '🦋' },
+            { name: "Slow Breaths", instruction: "Return to your comfortable side-lying position. Close your eyes. Take a slow, deep inhale, filling your belly.", duration: 20000, visual: 'side-lie', emoji: '😴' },
+            { name: "Humming Exhale", instruction: "Now, as you exhale, create a gentle humming sound. Feel the vibration in your chest and face. This is very calming for the nervous system.", duration: 20000, visual: 'side-lie', emoji: '😴' },
+            { name: "Relax", instruction: "Continue breathing, perhaps humming on each exhale. Imagine each breath is a wave of relaxation, melting away any remaining tension.", duration: 35000, visual: 'side-lie', emoji: '😴' },
             { name: "Rest", instruction: "Stay still for 1 minute. Just breathe. Feel your body heavy, relaxed, and ready for sleep. Good night.", duration: 60000, visual: 'side-lie', emoji: '😴' }
         ],
         safe: ['early', 'mid', 'late']
@@ -1575,6 +1575,7 @@ function playSummaryAnimation(averageMood) {
     }
 
 }
+
 
 
 
