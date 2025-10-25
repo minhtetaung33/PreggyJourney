@@ -118,13 +118,26 @@ export const cacheDomElements = () => {
     elements.editAppointmentType = document.getElementById('edit-appointment-type');
     elements.editAppointmentCustomType = document.getElementById('edit-appointment-custom-type');
 
-    // NEW: Wishlist Food Fields
+    // Wishlist Food Fields
     elements.newWishFoodFields = document.getElementById('new-wish-food-fields');
     elements.newWishFoodType = document.getElementById('new-wish-food-type');
     elements.newWishFoodExpiry = document.getElementById('new-wish-food-expiry');
+
+    // NEW: Edit Wish Modal Fields
+    elements.editWishModal = document.getElementById('edit-wish-modal');
+    elements.editWishItem = document.getElementById('edit-wish-item');
+    elements.editWishCategory = document.getElementById('edit-wish-category');
+    elements.editCustomCategoryInput = document.getElementById('edit-custom-category-input'); // Reused ID, ensure correct element is selected in journey.js
+    elements.editWishFoodFields = document.getElementById('edit-wish-food-fields');
+    elements.editWishFoodType = document.getElementById('edit-wish-food-type');
+    elements.editWishFoodExpiry = document.getElementById('edit-wish-food-expiry');
+    elements.editWishPrice = document.getElementById('edit-wish-price');
+    elements.editWishLink = document.getElementById('edit-wish-link');
+    elements.editWishModalCancelBtn = document.getElementById('edit-wish-modal-cancel-btn');
+    elements.editWishModalSaveBtn = document.getElementById('edit-wish-modal-save-btn');
     // --- END JOURNEY TAB ELEMENTS ---
 
-    // --- NEW AI RECIPE ASSISTANT FIELDS ---
+    // --- AI RECIPE ASSISTANT FIELDS ---
     elements.aiRecipePrompt = document.getElementById('ai-recipe-prompt');
     elements.aiGenerateRecipeBtn = document.getElementById('ai-generate-recipe-btn');
     elements.aiRecipeBtnText = document.getElementById('ai-recipe-btn-text');
