@@ -76,6 +76,7 @@ let wellnessDataForJourney = {};
 let activeReflectionId = null;
 let activeColor = 'pink';
 let activeTodoId = null;
+let activeWishId = null; // NEW: For editing wishes
 let showAllReflections = false;
 let activeReflectionImageUrl = null; // Variable to hold the image URL for the current reflection
 
@@ -239,40 +240,58 @@ function renderWishes(wishes) {
         return; // Exit function
     }
 
-    // ADDED food icons map
+    // UPDATED food icons map
     const foodIcons = {
         'Meat': '🥩',
         'Fruit': '🍎',
         'Vege': '🥦',
         'Snack': '🥨',
         'Diary': '🧀',
+        'Grain': '🍚', // Added Grain
+        'Soup': '🍲', // Added Soup
         'Dog': '🐶',
         'Drinks': '🥤',
         '': '🥕' // Default
     };
+    // NEW: Emojis for other categories (used in display)
+    const categoryDisplayEmojis = {
+        'Baby Care': '🍼',
+        'Nursery': '🧸',
+        'Hospital Bag': '👜',
+        'Health': '🧘‍♀️',
+        'Postpartum': '💖',
+        'Food': '🥕',
+        'Custom': '✨'
+    };
+
 
     // Iterate over the newly sorted list
     sortedWishes.forEach(wish => {
         const item = document.createElement('div');
         item.className = `wish-item-card p-3 bg-white/5 rounded-lg border border-transparent ${wish.purchased ? 'purchased opacity-60' : ''}`;
         
-        // NEW: Check for Food category
+        // Check for Food category
         let foodDetailsHtml = '';
         if (wish.category === 'Food' && wish.foodDetails) {
             const icon = foodIcons[wish.foodDetails.type] || '🥕';
             const expiryHtml = wish.foodDetails.expiry ? ` | <span class="text-yellow-400">Expires: ${formatDate(wish.foodDetails.expiry)}</span>` : '';
             foodDetailsHtml = `<p class="text-xs text-gray-400 mt-1">${icon} ${wish.foodDetails.type || 'Food'}${expiryHtml}</p>`;
         }
+        
+        // Use category emoji for display
+        const displayCategory = `${categoryDisplayEmojis[wish.category] || '✨'} ${wish.category}`;
 
         item.innerHTML = `
             <div class="flex items-start justify-between">
                 <div class="flex-1 min-w-0">
                     <p class="font-bold break-words">${wish.item}</p>
-                    <p class="text-xs text-indigo-300">${wish.category}</p>
-                    ${foodDetailsHtml} <!-- NEW: Added food details -->
+                    <p class="text-xs text-indigo-300">${displayCategory}</p> <!-- Display emoji + name -->
+                    ${foodDetailsHtml} 
                 </div>
-                <div class="flex items-center ml-2">
-                    <input type="checkbox" class="h-5 w-5 rounded bg-white/20 text-teal-400 focus:ring-teal-500 border-gray-500 cursor-pointer" ${wish.purchased ? 'checked' : ''}>
+                <div class="flex items-center ml-2 flex-shrink-0"> <!-- ADDED flex-shrink-0 -->
+                    <input type="checkbox" class="h-5 w-5 rounded bg-white/20 text-teal-400 focus:ring-teal-500 border-gray-500 cursor-pointer mr-2"> <!-- Added mr-2 -->
+                    <!-- NEW EDIT BUTTON -->
+                    <button class="icon-btn edit-wish-btn"><svg class="w-5 h-5 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L14.732 3.732z"></path></svg></button>
                     <button class="icon-btn delete-wish-btn ml-1"><svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
                 </div>
             </div>
@@ -281,6 +300,9 @@ function renderWishes(wishes) {
                 ${wish.link ? `<a href="${wish.link}" target="_blank" class="text-blue-400 hover:underline">Store Link</a>` : ''}
             </div>
         `;
+        // Set checkbox state AFTER innerHTML is set
+        item.querySelector('input[type="checkbox"]').checked = wish.purchased;
+
         item.querySelector('input[type="checkbox"]').addEventListener('change', async (e) => {
             const wishDocRef = doc(db, `users/${getCurrentUserId()}/wishes`, wish.id);
             await updateDoc(wishDocRef, { purchased: e.target.checked });
@@ -289,6 +311,9 @@ function renderWishes(wishes) {
             const wishDocRef = doc(db, `users/${getCurrentUserId()}/wishes`, wish.id);
             await deleteDoc(wishDocRef);
         });
+        // NEW Event listener for edit button
+        item.querySelector('.edit-wish-btn').addEventListener('click', () => openEditWishModal(wish));
+
         wishlistContainer.appendChild(item);
     });
     
@@ -935,6 +960,24 @@ function setupEventListeners() {
             }
         }
     });
+
+    // --- NEW Event Listeners for Edit Wish Modal ---
+    elements.editWishModalSaveBtn.addEventListener('click', handleSaveWish);
+    elements.editWishModalCancelBtn.addEventListener('click', closeEditWishModal);
+    elements.editWishModal.addEventListener('click', e => e.target === elements.editWishModal && closeEditWishModal());
+    elements.editWishCategory.addEventListener('change', () => { // Listener for category change *inside* edit modal
+        if (elements.editWishCategory.value === 'Custom') {
+            elements.editCustomCategoryInput.classList.remove('hidden');
+            elements.editWishFoodFields.classList.add('hidden');
+        } else if (elements.editWishCategory.value === 'Food') {
+            elements.editWishFoodFields.classList.remove('hidden');
+            elements.editCustomCategoryInput.classList.add('hidden');
+        } else {
+            elements.editCustomCategoryInput.classList.add('hidden');
+            elements.editWishFoodFields.classList.add('hidden');
+        }
+    });
+
 }
 
 function openEditTodoModal(todo) {
@@ -1091,6 +1134,89 @@ function closeReflectionModal() {
         imageLinkInput.value = '';
     }, 300);
 }
+
+// --- NEW Edit Wish Functions ---
+
+function openEditWishModal(wish) {
+    activeWishId = wish.id;
+    elements.editWishItem.value = wish.item;
+    elements.editWishPrice.value = wish.price || '';
+    elements.editWishLink.value = wish.link || '';
+
+    // Set category and handle custom/food fields
+    const standardCategories = ['Baby Care', 'Nursery', 'Hospital Bag', 'Health', 'Postpartum', 'Food'];
+    if (standardCategories.includes(wish.category)) {
+        elements.editWishCategory.value = wish.category;
+        elements.editCustomCategoryInput.classList.add('hidden');
+        elements.editCustomCategoryInput.value = '';
+        if (wish.category === 'Food') {
+            elements.editWishFoodFields.classList.remove('hidden');
+            const foodDetails = wish.foodDetails || {};
+            elements.editWishFoodType.value = foodDetails.type || '';
+            elements.editWishFoodExpiry.value = foodDetails.expiry || '';
+        } else {
+            elements.editWishFoodFields.classList.add('hidden');
+        }
+    } else {
+        elements.editWishCategory.value = 'Custom';
+        elements.editCustomCategoryInput.classList.remove('hidden');
+        elements.editCustomCategoryInput.value = wish.category;
+        elements.editWishFoodFields.classList.add('hidden');
+    }
+
+    elements.editWishModal.classList.remove('hidden');
+    setTimeout(() => elements.editWishModal.classList.add('active'), 10);
+}
+
+function closeEditWishModal() {
+    elements.editWishModal.classList.remove('active');
+    setTimeout(() => {
+        elements.editWishModal.classList.add('hidden');
+        activeWishId = null; // Reset active ID
+    }, 300);
+}
+
+async function handleSaveWish() {
+    if (!activeWishId || !wishesRef) return;
+
+    const item = elements.editWishItem.value.trim();
+    let category = elements.editWishCategory.value;
+    if (category === 'Custom') {
+        category = elements.editCustomCategoryInput.value.trim();
+    }
+
+    if (!item || !category) {
+        console.error('Item name and category cannot be empty.');
+        return; // Add some user feedback here later if needed
+    }
+
+    const wishDocRef = doc(db, `users/${getCurrentUserId()}/wishes`, activeWishId);
+    
+    const wishData = {
+        item,
+        category,
+        price: elements.editWishPrice.value.trim(),
+        link: elements.editWishLink.value.trim(),
+        foodDetails: null // Default to null
+    };
+
+    // Add food details if category is Food
+    if (category === 'Food') {
+        wishData.foodDetails = {
+            type: elements.editWishFoodType.value,
+            expiry: elements.editWishFoodExpiry.value
+        };
+    }
+    
+    try {
+        await updateDoc(wishDocRef, wishData);
+        closeEditWishModal();
+    } catch (error) {
+        console.error("Error updating wish:", error);
+        // Add user feedback for error here if needed
+    }
+}
+
 
 function updateColorTags() {
     reflectionColorTags.querySelectorAll('button').forEach(btn => {
