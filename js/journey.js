@@ -239,15 +239,37 @@ function renderWishes(wishes) {
         return; // Exit function
     }
 
+    // ADDED food icons map
+    const foodIcons = {
+        'Meat': '🥩',
+        'Fruit': '🍎',
+        'Vege': '🥦',
+        'Snack': '🥨',
+        'Diary': '🧀',
+        'Dog': '🐶',
+        'Drinks': '🥤',
+        '': '🥕' // Default
+    };
+
     // Iterate over the newly sorted list
     sortedWishes.forEach(wish => {
         const item = document.createElement('div');
         item.className = `wish-item-card p-3 bg-white/5 rounded-lg border border-transparent ${wish.purchased ? 'purchased opacity-60' : ''}`;
+        
+        // NEW: Check for Food category
+        let foodDetailsHtml = '';
+        if (wish.category === 'Food' && wish.foodDetails) {
+            const icon = foodIcons[wish.foodDetails.type] || '🥕';
+            const expiryHtml = wish.foodDetails.expiry ? ` | <span class="text-yellow-400">Expires: ${formatDate(wish.foodDetails.expiry)}</span>` : '';
+            foodDetailsHtml = `<p class="text-xs text-gray-400 mt-1">${icon} ${wish.foodDetails.type || 'Food'}${expiryHtml}</p>`;
+        }
+
         item.innerHTML = `
             <div class="flex items-start justify-between">
                 <div class="flex-1 min-w-0">
                     <p class="font-bold break-words">${wish.item}</p>
                     <p class="text-xs text-indigo-300">${wish.category}</p>
+                    ${foodDetailsHtml} <!-- NEW: Added food details -->
                 </div>
                 <div class="flex items-center ml-2">
                     <input type="checkbox" class="h-5 w-5 rounded bg-white/20 text-teal-400 focus:ring-teal-500 border-gray-500 cursor-pointer" ${wish.purchased ? 'checked' : ''}>
@@ -368,10 +390,17 @@ function renderAiWishSuggestions(suggestions) {
             if (categoryOption) {
                 newWishCategory.value = suggestion.category;
                 customCategoryInput.classList.add('hidden');
+                // NEW: Show/hide food fields based on AI category
+                if (suggestion.category === 'Food') {
+                    elements.newWishFoodFields.classList.remove('hidden');
+                } else {
+                    elements.newWishFoodFields.classList.add('hidden');
+                }
             } else {
                 newWishCategory.value = 'Custom';
                 customCategoryInput.classList.remove('hidden');
                 customCategoryInput.value = suggestion.category;
+                elements.newWishFoodFields.classList.add('hidden'); // Hide for custom
             }
             newWishItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
             newWishItem.focus();
@@ -608,18 +637,35 @@ function setupEventListeners() {
         }
         if (!item || !wishesRef || !category) return;
         
-        await addDoc(wishesRef, {
+        // NEW: Create wish data object
+        const wishData = {
             item,
             category: category,
             price: newWishPrice.value.trim(),
             link: newWishLink.value.trim(),
             purchased: false,
             createdAt: serverTimestamp()
-        });
+        };
+
+        // NEW: Add food details if category is Food
+        if (category === 'Food') {
+            wishData.foodDetails = {
+                type: elements.newWishFoodType.value,
+                expiry: elements.newWishFoodExpiry.value
+            };
+        }
+
+        await addDoc(wishesRef, wishData); // Use the new data object
+        
         newWishItem.value = newWishPrice.value = newWishLink.value = '';
         customCategoryInput.value = '';
         newWishCategory.value = 'Baby Care';
         customCategoryInput.classList.add('hidden');
+
+        // NEW: Reset food fields
+        elements.newWishFoodFields.classList.add('hidden');
+        elements.newWishFoodType.value = '';
+        elements.newWishFoodExpiry.value = '';
     });
     
     aiWishForm.addEventListener('submit', async (e) => {
@@ -634,7 +680,8 @@ function setupEventListeners() {
         </div>`;
 
         const pregnancyWeek = Math.floor(Math.abs(new Date() - new Date(wellnessDataForJourney.pregnancyStartDate)) / (1000 * 60 * 60 * 24 * 7));
-        const systemPrompt = `You are a helpful shopping assistant for a pregnant woman. Based on the user's request and their pregnancy week (${pregnancyWeek}), use the Google Search tool to find 3-4 real, relevant products. For each item, you MUST extract the actual product name, a relevant category (from "Baby Care", "Nursery", "Hospital Bag", "Health", "Postpartum"), price, and a working URL to the product page. Your response MUST be ONLY a valid JSON array of objects, with no other text or formatting. Each object must have these keys: "productName", "category", "price", "productUrl".`;
+        // MODIFIED: Added 'Food' to the list of categories
+        const systemPrompt = `You are a helpful shopping assistant for a pregnant woman. Based on the user's request and their pregnancy week (${pregnancyWeek}), use the Google Search tool to find 3-4 real, relevant products. For each item, you MUST extract the actual product name, a relevant category (from "Baby Care", "Nursery", "Hospital Bag", "Health", "Postpartum", "Food"), price, and a working URL to the product page. Your response MUST be ONLY a valid JSON array of objects, with no other text or formatting. Each object must have these keys: "productName", "category", "price", "productUrl".`;
         const userQuery = `My request: "${prompt}". I am in week ${pregnancyWeek} of pregnancy.`;
         const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; // API Key will be injected
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
@@ -660,8 +707,13 @@ function setupEventListeners() {
     newWishCategory.addEventListener('change', () => {
         if (newWishCategory.value === 'Custom') {
             customCategoryInput.classList.remove('hidden');
+            elements.newWishFoodFields.classList.add('hidden'); // Hide food fields
+        } else if (newWishCategory.value === 'Food') {
+            elements.newWishFoodFields.classList.remove('hidden');
+            customCategoryInput.classList.add('hidden'); // Hide custom input
         } else {
             customCategoryInput.classList.add('hidden');
+            elements.newWishFoodFields.classList.add('hidden');
         }
     });
 
