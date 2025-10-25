@@ -99,6 +99,28 @@ export const cacheDomElements = () => {
     elements.summaryStreakBadge = document.getElementById('summary-streak-badge');
     elements.summaryBarChart = document.getElementById('summary-bar-chart');
 
+    // --- NEW JOURNEY TAB APPOINTMENT FIELDS ---
+    // New To-Do Form
+    elements.newAppointmentFields = document.getElementById('new-appointment-fields');
+    elements.newAppointmentFname = document.getElementById('new-appointment-fname');
+    elements.newAppointmentLname = document.getElementById('new-appointment-lname');
+    elements.newAppointmentAddress = document.getElementById('new-appointment-address');
+    elements.newAppointmentContact = document.getElementById('new-appointment-contact');
+    elements.newAppointmentEmail = document.getElementById('new-appointment-email');
+    elements.newAppointmentType = document.getElementById('new-appointment-type');
+    elements.newAppointmentCustomType = document.getElementById('new-appointment-custom-type');
+
+    // Edit To-Do Modal
+    elements.editAppointmentFields = document.getElementById('edit-appointment-fields');
+    elements.editAppointmentFname = document.getElementById('edit-appointment-fname');
+    elements.editAppointmentLname = document.getElementById('edit-appointment-lname');
+    elements.editAppointmentAddress = document.getElementById('edit-appointment-address');
+    elements.editAppointmentContact = document.getElementById('edit-appointment-contact');
+    elements.editAppointmentEmail = document.getElementById('edit-appointment-email');
+    elements.editAppointmentType = document.getElementById('edit-appointment-type');
+    elements.editAppointmentCustomType = document.getElementById('edit-appointment-custom-type');
+    // --- END NEW JOURNEY FIELDS ---
+
     // --- Animation Elements ---
     elements.bubbleBackground = document.getElementById('bubble-background');
     elements.pageLoadOverlay = document.getElementById('page-load-overlay');
