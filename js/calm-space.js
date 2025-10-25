@@ -30,7 +30,7 @@ const breathingData = {
     '4-7-8': {
         name: '4-7-8 Breathing',
         steps: [
-            { instruction: 'Begin. Inhale softly through your nose for... 4... 3... 2... 1...', duration: 6000, type: 'inhale' },
+            { instruction: 'Begin... Inhale softly through your nose for... 4... 3... 2... 1...', duration: 7000, type: 'inhale' },
             { instruction: 'Now, gently hold that breath for... 7... 6... 5... 4... 3... 2... 1...', duration: 9000, type: 'hold' },
             { instruction: 'And exhale slowly through your mouth with a soft "whoosh" sound for... 8... 7... 6... 5... 4... 3... 2... 1...', duration: 12000, type: 'exhale' },
         ],
@@ -1575,5 +1575,6 @@ function playSummaryAnimation(averageMood) {
     }
 
 }
+
 
 
