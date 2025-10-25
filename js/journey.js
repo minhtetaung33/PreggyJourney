@@ -1,10 +1,76 @@
  import { collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
  import { db } from './firebase.js';
  import { getCurrentUserId } from "./auth.js";
- import { elements } from './ui.js'; // Import the elements object directly
+ import { elements } from './ui.js'; // Import elements from ui.js
  
- // --- REMOVED top-level const assignments for DOM elements ---
- // We will now use elements.elementName directly within functions.
+ // DOM Elements (using elements object from ui.js)
+ const todoListContainer = elements.todoListContainer; // Example, ensure all relevant elements are cached in ui.js
+ const newTodoInput = elements.newTodoInput;
+ const newTodoCategory = elements.newTodoCategory;
+ const addTodoBtn = elements.addTodoBtn;
+ const aiGenerateTodosBtn = elements.aiGenerateTodosBtn;
+ const wishlistContainer = elements.wishlistContainer;
+ const wishlistProgressText = elements.wishlistProgressText;
+ const wishlistProgressBar = elements.wishlistProgressBar;
+ const newWishItem = elements.newWishItem;
+ const newWishCategory = elements.newWishCategory;
+ const newWishPrice = elements.newWishPrice;
+ const newWishLink = elements.newWishLink;
+ const addWishBtn = elements.addWishBtn;
+ const aiWishForm = elements.aiWishForm;
+ const aiWishPrompt = elements.aiWishPrompt;
+ const reflectionsContainer = elements.reflectionsContainer;
+ const addReflectionBtn = elements.addReflectionBtn;
+ const reflectionModal = elements.reflectionModal;
+ const reflectionModalTitle = elements.reflectionModalTitle;
+ const reflectionTitleInput = elements.reflectionTitleInput;
+ const reflectionContentInput = elements.reflectionContentInput;
+ const reflectionColorTags = elements.reflectionColorTags;
+ const reflectionModalCancelBtn = elements.reflectionModalCancelBtn;
+ const reflectionModalSaveBtn = elements.reflectionModalSaveBtn;
+ const aiSummarizeReflectionsBtn = elements.aiSummarizeReflectionsBtn;
+ const aiSummaryModal = elements.aiSummaryModal;
+ const aiSummaryContent = elements.aiSummaryContent;
+ const aiSummaryCloseBtn = elements.aiSummaryCloseBtn;
+ const customCategoryInput = elements.customCategoryInput; // Wish custom category
+ const todoHeader = elements.todoHeader;
+ const collapsibleTodoContent = elements.collapsibleTodoContent;
+ const todoToggleIcon = elements.todoToggleIcon;
+ const wishlistHeader = elements.wishlistHeader;
+ const collapsibleWishlistContent = elements.collapsibleWishlistContent;
+ const wishlistToggleIcon = elements.wishlistToggleIcon;
+ const newTodoDate = elements.newTodoDate;
+ const newTodoTime = elements.newTodoTime;
+ const customTodoCategoryInput = elements.customTodoCategoryInput; // Todo custom category
+ const editTodoModal = elements.editTodoModal;
+ const editTodoInput = elements.editTodoInput;
+ const editTodoDate = elements.editTodoDate;
+ const editTodoTime = elements.editTodoTime;
+ const editTodoCategory = elements.editTodoCategory;
+ const editCustomTodoCategoryInput = elements.editCustomTodoCategoryInput;
+ const editTodoModalCancelBtn = elements.editTodoModalCancelBtn;
+ const editTodoModalSaveBtn = elements.editTodoModalSaveBtn;
+ const reflectionHeader = elements.reflectionHeader;
+ const collapsibleReflectionContent = elements.collapsibleReflectionContent;
+ const reflectionToggleIcon = elements.reflectionToggleIcon;
+ const toggleReflectionsContainer = elements.toggleReflectionsContainer;
+ const toggleReflectionsBtn = elements.toggleReflectionsBtn;
+ 
+ // New DOM Elements for Reflection Image Feature
+ const addReflectionImageBtn = elements.addReflectionImageBtn;
+ const imageLinkModal = elements.imageLinkModal;
+ const imageLinkInput = elements.imageLinkInput;
+ const imageLinkCancelBtn = elements.imageLinkCancelBtn;
+ const imageLinkSaveBtn = elements.imageLinkSaveBtn;
+ const reflectionImagePreviewContainer = elements.reflectionImagePreviewContainer;
+ const reflectionImagePreview = elements.reflectionImagePreview;
+ 
+ // --- NEW: Notification Elements (from ui.js) ---
+ const notificationPermissionArea = elements.notificationPermissionArea;
+ const enableNotificationsBtn = elements.enableNotificationsBtn;
+ const notificationStatusText = elements.notificationStatusText;
+ // --- End NEW ---
+ 
  
  let todosRef, wishesRef, reflectionsRef;
  let unsubscribeTodos, unsubscribeWishes, unsubscribeReflections;
@@ -16,57 +82,62 @@
  let showAllReflections = false;
  let activeReflectionImageUrl = null; // Variable to hold the image URL for the current reflection
  
- // --- Notification State ---
+ // --- NEW: Notification State ---
  let notificationPermissionGranted = Notification.permission === 'granted';
  const scheduledNotifications = {}; // Object to store timeout IDs: { todoId: timeoutId }
+ // --- End NEW ---
  
- // --- Update Notification Button UI ---
+ // --- NEW: Update Notification Button UI ---
  function updateNotificationButtonUI() {
-     // Use elements directly
-     if (!elements.notificationPermissionArea || !elements.enableNotificationsBtn || !elements.notificationStatusText) return;
+     if (!notificationPermissionArea || !enableNotificationsBtn || !notificationStatusText) return;
  
+     // Check if Notifications are supported first
      if (!('Notification' in window)) {
-         elements.notificationPermissionArea.innerHTML = '<p class="text-xs text-yellow-400">Browser notifications not supported.</p>';
+         notificationPermissionArea.innerHTML = '<p class="text-xs text-yellow-400">Browser notifications not supported.</p>';
          return;
      }
  
      if (Notification.permission === 'granted') {
-         elements.enableNotificationsBtn.classList.add('hidden');
-         elements.notificationStatusText.textContent = 'Reminders Enabled';
-         elements.notificationStatusText.classList.remove('hidden', 'text-red-400');
-         elements.notificationStatusText.classList.add('text-green-400');
+         enableNotificationsBtn.classList.add('hidden');
+         notificationStatusText.textContent = 'Reminders Enabled';
+         notificationStatusText.classList.remove('hidden', 'text-red-400');
+         notificationStatusText.classList.add('text-green-400');
          notificationPermissionGranted = true;
      } else if (Notification.permission === 'denied') {
-         elements.enableNotificationsBtn.classList.add('hidden');
-         elements.notificationStatusText.textContent = 'Reminders Blocked (Check Browser Settings)';
-         elements.notificationStatusText.classList.remove('hidden', 'text-green-400');
-         elements.notificationStatusText.classList.add('text-red-400');
+         enableNotificationsBtn.classList.add('hidden');
+         notificationStatusText.textContent = 'Reminders Blocked (Check Browser Settings)';
+         notificationStatusText.classList.remove('hidden', 'text-green-400');
+         notificationStatusText.classList.add('text-red-400');
          notificationPermissionGranted = false;
-     } else {
-         elements.enableNotificationsBtn.classList.remove('hidden');
-         elements.notificationStatusText.classList.add('hidden');
+     } else { // 'default' state (permission not yet asked or dismissed)
+         enableNotificationsBtn.classList.remove('hidden');
+         notificationStatusText.classList.add('hidden');
          notificationPermissionGranted = false;
      }
  }
+ // --- End NEW ---
  
- // --- Request Notification Permission ---
+ // --- NEW: Request Notification Permission ---
  async function requestNotificationPermission() {
      if ('Notification' in window) {
          if (Notification.permission === 'granted') {
              notificationPermissionGranted = true;
-             updateNotificationButtonUI();
+             updateNotificationButtonUI(); // Ensure UI is correct
              return true;
          } else if (Notification.permission !== 'denied') {
+             // Prompt the user for permission 
              const permission = await Notification.requestPermission();
              notificationPermissionGranted = permission === 'granted';
-             updateNotificationButtonUI();
+             updateNotificationButtonUI(); // Update UI after permission request
              return notificationPermissionGranted;
          }
      }
+     // If denied or not supported, update UI accordingly
      notificationPermissionGranted = false;
      updateNotificationButtonUI();
      return false;
  }
+ // --- End NEW ---
  
  export function initializeJourney(userId, initialWellnessData) {
      wellnessDataForJourney = initialWellnessData;
@@ -78,7 +149,7 @@
      loadWishes();
      loadReflections();
      setupEventListeners();
-     updateNotificationButtonUI();
+     updateNotificationButtonUI(); // Check initial state on load
  }
  
  export function updateWellnessDataForJourney(newData) {
@@ -87,6 +158,7 @@
  
  const formatDate = (dateString) => {
      if (!dateString) return '';
+     // Use UTC date to avoid timezone shifts affecting the displayed date
      const dateParts = dateString.split('-');
      const date = new Date(Date.UTC(dateParts[0], dateParts[1] - 1, dateParts[2]));
      return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', timeZone: 'UTC' });
@@ -94,68 +166,82 @@
  
  const formatTime = (timeString) => {
      if (!timeString) return '';
+     // Create a dummy date and set time based on input
      const [hours, minutes] = timeString.split(':');
      const date = new Date();
      date.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
      return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', hour12: true });
  };
  
- // --- Schedule Notification Function ---
+ // --- NEW: Schedule Notification Function ---
  function scheduleNotification(todo) {
+     // Check if permission is granted first
      if (!notificationPermissionGranted) {
+         // console.log("Notification permission not granted for todo:", todo.id);
          return;
      }
+ 
+     // Ensure todo has both date and time and is not completed
      if (!todo.date || !todo.time || todo.completed) {
-         clearScheduledNotification(todo.id);
+         clearScheduledNotification(todo.id); // Ensure no old notification persists if data is removed/completed
          return;
      }
+ 
      try {
+         // Combine date and time into a string recognized by Date constructor
          const reminderDateTimeStr = `${todo.date}T${todo.time}`;
          const reminderTime = new Date(reminderDateTimeStr).getTime();
          const now = Date.now();
          const delay = reminderTime - now;
  
+         // Check if the reminder time is in the future (add a small buffer like 1 sec to avoid immediate triggers)
          if (delay > 1000) {
+             // Clear any existing notification for this todo before scheduling a new one
              clearScheduledNotification(todo.id);
+ 
              console.log(`Scheduling notification for todo "${todo.text}" in ${Math.round(delay / 1000)} seconds.`);
              const timeoutId = setTimeout(() => {
                  console.log("Showing notification for:", todo.text);
+                 // Check permission again right before showing, in case it changed in browser settings
                  if (Notification.permission === 'granted') {
+                     // Show the notification
                      new Notification('Pregnancy Planner Reminder:', {
                          body: todo.text,
-                         icon: './assets/icons/icon-192x192.png'
+                         icon: './assets/icons/icon-192x192.png' // Optional: Add an icon URL if you have one
                      });
                  }
+                 // Remove from scheduled list after it fires (or attempts to fire)
                  delete scheduledNotifications[todo.id];
              }, delay);
+ 
+             // Store the timeout ID so we can cancel it later if needed
              scheduledNotifications[todo.id] = timeoutId;
          } else {
+              // If the calculated time is in the past or too close, clear any old notification ID
               clearScheduledNotification(todo.id);
          }
      } catch (error) {
-         console.error("Error scheduling notification for todo:", todo.id, error);
+         console.error("Error parsing date/time or scheduling notification for todo:", todo.id, error);
+          // Clear any potentially invalid notification ID in case of error
           clearScheduledNotification(todo.id);
      }
  }
+ // --- End NEW ---
  
- // --- Clear Scheduled Notification Function ---
+ // --- NEW: Clear Scheduled Notification Function ---
  function clearScheduledNotification(todoId) {
      if (scheduledNotifications[todoId]) {
          console.log("Clearing scheduled notification for todo:", todoId);
          clearTimeout(scheduledNotifications[todoId]);
-         delete scheduledNotifications[todoId];
+         delete scheduledNotifications[todoId]; // Remove from tracking object
      }
  }
+ // --- End NEW ---
  
  function renderTodos(todos) {
-     // Use elements directly
-     if (!elements.todoListContainer) {
-         console.error("todoListContainer not found!"); // Add check
-         return;
-     }
-     elements.todoListContainer.innerHTML = '';
+     todoListContainer.innerHTML = '';
      if (todos.length === 0) {
-         elements.todoListContainer.innerHTML = `<p class="text-center text-gray-400">No tasks yet. Add one below!</p>`;
+         todoListContainer.innerHTML = `<p class="text-center text-gray-400">No tasks yet. Add one below!</p>`;
          return;
      }
      const categoryIcons = { Health: '🧘‍♀️', Baby: '🍼', Home: '🏡', Reminder: '💬' };
@@ -192,8 +278,9 @@
          const toggleTodo = async () => {
               if (!todosRef) return;
               const todoDocRef = doc(db, `users/${getCurrentUserId()}/todos`, todo.id);
-              const isNowCompleted = !todo.completed;
+              const isNowCompleted = !todo.completed; // Calculate the target state
  
+              // Optimistically update UI first
               const checkLabel = item.querySelector('.check-label');
               const parentDiv = item;
               if (isNowCompleted) {
@@ -204,18 +291,23 @@
                   parentDiv.classList.remove('completed');
               }
  
+              // Update Firestore
               await updateDoc(todoDocRef, { completed: isNowCompleted });
  
+              // --- NEW: Update notification based on the *new* completion state ---
               if (isNowCompleted) {
                  clearScheduledNotification(todo.id);
               } else {
+                  // Reschedule only if it's now marked as incomplete
+                  // Create a temporary object with the updated state for scheduling
                   const updatedTodoForScheduling = { ...todo, completed: false };
                   scheduleNotification(updatedTodoForScheduling);
               }
+              // --- End NEW ---
          };
  
          item.querySelector('label').addEventListener('click', (e) => {
-             e.preventDefault();
+             e.preventDefault(); // Prevent default label behavior that might interfere
              toggleTodo();
          });
  
@@ -224,21 +316,22 @@
          item.querySelector('.delete-todo-btn').addEventListener('click', async () => {
              if (!todosRef) return;
              const todoDocRef = doc(db, `users/${getCurrentUserId()}/todos`, todo.id);
+             // --- NEW: Clear notification *before* deleting ---
              clearScheduledNotification(todo.id);
+             // --- End NEW ---
              await deleteDoc(todoDocRef);
          });
  
-         elements.todoListContainer.appendChild(item); // Use elements directly
+         todoListContainer.appendChild(item);
      });
  }
  
+ /**
+  * Renders the wish list, sorting un-purchased items to the top.
+  * @param {Array} wishes - The array of wish items from Firestore.
+  */
  function renderWishes(wishes) {
-     // Use elements directly
-     if (!elements.wishlistContainer) {
-         console.error("wishlistContainer not found!"); // Add check
-         return;
-     }
-     elements.wishlistContainer.innerHTML = '';
+     wishlistContainer.innerHTML = '';
  
      const sortedWishes = [...wishes].sort((a, b) => {
          if (a.purchased !== b.purchased) {
@@ -250,9 +343,9 @@
      });
  
      if (sortedWishes.length === 0) {
-         elements.wishlistContainer.innerHTML = `<p class="text-center text-gray-400">No wishes yet. Add one below!</p>`;
-         elements.wishlistProgressText.textContent = `0/0 Items`;
-         elements.wishlistProgressBar.style.width = '0%';
+         wishlistContainer.innerHTML = `<p class="text-center text-gray-400">No wishes yet. Add one below!</p>`;
+         wishlistProgressText.textContent = `0/0 Items`;
+         wishlistProgressBar.style.width = '0%';
          return;
      }
  
@@ -283,32 +376,27 @@
              const wishDocRef = doc(db, `users/${getCurrentUserId()}/wishes`, wish.id);
              await deleteDoc(wishDocRef);
          });
-         elements.wishlistContainer.appendChild(item); // Use elements directly
+         wishlistContainer.appendChild(item);
      });
  
      const purchasedCount = wishes.filter(w => w.purchased).length;
-     elements.wishlistProgressText.textContent = `${purchasedCount}/${wishes.length} Items`; // Use elements directly
-     elements.wishlistProgressBar.style.width = wishes.length > 0 ? `${(purchasedCount / wishes.length) * 100}%` : '0%'; // Use elements directly
+     wishlistProgressText.textContent = `${purchasedCount}/${wishes.length} Items`;
+     wishlistProgressBar.style.width = wishes.length > 0 ? `${(purchasedCount / wishes.length) * 100}%` : '0%';
  }
  
  
  function renderReflections(reflections) {
-     // Use elements directly
-     if (!elements.reflectionsContainer) {
-         console.error("reflectionsContainer not found!"); // Add check
-         return;
-     }
-     elements.reflectionsContainer.innerHTML = '';
+     reflectionsContainer.innerHTML = '';
      const notesToRender = showAllReflections ? reflections : reflections.slice(0, 3);
  
      if (reflections.length === 0) {
-         elements.reflectionsContainer.innerHTML = `<p class="text-center text-gray-400 col-span-full">No reflections yet. Add a new note to begin!</p>`;
-         if (elements.toggleReflectionsContainer) elements.toggleReflectionsContainer.classList.add('hidden');
+         reflectionsContainer.innerHTML = `<p class="text-center text-gray-400 col-span-full">No reflections yet. Add a new note to begin!</p>`;
+         toggleReflectionsContainer.classList.add('hidden');
          return;
      }
  
      if (notesToRender.length === 0 && reflections.length > 0) {
-         elements.reflectionsContainer.innerHTML = `<p class="text-center text-gray-400 col-span-full">All notes are hidden. Click "Show All" to see them.</p>`;
+         reflectionsContainer.innerHTML = `<p class="text-center text-gray-400 col-span-full">All notes are hidden. Click "Show All" to see them.</p>`;
      }
  
      notesToRender.forEach(note => {
@@ -335,21 +423,20 @@
              deleteReflection(note.id);
          });
  
-         elements.reflectionsContainer.appendChild(item); // Use elements directly
+         reflectionsContainer.appendChild(item);
      });
  
-     if (reflections.length > 3 && elements.toggleReflectionsContainer) {
-         elements.toggleReflectionsContainer.classList.remove('hidden');
-         elements.toggleReflectionsBtn.textContent = showAllReflections ? 'Show Less' : `Show All (${reflections.length})`;
-     } else if (elements.toggleReflectionsContainer) {
-         elements.toggleReflectionsContainer.classList.add('hidden');
+     if (reflections.length > 3) {
+         toggleReflectionsContainer.classList.remove('hidden');
+         toggleReflectionsBtn.textContent = showAllReflections ? 'Show Less' : `Show All (${reflections.length})`;
+     } else {
+         toggleReflectionsContainer.classList.add('hidden');
      }
  }
  
  
  function renderAiWishSuggestions(suggestions) {
-     const container = document.getElementById('ai-wish-suggestions-container'); // Keep getElementById here as it's specific to this function's context
-     if (!container) return;
+     const container = document.getElementById('ai-wish-suggestions-container');
      container.innerHTML = '';
  
      if (!suggestions || suggestions.length === 0) {
@@ -380,22 +467,21 @@
              <button class="btn-secondary text-xs font-semibold py-1.5 px-3 rounded-md add-suggestion-btn flex-shrink-0 self-center">Add</button>
          `;
          card.querySelector('.add-suggestion-btn').addEventListener('click', () => {
-             // Use elements directly
-             elements.newWishItem.value = suggestion.productName;
-             elements.newWishPrice.value = suggestion.price || '';
-             elements.newWishLink.value = suggestion.productUrl || '';
+             newWishItem.value = suggestion.productName;
+             newWishPrice.value = suggestion.price || '';
+             newWishLink.value = suggestion.productUrl || '';
  
-             const categoryOption = Array.from(elements.newWishCategory.options).find(opt => opt.value === suggestion.category);
+             const categoryOption = Array.from(newWishCategory.options).find(opt => opt.value === suggestion.category);
              if (categoryOption) {
-                 elements.newWishCategory.value = suggestion.category;
-                 elements.customCategoryInput.classList.add('hidden');
+                 newWishCategory.value = suggestion.category;
+                 customCategoryInput.classList.add('hidden'); // Wish custom input
              } else {
-                 elements.newWishCategory.value = 'Custom';
-                 elements.customCategoryInput.classList.remove('hidden');
-                 elements.customCategoryInput.value = suggestion.category;
+                 newWishCategory.value = 'Custom';
+                 customCategoryInput.classList.remove('hidden'); // Wish custom input
+                 customCategoryInput.value = suggestion.category; // Wish custom input
              }
-             elements.newWishItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
-             elements.newWishItem.focus();
+             newWishItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+             newWishItem.focus();
          });
          container.appendChild(card);
      });
@@ -409,9 +495,11 @@
          currentTodos = [];
          snapshot.forEach(doc => currentTodos.push({ id: doc.id, ...doc.data() }));
          renderTodos(currentTodos);
+         // --- Schedule notifications for loaded todos ---
          currentTodos.forEach(todo => {
-             scheduleNotification(todo);
+             scheduleNotification(todo); // Handles completed/past checks internally
          });
+         // --- End scheduling ---
      });
  }
  
@@ -438,280 +526,285 @@
  }
  
  function setupEventListeners() {
-     // Check if elements exist before adding listeners
-     if (elements.addTodoBtn) {
-         elements.addTodoBtn.addEventListener('click', async () => {
-             const text = elements.newTodoInput.value.trim();
-             let category = elements.newTodoCategory.value;
-             if (category === 'Custom') {
-                 category = elements.customTodoCategoryInput.value.trim();
-             }
- 
-             if (!text || !category || !todosRef) return;
- 
-             let hasPermission = notificationPermissionGranted;
-             if (elements.newTodoDate.value && elements.newTodoTime.value && Notification.permission === 'default') {
-                  hasPermission = await requestNotificationPermission();
-             }
- 
-             const newTodoData = {
-                 text,
-                 category,
-                 date: elements.newTodoDate.value,
-                 time: elements.newTodoTime.value,
-                 completed: false,
-                 createdAt: serverTimestamp()
-             };
- 
-             const docRef = await addDoc(todosRef, newTodoData);
- 
-             if (notificationPermissionGranted) { // Check updated status
-                scheduleNotification({ id: docRef.id, ...newTodoData });
-             }
- 
-             elements.newTodoInput.value = '';
-             elements.newTodoDate.value = '';
-             elements.newTodoTime.value = '';
-             elements.newTodoCategory.value = 'Health';
-             elements.customTodoCategoryInput.value = '';
-             elements.customTodoCategoryInput.classList.add('hidden');
-         });
-     }
- 
-     if (elements.aiGenerateTodosBtn) {
-         elements.aiGenerateTodosBtn.addEventListener('click', async () => {
-             const startDate = wellnessDataForJourney?.pregnancyStartDate;
-             if (!startDate) {
-                 console.error("Pregnancy start date not available for AI generation.");
-                 return; // Exit if start date isn't set
-             }
-             const pregnancyWeek = Math.floor(Math.abs(new Date() - new Date(startDate)) / (1000 * 60 * 60 * 24 * 7)) || 1;
-             const systemPrompt = `You are a helpful assistant. Generate a to-do list of 4-5 tasks for week ${pregnancyWeek} of pregnancy. Categorize each task as 'Health', 'Baby', 'Home', or 'Reminder'. Your response MUST be ONLY a valid JSON array of objects, where each object has "task" (string) and "category" (string) keys.`;
-             const userQuery = `Generate a weekly to-do list for week ${pregnancyWeek}.`;
-             const apiKey = "";
-             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-             const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json" } };
-             try {
-                 const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                 if (!response.ok) throw new Error(`API error: ${response.statusText}`);
-                 const result = await response.json();
-                 const jsonString = result.candidates[0].content.parts[0].text;
-                 const data = JSON.parse(jsonString);
-                 for (const item of data) {
-                     if (item.task && item.category && todosRef) {
-                         await addDoc(todosRef, { text: item.task, category: item.category, completed: false, createdAt: serverTimestamp() });
-                     }
-                 }
-             } catch (error) { console.error("AI To-do generation failed:", error); }
-         });
-     }
- 
-     if (elements.addWishBtn) {
-         elements.addWishBtn.addEventListener('click', async () => {
-             const item = elements.newWishItem.value.trim();
-             let category = elements.newWishCategory.value;
-             if (category === 'Custom') {
-                 category = elements.customCategoryInput.value.trim();
-             }
-             if (!item || !wishesRef || !category) return;
- 
-             await addDoc(wishesRef, {
-                 item,
-                 category: category,
-                 price: elements.newWishPrice.value.trim(),
-                 link: elements.newWishLink.value.trim(),
-                 purchased: false,
-                 createdAt: serverTimestamp()
-             });
-             elements.newWishItem.value = elements.newWishPrice.value = elements.newWishLink.value = '';
-             elements.customCategoryInput.value = '';
-             elements.newWishCategory.value = 'Baby Care';
-             elements.customCategoryInput.classList.add('hidden');
-         });
-     }
- 
-     if (elements.aiWishForm) {
-         elements.aiWishForm.addEventListener('submit', async (e) => {
-             e.preventDefault();
-             const prompt = elements.aiWishPrompt.value.trim();
-             if(!prompt) return;
- 
-             const suggestionsContainer = document.getElementById('ai-wish-suggestions-container'); // Keep local getElementById
-             if (!suggestionsContainer) return;
-             suggestionsContainer.innerHTML = `<div class="text-center p-4">...loading...</div>`; // Simplified loader
- 
-             const startDate = wellnessDataForJourney?.pregnancyStartDate;
-              if (!startDate) {
-                 console.error("Pregnancy start date not available for AI generation.");
-                 suggestionsContainer.innerHTML = `<p class="text-center text-red-300 p-4">Set pregnancy start date first.</p>`;
-                 return;
-             }
-             const pregnancyWeek = Math.floor(Math.abs(new Date() - new Date(startDate)) / (1000 * 60 * 60 * 24 * 7)) || 1;
-             const systemPrompt = `You are a helpful shopping assistant...`; // Keep prompt brief for example
-             const userQuery = `My request: "${prompt}". I am in week ${pregnancyWeek}...`;
-             const apiKey = "";
-             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-             const payload = { /* ... payload ... */ };
-             try {
-                // ... fetch logic ...
-                 renderAiWishSuggestions(data);
-             } catch (error) {
-                 console.error("AI Wishlist generation failed:", error);
-                 suggestionsContainer.innerHTML = `<p class="text-center text-red-300 p-4">Sorry, couldn't generate suggestions.</p>`;
-             }
-         });
-     }
- 
-     if (elements.newWishCategory) {
-         elements.newWishCategory.addEventListener('change', () => {
-             if (elements.newWishCategory.value === 'Custom') {
-                 elements.customCategoryInput.classList.remove('hidden');
-             } else {
-                 elements.customCategoryInput.classList.add('hidden');
-             }
-         });
-     }
- 
-     if (elements.newTodoCategory) {
-         elements.newTodoCategory.addEventListener('change', () => {
-             if (elements.newTodoCategory.value === 'Custom') {
-                 elements.customTodoCategoryInput.classList.remove('hidden');
-             } else {
-                 elements.customTodoCategoryInput.classList.add('hidden');
-             }
-         });
-     }
- 
-     if (elements.editTodoCategory) {
-         elements.editTodoCategory.addEventListener('change', () => {
-             if (elements.editTodoCategory.value === 'Custom') {
-                 elements.editCustomTodoCategoryInput.classList.remove('hidden');
-             } else {
-                 elements.editCustomTodoCategoryInput.classList.add('hidden');
-             }
-         });
-     }
- 
-     // Add checks for collapsible elements and icons
-     if (elements.wishlistHeader && elements.collapsibleWishlistContent && elements.wishlistToggleIcon) {
-         elements.wishlistHeader.addEventListener('click', () => {
-             elements.collapsibleWishlistContent.classList.toggle('hidden');
-             elements.wishlistToggleIcon.classList.toggle('rotate-180');
-         });
-     }
- 
-     if (elements.todoHeader && elements.collapsibleTodoContent && elements.todoToggleIcon) {
-         elements.todoHeader.addEventListener('click', () => {
-             elements.collapsibleTodoContent.classList.toggle('hidden');
-             elements.todoToggleIcon.classList.toggle('rotate-180');
-         });
-     }
- 
-     if (elements.reflectionHeader && elements.collapsibleReflectionContent && elements.reflectionToggleIcon) {
-         elements.reflectionHeader.addEventListener('click', () => {
-             elements.collapsibleReflectionContent.classList.toggle('hidden');
-             elements.reflectionToggleIcon.classList.toggle('rotate-180');
-         });
-     }
- 
-     if (elements.toggleReflectionsBtn) {
-         elements.toggleReflectionsBtn.addEventListener('click', () => {
-             showAllReflections = !showAllReflections;
-             renderReflections(currentReflections);
-         });
-     }
- 
-     // Reflection Modal Buttons (Add checks)
-     if (elements.addReflectionBtn) elements.addReflectionBtn.addEventListener('click', () => openReflectionModal());
-     if (elements.reflectionModalCancelBtn) elements.reflectionModalCancelBtn.addEventListener('click', closeReflectionModal);
-     if (elements.reflectionModal) elements.reflectionModal.addEventListener('click', e => e.target === elements.reflectionModal && closeReflectionModal());
-     if (elements.reflectionColorTags) {
-         elements.reflectionColorTags.addEventListener('click', (e) => {
-             if (e.target.tagName === 'BUTTON') {
-                 activeColor = e.target.dataset.color;
-                 updateColorTags();
-             }
-         });
-     }
-     if (elements.reflectionModalSaveBtn) {
-         elements.reflectionModalSaveBtn.addEventListener('click', async () => {
-             const title = elements.reflectionTitleInput.value.trim();
-             const content = elements.reflectionContentInput.value.trim();
-             if (!title || !content) return;
-             const reflectionData = { title, content, color: activeColor, imageUrl: activeReflectionImageUrl };
-             if (activeReflectionId) {
-                 const noteDocRef = doc(db, `users/${getCurrentUserId()}/reflections`, activeReflectionId);
-                 await updateDoc(noteDocRef, reflectionData);
-             } else {
-                 reflectionData.createdAt = serverTimestamp();
-                 await addDoc(reflectionsRef, reflectionData);
-             }
-             closeReflectionModal();
-         });
-     }
- 
-     // AI Summary Modal Buttons (Add checks)
-     if (elements.aiSummarizeReflectionsBtn) {
-         elements.aiSummarizeReflectionsBtn.addEventListener('click', async () => {
-            // ... AI Summary logic ...
-         });
-     }
-     if (elements.aiSummaryCloseBtn) {
-         elements.aiSummaryCloseBtn.addEventListener('click', () => {
-             if(elements.aiSummaryModal) {
-                 elements.aiSummaryModal.classList.remove('active');
-                 setTimeout(() => elements.aiSummaryModal.classList.add('hidden'), 300);
-             }
-         });
-     }
- 
-     // Edit Todo Modal Buttons (Add checks)
-     if (elements.editTodoModalSaveBtn) elements.editTodoModalSaveBtn.addEventListener('click', handleSaveTodo);
-     if (elements.editTodoModalCancelBtn) elements.editTodoModalCancelBtn.addEventListener('click', closeEditTodoModal);
-     if (elements.editTodoModal) elements.editTodoModal.addEventListener('click', e => e.target === elements.editTodoModal && closeEditTodoModal());
- 
-     // Image Link Modal Buttons (Add checks)
-     const openImageLinkModal = () => {
-         if (elements.imageLinkModal) {
-             elements.imageLinkModal.classList.remove('hidden');
-             setTimeout(() => elements.imageLinkModal.classList.add('active'), 10);
+     addTodoBtn.addEventListener('click', async () => {
+         const text = newTodoInput.value.trim();
+         let category = newTodoCategory.value;
+         if (category === 'Custom') {
+             category = customTodoCategoryInput.value.trim(); // Todo custom input
          }
+ 
+         if (!text || !category || !todosRef) return;
+ 
+         // --- Request permission before adding if needed ---
+         let hasPermission = notificationPermissionGranted; // Use current state
+         // Only ask if date/time are set AND permission is 'default' (not yet granted/denied)
+         if (newTodoDate.value && newTodoTime.value && Notification.permission === 'default') {
+              hasPermission = await requestNotificationPermission();
+         }
+         // --- End permission request ---
+ 
+         const newTodoData = {
+             text,
+             category,
+             date: newTodoDate.value,
+             time: newTodoTime.value,
+             completed: false,
+             createdAt: serverTimestamp()
+         };
+ 
+         const docRef = await addDoc(todosRef, newTodoData);
+ 
+         // --- Schedule notification after adding ---
+         // Use the *potentially updated* permission status
+         if (notificationPermissionGranted) {
+            scheduleNotification({ id: docRef.id, ...newTodoData });
+         }
+         // --- End scheduling ---
+ 
+         newTodoInput.value = '';
+         newTodoDate.value = '';
+         newTodoTime.value = '';
+         newTodoCategory.value = 'Health';
+         customTodoCategoryInput.value = ''; // Todo custom input
+         customTodoCategoryInput.classList.add('hidden'); // Todo custom input
+     });
+ 
+     aiGenerateTodosBtn.addEventListener('click', async () => {
+         const pregnancyWeek = Math.floor(Math.abs(new Date() - new Date(wellnessDataForJourney.pregnancyStartDate)) / (1000 * 60 * 60 * 24 * 7)) || 1; // Default to 1
+         const systemPrompt = `You are a helpful assistant. Generate a to-do list of 4-5 tasks for week ${pregnancyWeek} of pregnancy. Categorize each task as 'Health', 'Baby', 'Home', or 'Reminder'. Your response MUST be ONLY a valid JSON array of objects, where each object has "task" (string) and "category" (string) keys.`;
+         const userQuery = `Generate a weekly to-do list for week ${pregnancyWeek}.`;
+         const apiKey = ""; // Leave empty
+         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+         const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json" } };
+         try {
+             const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+             if (!response.ok) throw new Error(`API error: ${response.statusText}`);
+             const result = await response.json();
+             const jsonString = result.candidates[0].content.parts[0].text;
+             const data = JSON.parse(jsonString);
+             for (const item of data) {
+                 if (item.task && item.category && todosRef) {
+                     await addDoc(todosRef, { text: item.task, category: item.category, completed: false, createdAt: serverTimestamp() });
+                 }
+             }
+         } catch (error) { console.error("AI To-do generation failed:", error); }
+     });
+ 
+     addWishBtn.addEventListener('click', async () => {
+         const item = newWishItem.value.trim();
+         let category = newWishCategory.value;
+         if (category === 'Custom') {
+             category = customCategoryInput.value.trim(); // Wish custom input
+         }
+         if (!item || !wishesRef || !category) return;
+ 
+         await addDoc(wishesRef, {
+             item,
+             category: category,
+             price: newWishPrice.value.trim(),
+             link: newWishLink.value.trim(),
+             purchased: false,
+             createdAt: serverTimestamp()
+         });
+         newWishItem.value = newWishPrice.value = newWishLink.value = '';
+         customCategoryInput.value = ''; // Wish custom input
+         newWishCategory.value = 'Baby Care';
+         customCategoryInput.classList.add('hidden'); // Wish custom input
+     });
+ 
+     aiWishForm.addEventListener('submit', async (e) => {
+         e.preventDefault();
+         const prompt = aiWishPrompt.value.trim();
+         if(!prompt) return;
+ 
+         const suggestionsContainer = document.getElementById('ai-wish-suggestions-container');
+         suggestionsContainer.innerHTML = `<div class="text-center p-4">
+             <svg class="animate-spin mx-auto h-6 w-6 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+             <p class="mt-2 text-sm text-gray-300">Finding suggestions...</p>
+         </div>`;
+ 
+         const pregnancyWeek = Math.floor(Math.abs(new Date() - new Date(wellnessDataForJourney.pregnancyStartDate)) / (1000 * 60 * 60 * 24 * 7)) || 1;
+         const systemPrompt = `You are a helpful shopping assistant for a pregnant woman. Based on the user's request and their pregnancy week (${pregnancyWeek}), use the Google Search tool to find 3-4 real, relevant products. For each item, you MUST extract the actual product name, a relevant category (from "Baby Care", "Nursery", "Hospital Bag", "Health", "Postpartum"), price (as a number or string, just the value), and a working URL to the product page. Your response MUST be ONLY a valid JSON array of objects, with no other text or formatting. Each object must have these keys: "productName", "category", "price", "productUrl".`;
+         const userQuery = `My request: "${prompt}". I am in week ${pregnancyWeek} of pregnancy.`;
+         const apiKey = "";
+         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+         const payload = {
+             contents: [{ parts: [{ text: userQuery }] }],
+             tools: [{ "google_search": {} }],
+             systemInstruction: { parts: [{ text: systemPrompt }] },
+             generationConfig: { responseMimeType: "application/json" }
+         };
+         try {
+             const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+             if (!response.ok) throw new Error(`API error: ${response.statusText}`);
+             const result = await response.json();
+             let jsonString = result.candidates[0].content.parts[0].text;
+             jsonString = jsonString.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
+             const data = JSON.parse(jsonString);
+             renderAiWishSuggestions(data);
+         } catch (error) {
+             console.error("AI Wishlist generation failed:", error);
+             suggestionsContainer.innerHTML = `<p class="text-center text-red-300 p-4">Sorry, couldn't generate suggestions right now.</p>`;
+         }
+     });
+ 
+     newWishCategory.addEventListener('change', () => {
+         // Wish custom input
+         if (newWishCategory.value === 'Custom') {
+             customCategoryInput.classList.remove('hidden');
+         } else {
+             customCategoryInput.classList.add('hidden');
+         }
+     });
+ 
+     newTodoCategory.addEventListener('change', () => {
+         // Todo custom input
+         if (newTodoCategory.value === 'Custom') {
+             customTodoCategoryInput.classList.remove('hidden');
+         } else {
+             customTodoCategoryInput.classList.add('hidden');
+         }
+     });
+ 
+     editTodoCategory.addEventListener('change', () => {
+         if (editTodoCategory.value === 'Custom') {
+             editCustomTodoCategoryInput.classList.remove('hidden');
+         } else {
+             editCustomTodoCategoryInput.classList.add('hidden');
+         }
+     });
+ 
+     wishlistHeader.addEventListener('click', () => {
+         collapsibleWishlistContent.classList.toggle('hidden');
+         wishlistToggleIcon.classList.toggle('rotate-180');
+     });
+ 
+     todoHeader.addEventListener('click', () => {
+         collapsibleTodoContent.classList.toggle('hidden');
+         todoToggleIcon.classList.toggle('rotate-180');
+     });
+ 
+     reflectionHeader.addEventListener('click', () => {
+         collapsibleReflectionContent.classList.toggle('hidden');
+         reflectionToggleIcon.classList.toggle('rotate-180');
+     });
+ 
+     toggleReflectionsBtn.addEventListener('click', () => {
+         showAllReflections = !showAllReflections;
+         renderReflections(currentReflections);
+     });
+ 
+     addReflectionBtn.addEventListener('click', () => openReflectionModal());
+     reflectionModalCancelBtn.addEventListener('click', closeReflectionModal);
+     reflectionModal.addEventListener('click', e => e.target === reflectionModal && closeReflectionModal());
+ 
+     reflectionColorTags.addEventListener('click', (e) => {
+         if (e.target.tagName === 'BUTTON') {
+             activeColor = e.target.dataset.color;
+             updateColorTags();
+         }
+     });
+ 
+     reflectionModalSaveBtn.addEventListener('click', async () => {
+         const title = reflectionTitleInput.value.trim();
+         const content = reflectionContentInput.value.trim();
+         if (!title || !content) return;
+ 
+         const reflectionData = {
+             title,
+             content,
+             color: activeColor,
+             imageUrl: activeReflectionImageUrl
+         };
+ 
+         if (activeReflectionId) {
+             const noteDocRef = doc(db, `users/${getCurrentUserId()}/reflections`, activeReflectionId);
+             await updateDoc(noteDocRef, reflectionData);
+         } else {
+             reflectionData.createdAt = serverTimestamp();
+             await addDoc(reflectionsRef, reflectionData);
+         }
+         closeReflectionModal();
+     });
+ 
+     aiSummarizeReflectionsBtn.addEventListener('click', async () => {
+         if (currentReflections.length < 2) {
+             aiSummaryContent.textContent = "You need at least two notes for a summary.";
+             aiSummaryModal.classList.remove('hidden');
+             setTimeout(() => aiSummaryModal.classList.add('active'), 10);
+             return;
+         }
+         const notesToSummarize = currentReflections.slice(0, 3).map(n => `Title: ${n.title}\nContent: ${n.content}`).join('\n\n---\n\n');
+         const systemPrompt = "You are an empathetic assistant. Summarize the user's reflection notes into one short, insightful, and emotional paragraph. Focus on the underlying feelings and themes.";
+         const userQuery = `Here are my last few notes:\n${notesToSummarize}`;
+         const apiKey = "";
+         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+         const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }};
+ 
+         aiSummaryContent.textContent = "Summarizing your thoughts...";
+         aiSummaryModal.classList.remove('hidden');
+         setTimeout(() => aiSummaryModal.classList.add('active'), 10);
+ 
+         try {
+             const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+             if (!response.ok) throw new Error(`API error: ${response.statusText}`);
+             const result = await response.json();
+             aiSummaryContent.textContent = result.candidates[0].content.parts[0].text;
+         } catch (error) {
+             console.error("AI Summary failed:", error);
+             aiSummaryContent.textContent = "Sorry, I couldn't generate a summary right now.";
+         }
+     });
+ 
+     aiSummaryCloseBtn.addEventListener('click', () => {
+         aiSummaryModal.classList.remove('active');
+         setTimeout(() => aiSummaryModal.classList.add('hidden'), 300);
+     });
+ 
+     editTodoModalSaveBtn.addEventListener('click', handleSaveTodo);
+     editTodoModalCancelBtn.addEventListener('click', closeEditTodoModal);
+     editTodoModal.addEventListener('click', e => e.target === editTodoModal && closeEditTodoModal());
+ 
+     // --- Event Listeners for Image Link Modal ---
+     const openImageLinkModal = () => {
+         imageLinkModal.classList.remove('hidden');
+         setTimeout(() => imageLinkModal.classList.add('active'), 10);
      };
      const closeImageLinkModal = () => {
-         if (elements.imageLinkModal) {
-             elements.imageLinkModal.classList.remove('active');
-             setTimeout(() => elements.imageLinkModal.classList.add('hidden'), 300);
-         }
+         imageLinkModal.classList.remove('active');
+         setTimeout(() => imageLinkModal.classList.add('hidden'), 300);
      };
  
-     if (elements.addReflectionImageBtn) elements.addReflectionImageBtn.addEventListener('click', openImageLinkModal);
-     if (elements.imageLinkCancelBtn) elements.imageLinkCancelBtn.addEventListener('click', closeImageLinkModal);
-     if (elements.imageLinkModal) elements.imageLinkModal.addEventListener('click', e => e.target === elements.imageLinkModal && closeImageLinkModal());
-     if (elements.imageLinkSaveBtn) {
-         elements.imageLinkSaveBtn.addEventListener('click', () => {
-             const url = elements.imageLinkInput.value.trim();
-             if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
-                 activeReflectionImageUrl = url;
-                 elements.reflectionImagePreview.src = url;
-                 elements.reflectionImagePreviewContainer.classList.remove('hidden');
-             } else {
-                 console.warn("Invalid image URL");
-                 activeReflectionImageUrl = null;
-                 elements.reflectionImagePreview.src = '';
-                 elements.reflectionImagePreviewContainer.classList.add('hidden');
-             }
-             closeImageLinkModal();
-         });
-     }
+     addReflectionImageBtn.addEventListener('click', openImageLinkModal);
+     imageLinkCancelBtn.addEventListener('click', closeImageLinkModal);
+     imageLinkModal.addEventListener('click', e => e.target === imageLinkModal && closeImageLinkModal());
  
-     // --- Enable Notifications Button Listener ---
-     if (elements.enableNotificationsBtn) {
-         elements.enableNotificationsBtn.addEventListener('click', async () => {
+     imageLinkSaveBtn.addEventListener('click', () => {
+         const url = imageLinkInput.value.trim();
+         // Basic URL validation (optional, but good practice)
+         if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+             activeReflectionImageUrl = url;
+             reflectionImagePreview.src = url;
+             reflectionImagePreviewContainer.classList.remove('hidden');
+         } else {
+             // Handle invalid URL - maybe clear the image or show feedback
+             console.warn("Invalid image URL provided");
+             activeReflectionImageUrl = null;
+             reflectionImagePreview.src = '';
+             reflectionImagePreviewContainer.classList.add('hidden');
+         }
+         closeImageLinkModal();
+     });
+ 
+     // --- NEW: Event listener for Enable Notifications Button ---
+     if (enableNotificationsBtn) {
+         enableNotificationsBtn.addEventListener('click', async () => {
              const granted = await requestNotificationPermission();
              if (granted) {
                  console.log("Notification permission granted by user action.");
-                 currentTodos.forEach(todo => {
-                     if (!todo.completed) {
+                 // Re-schedule notifications for existing todos now that permission is granted
+                  currentTodos.forEach(todo => {
+                     if (!todo.completed) { // Only schedule for incomplete tasks
                          scheduleNotification(todo);
                      }
                  });
@@ -720,46 +813,42 @@
              }
          });
      }
+     // --- End NEW ---
  }
  
  function openEditTodoModal(todo) {
      activeTodoId = todo.id;
-     // Use elements directly
-     elements.editTodoInput.value = todo.text;
-     elements.editTodoDate.value = todo.date || '';
-     elements.editTodoTime.value = todo.time || '';
+     editTodoInput.value = todo.text;
+     editTodoDate.value = todo.date || '';
+     editTodoTime.value = todo.time || '';
  
      const standardCategories = ['Health', 'Baby', 'Home', 'Reminder'];
      if (standardCategories.includes(todo.category)) {
-         elements.editTodoCategory.value = todo.category;
-         elements.editCustomTodoCategoryInput.classList.add('hidden');
-         elements.editCustomTodoCategoryInput.value = '';
+         editTodoCategory.value = todo.category;
+         editCustomTodoCategoryInput.classList.add('hidden');
+         editCustomTodoCategoryInput.value = '';
      } else {
-         elements.editTodoCategory.value = 'Custom';
-         elements.editCustomTodoCategoryInput.classList.remove('hidden');
-         elements.editCustomTodoCategoryInput.value = todo.category;
+         editTodoCategory.value = 'Custom';
+         editCustomTodoCategoryInput.classList.remove('hidden');
+         editCustomTodoCategoryInput.value = todo.category;
      }
  
-     elements.editTodoModal.classList.remove('hidden');
-     setTimeout(() => elements.editTodoModal.classList.add('active'), 10);
+     editTodoModal.classList.remove('hidden');
+     setTimeout(() => editTodoModal.classList.add('active'), 10);
  }
  
  function closeEditTodoModal() {
-     // Use elements directly
-     if (elements.editTodoModal) {
-         elements.editTodoModal.classList.remove('active');
-         setTimeout(() => elements.editTodoModal.classList.add('hidden'), 300);
-     }
+     editTodoModal.classList.remove('active');
+     setTimeout(() => editTodoModal.classList.add('hidden'), 300);
  }
  
  async function handleSaveTodo() {
      if (!activeTodoId) return;
  
-     // Use elements directly
-     const text = elements.editTodoInput.value.trim();
-     let category = elements.editTodoCategory.value;
+     const text = editTodoInput.value.trim();
+     let category = editTodoCategory.value;
      if (category === 'Custom') {
-         category = elements.editCustomTodoCategoryInput.value.trim();
+         category = editCustomTodoCategoryInput.value.trim();
      }
  
      if (!text || !category) {
@@ -771,19 +860,25 @@
      const updatedData = {
          text: text,
          category: category,
-         date: elements.editTodoDate.value,
-         time: elements.editTodoTime.value
+         date: editTodoDate.value,
+         time: editTodoTime.value
+         // NOTE: We don't update 'completed' status here, toggleTodo handles that
      };
      await updateDoc(todoDocRef, updatedData);
  
+     // --- Reschedule notification on edit ---
+     // Fetch the *full* updated todo data (including completion status) to ensure accuracy
      const updatedTodoSnap = await getDoc(todoDocRef);
      if (updatedTodoSnap.exists()) {
          const updatedTodoFullData = { id: activeTodoId, ...updatedTodoSnap.data() };
+          // Request permission again ONLY if date/time added AND permission is 'default'
           if (updatedTodoFullData.date && updatedTodoFullData.time && !updatedTodoFullData.completed && Notification.permission === 'default') {
-             await requestNotificationPermission();
+             await requestNotificationPermission(); // Ask only if needed and not already denied
           }
+         // Schedule (or clear if needed) based on the full, updated data
          scheduleNotification(updatedTodoFullData);
      }
+     // --- End rescheduling ---
  
      closeEditTodoModal();
  }
@@ -795,71 +890,68 @@
  }
  
  function openReflectionModal(note = null) {
-     // Use elements directly
      if (note) {
          activeReflectionId = note.id;
-         elements.reflectionModalTitle.textContent = "Edit Reflection";
-         elements.reflectionTitleInput.value = note.title;
-         elements.reflectionContentInput.value = note.content;
+         reflectionModalTitle.textContent = "Edit Reflection";
+         reflectionTitleInput.value = note.title;
+         reflectionContentInput.value = note.content;
          activeColor = note.color;
+         // Handle image
          if (note.imageUrl) {
              activeReflectionImageUrl = note.imageUrl;
-             elements.reflectionImagePreview.src = note.imageUrl;
-             elements.reflectionImagePreviewContainer.classList.remove('hidden');
-             elements.imageLinkInput.value = note.imageUrl;
+             reflectionImagePreview.src = note.imageUrl;
+             reflectionImagePreviewContainer.classList.remove('hidden');
+             imageLinkInput.value = note.imageUrl;
          } else {
              activeReflectionImageUrl = null;
-             elements.reflectionImagePreviewContainer.classList.add('hidden');
-             elements.reflectionImagePreview.src = '';
-             elements.imageLinkInput.value = '';
+             reflectionImagePreviewContainer.classList.add('hidden');
+             reflectionImagePreview.src = '';
+             imageLinkInput.value = '';
          }
      } else {
          activeReflectionId = null;
-         elements.reflectionModalTitle.textContent = "New Reflection";
-         elements.reflectionTitleInput.value = '';
-         elements.reflectionContentInput.value = '';
+         reflectionModalTitle.textContent = "New Reflection";
+         reflectionTitleInput.value = '';
+         reflectionContentInput.value = '';
          activeColor = 'pink';
+         // Reset image for new note
          activeReflectionImageUrl = null;
-         elements.reflectionImagePreviewContainer.classList.add('hidden');
-         elements.reflectionImagePreview.src = '';
-         elements.imageLinkInput.value = '';
+         reflectionImagePreviewContainer.classList.add('hidden');
+         reflectionImagePreview.src = '';
+         imageLinkInput.value = ''; // Also clear the input for next time
      }
      updateColorTags();
-     elements.reflectionModal.classList.remove('hidden');
-     setTimeout(() => elements.reflectionModal.classList.add('active'), 10);
+     reflectionModal.classList.remove('hidden');
+     setTimeout(() => reflectionModal.classList.add('active'), 10);
  }
  
  function closeReflectionModal() {
-     // Use elements directly
-     if (elements.reflectionModal) {
-         elements.reflectionModal.classList.remove('active');
-         setTimeout(() => {
-             elements.reflectionModal.classList.add('hidden');
-             activeReflectionImageUrl = null;
-             elements.reflectionImagePreviewContainer.classList.add('hidden');
-             elements.reflectionImagePreview.src = '';
-             elements.imageLinkInput.value = '';
-         }, 300);
-     }
+     reflectionModal.classList.remove('active');
+     setTimeout(() => {
+         reflectionModal.classList.add('hidden');
+         // Also reset image state when modal is fully closed
+         activeReflectionImageUrl = null;
+         reflectionImagePreviewContainer.classList.add('hidden');
+         reflectionImagePreview.src = '';
+         imageLinkInput.value = '';
+     }, 300);
  }
  
  function updateColorTags() {
-     // Use elements directly
-     if (elements.reflectionColorTags) {
-         elements.reflectionColorTags.querySelectorAll('button').forEach(btn => {
-             if (btn.dataset.color === activeColor) {
-                 btn.classList.add('border-white');
-             } else {
-                 btn.classList.remove('border-white');
-             }
-         });
-     }
+     reflectionColorTags.querySelectorAll('button').forEach(btn => {
+         if (btn.dataset.color === activeColor) {
+             btn.classList.add('border-white');
+         } else {
+             btn.classList.remove('border-white');
+         }
+     });
  }
  
  export function unloadJourney() {
      if (unsubscribeTodos) unsubscribeTodos();
      if (unsubscribeWishes) unsubscribeWishes();
      if (unsubscribeReflections) unsubscribeReflections();
+     // Clear any remaining scheduled notifications when unloading
      Object.keys(scheduledNotifications).forEach(todoId => {
          clearTimeout(scheduledNotifications[todoId]);
          delete scheduledNotifications[todoId];
