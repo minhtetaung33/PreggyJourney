@@ -670,9 +670,30 @@
                                      <option value="Hospital Bag">Hospital Bag</option>
                                      <option value="Health">Health</option>
                                      <option value="Postpartum">Postpartum</option>
+                                     <!-- ADDED NEW FOOD OPTION -->
+                                     <option value="Food">🥕 Food</option>
                                      <option value="Custom">Custom</option>
                                  </select>
                                  <input type="text" id="custom-category-input" class="meal-select text-sm hidden" placeholder="Your custom category...">
+                                 
+                                 <!-- NEW FOOD FIELDS CONTAINER -->
+                                 <div id="new-wish-food-fields" class="hidden space-y-3 pt-3 mt-3 border-t border-white/10">
+                                     <p class="text-sm font-semibold text-indigo-200">Food Details</p>
+                                     <select id="new-wish-food-type" class="meal-select text-sm">
+                                         <option value="">Select food type...</option>
+                                         <option value="Meat">🥩 Meat</option>
+                                         <option value="Fruit">🍎 Fruit</option>
+                                         <option value="Vege">🥦 Vege</option>
+                                         <option value="Snack">🥨 Snack</option>
+                                         <option value="Diary">🧀 Diary</option>
+                                         <option value="Dog">🐶 Dog Food</option>
+                                         <option value="Drinks">🥤 Drinks</option>
+                                     </select>
+                                     <label for="new-wish-food-expiry" class="text-sm text-gray-300 -mb-2 block">Expiration Date:</label>
+                                     <input type="date" id="new-wish-food-expiry" class="date-input text-sm">
+                                 </div>
+                                 <!-- END NEW FOOD FIELDS CONTAINER -->
+
                                  <div class="flex gap-2">
                                      <input type="text" id="new-wish-price" class="meal-select text-sm w-1/2" placeholder="Price ($)">
                                      <input type="text" id="new-wish-link" class="meal-select text-sm w-1/2" placeholder="Store Link">
