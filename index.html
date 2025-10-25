@@ -720,7 +720,8 @@
     </div>
 
     <!-- Modals -->
-    <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
+    <!-- UPDATED z-index for all modals from z-30/40/50 to z-[110] or higher to appear above sparkle container (z-[100]) -->
+    <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-[110] p-4">
         <div id="auth-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-sm transform scale-95 opacity-0 transition-transform transition-opacity duration-300 text-center">
             <h3 class="text-2xl font-bold mb-2">Welcome!</h3>
             <p class="text-indigo-200 mb-6">Sign in to save and share your journey.</p>
@@ -732,7 +733,7 @@
         </div>
     </div>
     
-    <div id="meal-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-30 p-4">
+    <div id="meal-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-[110] p-4">
         <div id="modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-md transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
              <h3 id="modal-title" class="text-2xl font-bold mb-4 text-center">Edit Meal</h3>
              <select id="modal-meal-select" class="meal-select mb-4"></select>
@@ -741,7 +742,7 @@
              <button id="modal-close-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Close</button>
         </div>
     </div>
-    <div id="manage-meals-modal" class="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-md flex justify-center items-center hidden z-40 p-4">
+    <div id="manage-meals-modal" class="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-md flex justify-center items-center hidden z-[120] p-4">
         <div id="manage-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
             <h3 id="manage-modal-title" class="text-2xl font-bold mb-6 text-center">Manage Meals</h3>
             <div id="meal-list-container" class="space-y-2 mb-6 max-h-60 overflow-y-auto pr-2"></div>
@@ -756,7 +757,7 @@
             </div>
         </div>
     </div>
-    <div id="edit-meal-modal" class="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-md flex justify-center items-center hidden z-50 p-4">
+    <div id="edit-meal-modal" class="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-md flex justify-center items-center hidden z-[130] p-4">
         <div id="edit-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-md transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
             <h3 class="text-2xl font-bold mb-6 text-center">Edit Meal</h3>
             <input type="text" id="edit-meal-input" class="meal-select w-full mb-4" placeholder="Enter new meal name...">
@@ -770,7 +771,7 @@
             </div>
         </div>
     </div>
-    <div id="start-date-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
+    <div id="start-date-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-[110] p-4">
         <div id="start-date-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-md transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
              <h3 class="text-2xl font-bold mb-4 text-center">Update Pregnancy Dates</h3>
              <p class="text-gray-300 mb-4 text-center">Start date is usually the first day of your last menstrual period.</p>
@@ -785,7 +786,7 @@
              </div>
         </div>
     </div>
-    <div id="ai-meal-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
+    <div id="ai-meal-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-[110] p-4">
         <div id="ai-meal-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300 modal-scroll">
              <h3 id="ai-modal-title" class="text-2xl font-bold mb-4 text-center">AI Meal Plan for Monday</h3>
              
@@ -818,7 +819,7 @@
               <button id="ai-meal-close-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg transition-colors mt-4">Close</button>
         </div>
     </div>
-    <div id="manage-supplements-modal" class="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-md flex justify-center items-center hidden z-50 p-4">
+    <div id="manage-supplements-modal" class="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-md flex justify-center items-center hidden z-[110] p-4">
         <div id="manage-supplements-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
             <h3 class="text-2xl font-bold mb-6 text-center">Manage & Log Supplements</h3>
             <p class="text-sm text-center text-gray-300 mb-4">Add supplements to your saved list. Click a supplement in the list to log it for today.</p>
@@ -834,7 +835,7 @@
             </div>
         </div>
     </div>
-    <div id="reflection-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
+    <div id="reflection-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-[110] p-4">
         <div id="reflection-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
             <h3 id="reflection-modal-title" class="text-2xl font-bold mb-4 text-center">New Reflection</h3>
             <input type="text" id="reflection-title-input" class="meal-select mb-4" placeholder="Note Title...">
@@ -863,7 +864,7 @@
             </div>
         </div>
     </div>
-    <div id="edit-todo-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
+    <div id="edit-todo-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-[110] p-4">
         <div id="edit-todo-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
             <h3 id="edit-todo-modal-title" class="text-2xl font-bold mb-4 text-center">Edit Task</h3>
             <div class="space-y-3">
@@ -916,14 +917,14 @@
             </div>
         </div>
     </div>
-    <div id="ai-summary-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
+    <div id="ai-summary-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-[110] p-4">
         <div id="ai-summary-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-md transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
              <h3 class="text-2xl font-bold mb-4 text-center">AI Reflection Summary</h3>
              <div id="ai-summary-content" class="text-gray-300 bg-white/5 p-4 rounded-lg min-h-[100px]"></div>
              <button id="ai-summary-close-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors mt-6">Close</button>
         </div>
     </div>
-    <div id="nutrition-history-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-40 p-4">
+    <div id="nutrition-history-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-[110] p-4">
         <div id="nutrition-history-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-2xl transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
             <div class="flex items-center justify-between mb-4">
                 <button id="nutrition-history-prev-week-btn" class="icon-btn p-2 rounded-full hover:bg-white/20 transition-colors">
@@ -946,7 +947,7 @@
     </div>
     
     <!-- Sleep Modal -->
-    <div id="sleep-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
+    <div id="sleep-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-[110] p-4">
         <div id="sleep-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
              <div class="flex items-center justify-between mb-4">
                 <button id="sleep-prev-week-btn" class="icon-btn p-2 rounded-full hover:bg-white/20 transition-colors">
@@ -972,7 +973,7 @@
     </div>
 
     <!-- Edit Wellness Day Modal -->
-    <div id="edit-day-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
+    <div id="edit-day-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-[110] p-4">
         <div id="edit-day-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
             <h3 id="edit-day-modal-title" class="text-2xl font-bold mb-6 text-center">Edit Log for Wednesday</h3>
             <div class="space-y-6">
@@ -1016,7 +1017,7 @@
     </div>
     
     <!-- New Image Link Modal -->
-    <div id="image-link-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
+    <div id="image-link-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-[120] p-4">
         <div id="image-link-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-md transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
             <h3 class="text-2xl font-bold mb-4 text-center">Add Image Link</h3>
             <p class="text-gray-300 mb-4 text-center text-sm">Paste a direct link to an image (e.g., from Imgur).</p>
@@ -1029,7 +1030,7 @@
     </div>
 
     <!-- New Baby Message Modal - UPDATED -->
-    <div id="baby-message-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
+    <div id="baby-message-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-[110] p-4">
         <!-- 
           UPDATES:
           - Removed 'glass-card' and 'text-center' from this div.
@@ -1057,7 +1058,7 @@
     </div>
 
     <!-- CALM SPACE: Mindful Reflection Modal -->
-    <div id="mindful-reflection-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
+    <div id="mindful-reflection-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-[110] p-4">
         <div id="mindful-reflection-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-md transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
             <!-- FIX: Added id "mindful-reflection-title" -->
             <h3 id="mindful-reflection-title" class="text-2xl font-bold mb-4 text-center">How do you feel?</h3>
@@ -1081,7 +1082,7 @@
     </div>
     
     <!-- NEW EDIT WISH MODAL -->
-    <div id="edit-wish-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
+    <div id="edit-wish-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-[110] p-4">
         <div id="edit-wish-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
             <h3 class="text-2xl font-bold mb-4 text-center">Edit Wish</h3>
             <div class="space-y-3">
