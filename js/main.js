@@ -1,7 +1,7 @@
 import { configError } from './firebase.js';
 import { setupAuthentication, getCurrentUserId } from './auth.js';
-// Import createBubbleBackground from ui.js
-import { setupTabs, createBubbleBackground } from './ui.js';
+// Import the new cacheDomElements function
+import { setupTabs, createBubbleBackground, cacheDomElements } from './ui.js';
 import { initializeMealPlanner, unloadMealPlanner, updateWellnessDataForMealPlanner } from './meal-planner.js';
 import { 
     initializeWellness, 
@@ -16,12 +16,13 @@ import { initializeJourney, unloadJourney, updateWellnessDataForJourney } from '
 // NEW IMPORT for Calm Space
 import { initializeCalmSpace, unloadCalmSpace } from './calm-space.js';
 
+// These must be 'let' as they are reassigned
 let wellnessData = {};
 let currentMealPlan = {};
 let tipsHaveBeenGenerated = false;
 
 // This function is called whenever wellness data (mood, energy, etc.) changes in Firestore.
-function onWellnessDataUpdate(newData) {
+const onWellnessDataUpdate = (newData) => {
     wellnessData = newData;
     updateWellnessDataForMealPlanner(newData);
     updateWellnessDataForJourney(newData);
@@ -35,10 +36,10 @@ function onWellnessDataUpdate(newData) {
     if (document.getElementById('content-symptom-tracker').classList.contains('active')) {
         updateDashboardUI();
     }
-}
+};
 
 // This function is called whenever the meal plan changes in Firestore.
-function onMealPlanUpdate(newPlan) {
+const onMealPlanUpdate = (newPlan) => {
     currentMealPlan = newPlan;
     
     // Check if both data sources are ready, and if tips haven't been generated yet.
@@ -48,7 +49,7 @@ function onMealPlanUpdate(newPlan) {
     }
 
     updateDashboardUI();
-}
+};
 
 export const loadAllDataForUser = (userId) => {
     // Reset the flag for a new user session/page load.
@@ -79,6 +80,12 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    // --- THIS IS THE FIX ---
+    // Cache all elements first, *before* setting up auth or tabs
+    cacheDomElements(); 
+    // Now these functions can safely access elements.
+    // -------------------------
+
     setupAuthentication();
     setupTabs(handleTabSwitch);
 
@@ -92,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- END NEW ANIMATION SETUP ---
 });
 
-function handleTabSwitch(activeTab) {
+const handleTabSwitch = (activeTab) => {
     const userId = getCurrentUserId();
     if (!userId) return;
 
@@ -107,4 +114,4 @@ function handleTabSwitch(activeTab) {
     }
     // No specific action needed for 'calm' or 'journey' tab switches, 
     // they are initialized on load and handle their own state.
-}
+};
