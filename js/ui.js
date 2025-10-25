@@ -32,6 +32,69 @@
      elements.calmSpaceTab = document.getElementById('tab-calm-space');
      elements.calmSpaceContent = document.getElementById('content-calm-space');
      elements.sparkleContainer = document.getElementById('sparkle-container');
+  
+     // --- 
+     // --- FIX: Added all Journey Tab elements
+     // --- 
+     elements.todoListContainer = document.getElementById('todo-list-container');
+     elements.newTodoInput = document.getElementById('new-todo-input');
+     elements.newTodoCategory = document.getElementById('new-todo-category');
+     elements.addTodoBtn = document.getElementById('add-todo-btn');
+     elements.aiGenerateTodosBtn = document.getElementById('ai-generate-todos-btn');
+     elements.wishlistContainer = document.getElementById('wishlist-container');
+     elements.wishlistProgressText = document.getElementById('wishlist-progress-text');
+     elements.wishlistProgressBar = document.getElementById('wishlist-progress-bar');
+     elements.newWishItem = document.getElementById('new-wish-item');
+     elements.newWishCategory = document.getElementById('new-wish-category');
+     elements.newWishPrice = document.getElementById('new-wish-price');
+     elements.newWishLink = document.getElementById('new-wish-link');
+     elements.addWishBtn = document.getElementById('add-wish-btn');
+     elements.aiWishForm = document.getElementById('ai-wish-form');
+     elements.aiWishPrompt = document.getElementById('ai-wish-prompt');
+     elements.reflectionsContainer = document.getElementById('reflections-container');
+     elements.addReflectionBtn = document.getElementById('add-reflection-btn');
+     elements.reflectionModal = document.getElementById('reflection-modal');
+     elements.reflectionModalTitle = document.getElementById('reflection-modal-title');
+     elements.reflectionTitleInput = document.getElementById('reflection-title-input');
+     elements.reflectionContentInput = document.getElementById('reflection-content-input');
+     elements.reflectionColorTags = document.getElementById('reflection-color-tags');
+     elements.reflectionModalCancelBtn = document.getElementById('reflection-modal-cancel-btn');
+     elements.reflectionModalSaveBtn = document.getElementById('reflection-modal-save-btn');
+     elements.aiSummarizeReflectionsBtn = document.getElementById('ai-summarize-reflections-btn');
+     elements.aiSummaryModal = document.getElementById('ai-summary-modal');
+     elements.aiSummaryContent = document.getElementById('ai-summary-content');
+     elements.aiSummaryCloseBtn = document.getElementById('ai-summary-close-btn');
+     elements.customCategoryInput = document.getElementById('custom-category-input'); // For wishes
+     elements.todoHeader = document.getElementById('todo-header');
+     elements.collapsibleTodoContent = document.getElementById('collapsible-todo-content');
+     elements.todoToggleIcon = document.getElementById('todo-toggle-icon');
+     elements.wishlistHeader = document.getElementById('wishlist-header');
+     elements.collapsibleWishlistContent = document.getElementById('collapsible-wishlist-content');
+     elements.wishlistToggleIcon = document.getElementById('wishlist-toggle-icon');
+     elements.newTodoDate = document.getElementById('new-todo-date');
+     elements.newTodoTime = document.getElementById('new-todo-time');
+     elements.customTodoCategoryInput = document.getElementById('custom-todo-category-input'); // For new todos
+     elements.editTodoModal = document.getElementById('edit-todo-modal');
+     elements.editTodoInput = document.getElementById('edit-todo-input');
+     elements.editTodoDate = document.getElementById('edit-todo-date');
+     elements.editTodoTime = document.getElementById('edit-todo-time');
+     elements.editTodoCategory = document.getElementById('edit-todo-category');
+     elements.editCustomTodoCategoryInput = document.getElementById('edit-custom-todo-category-input');
+     elements.editTodoModalCancelBtn = document.getElementById('edit-todo-modal-cancel-btn');
+     elements.editTodoModalSaveBtn = document.getElementById('edit-todo-modal-save-btn');
+     elements.reflectionHeader = document.getElementById('reflection-header');
+     elements.collapsibleReflectionContent = document.getElementById('collapsible-reflection-content');
+     elements.reflectionToggleIcon = document.getElementById('reflection-toggle-icon');
+     elements.toggleReflectionsContainer = document.getElementById('toggle-reflections-container');
+     elements.toggleReflectionsBtn = document.getElementById('toggle-reflections-btn');
+     elements.addReflectionImageBtn = document.getElementById('add-reflection-image-btn');
+     elements.imageLinkModal = document.getElementById('image-link-modal');
+     elements.imageLinkInput = document.getElementById('image-link-input');
+     elements.imageLinkCancelBtn = document.getElementById('image-link-cancel-btn');
+     elements.imageLinkSaveBtn = document.getElementById('image-link-save-btn');
+     elements.reflectionImagePreviewContainer = document.getElementById('reflection-image-preview-container');
+     elements.reflectionImagePreview = document.getElementById('reflection-image-preview');
+     // --- End Journey Tab Elements ---
  
      // --- NEW: Notification Elements ---
      elements.notificationPermissionArea = document.getElementById('notification-permission-area');
@@ -283,7 +346,7 @@
          }
      });
  
-     if (tabs[activeTab].btn && tabs[activeTab].content) {
+     if (tabs[activeTab] && tabs[activeTab].btn && tabs[activeTab].content) {
          tabs[activeTab].btn.classList.add('active');
          tabs[activeTab].content.classList.add('active');
          
