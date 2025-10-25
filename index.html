@@ -665,14 +665,14 @@
                             <div class="pt-4 border-t border-white/10 space-y-3">
                                  <input type="text" id="new-wish-item" class="meal-select text-sm" placeholder="Item name (e.g., Baby Monitor)">
                                  <select id="new-wish-category" class="meal-select text-sm">
-                                     <option value="Baby Care">Baby Care</option>
-                                     <option value="Nursery">Nursery</option>
-                                     <option value="Hospital Bag">Hospital Bag</option>
-                                     <option value="Health">Health</option>
-                                     <option value="Postpartum">Postpartum</option>
-                                     <!-- ADDED NEW FOOD OPTION -->
+                                     <!-- ADDED EMOJIS -->
+                                     <option value="Baby Care">🍼 Baby Care</option>
+                                     <option value="Nursery">🧸 Nursery</option>
+                                     <option value="Hospital Bag">👜 Hospital Bag</option>
+                                     <option value="Health">🧘‍♀️ Health</option>
+                                     <option value="Postpartum">💖 Postpartum</option> 
                                      <option value="Food">🥕 Food</option>
-                                     <option value="Custom">Custom</option>
+                                     <option value="Custom">✨ Custom</option>
                                  </select>
                                  <input type="text" id="custom-category-input" class="meal-select text-sm hidden" placeholder="Your custom category...">
                                  
@@ -686,6 +686,9 @@
                                          <option value="Vege">🥦 Vege</option>
                                          <option value="Snack">🥨 Snack</option>
                                          <option value="Diary">🧀 Diary</option>
+                                         <!-- ADDED Grain and Soup -->
+                                         <option value="Grain">🍚 Grain</option> 
+                                         <option value="Soup">🍲 Soup</option>
                                          <option value="Dog">🐶 Dog Food</option>
                                          <option value="Drinks">🥤 Drinks</option>
                                      </select>
@@ -1073,6 +1076,55 @@
                 <!-- FIX: Renamed id to "mindful-reflection-close-btn" -->
                 <button id="mindful-reflection-close-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg">Skip</button>
                 <button id="mindful-reflection-save-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg">Save</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- NEW EDIT WISH MODAL -->
+    <div id="edit-wish-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-50 p-4">
+        <div id="edit-wish-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
+            <h3 class="text-2xl font-bold mb-4 text-center">Edit Wish</h3>
+            <div class="space-y-3">
+                <input type="text" id="edit-wish-item" class="meal-select text-sm" placeholder="Item name">
+                <select id="edit-wish-category" class="meal-select text-sm">
+                     <!-- ADDED EMOJIS -->
+                     <option value="Baby Care">🍼 Baby Care</option>
+                     <option value="Nursery">🧸 Nursery</option>
+                     <option value="Hospital Bag">👜 Hospital Bag</option>
+                     <option value="Health">🧘‍♀️ Health</option>
+                     <option value="Postpartum">💖 Postpartum</option> 
+                     <option value="Food">🥕 Food</option>
+                     <option value="Custom">✨ Custom</option>
+                </select>
+                <input type="text" id="edit-custom-category-input" class="meal-select text-sm hidden" placeholder="Your custom category...">
+                
+                <div id="edit-wish-food-fields" class="hidden space-y-3 pt-3 mt-3 border-t border-white/10">
+                     <p class="text-sm font-semibold text-indigo-200">Food Details</p>
+                     <select id="edit-wish-food-type" class="meal-select text-sm">
+                         <option value="">Select food type...</option>
+                         <option value="Meat">🥩 Meat</option>
+                         <option value="Fruit">🍎 Fruit</option>
+                         <option value="Vege">🥦 Vege</option>
+                         <option value="Snack">🥨 Snack</option>
+                         <option value="Diary">🧀 Diary</option>
+                         <!-- ADDED Grain and Soup -->
+                         <option value="Grain">🍚 Grain</option> 
+                         <option value="Soup">🍲 Soup</option>
+                         <option value="Dog">🐶 Dog Food</option>
+                         <option value="Drinks">🥤 Drinks</option>
+                     </select>
+                     <label for="edit-wish-food-expiry" class="text-sm text-gray-300 -mb-2 block">Expiration Date:</label>
+                     <input type="date" id="edit-wish-food-expiry" class="date-input text-sm">
+                 </div>
+
+                 <div class="flex gap-2">
+                     <input type="text" id="edit-wish-price" class="meal-select text-sm w-1/2" placeholder="Price ($)">
+                     <input type="text" id="edit-wish-link" class="meal-select text-sm w-1/2" placeholder="Store Link">
+                 </div>
+            </div>
+            <div class="flex gap-4 mt-6">
+                <button id="edit-wish-modal-cancel-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg">Cancel</button>
+                <button id="edit-wish-modal-save-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg">Save Changes</button>
             </div>
         </div>
     </div>
