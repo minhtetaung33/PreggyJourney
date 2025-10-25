@@ -2,6 +2,9 @@
  import { db } from './firebase.js';
  import { getCurrentUserId } from "./auth.js";
  import { elements } from './ui.js'; // Import elements from ui.js
+ // --- NEW: Import Calendar Auth functions ---
+ import { signInToGoogleCalendar, isCalendarAuthed, getGapiClient } from './auth.js';
+ // --- End NEW ---
  
  // --- REMOVED ALL 'const ... = elements...' ASSIGNMENTS ---
  // We will now access elements directly, e.g., elements.todoListContainer
@@ -16,63 +19,29 @@
  let showAllReflections = false;
  let activeReflectionImageUrl = null; // Variable to hold the image URL for the current reflection
  
- // --- NEW: Notification State ---
- let notificationPermissionGranted = Notification.permission === 'granted';
- const scheduledNotifications = {}; // Object to store timeout IDs: { todoId: timeoutId }
- // --- End NEW ---
+ // --- REMOVED Notification State ---
+ 
  
  // --- NEW: Update Notification Button UI ---
  function updateNotificationButtonUI() {
      // Access elements directly
      if (!elements.notificationPermissionArea || !elements.enableNotificationsBtn || !elements.notificationStatusText) return;
  
-     // Check if Notifications are supported first
-     if (!('Notification' in window)) {
-         elements.notificationPermissionArea.innerHTML = '<p class="text-xs text-yellow-400">Browser notifications not supported.</p>';
-         return;
-     }
- 
-     if (Notification.permission === 'granted') {
+     // Check if Calendar API is ready and authed
+     if (isCalendarAuthed()) {
          elements.enableNotificationsBtn.classList.add('hidden');
-         elements.notificationStatusText.textContent = 'Reminders Enabled';
+         elements.notificationStatusText.textContent = 'Google Calendar Reminders Enabled';
          elements.notificationStatusText.classList.remove('hidden', 'text-red-400');
          elements.notificationStatusText.classList.add('text-green-400');
-         notificationPermissionGranted = true;
-     } else if (Notification.permission === 'denied') {
-         elements.enableNotificationsBtn.classList.add('hidden');
-         elements.notificationStatusText.textContent = 'Reminders Blocked (Check Browser Settings)';
-         elements.notificationStatusText.classList.remove('hidden', 'text-green-400');
-         elements.notificationStatusText.classList.add('text-red-400');
-         notificationPermissionGranted = false;
-     } else { // 'default' state (permission not yet asked or dismissed)
+     } else { // Not yet authed
+         elements.enableNotificationsBtn.textContent = 'Enable Google Calendar Reminders';
          elements.enableNotificationsBtn.classList.remove('hidden');
          elements.notificationStatusText.classList.add('hidden');
-         notificationPermissionGranted = false;
      }
  }
  // --- End NEW ---
  
- // --- NEW: Request Notification Permission ---
- async function requestNotificationPermission() {
-     if ('Notification' in window) {
-         if (Notification.permission === 'granted') {
-             notificationPermissionGranted = true;
-             updateNotificationButtonUI(); // Ensure UI is correct
-             return true;
-         } else if (Notification.permission !== 'denied') {
-             // Prompt the user for permission 
-             const permission = await Notification.requestPermission();
-             notificationPermissionGranted = permission === 'granted';
-             updateNotificationButtonUI(); // Update UI after permission request
-             return notificationPermissionGranted;
-         }
-     }
-     // If denied or not supported, update UI accordingly
-     notificationPermissionGranted = false;
-     updateNotificationButtonUI();
-     return false;
- }
- // --- End NEW ---
+ // --- REMOVED requestNotificationPermission ---
  
  export function initializeJourney(userId, initialWellnessData) {
      wellnessDataForJourney = initialWellnessData;
@@ -108,69 +77,101 @@
      return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', hour12: true });
  };
  
- // --- NEW: Schedule Notification Function ---
- function scheduleNotification(todo) {
-     // Check if permission is granted first
-     if (!notificationPermissionGranted) {
-         // console.log("Notification permission not granted for todo:", todo.id);
-         return;
-     }
- 
-     // Ensure todo has both date and time and is not completed
-     if (!todo.date || !todo.time || todo.completed) {
-         clearScheduledNotification(todo.id); // Ensure no old notification persists if data is removed/completed
-         return;
-     }
- 
-     try {
-         // Combine date and time into a string recognized by Date constructor
-         const reminderDateTimeStr = `${todo.date}T${todo.time}`;
-         const reminderTime = new Date(reminderDateTimeStr).getTime();
-         const now = Date.now();
-         const delay = reminderTime - now;
- 
-         // Check if the reminder time is in the future (add a small buffer like 1 sec to avoid immediate triggers)
-         if (delay > 1000) {
-             // Clear any existing notification for this todo before scheduling a new one
-             clearScheduledNotification(todo.id);
- 
-             console.log(`Scheduling notification for todo "${todo.text}" in ${Math.round(delay / 1000)} seconds.`);
-             const timeoutId = setTimeout(() => {
-                 console.log("Showing notification for:", todo.text);
-                 // Check permission again right before showing, in case it changed in browser settings
-                 if (Notification.permission === 'granted') {
-                     // Show the notification
-                     new Notification('Pregnancy Planner Reminder:', {
-                         body: todo.text,
-                         icon: './assets/icons/icon-192x192.png' // Optional: Add an icon URL if you have one
-                     });
-                 }
-                 // Remove from scheduled list after it fires (or attempts to fire)
-                 delete scheduledNotifications[todo.id];
-             }, delay);
- 
-             // Store the timeout ID so we can cancel it later if needed
-             scheduledNotifications[todo.id] = timeoutId;
-         } else {
-              // If the calculated time is in the past or too close, clear any old notification ID
-              clearScheduledNotification(todo.id);
-         }
-     } catch (error) {
-         console.error("Error parsing date/time or scheduling notification for todo:", todo.id, error);
-          // Clear any potentially invalid notification ID in case of error
-          clearScheduledNotification(todo.id);
-     }
- }
+ // --- NEW: Schedule Google Calendar Event ---
+ async function scheduleGoogleCalendarEvent(todo) {
+    if (!isCalendarAuthed() || !todo.date || !todo.time || todo.completed) {
+        return;
+    }
+
+    // 1. Convert local date/time to ISO 8601 format
+    // We assume the user is inputting time in their local timezone.
+    const startTimeStr = `${todo.date}T${todo.time}`;
+    const startDate = new Date(startTimeStr);
+    
+    // Create an end time (e.g., 1 hour later)
+    const endDate = new Date(startDate.getTime() + 60 * 60 * 1000); // 1 hour duration
+
+    // Check if time is in the past
+    if (startDate.getTime() < Date.now()) {
+        console.log("Not scheduling event, time is in the past.", todo.text);
+        return;
+    }
+
+    const event = {
+        'summary': todo.text,
+        'description': `From your Pregnancy Wellness Planner.\nCategory: ${todo.category}`,
+        'start': {
+            'dateTime': startDate.toISOString(),
+            // 'timeZone': 'America/Los_Angeles' // You could add a timeZone selector, but default is user's calendar setting
+        },
+        'end': {
+            'dateTime': endDate.toISOString(),
+            // 'timeZone': 'America/Los_Angeles'
+        },
+        'reminders': {
+            'useDefault': false,
+            'overrides': [
+                {'method': 'popup', 'minutes': 30}, // 30-minute popup reminder
+                {'method': 'email', 'minutes': 60} // 1-hour email reminder
+            ],
+        },
+    };
+
+    try {
+        const gapiClient = getGapiClient();
+        const request = gapiClient.calendar.events.insert({
+            'calendarId': 'primary',
+            'resource': event,
+        });
+
+        const response = await request;
+        console.log('Google Calendar Event created:', response.result);
+        
+        // --- IMPORTANT: Save the event ID back to Firebase ---
+        // This allows us to delete it later
+        const todoDocRef = doc(db, `users/${getCurrentUserId()}/todos`, todo.id);
+        await updateDoc(todoDocRef, {
+            googleEventId: response.result.id
+        });
+
+    } catch (error) {
+        console.error("Error creating Google Calendar event:", error);
+    }
+}
  // --- End NEW ---
  
- // --- NEW: Clear Scheduled Notification Function ---
- function clearScheduledNotification(todoId) {
-     if (scheduledNotifications[todoId]) {
-         console.log("Clearing scheduled notification for todo:", todoId);
-         clearTimeout(scheduledNotifications[todoId]);
-         delete scheduledNotifications[todoId]; // Remove from tracking object
-     }
- }
+ // --- NEW: Clear Google Calendar Event Function ---
+ async function clearGoogleCalendarEvent(todo) {
+    if (!isCalendarAuthed() || !todo.googleEventId) {
+        // No event to clear
+        return;
+    }
+
+    try {
+        const gapiClient = getGapiClient();
+        const request = gapiClient.calendar.events.delete({
+            'calendarId': 'primary',
+            'eventId': todo.googleEventId,
+        });
+
+        await request;
+        console.log('Google Calendar Event deleted:', todo.googleEventId);
+
+        // Remove the ID from Firebase so we don't try again
+        const todoDocRef = doc(db, `users/${getCurrentUserId()}/todos`, todo.id);
+        await updateDoc(todoDocRef, {
+            googleEventId: deleteDoc() // This might need to be 'null' or 'deleteField()'
+        });
+
+    } catch (error) {
+        // Handle 404/410 "Not Found" or "Gone" errors gracefully
+        if (error.code === 404 || error.code === 410) {
+             console.log("Event already deleted from Google Calendar.");
+        } else {
+            console.error("Error deleting Google Calendar event:", error);
+        }
+    }
+}
  // --- End NEW ---
  
  function renderTodos(todos) {
@@ -234,12 +235,11 @@
  
               // --- NEW: Update notification based on the *new* completion state ---
               if (isNowCompleted) {
-                 clearScheduledNotification(todo.id);
+                 clearGoogleCalendarEvent(todo); // Clear the event
               } else {
                   // Reschedule only if it's now marked as incomplete
-                  // Create a temporary object with the updated state for scheduling
                   const updatedTodoForScheduling = { ...todo, completed: false };
-                  scheduleNotification(updatedTodoForScheduling);
+                  scheduleGoogleCalendarEvent(updatedTodoForScheduling); // Add the event
               }
               // --- End NEW ---
          };
@@ -254,8 +254,8 @@
          item.querySelector('.delete-todo-btn').addEventListener('click', async () => {
              if (!todosRef) return;
              const todoDocRef = doc(db, `users/${getCurrentUserId()}/todos`, todo.id);
-             // --- NEW: Clear notification *before* deleting ---
-             clearScheduledNotification(todo.id);
+             // --- NEW: Clear GCal event *before* deleting ---
+             clearGoogleCalendarEvent(todo);
              // --- End NEW ---
              await deleteDoc(todoDocRef);
          });
@@ -440,11 +440,7 @@
          currentTodos = [];
          snapshot.forEach(doc => currentTodos.push({ id: doc.id, ...doc.data() }));
          renderTodos(currentTodos);
-         // --- Schedule notifications for loaded todos ---
-         currentTodos.forEach(todo => {
-             scheduleNotification(todo); // Handles completed/past checks internally
-         });
-         // --- End scheduling ---
+         // --- REMOVED old scheduling ---
      });
  }
  
@@ -482,13 +478,7 @@
  
              if (!text || !category || !todosRef) return;
  
-             // --- Request permission before adding if needed ---
-             let hasPermission = notificationPermissionGranted; // Use current state
-             // Only ask if date/time are set AND permission is 'default' (not yet granted/denied)
-             if (elements.newTodoDate.value && elements.newTodoTime.value && Notification.permission === 'default') {
-                 hasPermission = await requestNotificationPermission();
-             }
-             // --- End permission request ---
+             // --- REMOVED old permission request ---
  
              const newTodoData = {
                  text,
@@ -501,12 +491,10 @@
  
              const docRef = await addDoc(todosRef, newTodoData);
  
-             // --- Schedule notification after adding ---
-             // Use the *potentially updated* permission status
-             if (notificationPermissionGranted) {
-                 scheduleNotification({ id: docRef.id, ...newTodoData });
-             }
-             // --- End scheduling ---
+             // --- NEW: Schedule GCal event after adding ---
+             // We pass the new doc ID so we can save the event ID back
+             scheduleGoogleCalendarEvent({ id: docRef.id, ...newTodoData });
+             // --- End NEW ---
  
              elements.newTodoInput.value = '';
              elements.newTodoDate.value = '';
@@ -795,17 +783,13 @@
      // --- NEW: Event listener for Enable Notifications Button ---
      if (elements.enableNotificationsBtn) {
          elements.enableNotificationsBtn.addEventListener('click', async () => {
-             const granted = await requestNotificationPermission();
+             const granted = await signInToGoogleCalendar(); // This now calls the GCal sign-in
+             updateNotificationButtonUI(); // Update UI based on success
              if (granted) {
-                 console.log("Notification permission granted by user action.");
-                 // Re-schedule notifications for existing todos now that permission is granted
-                 currentTodos.forEach(todo => {
-                     if (!todo.completed) { // Only schedule for incomplete tasks
-                         scheduleNotification(todo);
-                     }
-                 });
+                 console.log("Google Calendar permission granted.");
+                 // Optional: You could loop through existing todos and schedule them
              } else {
-                 console.log("Notification permission denied or dismissed by user action.");
+                 console.log("Google Calendar permission was not granted.");
              }
          });
      }
@@ -869,12 +853,14 @@
      const updatedTodoSnap = await getDoc(todoDocRef);
      if (updatedTodoSnap.exists()) {
          const updatedTodoFullData = { id: activeTodoId, ...updatedTodoSnap.data() };
-         // Request permission again ONLY if date/time added AND permission is 'default'
-         if (updatedTodoFullData.date && updatedTodoFullData.time && !updatedTodoFullData.completed && Notification.permission === 'default') {
-             await requestNotificationPermission(); // Ask only if needed and not already denied
+         
+         // 1. Clear any old event that might exist
+         if (updatedTodoFullData.googleEventId) {
+             await clearGoogleCalendarEvent(updatedTodoFullData);
          }
-         // Schedule (or clear if needed) based on the full, updated data
-         scheduleNotification(updatedTodoFullData);
+         
+         // 2. Schedule a new event with the new data
+         scheduleGoogleCalendarEvent(updatedTodoFullData);
      }
      // --- End rescheduling ---
  
@@ -955,9 +941,5 @@
      if (unsubscribeTodos) unsubscribeTodos();
      if (unsubscribeWishes) unsubscribeWishes();
      if (unsubscribeReflections) unsubscribeReflections();
-     // Clear any remaining scheduled notifications when unloading
-     Object.keys(scheduledNotifications).forEach(todoId => {
-         clearTimeout(scheduledNotifications[todoId]);
-         delete scheduledNotifications[todoId];
-     });
+     // --- REMOVED old notification clearing ---
  }
