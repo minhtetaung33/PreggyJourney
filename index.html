@@ -420,10 +420,9 @@
                             </div>
                         </div>
 
-                        <!-- Right Column: Baby Connection & Daily Summary -->
-                        <!-- UPDATE: Wrapped this column in a space-y-8 -->
-                        <div class="space-y-8">
-                            <!-- Baby Connection -->
+                        <!-- Right Column: Baby Connection & Summary -->
+                        <div class="lg:col-span-1 space-y-8">
+                            <!-- Baby Connection Card -->
                             <div class="glass-card anim-card p-4 md:p-6">
                                 <h3 class="text-2xl font-bold mb-4">💖 Baby Connection</h3>
                                 <!-- FIX: Renamed id to "meditation-visual-container" -->
@@ -469,10 +468,10 @@
                                 <audio id="meditation-audio-player" loop class="hidden"></audio>
                             </div>
 
-                            <!-- *** NEW DAILY SUMMARY CARD *** -->
-                            <div id="daily-summary-card" class="glass-card anim-card p-4 md:p-6 transition-colors duration-1000">
-                                <h3 class="text-2xl font-bold mb-4">📅 Daily Summary</h3>
-                                
+                            <!-- Daily Summary Card -->
+                            <div id="daily-summary-card" class="glass-card anim-card p-4 md:p-6">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h3 class="text-2xl font-bold">📊 Daily Summary</h3>
                                 <div class="relative w-full h-56 flex items-center justify-center mb-4">
                                     <!-- Mood Meter Gauge -->
                                     <div id="summary-mood-gauge" class="w-56 h-56 rounded-full p-4" style="background-image: conic-gradient(from 0deg, #4d5bf9 0%, #00d4ff 0%, #1a203c 0%);">
@@ -594,6 +593,10 @@
                             </div>
                         </div>
 
+                    </div>
+                </div>
+
+                 <!-- Journey Tab -->
                         <!-- Right Column: Little Wishes -->
                         <!-- Added anim-card class -->
                         <div class="glass-card anim-card p-4 md:p-6">
