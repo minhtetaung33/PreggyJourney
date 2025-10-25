@@ -1128,13 +1128,15 @@ async function saveReflection() {
     const docPath = `/artifacts/${appId}/users/${userId}/calmSummary/${todayId}`;
     const docRef = doc(db, docPath);
 
+    let todayData = {}; // To store the updated data for the animation
+
     try {
         // Disable button to prevent double-save
         elements.mindfulReflectionSaveBtn.disabled = true;
 
         // Get today's document to see if it exists
         const docSnap = await getDoc(docRef);
-        let todayData = {
+        todayData = {
             date: Timestamp.fromDate(new Date(todayId)), // Store a proper timestamp
             moods: [],
             breathingMinutes: 0,
@@ -1180,6 +1182,10 @@ async function saveReflection() {
         // Re-enable button and close modal
         elements.mindfulReflectionSaveBtn.disabled = false;
         closeReflectionModal();
+        
+        // --- NEW: Trigger animation on save ---
+        const { averageMood } = calculateTodayScore(todayData);
+        playSummaryAnimation(averageMood);
     }
 }
 
@@ -1285,26 +1291,14 @@ function updateDailySummaryUI(summaryData) {
  */
 function calculateTodayScore(todaySummary) {
     let totalScore = 0;
-    // Boosts: Breathing: 5pts/min, Stretch: 3pts/min, Meditation: 4pts/min
-    totalScore += (todaySummary.breathingMinutes || 0) * 5;
-    totalScore += (todaySummary.stretchMinutes || 0) * 3;
-    totalScore += (todaySummary.meditationMinutes || 0) * 4;
-
+    
     let averageMood = 0;
     if (todaySummary.moods && todaySummary.moods.length > 0) {
         const moodSum = todaySummary.moods.reduce((a, b) => a + b, 0);
         averageMood = moodSum / todaySummary.moods.length; // (1-5)
     }
 
-    // Convert mood (1-5) to a score (0-100) and add it
-    // (avgMood / 5) * 100 = avgMood * 20
-    const moodScore = (averageMood || 2.5) * 20; // Default to 2.5 (50%) if no mood
-    
-    // Final score: 60% from activities, 40% from mood
-    // We'll just add them and cap. Max activity score is arbitrary, let's aim for ~60.
-    // 5min breath = 25. 5min stretch = 15. 5min meditation = 20. Total = 60.
-    // This calculation makes `totalScore` the main driver.
-    // Let's re-think: Base = mood. Bonus = activities.
+    // Base = mood. Bonus = activities.
     let baseScore = (averageMood || 2.5) * 20; // 0-100
     let bonus = 0;
     bonus += (todaySummary.breathingMinutes || 0) * 2; // Max 10min = 20pts
