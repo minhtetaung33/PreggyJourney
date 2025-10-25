@@ -1,8 +1,9 @@
 import { collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { db } from './firebase.js';
 import { getCurrentUserId } from "./auth.js";
+import { elements } from './ui.js'; // Import elements from ui.js
 
-// DOM Elements
+// DOM Elements (Original)
 const todoListContainer = document.getElementById('todo-list-container');
 const newTodoInput = document.getElementById('new-todo-input');
 const newTodoCategory = document.getElementById('new-todo-category');
@@ -112,7 +113,9 @@ function renderTodos(todos) {
         todoListContainer.innerHTML = `<p class="text-center text-gray-400">No tasks yet. Add one below!</p>`;
         return;
     }
-    const categoryIcons = { Health: '🧘‍♀️', Baby: '🍼', Home: '🏡', Reminder: '💬' };
+    // ADDED 'Appointment'
+    const categoryIcons = { Health: '🧘‍♀️', Baby: '🍼', Home: '🏡', Reminder: '💬', Appointment: '🗓️' };
+    
     todos.forEach(todo => {
         const item = document.createElement('div');
         item.className = `todo-item flex items-start justify-between p-3 bg-white/5 rounded-lg ${todo.completed ? 'completed' : ''}`;
@@ -120,28 +123,66 @@ function renderTodos(todos) {
         const displayDate = formatDate(todo.date);
         const displayTime = formatTime(todo.time);
 
-        item.innerHTML = `
-            <div class="flex items-start flex-1 min-w-0">
-                 <label for="todo-${todo.id}" class="flex items-center cursor-pointer pt-1">
-                    <input type="checkbox" id="todo-${todo.id}" class="hidden todo-checkbox">
-                    <div class="w-6 h-6 border-2 border-purple-400 rounded-md mr-3 flex-shrink-0 flex items-center justify-center check-label">
-                        ${todo.completed ? '<svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>' : ''}
-                    </div>
-                </label>
-                <div class="flex-1">
-                    <p class="font-semibold break-words">${todo.text}</p>
-                    <div class="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs text-gray-400 mt-1">
-                        <span>${categoryIcons[todo.category] || '✨'} ${todo.category}</span>
-                        ${displayDate ? `<span>🗓️ ${displayDate}</span>` : ''}
-                        ${displayTime ? `<span>⏰ ${displayTime}</span>` : ''}
+        // NEW: Check if it's an Appointment
+        if (todo.category === 'Appointment' && todo.appointment) {
+            const appt = todo.appointment;
+            const apptType = appt.customType || appt.type || '';
+            const apptName = [appt.fname, appt.lname].filter(Boolean).join(' ');
+
+            item.innerHTML = `
+                <div class="flex items-start flex-1 min-w-0">
+                    <label for="todo-${todo.id}" class="flex items-center cursor-pointer pt-1">
+                        <input type="checkbox" id="todo-${todo.id}" class="hidden todo-checkbox">
+                        <div class="w-6 h-6 border-2 border-purple-400 rounded-md mr-3 flex-shrink-0 flex items-center justify-center check-label">
+                            ${todo.completed ? '<svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>' : ''}
+                        </div>
+                    </label>
+                    <div class="flex-1">
+                        <p class="font-semibold break-words">${todo.text}</p>
+                        <div class="text-xs text-gray-400 mt-1">
+                            <span class="font-bold text-indigo-300 text-sm">${categoryIcons[todo.category] || '✨'} ${apptType}</span>
+                            ${(displayDate || displayTime) ? `<span class="text-lg font-semibold text-white ml-2">| ${displayDate} at ${displayTime}</span>` : ''}
+                        </div>
+                        <div class="mt-2 p-2 bg-black/20 rounded-md space-y-1 text-sm">
+                            ${apptName ? `<p><span class="font-semibold text-gray-300">With:</span> ${apptName}</p>` : ''}
+                            ${appt.address ? `<p><span class="font-semibold text-gray-300">At:</span> ${appt.address}</p>` : ''}
+                            <div class="flex flex-wrap gap-x-4">
+                                ${appt.contact ? `<p><span class="font-semibold text-gray-300">Call:</span> ${appt.contact}</p>` : ''}
+                                ${appt.email ? `<p><span class="font-semibold text-gray-300">Email:</span> ${appt.email}</p>` : ''}
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="flex items-center flex-shrink-0">
-                <button class="icon-btn edit-todo-btn"><svg class="w-5 h-5 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L14.732 3.732z"></path></svg></button>
-                <button class="icon-btn delete-todo-btn ml-1"><svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
-            </div>
-        `;
+                <div class="flex items-center flex-shrink-0">
+                    <button class="icon-btn edit-todo-btn"><svg class="w-5 h-5 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L14.732 3.732z"></path></svg></button>
+                    <button class="icon-btn delete-todo-btn ml-1"><svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                </div>
+            `;
+        } else {
+            // Original HTML for other categories
+            item.innerHTML = `
+                <div class="flex items-start flex-1 min-w-0">
+                    <label for="todo-${todo.id}" class="flex items-center cursor-pointer pt-1">
+                        <input type="checkbox" id="todo-${todo.id}" class="hidden todo-checkbox">
+                        <div class="w-6 h-6 border-2 border-purple-400 rounded-md mr-3 flex-shrink-0 flex items-center justify-center check-label">
+                            ${todo.completed ? '<svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>' : ''}
+                        </div>
+                    </label>
+                    <div class="flex-1">
+                        <p class="font-semibold break-words">${todo.text}</p>
+                        <div class="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs text-gray-400 mt-1">
+                            <span>${categoryIcons[todo.category] || '✨'} ${todo.category}</span>
+                            ${displayDate ? `<span>🗓️ ${displayDate}</span>` : ''}
+                            ${displayTime ? `<span>⏰ ${displayTime}</span>` : ''}
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center flex-shrink-0">
+                    <button class="icon-btn edit-todo-btn"><svg class="w-5 h-5 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L14.732 3.732z"></path></svg></button>
+                    <button class="icon-btn delete-todo-btn ml-1"><svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                </div>
+            `;
+        }
         
         const toggleTodo = async () => {
              if (!todosRef) return;
@@ -378,20 +419,54 @@ function setupEventListeners() {
 
         if (!text || !category || !todosRef) return;
 
-        await addDoc(todosRef, {
+        // NEW: Create data payload
+        const todoData = {
             text,
             category,
             date: newTodoDate.value,
             time: newTodoTime.value,
             completed: false,
             createdAt: serverTimestamp()
-        });
+        };
+
+        // NEW: Add appointment data if category is correct
+        if (category === 'Appointment') {
+            let apptType = elements.newAppointmentType.value;
+            if (apptType === 'Custom') {
+                apptType = elements.newAppointmentCustomType.value.trim();
+            }
+
+            todoData.appointment = {
+                fname: elements.newAppointmentFname.value.trim(),
+                lname: elements.newAppointmentLname.value.trim(),
+                address: elements.newAppointmentAddress.value.trim(),
+                contact: elements.newAppointmentContact.value.trim(),
+                email: elements.newAppointmentEmail.value.trim(),
+                type: elements.newAppointmentType.value === 'Custom' ? '' : elements.newAppointmentType.value,
+                customType: apptType
+            };
+        }
+
+        await addDoc(todosRef, todoData);
+
+        // Reset fields
         newTodoInput.value = '';
         newTodoDate.value = '';
         newTodoTime.value = '';
         newTodoCategory.value = 'Health';
         customTodoCategoryInput.value = '';
         customTodoCategoryInput.classList.add('hidden');
+        
+        // NEW: Reset appointment fields
+        elements.newAppointmentFields.classList.add('hidden');
+        elements.newAppointmentFname.value = '';
+        elements.newAppointmentLname.value = '';
+        elements.newAppointmentAddress.value = '';
+        elements.newAppointmentContact.value = '';
+        elements.newAppointmentEmail.value = '';
+        elements.newAppointmentType.value = '';
+        elements.newAppointmentCustomType.value = '';
+        elements.newAppointmentCustomType.classList.add('hidden');
     });
 
     aiGenerateTodosBtn.addEventListener('click', async () => {
@@ -482,13 +557,43 @@ function setupEventListeners() {
         } else {
             customTodoCategoryInput.classList.add('hidden');
         }
+        // NEW: Show/hide appointment fields
+        if (newTodoCategory.value === 'Appointment') {
+            elements.newAppointmentFields.classList.remove('hidden');
+        } else {
+            elements.newAppointmentFields.classList.add('hidden');
+        }
     });
+
+    // NEW: Show/hide custom appointment type fields
+    elements.newAppointmentType.addEventListener('change', () => {
+        if (elements.newAppointmentType.value === 'Custom') {
+            elements.newAppointmentCustomType.classList.remove('hidden');
+        } else {
+            elements.newAppointmentCustomType.classList.add('hidden');
+        }
+    });
+
+    elements.editAppointmentType.addEventListener('change', () => {
+        if (elements.editAppointmentType.value === 'Custom') {
+            elements.editAppointmentCustomType.classList.remove('hidden');
+        } else {
+            elements.editAppointmentCustomType.classList.add('hidden');
+        }
+    });
+
 
     editTodoCategory.addEventListener('change', () => {
         if (editTodoCategory.value === 'Custom') {
             editCustomTodoCategoryInput.classList.remove('hidden');
         } else {
             editCustomTodoCategoryInput.classList.add('hidden');
+        }
+        // NEW: Show/hide edit appointment fields
+        if (editTodoCategory.value === 'Appointment') {
+            elements.editAppointmentFields.classList.remove('hidden');
+        } else {
+            elements.editAppointmentFields.classList.add('hidden');
         }
     });
 
@@ -613,7 +718,8 @@ function openEditTodoModal(todo) {
     editTodoDate.value = todo.date || '';
     editTodoTime.value = todo.time || '';
 
-    const standardCategories = ['Health', 'Baby', 'Home', 'Reminder'];
+   // NEW: Added Appointment
+   const standardCategories = ['Health', 'Baby', 'Home', 'Reminder', 'Appointment'];
     if (standardCategories.includes(todo.category)) {
         editTodoCategory.value = todo.category;
         editCustomTodoCategoryInput.classList.add('hidden');
@@ -622,6 +728,32 @@ function openEditTodoModal(todo) {
         editTodoCategory.value = 'Custom';
         editCustomTodoCategoryInput.classList.remove('hidden');
         editCustomTodoCategoryInput.value = todo.category;
+    }
+
+    // NEW: Handle Appointment Fields
+    if (todo.category === 'Appointment') {
+        elements.editAppointmentFields.classList.remove('hidden');
+        const appt = todo.appointment || {};
+        elements.editAppointmentFname.value = appt.fname || '';
+        elements.editAppointmentLname.value = appt.lname || '';
+        elements.editAppointmentAddress.value = appt.address || '';
+        elements.editAppointmentContact.value = appt.contact || '';
+        elements.editAppointmentEmail.value = appt.email || '';
+        
+        // Handle custom type dropdown
+        const standardTypes = ['OB/GYN', 'Ultrasound', 'Pediatrician'];
+        if (standardTypes.includes(appt.type)) {
+            elements.editAppointmentType.value = appt.type;
+            elements.editAppointmentCustomType.classList.add('hidden');
+            elements.editAppointmentCustomType.value = '';
+        } else {
+            elements.editAppointmentType.value = 'Custom';
+            elements.editAppointmentCustomType.classList.remove('hidden');
+            elements.editAppointmentCustomType.value = appt.customType || '';
+        }
+
+    } else {
+        elements.editAppointmentFields.classList.add('hidden');
     }
 
     editTodoModal.classList.remove('hidden');
@@ -648,12 +780,36 @@ async function handleSaveTodo() {
     }
 
     const todoDocRef = doc(db, `users/${getCurrentUserId()}/todos`, activeTodoId);
-    await updateDoc(todoDocRef, {
+    
+    // NEW: Create data payload
+    const todoData = {
         text: text,
         category: category,
         date: editTodoDate.value,
-        time: editTodoTime.value
-    });
+        time: editTodoTime.value,
+        appointment: null // Default to null
+    };
+
+    // NEW: Add appointment data if category is correct
+    if (category === 'Appointment') {
+        let apptType = elements.editAppointmentType.value;
+        let customApptType = '';
+        if (apptType === 'Custom') {
+            customApptType = elements.editAppointmentCustomType.value.trim();
+        }
+
+        todoData.appointment = {
+            fname: elements.editAppointmentFname.value.trim(),
+            lname: elements.editAppointmentLname.value.trim(),
+            address: elements.editAppointmentAddress.value.trim(),
+            contact: elements.editAppointmentContact.value.trim(),
+            email: elements.editAppointmentEmail.value.trim(),
+            type: apptType === 'Custom' ? '' : apptType,
+            customType: customApptType
+        };
+    }
+    
+    await updateDoc(todoDocRef, todoData);
     closeEditTodoModal();
 }
 
