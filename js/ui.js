@@ -1,53 +1,114 @@
-export const elements = {
+// We define elements as an empty object first.
+export const elements = {};
+
+/**
+ * Caches all DOM elements after the page has loaded.
+ * This function is called by main.js once the DOM is ready.
+ */
+export const cacheDomElements = () => {
     // Hero and App containers
-    heroSection: document.getElementById('hero-section'),
-    mainApp: document.getElementById('main-app'),
-    authButtons: document.getElementById('auth-buttons'),
-    userInfo: document.getElementById('user-info'),
-    userNameEl: document.getElementById('user-name'),
+    elements.heroSection = document.getElementById('hero-section');
+    elements.mainApp = document.getElementById('main-app');
+    elements.authButtons = document.getElementById('auth-buttons');
+    elements.userInfo = document.getElementById('user-info');
+    elements.userNameEl = document.getElementById('user-name');
     
     // Auth
-    signUpBtn: document.getElementById('sign-up-btn'),
-    signOutBtn: document.getElementById('sign-out-btn'),
-    authModal: document.getElementById('auth-modal'),
-    googleSignInBtn: document.getElementById('google-signin-btn'),
-    authModalCloseBtn: document.getElementById('auth-modal-close-btn'),
+    elements.signUpBtn = document.getElementById('sign-up-btn');
+    elements.signOutBtn = document.getElementById('sign-out-btn');
+    elements.authModal = document.getElementById('auth-modal');
+    elements.googleSignInBtn = document.getElementById('google-signin-btn');
+    elements.authModalCloseBtn = document.getElementById('auth-modal-close-btn');
 
     // Tabs
-    mealPlanTab: document.getElementById('tab-meal-plan'),
-    symptomTrackerTab: document.getElementById('tab-symptom-tracker'),
-    journeyTab: document.getElementById('tab-journey'),
-    mealPlanContent: document.getElementById('content-meal-plan'),
-    symptomTrackerContent: document.getElementById('content-symptom-tracker'),
-    journeyContent: document.getElementById('content-journey'),
+    elements.mealPlanTab = document.getElementById('tab-meal-plan');
+    elements.symptomTrackerTab = document.getElementById('tab-symptom-tracker');
+    elements.journeyTab = document.getElementById('tab-journey');
+    elements.mealPlanContent = document.getElementById('content-meal-plan');
+    elements.symptomTrackerContent = document.getElementById('content-symptom-tracker');
+    elements.journeyContent = document.getElementById('content-journey');
 
-    // --- NEW CALM SPACE Elements ---
-    calmSpaceTab: document.getElementById('tab-calm-space'),
-    calmSpaceContent: document.getElementById('content-calm-space'),
-    sparkleContainer: document.getElementById('sparkle-container'), // For sparkle animation
+    // --- CALM SPACE Elements (Added) ---
+    elements.calmSpaceTab = document.getElementById('tab-calm-space');
+    elements.calmSpaceContent = document.getElementById('content-calm-space');
+    elements.sparkleContainer = document.getElementById('sparkle-container');
 
-    // --- NEW Daily Summary Elements ---
-    dailySummaryCard: document.getElementById('daily-summary-card'),
-    summaryMoodGauge: document.getElementById('summary-mood-gauge'),
-    summaryMoodEmoji: document.getElementById('summary-mood-emoji'),
-    summaryMoodLabel: document.getElementById('summary-mood-label'),
-    summaryGlowEffect: document.getElementById('summary-glow-effect'),
-    summaryBreathLevel: document.getElementById('summary-breath-level'),
-    summaryStretchLevel: document.getElementById('summary-stretch-level'),
-    summaryMeditationLevel: document.getElementById('summary-meditation-level'),
-    summaryPositiveMessage: document.getElementById('summary-positive-message'),
-    summaryStreakBadge: document.getElementById('summary-streak-badge'),
-    summaryBarChart: document.getElementById('summary-bar-chart'),
+    // Breathing
+    elements.breathingExerciseButtons = document.getElementById('breathing-exercise-buttons');
+    elements.breathingPlayBtn = document.getElementById('breathing-play-btn');
+    elements.breathingStopBtn = document.getElementById('breathing-stop-btn');
+    elements.breathingSilentToggle = document.getElementById('breathing-silent-toggle');
+    elements.breathingSoundOnIcon = document.getElementById('breathing-sound-on-icon');
+    elements.breathingSoundOffIcon = document.getElementById('breathing-sound-off-icon');
+    elements.breathingOrb = document.getElementById('breathing-orb');
+    elements.breathingVisualEmoji = document.getElementById('breathing-visual-emoji');
+    elements.breathingAnimationElement = document.getElementById('breathing-animation-element');
+    elements.breathingInstruction = document.getElementById('breathing-instruction');
+    elements.breathingStepsList = document.getElementById('breathing-steps-list');
+    elements.breathingTimerInput = document.getElementById('breathing-timer-input');
+    elements.breathingTimerDisplay = document.getElementById('breathing-timer-display');
 
-    // --- NEW Animation Elements ---
-    bubbleBackground: document.getElementById('bubble-background'),
-    pageLoadOverlay: document.getElementById('page-load-overlay'),
+    // Meditation
+    elements.meditationTypeButtons = document.getElementById('meditation-type-buttons');
+    elements.startMeditationBtn = document.getElementById('start-meditation-btn');
+    elements.stopMeditationBtn = document.getElementById('stop-meditation-btn');
+    elements.meditationVoiceToggle = document.getElementById('meditation-voice-toggle');
+    elements.meditationSoundOnIcon = document.getElementById('meditation-sound-on-icon');
+    elements.meditationSoundOffIcon = document.getElementById('meditation-sound-off-icon');
+    elements.meditationOrb = document.getElementById('meditation-orb');
+    elements.meditationVisualEmoji = document.getElementById('meditation-visual-emoji');
+    elements.meditationInstruction = document.getElementById('meditation-instruction');
+    elements.meditationTimerInput = document.getElementById('meditation-timer-input');
+    elements.meditationTimerDisplay = document.getElementById('meditation-timer-display');
+    elements.meditationAudioPlayer = document.getElementById('meditation-audio-player');
+
+    // Stretches
+    elements.stretchRoutineButtons = document.getElementById('stretch-routine-buttons');
+    elements.stretchPlayPauseBtn = document.getElementById('stretch-play-pause-btn');
+    elements.stretchNextPoseBtn = document.getElementById('stretch-next-pose-btn');
+    elements.stretchPrevPoseBtn = document.getElementById('stretch-prev-pose-btn');
+    elements.stretchVoiceToggle = document.getElementById('stretch-voice-toggle');
+    elements.stretchSoundOnIcon = document.getElementById('stretch-sound-on-icon');
+    elements.stretchSoundOffIcon = document.getElementById('stretch-sound-off-icon');
+    elements.stretchVisual = document.getElementById('stretch-visual');
+    elements.stretchPoseDisplay = document.getElementById('stretch-pose-display');
+    elements.stretchTimerDisplay = document.getElementById('stretch-timer-display');
+    elements.stretchInstruction = document.getElementById('stretch-instruction');
+    elements.stretchTimerInput = document.getElementById('stretch-timer-input');
+    elements.stretchPlayIcon = document.getElementById('stretch-play-icon');
+    elements.stretchPauseIcon = document.getElementById('stretch-pause-icon');
+
+    // Reflection Modal
+    elements.mindfulReflectionModal = document.getElementById('mindful-reflection-modal');
+    elements.mindfulReflectionCloseBtn = document.getElementById('mindful-reflection-close-btn');
+    elements.mindfulMoodButtons = document.getElementById('mindful-mood-buttons');
+    elements.mindfulReflectionSaveBtn = document.getElementById('mindful-reflection-save-btn');
+    elements.mindfulReflectionTitle = document.getElementById('mindful-reflection-title');
+    elements.mindfulReflectionTextarea = document.getElementById('mindful-reflection-textarea');
+
+    // --- Daily Summary Elements (Added) ---
+    elements.dailySummaryCard = document.getElementById('daily-summary-card');
+    elements.summaryMoodGauge = document.getElementById('summary-mood-gauge');
+    elements.summaryMoodEmoji = document.getElementById('summary-mood-emoji');
+    elements.summaryMoodLabel = document.getElementById('summary-mood-label');
+    elements.summaryGlowEffect = document.getElementById('summary-glow-effect');
+    elements.summaryBreathLevel = document.getElementById('summary-breath-level');
+    elements.summaryStretchLevel = document.getElementById('summary-stretch-level');
+    elements.summaryMeditationLevel = document.getElementById('summary-meditation-level');
+    elements.summaryPositiveMessage = document.getElementById('summary-positive-message');
+    elements.summaryStreakBadge = document.getElementById('summary-streak-badge');
+    elements.summaryBarChart = document.getElementById('summary-bar-chart');
+
+    // --- Animation Elements ---
+    elements.bubbleBackground = document.getElementById('bubble-background');
+    elements.pageLoadOverlay = document.getElementById('page-load-overlay');
 };
+
 
 /**
  * Creates the rising bubble background effect.
  */
-export function createBubbleBackground() {
+export const createBubbleBackground = () => {
     if (!elements.bubbleBackground) return;
     const numBubbles = 30; // More bubbles
     for (let i = 0; i < numBubbles; i++) {
@@ -75,13 +136,13 @@ export function createBubbleBackground() {
     // Update keyframes in CSS to use drift (we can't, but we can slightly modify the animation)
     // We'll modify the `rise` keyframe in CSS to include a horizontal movement.
     // For simplicity, we'll stick to the vertical rise defined in CSS.
-}
+};
 
 /**
  * Resets the entrance animations for a given tab content area.
  * @param {HTMLElement} tabContentElement - The tab content element (e.g., elements.mealPlanContent)
  */
-function resetTabAnimation(tabContentElement) {
+const resetTabAnimation = (tabContentElement) => {
     if (!tabContentElement) return;
     const cards = tabContentElement.querySelectorAll('.anim-card');
     cards.forEach(card => {
@@ -89,13 +150,13 @@ function resetTabAnimation(tabContentElement) {
         // Re-apply initial hidden state
         card.style.opacity = '0'; 
     });
-}
+};
 
 /**
  * Plays the staggered bubble-in animation for a tab content area.
  * @param {HTMLElement} tabContentElement - The tab content element (e.g., elements.mealPlanContent)
  */
-function playTabEntranceAnimation(tabContentElement) {
+const playTabEntranceAnimation = (tabContentElement) => {
     if (!tabContentElement) return;
     const cards = tabContentElement.querySelectorAll('.anim-card');
     const staggerDelay = 300; // 0.3s delay between cards
@@ -118,15 +179,15 @@ function playTabEntranceAnimation(tabContentElement) {
             card.classList.add('anim-float');
         });
     }, totalAnimationTime);
-}
+};
 
 // --- NEW SPARKLE ANIMATION ---
 /**
  * Creates a sparkle animation at a specific (x, y) coordinate.
  * @param {number} x - The x coordinate.
- * @param {number} y - The y coordinate.
+ *.param {number} y - The y coordinate.
  */
-export function createSparkleAnimation(x, y) {
+export const createSparkleAnimation = (x, y) => {
     if (!elements.sparkleContainer) return;
 
     const sparkle = document.createElement('div');
@@ -140,10 +201,10 @@ export function createSparkleAnimation(x, y) {
     setTimeout(() => {
         sparkle.remove();
     }, 1000); // Animation duration is 1s
-}
+};
 
 
-export function showMainApp() {
+export const showMainApp = () => {
     elements.authButtons.classList.add('hidden');
     elements.userInfo.classList.add('flex');
     elements.userInfo.classList.remove('hidden');
@@ -157,27 +218,27 @@ export function showMainApp() {
             playTabEntranceAnimation(activeContent);
         }
     }, 200); // Small delay for content to render
-}
+};
 
-export function showHeroSection() {
+export const showHeroSection = () => {
     elements.authButtons.classList.remove('hidden');
     elements.userInfo.classList.remove('flex');
     elements.userInfo.classList.add('hidden');
     elements.mainApp.classList.add('hidden');
     elements.heroSection.classList.remove('hidden');
-}
+};
 
-export function openAuthModal() {
+export const openAuthModal = () => {
     elements.authModal.classList.remove('hidden');
     setTimeout(() => elements.authModal.classList.add('active'), 10);
-}
+};
 
-export function closeAuthModal() {
+export const closeAuthModal = () => {
     elements.authModal.classList.remove('active');
     setTimeout(() => elements.authModal.classList.add('hidden'), 300);
-}
+};
 
-export function setupTabs(onTabSwitch) {
+export const setupTabs = (onTabSwitch) => {
     elements.mealPlanTab.addEventListener('click', () => {
         switchTab('meal');
         onTabSwitch('meal');
@@ -195,9 +256,9 @@ export function setupTabs(onTabSwitch) {
         switchTab('journey');
         onTabSwitch('journey');
     });
-}
+};
 
-function switchTab(activeTab) {
+const switchTab = (activeTab) => {
     const tabs = {
         meal: { btn: elements.mealPlanTab, content: elements.mealPlanContent },
         symptom: { btn: elements.symptomTrackerTab, content: elements.symptomTrackerContent },
@@ -206,17 +267,21 @@ function switchTab(activeTab) {
     };
 
     Object.keys(tabs).forEach(key => {
-        tabs[key].btn.classList.remove('active');
-        tabs[key].content.classList.remove('active');
-        // Reset animations on other tabs
-        if (key !== activeTab) {
-            resetTabAnimation(tabs[key].content);
+        if (tabs[key].btn && tabs[key].content) {
+            tabs[key].btn.classList.remove('active');
+            tabs[key].content.classList.remove('active');
+            // Reset animations on other tabs
+            if (key !== activeTab) {
+                resetTabAnimation(tabs[key].content);
+            }
         }
     });
 
-    tabs[activeTab].btn.classList.add('active');
-    tabs[activeTab].content.classList.add('active');
-    
-    // Play animation for the new active tab
-    playTabEntranceAnimation(tabs[activeTab].content);
-}
+    if (tabs[activeTab].btn && tabs[activeTab].content) {
+        tabs[activeTab].btn.classList.add('active');
+        tabs[activeTab].content.classList.add('active');
+        
+        // Play animation for the new active tab
+        playTabEntranceAnimation(tabs[activeTab].content);
+    }
+};
