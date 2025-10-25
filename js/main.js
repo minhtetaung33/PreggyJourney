@@ -1,5 +1,6 @@
 import { configError } from './firebase.js';
-import { setupAuthentication, getCurrentUserId } from './auth.js';
+// Import loadGapiClient
+import { setupAuthentication, getCurrentUserId, loadGapiClient } from './auth.js';
 // Import the new cacheDomElements function
 import { setupTabs, createBubbleBackground, cacheDomElements } from './ui.js';
 import { initializeMealPlanner, unloadMealPlanner, updateWellnessDataForMealPlanner } from './meal-planner.js';
@@ -85,6 +86,10 @@ document.addEventListener('DOMContentLoaded', () => {
     cacheDomElements(); 
     // Now these functions can safely access elements.
     // -------------------------
+
+    // --- NEW: Load Google API Client ---
+    loadGapiClient();
+    // --- End NEW ---
 
     setupAuthentication();
     setupTabs(handleTabSwitch);
