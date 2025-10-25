@@ -99,8 +99,14 @@ export const cacheDomElements = () => {
     elements.summaryStreakBadge = document.getElementById('summary-streak-badge');
     elements.summaryBarChart = document.getElementById('summary-bar-chart');
 
-    // --- NEW JOURNEY TAB APPOINTMENT FIELDS ---
-    // New To-Do Form
+    // --- Animation Elements ---
+    elements.bubbleBackground = document.getElementById('bubble-background');
+    elements.pageLoadOverlay = document.getElementById('page-load-overlay');
+
+    // --- Journey Tab Elements ---
+    // (Existing elements like todoListContainer, etc., are assumed already here)
+    elements.newTodoCategory = document.getElementById('new-todo-category');
+    elements.customTodoCategoryInput = document.getElementById('custom-todo-category-input');
     elements.newAppointmentFields = document.getElementById('new-appointment-fields');
     elements.newAppointmentFname = document.getElementById('new-appointment-fname');
     elements.newAppointmentLname = document.getElementById('new-appointment-lname');
@@ -110,7 +116,12 @@ export const cacheDomElements = () => {
     elements.newAppointmentType = document.getElementById('new-appointment-type');
     elements.newAppointmentCustomType = document.getElementById('new-appointment-custom-type');
 
-    // Edit To-Do Modal
+    elements.editTodoModal = document.getElementById('edit-todo-modal');
+    elements.editTodoInput = document.getElementById('edit-todo-input');
+    elements.editTodoDate = document.getElementById('edit-todo-date');
+    elements.editTodoTime = document.getElementById('edit-todo-time');
+    elements.editTodoCategory = document.getElementById('edit-todo-category');
+    elements.editCustomTodoCategoryInput = document.getElementById('edit-custom-todo-category-input');
     elements.editAppointmentFields = document.getElementById('edit-appointment-fields');
     elements.editAppointmentFname = document.getElementById('edit-appointment-fname');
     elements.editAppointmentLname = document.getElementById('edit-appointment-lname');
@@ -119,11 +130,21 @@ export const cacheDomElements = () => {
     elements.editAppointmentEmail = document.getElementById('edit-appointment-email');
     elements.editAppointmentType = document.getElementById('edit-appointment-type');
     elements.editAppointmentCustomType = document.getElementById('edit-appointment-custom-type');
-    // --- END NEW JOURNEY FIELDS ---
+    elements.editTodoModalCancelBtn = document.getElementById('edit-todo-modal-cancel-btn');
+    elements.editTodoModalSaveBtn = document.getElementById('edit-todo-modal-save-btn');
 
-    // --- Animation Elements ---
-    elements.bubbleBackground = document.getElementById('bubble-background');
-    elements.pageLoadOverlay = document.getElementById('page-load-overlay');
+    // NEW AI Assistant Modal Elements
+    elements.openAiAssistantBtn = document.getElementById('open-ai-assistant-btn');
+    elements.aiAssistantModal = document.getElementById('ai-assistant-modal');
+    elements.aiAssistantToggleTodo = document.getElementById('ai-assistant-toggle-todo');
+    elements.aiAssistantToggleRecipe = document.getElementById('ai-assistant-toggle-recipe');
+    elements.aiAssistantPromptLabel = document.getElementById('ai-assistant-prompt-label');
+    elements.aiAssistantPrompt = document.getElementById('ai-assistant-prompt');
+    elements.aiAssistantGenerateBtn = document.getElementById('ai-assistant-generate-btn');
+    elements.aiAssistantLoader = document.getElementById('ai-assistant-loader');
+    elements.aiAssistantResults = document.getElementById('ai-assistant-results');
+    elements.aiAssistantCloseBtn = document.getElementById('ai-assistant-close-btn');
+
 };
 
 
