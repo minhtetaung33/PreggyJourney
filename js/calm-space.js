@@ -494,9 +494,9 @@ function speak(text, isSilent) {
     // --- VOICE CHANGE ---
     if (femaleVoice) {
         utterance.voice = femaleVoice;
-        utterance.pitch = 1.6; // Use natural pitch if voice is found
+        utterance.pitch = 1.4; // Use natural pitch if voice is found
     } else {
-        utterance.pitch = 1.6; // Fallback to higher pitch
+        utterance.pitch = 1.4; // Fallback to higher pitch
     }
     // --- END VOICE CHANGE ---
 
@@ -1575,6 +1575,7 @@ function playSummaryAnimation(averageMood) {
     }
 
 }
+
 
 
 
