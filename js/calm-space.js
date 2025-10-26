@@ -489,14 +489,14 @@ function speak(text, isSilent) {
     if (isSilent || !text) return;
     synth.cancel(); // Stop any previous speech
     utterance.text = text;
-    utterance.rate = 0.9;
+    utterance.rate = 0.5;
 
     // --- VOICE CHANGE ---
     if (femaleVoice) {
         utterance.voice = femaleVoice;
-        utterance.pitch = 1; // Use natural pitch if voice is found
+        utterance.pitch = 0.8; // Use natural pitch if voice is found
     } else {
-        utterance.pitch = 1.2; // Fallback to higher pitch
+        utterance.pitch = 0.8; // Fallback to higher pitch
     }
     // --- END VOICE CHANGE ---
 
@@ -1575,6 +1575,7 @@ function playSummaryAnimation(averageMood) {
     }
 
 }
+
 
 
 
