@@ -30,9 +30,9 @@ const breathingData = {
     '4-7-8': {
         name: '4-7-8 Breathing',
         steps: [
-            { instruction: 'Begin... Inhale softly through your nose for... 4... 3... 2... 1...', duration: 7000, type: 'inhale' },
-            { instruction: 'Now.., gently hold that breath for... 7... 6... 5... 4... 3... 2... 1...', duration: 9000, type: 'hold' },
-            { instruction: 'And exhale slowly through your mouth with a soft "whoosh" sound for... 8... 7... 6... 5... 4... 3... 2... 1...', duration: 12000, type: 'exhale' },
+            { instruction: 'Begin... Inhale softly through your nose for... 4... 3... 2... 1...', duration: 8000, type: 'inhale' },
+            { instruction: 'Now.., gently hold that breath for... 7... 6... 5... 4... 3... 2... 1...', duration: 10000, type: 'hold' },
+            { instruction: 'And exhale slowly through your mouth with a soft "whoosh" sound for... 8... 7... 6... 5... 4... 3... 2... 1...', duration: 13000, type: 'exhale' },
         ],
         visual: 'orb-glow',
         color: 'bg-blue-400',
@@ -47,10 +47,10 @@ const breathingData = {
     'box': {
         name: 'Box Breathing',
         steps: [
-            { instruction: 'Inhale through your nose for... 4... 3... 2... 1...', duration: 6000, type: 'inhale' },
-            { instruction: 'Gently hold the breath at the top for... 4... 3... 2... 1...', duration: 6000, type: 'hold' },
-            { instruction: 'Exhale slowly through your mouth for... 4... 3... 2... 1...', duration: 6000, type: 'exhale' },
-            { instruction: 'And hold the breath at the bottom, empty and relaxed, for... 4... 3... 2... 1...', duration: 8000, type: 'hold' },
+            { instruction: 'Inhale through your nose for... 4... 3... 2... 1...', duration: 7000, type: 'inhale' },
+            { instruction: 'Gently hold the breath at the top for... 4... 3... 2... 1...', duration: 7000, type: 'hold' },
+            { instruction: 'Exhale slowly through your mouth for... 4... 3... 2... 1...', duration: 7000, type: 'exhale' },
+            { instruction: 'And hold the breath at the bottom, empty and relaxed, for... 4... 3... 2... 1...', duration: 9000, type: 'hold' },
         ],
         visual: 'box-glow',
         color: 'bg-green-400',
@@ -65,8 +65,8 @@ const breathingData = {
     'wave': {
         name: 'Wave Breathing',
         steps: [
-            { instruction: 'Inhale... watch the wave rise as you breathe in for... 5... 4... 3... 2... 1...', duration: 7000, type: 'inhale' },
-            { instruction: 'Exhale... watch the wave fall as you breathe out for... 5... 4... 3... 2... 1...', duration: 7000, type: 'exhale' },
+            { instruction: 'Inhale... watch the wave rise as you breathe in for... 5... 4... 3... 2... 1...', duration: 8000, type: 'inhale' },
+            { instruction: 'Exhale... watch the wave fall as you breathe out for... 5... 4... 3... 2... 1...', duration: 8000, type: 'exhale' },
         ],
         visual: 'wave-glow',
         color: 'bg-cyan-400',
@@ -81,8 +81,8 @@ const breathingData = {
     'heartbeat': {
         name: 'Heartbeat Sync',
         steps: [
-            { instruction: 'Inhale gently, feeling your belly and chest expand... 4... 3... 2... 1...', duration: 8000, type: 'inhale' },
-            { instruction: 'Exhale slowly, letting everything soften... 6... 5... 4... 3... 2... 1...', duration: 9000, type: 'exhale' },
+            { instruction: 'Inhale gently, feeling your belly and chest expand... 4... 3... 2... 1...', duration: 9000, type: 'inhale' },
+            { instruction: 'Exhale slowly, letting everything soften... 6... 5... 4... 3... 2... 1...', duration: 10000, type: 'exhale' },
         ],
         visual: 'heartbeat-pulse',
         color: 'bg-pink-400',
@@ -97,8 +97,8 @@ const breathingData = {
     'energizer': {
         name: 'Morning Energizer',
         steps: [
-            { instruction: 'Take a bright inhale for... 3... 2... 1...', duration: 5000, type: 'inhale' },
-            { instruction: 'And a matching exhale, letting it go... 3... 2... 1...', duration: 7000, type: 'exhale' },
+            { instruction: 'Take a bright inhale for... 3... 2... 1...', duration: 6000, type: 'inhale' },
+            { instruction: 'And a matching exhale, letting it go... 3... 2... 1...', duration: 8000, type: 'exhale' },
         ],
         visual: 'orb-glow',
         color: 'bg-yellow-400',
@@ -113,9 +113,9 @@ const breathingData = {
     'sleep': {
         name: 'Sleep Wind-Down',
         steps: [
-            { instruction: 'Inhale slowly and deeply for... 5... 4... 3... 2... 1...', duration: 7000, type: 'inhale' },
-            { instruction: 'A soft pause at the top... just for... 2... 1...', duration: 4000, type: 'hold' },
-            { instruction: 'And a long, slow exhale, releasing the day... 7... 6... 5... 4... 3... 2... 1...', duration: 10000, type: 'exhale' },
+            { instruction: 'Inhale slowly and deeply for... 5... 4... 3... 2... 1...', duration: 8000, type: 'inhale' },
+            { instruction: 'A soft pause at the top... just for... 2... 1...', duration: 5000, type: 'hold' },
+            { instruction: 'And a long, slow exhale, releasing the day... 7... 6... 5... 4... 3... 2... 1...', duration: 11000, type: 'exhale' },
         ],
         visual: 'orb-glow',
         color: 'bg-indigo-400',
@@ -260,57 +260,57 @@ const stretchData = {
     'morning-flow': {
         name: 'Morning Energizer Flow',
         poses: [
-            { name: "Stand Tall", instruction: "Stand tall, feet hip-width apart. Root your feet into the ground. Roll your shoulders back and down. Take a deep, grounding breath.", duration: 15000, visual: 'stand', emoji: '🧍‍♀️' },
-            { name: "Overhead Reach", instruction: "Inhale, sweeping your arms wide and reaching up overhead. Look up if it feels good. Feel the length in your spine.", duration: 15000, visual: 'reach', emoji: '🙌' },
-            { name: "Slight Forward Bend", instruction: "Exhale, soften your knees, and hinge at your hips. Fold forward only as far as is comfortable, keeping your back flat. Rest hands on thighs.", duration: 15000, visual: 'bend', emoji: '🙇‍♀️' },
-            { name: "Shoulder Rolls", instruction: "Slowly roll your shoulders up toward your ears, and then back and down. Feel the tension melting. Repeat 5 times.", duration: 20000, visual: 'shoulders', emoji: '🙆‍♀️' },
-            { name: "Neck Circles", instruction: "Gently drop your chin to your chest. Slowly roll your right ear to your right shoulder. Pause. Roll back to center, and over to the left. Be very gentle. 3 times each way.", duration: 25000, visual: 'neck', emoji: '↪️' },
-            { name: "Deep Breaths", instruction: "Return to standing tall. Take 3 final, deep breaths, filling your belly and chest. You are ready for the day.", duration: 20000, visual: 'stand', emoji: '🧍‍♀️' }
+            { name: "Stand Tall", instruction: "Stand tall, feet hip-width apart. Root your feet into the ground. Roll your shoulders back and down. Take a deep, grounding breath.", duration: 20000, visual: 'stand', emoji: '🧍‍♀️' },
+            { name: "Overhead Reach", instruction: "Inhale, sweeping your arms wide and reaching up overhead. Look up if it feels good. Feel the length in your spine.", duration: 20000, visual: 'reach', emoji: '🙌' },
+            { name: "Slight Forward Bend", instruction: "Exhale, soften your knees, and hinge at your hips. Fold forward only as far as is comfortable, keeping your back flat. Rest hands on thighs.", duration: 20000, visual: 'bend', emoji: '🙇‍♀️' },
+            { name: "Shoulder Rolls", instruction: "Slowly roll your shoulders up toward your ears, and then back and down. Feel the tension melting. Repeat 5 times.", duration: 25000, visual: 'shoulders', emoji: '🙆‍♀️' },
+            { name: "Neck Circles", instruction: "Gently drop your chin to your chest. Slowly roll your right ear to your right shoulder. Pause. Roll back to center, and over to the left. Be very gentle. 3 times each way.", duration: 30000, visual: 'neck', emoji: '↪️' },
+            { name: "Deep Breaths", instruction: "Return to standing tall. Take 3 final, deep breaths, filling your belly and chest. You are ready for the day.", duration: 25000, visual: 'stand', emoji: '🧍‍♀️' }
         ],
         safe: ['early', 'mid', 'late']
     },
     'back-hip': {
         name: 'Back & Hip Relief',
         poses: [
-            { name: "Tabletop", instruction: "Come onto your hands and knees. Place wrists directly under shoulders, and knees directly under hips. Your back is flat like a table.", duration: 15000, visual: 'tabletop', emoji: '🐾' },
-            { name: "Cow Pose", instruction: "Inhale. Drop your belly, lift your tailbone, and draw your heart forward. Gaze gently upward. Feel the stretch in your front body.", duration: 15000, visual: 'cow-pose', emoji: '🐄' },
-            { name: "Cat Pose", instruction: "Exhale. Press into your hands, round your upper back toward the sky. Tuck your chin and tailbone. Feel the release in your spine.", duration: 15000, visual: 'cat-pose', emoji: '🐈' },
-            { name: "Repeat Cat/Cow", instruction: "Flow with your own breath. Inhale for Cow pose, exhale for Cat pose. Let the movement be fluid and nourishing for your back.", duration: 35000, visual: 'cat-cow-flow', emoji: '🔄' },
-            { name: "Hip Circles", instruction: "From tabletop, begin to circle your hips back, to the right, forward, and to the left. Make the circles as big or small as feels good. 5 times clockwise.", duration: 20000, visual: 'hips', emoji: '🔄' },
-            { name: "Hip Circles (Reverse)", instruction: "Now, pause and reverse direction. Circle your hips counter-clockwise, 5 times. Releasing tension in the hip joints.", duration: 20000, visual: 'hips', emoji: '🔄' },
-            { name: "Child's Pose", instruction: "Bring your big toes to touch and take your knees wide apart to make space for your belly. Sink your hips back toward your heels. Rest your forehead on the mat. Breathe deeply into your back.", duration: 40000, visual: 'childs-pose', emoji: '🙇‍♀️' }
+            { name: "Tabletop", instruction: "Come onto your hands and knees. Place wrists directly under shoulders, and knees directly under hips. Your back is flat like a table.", duration: 20000, visual: 'tabletop', emoji: '🐾' },
+            { name: "Cow Pose", instruction: "Inhale. Drop your belly, lift your tailbone, and draw your heart forward. Gaze gently upward. Feel the stretch in your front body.", duration: 20000, visual: 'cow-pose', emoji: '🐄' },
+            { name: "Cat Pose", instruction: "Exhale. Press into your hands, round your upper back toward the sky. Tuck your chin and tailbone. Feel the release in your spine.", duration: 20000, visual: 'cat-pose', emoji: '🐈' },
+            { name: "Repeat Cat/Cow", instruction: "Flow with your own breath. Inhale for Cow pose, exhale for Cat pose. Let the movement be fluid and nourishing for your back.", duration: 40000, visual: 'cat-cow-flow', emoji: '🔄' },
+            { name: "Hip Circles", instruction: "From tabletop, begin to circle your hips back, to the right, forward, and to the left. Make the circles as big or small as feels good. 5 times clockwise.", duration: 25000, visual: 'hips', emoji: '🔄' },
+            { name: "Hip Circles (Reverse)", instruction: "Now, pause and reverse direction. Circle your hips counter-clockwise, 5 times. Releasing tension in the hip joints.", duration: 25000, visual: 'hips', emoji: '🔄' },
+            { name: "Child's Pose", instruction: "Bring your big toes to touch and take your knees wide apart to make space for your belly. Sink your hips back toward your heels. Rest your forehead on the mat. Breathe deeply into your back.", duration: 45000, visual: 'childs-pose', emoji: '🙇‍♀️' }
         ],
         safe: ['early', 'mid']
     },
     'leg-relax': {
         name: 'Leg & Foot Relax',
         poses: [
-            { name: "Sit Comfortably", instruction: "Sit on the floor, perhaps on a cushion, with your legs extended out in front of you. Sit tall through your spine.", duration: 10000, visual: 'sit', emoji: '🧘‍♀️' },
-            { name: "Ankle Rotations", instruction: "Lift one foot slightly and slowly rotate your ankle 5 times in one direction, then 5 times in the other. Repeat with the other foot.", duration: 25000, visual: 'ankles', emoji: '👟' },
-            { name: "Point and Flex", instruction: "With both legs extended, point your toes forward, feeling a stretch in your shins. Hold. Then, flex your feet, pulling your toes back toward you. Feel the stretch in your calves. Repeat 10 times.", duration: 30000, visual: 'toes', emoji: '🦶' },
-            { name: "Calf Massage", instruction: "Bend one knee and gently use your hands to massage your opposite calf muscle, from the ankle up toward the knee. Breathe deeply. Switch legs.", duration: 35000, visual: 'calf', emoji: '🦵' }
+            { name: "Sit Comfortably", instruction: "Sit on the floor, perhaps on a cushion, with your legs extended out in front of you. Sit tall through your spine.", duration: 15000, visual: 'sit', emoji: '🧘‍♀️' },
+            { name: "Ankle Rotations", instruction: "Lift one foot slightly and slowly rotate your ankle 5 times in one direction, then 5 times in the other. Repeat with the other foot.", duration: 30000, visual: 'ankles', emoji: '👟' },
+            { name: "Point and Flex", instruction: "With both legs extended, point your toes forward, feeling a stretch in your shins. Hold. Then, flex your feet, pulling your toes back toward you. Feel the stretch in your calves. Repeat 10 times.", duration: 35000, visual: 'toes', emoji: '🦶' },
+            { name: "Calf Massage", instruction: "Bend one knee and gently use your hands to massage your opposite calf muscle, from the ankle up toward the knee. Breathe deeply. Switch legs.", duration: 40000, visual: 'calf', emoji: '🦵' }
         ],
         safe: ['early', 'mid', 'late']
     },
     'shoulder-neck': {
         name: 'Shoulder & Neck Release',
         poses: [
-            { name: "Sit Tall", instruction: "Sit comfortably, cross-legged or on a chair. Lengthen your spine and relax your shoulders down and back.", duration: 10000, visual: 'sit-cross', emoji: '🧘‍♀️' },
-            { name: "Shoulder Rolls", instruction: "Inhale and shrug your shoulders up to your ears. Exhale and roll them back and down. Feel the shoulder blades slide down your back. Repeat 5 times.", duration: 20000, visual: 'shoulders', emoji: '🙆‍♀️' },
-            { name: "Side Neck Tilt", instruction: "Gently tilt your right ear toward your right shoulder. Don't force it. Feel a gentle stretch along the left side of your neck. Breathe. Hold.", duration: 20000, visual: 'neck-tilt', emoji: '↪️' },
-            { name: "Side Neck Tilt", instruction: "Slowly bring your head back to center. Now, gently tilt your left ear toward your left shoulder. Breathe into the right side of your neck. Hold.", duration: 20000, visual: 'neck-tilt', emoji: '↪️' },
-            { name: "Chest Opener", instruction: "Interlace your fingers behind your back. Straighten your arms (or keep them bent) and lift your hands away from your body, opening your chest. Lift your gaze. Breathe into your heart.", duration: 30000, visual: 'chest', emoji: '💖' }
+            { name: "Sit Tall", instruction: "Sit comfortably, cross-legged or on a chair. Lengthen your spine and relax your shoulders down and back.", duration: 15000, visual: 'sit-cross', emoji: '🧘‍♀️' },
+            { name: "Shoulder Rolls", instruction: "Inhale and shrug your shoulders up to your ears. Exhale and roll them back and down. Feel the shoulder blades slide down your back. Repeat 5 times.", duration: 25000, visual: 'shoulders', emoji: '🙆‍♀️' },
+            { name: "Side Neck Tilt", instruction: "Gently tilt your right ear toward your right shoulder. Don't force it. Feel a gentle stretch along the left side of your neck. Breathe. Hold.", duration: 25000, visual: 'neck-tilt', emoji: '↪️' },
+            { name: "Side Neck Tilt", instruction: "Slowly bring your head back to center. Now, gently tilt your left ear toward your left shoulder. Breathe into the right side of your neck. Hold.", duration: 25000, visual: 'neck-tilt', emoji: '↪️' },
+            { name: "Chest Opener", instruction: "Interlace your fingers behind your back. Straighten your arms (or keep them bent) and lift your hands away from your body, opening your chest. Lift your gaze. Breathe into your heart.", duration: 35000, visual: 'chest', emoji: '💖' }
         ],
         safe: ['early', 'mid', 'late']
     },
     'sleep-wind': {
         name: 'Sleep Wind-Down Yoga',
         poses: [
-            { name: "Lie Comfortably", instruction: "Lie on your side with pillows supporting your head, belly, and between your knees. Settle in and get comfortable.", duration: 20000, visual: 'side-lie', emoji: '😴' },
-            { name: "Gentle Butterfly", instruction: "Slowly come to a seated position. Bring the soles of your feet together, letting your knees fall open. Sit tall, or fold forward gently if that feels better. Breathe.", duration: 40000, visual: 'butterfly', emoji: '🦋' },
-            { name: "Slow Breaths", instruction: "Return to your comfortable side-lying position. Close your eyes. Take a slow, deep inhale, filling your belly.", duration: 20000, visual: 'side-lie', emoji: '😴' },
-            { name: "Humming Exhale", instruction: "Now, as you exhale, create a gentle humming sound. Feel the vibration in your chest and face. This is very calming for the nervous system.", duration: 20000, visual: 'side-lie', emoji: '😴' },
-            { name: "Relax", instruction: "Continue breathing, perhaps humming on each exhale. Imagine each breath is a wave of relaxation, melting away any remaining tension.", duration: 35000, visual: 'side-lie', emoji: '😴' },
+            { name: "Lie Comfortably", instruction: "Lie on your side with pillows supporting your head, belly, and between your knees. Settle in and get comfortable.", duration: 25000, visual: 'side-lie', emoji: '😴' },
+            { name: "Gentle Butterfly", instruction: "Slowly come to a seated position. Bring the soles of your feet together, letting your knees fall open. Sit tall, or fold forward gently if that feels better. Breathe.", duration: 45000, visual: 'butterfly', emoji: '🦋' },
+            { name: "Slow Breaths", instruction: "Return to your comfortable side-lying position. Close your eyes. Take a slow, deep inhale, filling your belly.", duration: 25000, visual: 'side-lie', emoji: '😴' },
+            { name: "Humming Exhale", instruction: "Now, as you exhale, create a gentle humming sound. Feel the vibration in your chest and face. This is very calming for the nervous system.", duration: 25000, visual: 'side-lie', emoji: '😴' },
+            { name: "Relax", instruction: "Continue breathing, perhaps humming on each exhale. Imagine each breath is a wave of relaxation, melting away any remaining tension.", duration: 4000, visual: 'side-lie', emoji: '😴' },
             { name: "Rest", instruction: "Stay still for 1 minute. Just breathe. Feel your body heavy, relaxed, and ready for sleep. Good night.", duration: 60000, visual: 'side-lie', emoji: '😴' }
         ],
         safe: ['early', 'mid', 'late']
@@ -489,14 +489,14 @@ function speak(text, isSilent) {
     if (isSilent || !text) return;
     synth.cancel(); // Stop any previous speech
     utterance.text = text;
-    utterance.rate = 0.5;
+    utterance.rate = 0.7;
 
     // --- VOICE CHANGE ---
     if (femaleVoice) {
         utterance.voice = femaleVoice;
-        utterance.pitch = 0.8; // Use natural pitch if voice is found
+        utterance.pitch = 0.5; // Use natural pitch if voice is found
     } else {
-        utterance.pitch = 0.8; // Fallback to higher pitch
+        utterance.pitch = 0.5; // Fallback to higher pitch
     }
     // --- END VOICE CHANGE ---
 
@@ -1575,6 +1575,7 @@ function playSummaryAnimation(averageMood) {
     }
 
 }
+
 
 
 
