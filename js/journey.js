@@ -605,8 +605,8 @@ function renderFavoriteNames(favNames) {
             nameFavoritesList.appendChild(item);
         });
     }
-    // Update favorite count on button
-    nameFavoritesToggleBtn.textContent = `❤️ My Favorites (${favNames.length})`;
+    // Update favorite count on button - REMOVED "My Favorites" text
+    nameFavoritesToggleBtn.textContent = `❤️ (${favNames.length})`;
 }
 
 // === Event Listener Setup ===
