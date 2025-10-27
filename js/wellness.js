@@ -308,19 +308,25 @@ export async function initializeWellness(userId, onWellnessDataUpdate) {
     unsubscribeDailyWellness = onSnapshot(dailyWellnessRef, (docSnap) => {
         if (docSnap.exists()) {
             dailyWellnessData = docSnap.data();
-            // Reload weekly data to merge the new daily data (like a changed start date).
-            // This triggers the main onSnapshot and the full update chain.
-            loadWellnessForDate(wellnessHistoryCurrentDate, onWellnessDataUpdate);
         } else {
             // If it doesn't exist, create it with the start date from the default object
             setDoc(dailyWellnessRef, { 
                 pregnancyStartDate: defaultWellnessData.pregnancyStartDate, 
                 pregnancyEndDate: defaultWellnessData.pregnancyEndDate 
             });
+            dailyWellnessData = { // Assume default data for this first run
+                pregnancyStartDate: defaultWellnessData.pregnancyStartDate, 
+                pregnancyEndDate: defaultWellnessData.pregnancyEndDate 
+            };
         }
+        // FIX: This now runs *after* dailyWellnessData is set.
+        // It was previously being called synchronously below, creating a race condition.
+        loadWellnessForDate(wellnessHistoryCurrentDate, onWellnessDataUpdate);
     });
 
-    await loadWellnessForDate(new Date(), onWellnessDataUpdate);
+    // FIX: Removed the synchronous call to loadWellnessForDate.
+    // await loadWellnessForDate(new Date(), onWellnessDataUpdate); 
+    
     await initializeSupplements();
     loadSupplements();
     setupEventListeners();
@@ -363,6 +369,7 @@ async function loadWellnessForDate(date, onWellnessDataUpdate) {
         const firestoreData = docSnap.exists() ? docSnap.data() : defaultWellnessData;
         
         // Merge daily data (like start date) with the weekly log data.
+        // This ensures the start date is always present.
         wellnessData = { ...defaultWellnessData, ...dailyWellnessData, ...firestoreData };
 
         if (!isHistoryView) {
@@ -1209,6 +1216,7 @@ async function populateNutritionHistory(date) {
         const dayTitle = dayTitles[dayKey];
         const totals = { iron: 0, calcium: 0, folate: 0, fiber: 0 };
         for (const mealKey in mealPlanForWeek) {
+            // FIX: Added a check to ensure the property is a valid meal object
             if (mealPlanForWeek[mealKey] && typeof mealPlanForWeek[mealKey] === 'object') {
                 const mealName = mealPlanForWeek[mealKey][dayKey];
                 if (mealName && allMealNutrients[mealName]) {
