@@ -2,7 +2,8 @@
 import { collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, where, getDocs, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { db } from './firebase.js';
 import { getCurrentUserId } from "./auth.js";
-import { elements } from './ui.js'; // Import elements from ui.js
+// IMPORT THE NEW NOTIFICATION UI FUNCTION
+import { elements, updateNotificationUI } from './ui.js'; 
 
 // === ORIGINAL DOM Elements ===
 const todoListContainer = document.getElementById('todo-list-container');
@@ -95,6 +96,10 @@ let activeWishId = null;
 let showAllReflections = false;
 let activeReflectionImageUrl = null;
 
+// === NEW Notification State ===
+let allNotifications = [];
+const DAY_IN_MS = 1000 * 60 * 60 * 24;
+
 // === NEW Baby Name Generator State ===
 let selectedNameGender = null;
 let selectedNameOrigin = '';
@@ -134,6 +139,7 @@ function loadTodos() {
         currentTodos = [];
         snapshot.forEach(doc => currentTodos.push({ id: doc.id, ...doc.data() }));
         renderTodos(currentTodos);
+        checkNotifications(); // NEW: Check notifications when todos load
     });
 }
 
@@ -145,6 +151,7 @@ function loadWishes() {
         currentWishes = [];
         snapshot.forEach(doc => currentWishes.push({ id: doc.id, ...doc.data() }));
         renderWishes(currentWishes);
+        checkNotifications(); // NEW: Check notifications when wishes load
     });
 }
 
@@ -1049,6 +1056,10 @@ function setupEventListeners() {
         }
     });
 
+    // NEW: Add listener for Clear All Notifications button
+    if (elements.notificationClearAllBtn) {
+        elements.notificationClearAllBtn.addEventListener('click', clearAllNotifications);
+    }
 }
 
 // === NEW AI Baby Name Generator Listeners ===
@@ -1570,6 +1581,155 @@ async function toggleFavoriteName(nameData) {
     } catch (error) {
         console.error("Error toggling favorite name:", error);
     }
+}
+
+
+// === NEW NOTIFICATION FUNCTIONS ===
+
+/**
+ * Gets the start of the current day (midnight) in the user's local timezone.
+ * @returns {Date} A Date object set to today at 00:00:00.
+ */
+function getStartOfToday() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today;
+}
+
+/**
+ * Checks all To-Dos for upcoming due dates and returns an array of notifications.
+ * @param {Array} todos - The current list of todo items.
+ * @returns {Array} An array of notification objects.
+ */
+function checkTodoNotifications(todos) {
+    const notifications = [];
+    const today = getStartOfToday().getTime();
+
+    todos.forEach(todo => {
+        // Skip completed tasks or tasks without a date
+        if (todo.completed || !todo.date) {
+            return;
+        }
+
+        try {
+            // Parse date as local timezone (e.g., '2023-10-28' becomes Oct 28 at 00:00 local time)
+            const dueDate = new Date(todo.date + 'T00:00:00').getTime();
+            const diffTime = dueDate - today;
+            const diffDays = Math.round(diffTime / DAY_IN_MS);
+
+            let message = '';
+            let type = '';
+
+            // 7, 3, 1 day warnings
+            if (diffDays <= 7 && diffDays > 3) {
+                message = `This task is due in ${diffDays} days.`;
+                type = 'todo-soon';
+            } else if (diffDays <= 3 && diffDays > 0) {
+                message = `This task is due in ${diffDays} ${diffDays === 1 ? 'day' : 'days'}!`;
+                type = 'todo-urgent';
+            } else if (diffDays === 0) {
+                message = 'This task is due TODAY!';
+                type = 'todo-urgent';
+            } else if (diffDays < 0) {
+                message = `This task was due ${Math.abs(diffDays)} ${Math.abs(diffDays) === 1 ? 'day' : 'days'} ago.`;
+                type = 'todo-urgent';
+            }
+
+            if (message) {
+                notifications.push({
+                    id: `todo-${todo.id}`,
+                    title: todo.text,
+                    message: message,
+                    type: type,
+                    daysLeft: diffDays
+                });
+            }
+        } catch (e) {
+            console.error("Error parsing todo date:", e, todo);
+        }
+    });
+    return notifications;
+}
+
+/**
+ * Checks all "Food" wishes for upcoming expiration dates.
+ * @param {Array} wishes - The current list of wish items.
+ * @returns {Array} An array of notification objects.
+ */
+function checkWishNotifications(wishes) {
+    const notifications = [];
+    const today = getStartOfToday().getTime();
+
+    wishes.forEach(wish => {
+        // Skip purchased, non-food, or items without an expiry date
+        if (wish.purchased || wish.category !== 'Food' || !wish.foodDetails || !wish.foodDetails.expiry) {
+            return;
+        }
+
+        try {
+            const expiryDate = new Date(wish.foodDetails.expiry + 'T00:00:00').getTime();
+            const diffTime = expiryDate - today;
+            const diffDays = Math.round(diffTime / DAY_IN_MS);
+
+            let message = '';
+            let type = '';
+
+            // 1 month (30 days), 7, 3, 1 day warnings
+            if (diffDays <= 30 && diffDays > 7) {
+                message = `This item expires in ${diffDays} days.`;
+                type = 'wish-soon';
+            } else if (diffDays <= 7 && diffDays > 3) {
+                message = `This item expires in ${diffDays} days!`;
+                type = 'wish-urgent';
+            } else if (diffDays <= 3 && diffDays > 0) {
+                message = `Expires in ${diffDays} ${diffDays === 1 ? 'day' : 'days'}!`;
+                type = 'wish-urgent';
+            } else if (diffDays === 0) {
+                message = 'This item expires TODAY!';
+                type = 'wish-urgent';
+            } else if (diffDays < 0) {
+                message = `This item expired ${Math.abs(diffDays)} ${Math.abs(diffDays) === 1 ? 'day' : 'days'} ago.`;
+                type = 'wish-urgent';
+            }
+
+            if (message) {
+                notifications.push({
+                    id: `wish-${wish.id}`,
+                    title: wish.item,
+                    message: message,
+                    type: type,
+                    daysLeft: diffDays
+                });
+            }
+        } catch (e) {
+            console.error("Error parsing wish date:", e, wish);
+        }
+    });
+    return notifications;
+}
+
+/**
+ * Main function to check all notifications, sort them, and update the UI.
+ */
+function checkNotifications() {
+    const todoNotifications = checkTodoNotifications(currentTodos);
+    const wishNotifications = checkWishNotifications(currentWishes);
+
+    // Combine and sort notifications by urgency (daysLeft ascending)
+    allNotifications = [...todoNotifications, ...wishNotifications];
+    allNotifications.sort((a, b) => a.daysLeft - b.daysLeft);
+
+    updateNotificationUI(allNotifications);
+}
+
+/**
+ * Clears all current notifications from the UI.
+ */
+function clearAllNotifications() {
+    allNotifications = [];
+    updateNotificationUI(allNotifications);
+    // The modal will now show the "no notifications" message.
+    // The user can close it manually.
 }
 
 
