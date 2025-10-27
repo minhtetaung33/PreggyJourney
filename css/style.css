@@ -232,7 +232,7 @@ h1, h2, h3 {
     opacity: 0.7;
 }
 
-/* Animation for modal */
+/* Animation for modal content pop-in */
 #meal-modal.active #modal-content,
 #manage-meals-modal.active #manage-modal-content,
 #edit-meal-modal.active #edit-modal-content,
@@ -246,7 +246,8 @@ h1, h2, h3 {
 #nutrition-history-modal.active #nutrition-history-modal-content,
 #edit-day-modal.active #edit-day-modal-content,
 #image-link-modal.active #image-link-modal-content,
-#baby-message-modal.active #baby-message-content, /* Ensure animation applies */
+/* FIX: Changed #baby-message-content to #baby-message-modal-content */
+#baby-message-modal.active #baby-message-modal-content,
 #ai-meal-modal.active #ai-meal-modal-content,
 #mindful-reflection-modal.active #mindful-reflection-modal-content, /* NEW MODAL */
 #edit-wish-modal.active #edit-wish-modal-content, /* ADDED THIS LINE FOR EDIT WISH MODAL */
@@ -442,7 +443,7 @@ h1, h2, h3 {
 }
 
 /* Ensure modal content is above the background glow/patterns */
-#baby-message-content {
+#baby-message-modal-content { /* Changed from baby-message-content */
     position: relative;
     z-index: 10;
 }
