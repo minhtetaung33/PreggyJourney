@@ -170,8 +170,10 @@ export const cacheDomElements = () => {
     elements.notificationBellBtn = document.getElementById('notification-bell-btn');
     elements.notificationBadge = document.getElementById('notification-badge');
     elements.notificationModal = document.getElementById('notification-modal');
-    elements.notificationCloseBtn = document.getElementById('notification-close-btn');
-    elements.notificationList = document.getElementById('notification-list');
+    // --- FIX 1: Match the ID from index.html ---
+    elements.notificationCloseBtn = document.getElementById('notification-modal-close-btn'); 
+    // --- FIX 2: Match the ID from index.html ---
+    elements.notificationList = document.getElementById('notification-list-container'); 
     elements.notificationClearAllBtn = document.getElementById('notification-clear-all-btn');
 };
 
