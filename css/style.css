@@ -246,10 +246,11 @@ h1, h2, h3 {
 #nutrition-history-modal.active #nutrition-history-modal-content,
 #edit-day-modal.active #edit-day-modal-content,
 #image-link-modal.active #image-link-modal-content,
-#baby-message-modal.active #baby-message-modal-content, /* Ensure animation applies */
+#baby-message-modal.active #baby-message-content, /* Ensure animation applies */
 #ai-meal-modal.active #ai-meal-modal-content,
 #mindful-reflection-modal.active #mindful-reflection-modal-content, /* NEW MODAL */
-#edit-wish-modal.active #edit-wish-modal-content { /* ADDED THIS LINE FOR EDIT WISH MODAL */
+#edit-wish-modal.active #edit-wish-modal-content, /* ADDED THIS LINE FOR EDIT WISH MODAL */
+#notification-modal.active #notification-modal-content /* NEW NOTIFICATION MODAL */ {
     transform: scale(1);
     opacity: 1;
 }
@@ -842,46 +843,46 @@ h1, h2, h3 {
 }
 
 /* === NEW NOTIFICATION STYLES === */
-
-/* Notification Badge */
-@keyframes badgePulse {
-    0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } /* red-500 */
-    50% { transform: scale(1.1); box-shadow: 0 0 0 5px rgba(239, 68, 68, 0); }
+@keyframes badge-pulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 100, 100, 0.7); }
+    50% { transform: scale(1.1); box-shadow: 0 0 5px 5px rgba(255, 100, 100, 0); }
 }
 
-#notification-badge:not(.hidden) { /* Apply animation only when visible */
-    animation: badgePulse 1.5s infinite cubic-bezier(0.66, 0, 0, 1);
+#notification-badge {
+    animation: badge-pulse 1.5s infinite;
 }
 
-/* Notification Modal Items */
-.notification-item {
-    padding: 0.75rem 1rem;
+/* Notification Modal Specific Scrollbar */
+#notification-modal-content .modal-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+#notification-modal-content .modal-scroll::-webkit-scrollbar-thumb {
+    background: rgba(167, 139, 250, 0.4);
+}
+#notification-modal-content .modal-scroll::-webkit-scrollbar-track {
     background: rgba(255, 255, 255, 0.05);
-    border-radius: 0.75rem;
-    border-left: 4px solid transparent; /* Placeholder for color */
-    transition: background-color 0.2s ease;
 }
 
-.notification-item:hover {
-    background: rgba(255, 255, 255, 0.1);
+/* Notification Item Styling */
+.notification-item {
+    padding: 0.75rem 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    gap: 0.75rem;
 }
-
-.notification-item.type-todo-soon { border-left-color: #fbbf24; } /* amber-400 */
-.notification-item.type-todo-urgent { border-left-color: #f87171; } /* red-400 */
-.notification-item.type-wish-soon { border-left-color: #facc15; } /* yellow-400 */
-.notification-item.type-wish-urgent { border-left-color: #fb923c; } /* orange-400 */
-
-/* Icons within notification items */
+.notification-item:last-child {
+    border-bottom: none;
+}
 .notification-item svg {
-    width: 1.25rem; /* 20px */
-    height: 1.25rem;
-    margin-right: 0.75rem; /* 12px */
+    width: 1.5rem; /* 24px */
+    height: 1.5rem; /* 24px */
     flex-shrink: 0;
+    margin-top: 2px; /* Align icon better with text */
 }
 
-/* Animation for notification modal (reusing existing modal animation class) */
-#notification-modal.active #notification-modal-content {
-    transform: scale(1);
-    opacity: 1;
+/* Optional: Different colors/styles based on type */
+.notification-item.type-todo-urgent p:first-child {
+    color: #fecaca; /* red-200 for urgent */
 }
-
+.notification-item.type-wish-urgent p:first-child {
+     color: #fde68a; /* yellow-200 for urgent */
+}
