@@ -641,77 +641,197 @@
                             </div>
                         </div>
 
-                        <!-- Right Column: Little Wishes -->
-                        <!-- Added anim-card class -->
-                        <div class="glass-card anim-card p-4 md:p-6">
-                            <div id="wishlist-header" class="flex justify-between items-center mb-4 cursor-pointer">
-                                <h3 class="text-2xl font-bold">🎁 Little Wishes</h3>
-                                <svg id="wishlist-toggle-icon" class="w-6 h-6 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </div>
+                        <!-- 
+                        ============================================================
+                        === RIGHT COLUMN - WRAPPED IN A DIV FOR STACKING
+                        ============================================================
+                        -->
+                        <div class="space-y-8">
+                            <!-- Right Column: Little Wishes (Original Card) -->
+                            <!-- Added anim-card class -->
+                            <div class="glass-card anim-card p-4 md:p-6">
+                                <div id="wishlist-header" class="flex justify-between items-center mb-4 cursor-pointer">
+                                    <h3 class="text-2xl font-bold">🎁 Little Wishes</h3>
+                                    <svg id="wishlist-toggle-icon" class="w-6 h-6 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </div>
 
-                            <div id="collapsible-wishlist-content" class="hidden">
-                                <div class="mb-4">
-                                    <div class="flex justify-between text-sm mb-1">
-                                        <span>Purchased</span>
-                                        <span id="wishlist-progress-text">0/0 Items</span>
+                                <div id="collapsible-wishlist-content" class="hidden">
+                                    <div class="mb-4">
+                                        <div class="flex justify-between text-sm mb-1">
+                                            <span>Purchased</span>
+                                            <span id="wishlist-progress-text">0/0 Items</span>
+                                        </div>
+                                        <div class="w-full bg-gray-700 rounded-full h-2.5">
+                                            <div id="wishlist-progress-bar" class="bg-gradient-to-r from-teal-400 to-blue-500 h-2.5 rounded-full" style="width: 0%; transition: width 0.5s ease;"></div>
+                                        </div>
                                     </div>
-                                    <div class="w-full bg-gray-700 rounded-full h-2.5">
-                                        <div id="wishlist-progress-bar" class="bg-gradient-to-r from-teal-400 to-blue-500 h-2.5 rounded-full" style="width: 0%; transition: width 0.5s ease;"></div>
+                                    <div id="wishlist-container" class="space-y-3 max-h-[28rem] overflow-y-auto modal-scroll pr-2 mb-4"></div>
+                                </div>
+                                
+                                <div class="pt-4 border-t border-white/10 space-y-3">
+                                    <input type="text" id="new-wish-item" class="meal-select text-sm" placeholder="Item name (e.g., Baby Monitor)">
+                                    <select id="new-wish-category" class="meal-select text-sm">
+                                        <!-- ADDED EMOJIS -->
+                                        <option value="Baby Care">🍼 Baby Care</option>
+                                        <option value="Nursery">🧸 Nursery</option>
+                                        <option value="Hospital Bag">👜 Hospital Bag</option>
+                                        <option value="Health">🧘‍♀️ Health</option>
+                                        <option value="Postpartum">💖 Postpartum</option> 
+                                        <option value="Food">🥕 Food</option>
+                                        <option value="Custom">✨ Custom</option>
+                                    </select>
+                                    <input type="text" id="custom-category-input" class="meal-select text-sm hidden" placeholder="Your custom category...">
+                                    
+                                    <!-- NEW FOOD FIELDS CONTAINER -->
+                                    <div id="new-wish-food-fields" class="hidden space-y-3 pt-3 mt-3 border-t border-white/10">
+                                        <p class="text-sm font-semibold text-indigo-200">Food Details</p>
+                                        <select id="new-wish-food-type" class="meal-select text-sm">
+                                            <option value="">Select food type...</option>
+                                            <option value="Meat">🥩 Meat</option>
+                                            <option value="Fruit">🍎 Fruit</option>
+                                            <option value="Vege">🥦 Vege</option>
+                                            <option value="Snack">🥨 Snack</option>
+                                            <option value="Diary">🧀 Diary</option>
+                                            <!-- ADDED Grain and Soup -->
+                                            <option value="Grain">🍚 Grain</option> 
+                                            <option value="Soup">🍲 Soup</option>
+                                            <option value="Dog">🐶 Dog Food</option>
+                                            <option value="Drinks">🥤 Drinks</option>
+                                        </select>
+                                        <label for="new-wish-food-expiry" class="text-sm text-gray-300 -mb-2 block">Expiration Date:</label>
+                                        <input type="date" id="new-wish-food-expiry" class="date-input text-sm">
+                                    </div>
+                                    <!-- END NEW FOOD FIELDS CONTAINER -->
+
+                                    <div class="flex gap-2">
+                                        <input type="text" id="new-wish-price" class="meal-select text-sm w-1/2" placeholder="Price ($)">
+                                        <input type="text" id="new-wish-link" class="meal-select text-sm w-1/2" placeholder="Store Link">
+                                    </div>
+                                    <button id="add-wish-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Add Wish</button>
+                                </div>
+                                <div class="mt-6 text-center">
+                                    <p class="mb-2 text-indigo-200">Let AI suggest items!</p>
+                                    <form id="ai-wish-form" class="flex gap-2">
+                                        <input type="text" id="ai-wish-prompt" class="meal-select text-sm flex-grow" placeholder="e.g., Hospital bag for third trimester">
+                                        <button type="submit" class="btn-secondary font-semibold py-2 px-4 rounded-lg">Go</button>
+                                    </form>
+                                </div>
+                                <div id="ai-wish-suggestions-container" class="mt-4 space-y-3"></div>
+                            </div>
+                        
+                            <!-- 
+                            ============================================================
+                            === NEW: AI BABY NAME GENERATOR CARD
+                            ============================================================
+                            -->
+                            <div id="dream-name-card" class="glass-card anim-card p-4 md:p-6">
+                                <!-- Header -->
+                                <div class="flex justify-between items-center mb-4">
+                                    <h3 class="text-2xl font-bold">🍼 Dream Name</h3>
+                                    <button id="name-favorites-toggle-btn" class="btn-secondary text-sm font-semibold py-2 px-4 rounded-lg">
+                                        ❤️ My Favorites (0)
+                                    </button>
+                                </div>
+
+                                <!-- Collapsible Favorites List -->
+                                <div id="name-favorites-container" class="hidden mb-6 pt-4 border-t border-white/10">
+                                    <h4 class="font-bold text-lg mb-3">Saved Names</h4>
+                                    <div id="name-favorites-list" class="space-y-2 max-h-48 overflow-y-auto modal-scroll pr-2">
+                                        <p class="text-gray-400 text-sm text-center">Your favorite names will appear here.</p>
+                                        <!-- Favorite names will be populated by JS -->
                                     </div>
                                 </div>
-                                <div id="wishlist-container" class="space-y-3 max-h-[28rem] overflow-y-auto modal-scroll pr-2 mb-4"></div>
-                            </div>
-                            
-                            <div class="pt-4 border-t border-white/10 space-y-3">
-                                 <input type="text" id="new-wish-item" class="meal-select text-sm" placeholder="Item name (e.g., Baby Monitor)">
-                                 <select id="new-wish-category" class="meal-select text-sm">
-                                     <!-- ADDED EMOJIS -->
-                                     <option value="Baby Care">🍼 Baby Care</option>
-                                     <option value="Nursery">🧸 Nursery</option>
-                                     <option value="Hospital Bag">👜 Hospital Bag</option>
-                                     <option value="Health">🧘‍♀️ Health</option>
-                                     <option value="Postpartum">💖 Postpartum</option> 
-                                     <option value="Food">🥕 Food</option>
-                                     <option value="Custom">✨ Custom</option>
-                                 </select>
-                                 <input type="text" id="custom-category-input" class="meal-select text-sm hidden" placeholder="Your custom category...">
-                                 
-                                 <!-- NEW FOOD FIELDS CONTAINER -->
-                                 <div id="new-wish-food-fields" class="hidden space-y-3 pt-3 mt-3 border-t border-white/10">
-                                     <p class="text-sm font-semibold text-indigo-200">Food Details</p>
-                                     <select id="new-wish-food-type" class="meal-select text-sm">
-                                         <option value="">Select food type...</option>
-                                         <option value="Meat">🥩 Meat</option>
-                                         <option value="Fruit">🍎 Fruit</option>
-                                         <option value="Vege">🥦 Vege</option>
-                                         <option value="Snack">🥨 Snack</option>
-                                         <option value="Diary">🧀 Diary</option>
-                                         <!-- ADDED Grain and Soup -->
-                                         <option value="Grain">🍚 Grain</option> 
-                                         <option value="Soup">🍲 Soup</option>
-                                         <option value="Dog">🐶 Dog Food</option>
-                                         <option value="Drinks">🥤 Drinks</option>
-                                     </select>
-                                     <label for="new-wish-food-expiry" class="text-sm text-gray-300 -mb-2 block">Expiration Date:</label>
-                                     <input type="date" id="new-wish-food-expiry" class="date-input text-sm">
-                                 </div>
-                                 <!-- END NEW FOOD FIELDS CONTAINER -->
 
-                                 <div class="flex gap-2">
-                                     <input type="text" id="new-wish-price" class="meal-select text-sm w-1/2" placeholder="Price ($)">
-                                     <input type="text" id="new-wish-link" class="meal-select text-sm w-1/2" placeholder="Store Link">
-                                 </div>
-                                 <button id="add-wish-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Add Wish</button>
+                                <!-- Generator Form -->
+                                <div class="space-y-4">
+                                    <!-- Gender Selector -->
+                                    <div>
+                                        <label class="block text-sm font-semibold mb-2">Gender</label>
+                                        <div id="name-gender-selector" class="flex flex-wrap gap-2">
+                                            <button class="btn-secondary flex-grow text-sm py-2 px-3 rounded-lg" data-gender="Boy">Boy 👦</button>
+                                            <button class="btn-secondary flex-grow text-sm py-2 px-3 rounded-lg" data-gender="Girl">Girl 👧</button>
+                                            <button class="btn-secondary flex-grow text-sm py-2 px-3 rounded-lg" data-gender="Neutral">Neutral 🌈</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Filters Grid -->
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <!-- Origin / Language -->
+                                        <div>
+                                            <label for="name-origin-select" class="block text-sm font-semibold mb-2">Origin / Language</label>
+                                            <select id="name-origin-select" class="meal-select text-sm">
+                                                <option value="">Any Origin</option>
+                                                <option value="English">English</option>
+                                                <option value="Burmese">Burmese</option>
+                                                <option value="Japanese">Japanese</option>
+                                                <option value="Biblical">Biblical</option>
+                                                <option value="Modern">Modern</option>
+                                                <option value="Hong Kong">Hong Kong</option>
+                                                <option value="Korean">Korean</option>
+                                                <option value="Custom">Custom...</option>
+                                            </select>
+                                            <input type="text" id="name-origin-custom" class="meal-select text-sm mt-2 hidden" placeholder="Type custom origin...">
+                                        </div>
+
+                                        <!-- Style / Mood -->
+                                        <div>
+                                            <label for="name-style-select" class="block text-sm font-semibold mb-2">Style / Mood</label>
+                                            <select id="name-style-select" class="meal-select text-sm">
+                                                <option value="">Any Style</option>
+                                                <option value="Classic">Classic</option>
+                                                <option value="Unique">Unique</option>
+                                                <option value="Trendy">Trendy</option>
+                                                <option value="Short & Cute">Short & Cute</option>
+                                                <option value="Royal">Royal</option>
+                                                <option value="Nature-inspired">Nature-inspired</option>
+                                                <option value="Custom">Custom...</option>
+                                            </select>
+                                            <input type="text" id="name-style-custom" class="meal-select text-sm mt-2 hidden" placeholder="Type custom style...">
+                                        </div>
+                                    </div>
+
+                                    <!-- Meaning Filter -->
+                                    <div>
+                                        <label for="name-meaning-input" class="block text-sm font-semibold mb-2">Meaning / Vibe</label>
+                                        <input type="text" id="name-meaning-input" class="meal-select text-sm" placeholder="e.g., 'peace', 'strong', 'light'">
+                                    </div>
+
+                                    <!-- Syllable Count -->
+                                    <div>
+                                        <label class="block text-sm font-semibold mb-2">Syllables</label>
+                                        <div id="name-syllable-selector" class="flex flex-wrap gap-3">
+                                            <label class="flex items-center gap-2"><input type="radio" name="syllables" value="" class="name-radio" checked> Any</label>
+                                            <label class="flex items-center gap-2"><input type="radio" name="syllables" value="1" class="name-radio"> 1</label>
+                                            <label class="flex items-center gap-2"><input type="radio" name="syllables" value="2" class="name-radio"> 2</label>
+                                            <label class="flex items-center gap-2"><input type="radio" name="syllables" value="3+" class="name-radio"> 3+</label>
+                                        </div>
+                                    </div>
+
+                                    <!-- Action Buttons -->
+                                    <div class="grid grid-cols-2 gap-3 pt-4 border-t border-white/10">
+                                        <button id="name-random-btn" class="btn-secondary font-semibold py-3 px-4 rounded-lg text-sm">
+                                            🔀 Randomize
+                                        </button>
+                                        <button id="name-generate-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
+                                            <span id="name-generate-btn-text">Generate Names</span>
+                                            <svg id="name-generate-loader" class="animate-spin ml-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Results Display -->
+                                <div id="name-results-container" class="mt-6 pt-6 border-t border-white/10 space-y-3">
+                                    <!-- AI-generated names will appear here -->
+                                    <p class="text-gray-400 text-sm text-center">Your name suggestions will appear here.</p>
+                                </div>
+                                
+                                <!-- Generate Again Button (appears after first results) -->
+                                <button id="name-generate-again-btn" class="w-full btn-secondary font-semibold py-2 px-4 rounded-lg mt-4 hidden">
+                                    🔁 Generate Again
+                                </button>
                             </div>
-                             <div class="mt-6 text-center">
-                                <p class="mb-2 text-indigo-200">Let AI suggest items!</p>
-                                <form id="ai-wish-form" class="flex gap-2">
-                                    <input type="text" id="ai-wish-prompt" class="meal-select text-sm flex-grow" placeholder="e.g., Hospital bag for third trimester">
-                                    <button type="submit" class="btn-secondary font-semibold py-2 px-4 rounded-lg">Go</button>
-                                </form>
-                            </div>
-                            <div id="ai-wish-suggestions-container" class="mt-4 space-y-3"></div>
                         </div>
+                        
                     </div>
                 </div>
 
