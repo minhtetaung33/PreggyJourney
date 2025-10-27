@@ -46,7 +46,7 @@ body.loaded #page-load-overlay {
     bottom: -150px;
     border-radius: 50%;
     /* Soft, transparent bubble color */
-    background: rgba(220, 235, 255, 0.1); 
+    background: rgba(220, 235, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.15);
     filter: blur(1px);
     animation: rise 15s infinite ease-in;
@@ -306,10 +306,13 @@ h1, h2, h3 {
 }
 
 /* --- NEW: Active state for icon buttons --- */
-.icon-btn.active {
+/* (Also reused for name generator buttons) */
+.icon-btn.active,
+#name-gender-selector .btn-secondary.active {
     background-color: rgba(167, 139, 250, 0.3);
     color: #fff;
     box-shadow: 0 0 8px rgba(167, 139, 250, 0.3);
+    border-color: rgba(167, 139, 250, 0.5); /* Added border for consistency */
 }
 
 .ai-insight {
@@ -781,4 +784,59 @@ h1, h2, h3 {
     /* Default color, will be changed by JS */
     background-color: #fff;
     box-shadow: 0 0 8px #fff;
+}
+
+/* === NEW AI BABY NAME GENERATOR STYLES === */
+
+/* Custom Radio Buttons for Syllables */
+.name-radio {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    margin-right: 0.3rem;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.name-radio:checked {
+    border-color: #a78bfa; /* purple-400 */
+}
+.name-radio:checked::before {
+    content: '';
+    display: block;
+    width: 0.5rem;
+    height: 0.5rem;
+    background-color: #a78bfa;
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Name Suggestion Card */
+.name-suggestion-card {
+    transition: background-color 0.2s ease-in-out;
+}
+.name-suggestion-card:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Favorite Button (Heart Icon) */
+.toggle-favorite-name-btn svg {
+    transition: fill 0.2s ease, color 0.2s ease;
+    color: #f871b3; /* pink-400 */
+}
+.toggle-favorite-name-btn:hover svg {
+    fill: rgba(248, 113, 179, 0.3); /* Lighter pink fill on hover */
+}
+.toggle-favorite-name-btn.is-favorite svg {
+    fill: #f871b3; /* Solid pink when favorited */
+    color: #f871b3;
+}
+.toggle-favorite-name-btn.is-favorite:hover svg {
+    fill: #ec4899; /* Darker pink on hover when favorited */
 }
