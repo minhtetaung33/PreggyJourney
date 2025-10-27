@@ -92,7 +92,7 @@ let wellnessDataForJourney = {};
 let activeReflectionId = null;
 let activeColor = 'pink';
 let activeTodoId = null;
-let activeWishId = null;
+let activeWishId = null; // Added for edit wish modal
 let showAllReflections = false;
 let activeReflectionImageUrl = null;
 
@@ -1636,13 +1636,24 @@ function checkTodoNotifications(todos) {
             }
 
             if (message) {
-                notifications.push({
+                // --- MODIFICATION START ---
+                const notificationData = {
                     id: `todo-${todo.id}`,
-                    title: todo.text,
-                    message: message,
+                    title: todo.text, // The main title (e.g., "First Check-Up")
+                    message: message,  // The urgency (e.g., "This task is due TODAY!")
                     type: type,
-                    daysLeft: diffDays
-                });
+                    daysLeft: diffDays,
+                    details: {} // Create an empty details object
+                };
+
+                // If it's an appointment, add all the appointment details
+                if (todo.category === 'Appointment' && todo.appointment) {
+                    notificationData.details.appointment = todo.appointment;
+                    notificationData.details.time = todo.time;
+                }
+                
+                notifications.push(notificationData);
+                // --- MODIFICATION END ---
             }
         } catch (e) {
             console.error("Error parsing todo date:", e, todo);
@@ -1693,13 +1704,18 @@ function checkWishNotifications(wishes) {
             }
 
             if (message) {
+                // --- MODIFICATION START ---
                 notifications.push({
                     id: `wish-${wish.id}`,
                     title: wish.item,
                     message: message,
                     type: type,
-                    daysLeft: diffDays
+                    daysLeft: diffDays,
+                    details: {
+                        food: wish.foodDetails // Add the food details object
+                    }
                 });
+                // --- MODIFICATION END ---
             }
         } catch (e) {
             console.error("Error parsing wish date:", e, wish);
