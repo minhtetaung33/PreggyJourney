@@ -840,3 +840,104 @@ h1, h2, h3 {
 .toggle-favorite-name-btn.is-favorite:hover svg {
     fill: #ec4899; /* Darker pink on hover when favorited */
 }
+
+/* ... existing code ... */
+
+/* === NEW AI BABY NAME GENERATOR STYLES === */
+
+/* Custom Radio Buttons for Syllables */
+.name-radio {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    margin-right: 0.3rem;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.name-radio:checked {
+    border-color: #a78bfa; /* purple-400 */
+}
+.name-radio:checked::before {
+    content: '';
+    display: block;
+    width: 0.5rem;
+    height: 0.5rem;
+    background-color: #a78bfa;
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Name Suggestion Card */
+.name-suggestion-card {
+    transition: background-color 0.2s ease-in-out;
+}
+.name-suggestion-card:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Favorite Button (Heart Icon) */
+.toggle-favorite-name-btn svg {
+    transition: fill 0.2s ease, color 0.2s ease;
+    color: #f871b3; /* pink-400 */
+}
+.toggle-favorite-name-btn:hover svg {
+    fill: rgba(248, 113, 179, 0.3); /* Lighter pink fill on hover */
+}
+.toggle-favorite-name-btn.is-favorite svg {
+    fill: #f871b3; /* Solid pink when favorited */
+    color: #f871b3;
+}
+.toggle-favorite-name-btn.is-favorite:hover svg {
+    fill: #ec4899; /* Darker pink on hover when favorited */
+}
+
+/* === NEW NOTIFICATION STYLES === */
+
+/* Notification Badge */
+@keyframes badgePulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } /* red-500 */
+    50% { transform: scale(1.1); box-shadow: 0 0 0 5px rgba(239, 68, 68, 0); }
+}
+
+#notification-badge:not(.hidden) { /* Apply animation only when visible */
+    animation: badgePulse 1.5s infinite cubic-bezier(0.66, 0, 0, 1);
+}
+
+/* Notification Modal Items */
+.notification-item {
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 0.75rem;
+    border-left: 4px solid transparent; /* Placeholder for color */
+    transition: background-color 0.2s ease;
+}
+
+.notification-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.notification-item.type-todo-soon { border-left-color: #fbbf24; } /* amber-400 */
+.notification-item.type-todo-urgent { border-left-color: #f87171; } /* red-400 */
+.notification-item.type-wish-soon { border-left-color: #facc15; } /* yellow-400 */
+.notification-item.type-wish-urgent { border-left-color: #fb923c; } /* orange-400 */
+
+/* Icons within notification items */
+.notification-item svg {
+    width: 1.25rem; /* 20px */
+    height: 1.25rem;
+    margin-right: 0.75rem; /* 12px */
+    flex-shrink: 0;
+}
+
+/* Animation for notification modal (reusing existing modal animation class) */
+#notification-modal.active #notification-modal-content {
+    transform: scale(1);
+    opacity: 1;
+}
