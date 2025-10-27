@@ -20,6 +20,16 @@ export const cacheDomElements = () => {
     elements.googleSignInBtn = document.getElementById('google-signin-btn');
     elements.authModalCloseBtn = document.getElementById('auth-modal-close-btn');
 
+    // NEW: Notification Elements
+    elements.notificationBellBtn = document.getElementById('notification-bell-btn');
+    elements.notificationBadge = document.getElementById('notification-badge');
+    elements.notificationModal = document.getElementById('notification-modal');
+    elements.notificationModalContent = document.getElementById('notification-modal-content');
+    elements.notificationListContainer = document.getElementById('notification-list-container');
+    elements.noNotificationsMessage = document.getElementById('no-notifications-message');
+    elements.notificationModalCloseBtn = document.getElementById('notification-modal-close-btn');
+    elements.notificationClearAllBtn = document.getElementById('notification-clear-all-btn'); // We'll add listener in journey.js
+
     // Tabs
     elements.mealPlanTab = document.getElementById('tab-meal-plan');
     elements.symptomTrackerTab = document.getElementById('tab-symptom-tracker');
@@ -348,3 +358,87 @@ const switchTab = (activeTab) => {
         playTabEntranceAnimation(tabs[activeTab].content);
     }
 };
+
+// === NEW NOTIFICATION MODAL FUNCTIONS ===
+
+/**
+ * Opens the notification modal with a smooth animation.
+ */
+export const openNotificationModal = () => {
+    if (!elements.notificationModal) return;
+    elements.notificationModal.classList.remove('hidden');
+    setTimeout(() => elements.notificationModal.classList.add('active'), 10);
+};
+
+/**
+ * Closes the notification modal with a smooth animation.
+ */
+export const closeNotificationModal = () => {
+    if (!elements.notificationModal) return;
+    elements.notificationModal.classList.remove('active');
+    setTimeout(() => elements.notificationModal.classList.add('hidden'), 300);
+};
+
+/**
+ * Updates the notification UI with a list of notifications.
+ * @param {Array<Object>} notifications - An array of notification objects.
+ */
+export const updateNotificationUI = (notifications = []) => {
+    if (!elements.notificationBadge || !elements.notificationListContainer || !elements.noNotificationsMessage) return;
+
+    // --- Update Badge ---
+    if (notifications.length > 0) {
+        elements.notificationBadge.textContent = notifications.length > 9 ? '9+' : notifications.length;
+        elements.notificationBadge.classList.remove('hidden');
+    } else {
+        elements.notificationBadge.classList.add('hidden');
+    }
+
+    // --- Update List ---
+    elements.notificationListContainer.innerHTML = ''; // Clear old list
+    if (notifications.length === 0) {
+        elements.noNotificationsMessage.classList.remove('hidden');
+    } else {
+        elements.noNotificationsMessage.classList.add('hidden');
+        notifications.forEach(notification => {
+            const item = document.createElement('div');
+            item.className = `notification-item flex items-start type-${notification.type}`;
+            
+            // Icon logic
+            let iconHtml = '';
+            if (notification.type.includes('todo')) {
+                iconHtml = `<svg class="text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002-2h2a2 2 0 002 2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>`;
+            } else if (notification.type.includes('wish')) {
+                iconHtml = `<svg class="text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zM8 8H6a2 2 0 100 4h2v6H6a2 2 0 100 4h2V8zm8 0h2a2 2 0 100-4h-2v6h2a2 2 0 100-4h-2V8zM8 5V3m8 2V3"></path></svg>`;
+            }
+
+            item.innerHTML = `
+                ${iconHtml}
+                <div class="flex-1">
+                    <p class="font-semibold text-white">${notification.title}</p>
+                    <p class="text-sm text-gray-300">${notification.message}</p>
+                </div>
+            `;
+            elements.notificationListContainer.appendChild(item);
+        });
+    }
+};
+
+// --- Setup Notification Listeners ---
+// We can set these up here since ui.js is guaranteed to run after cacheDomElements
+document.addEventListener('DOMContentLoaded', () => {
+    // Wait for elements to be cached
+    if (elements.notificationBellBtn) {
+        elements.notificationBellBtn.addEventListener('click', openNotificationModal);
+    }
+    if (elements.notificationModalCloseBtn) {
+        elements.notificationModalCloseBtn.addEventListener('click', closeNotificationModal);
+    }
+    if (elements.notificationModal) {
+        elements.notificationModal.addEventListener('click', (e) => {
+            if (e.target === elements.notificationModal) {
+                closeNotificationModal();
+            }
+        });
+    }
+});
