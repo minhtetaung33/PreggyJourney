@@ -468,8 +468,83 @@
                             </div>
                         </div>
                         
-                        <!-- Item 4: Daily Summary -->
-                        <div id="daily-summary-card" class="glass-card anim-card p-4 md:p-6 transition-colors duration-1000">
+                        <!-- 
+                        ============================================================
+                        === NEW PREGGY STEPS CARD ===
+                        ============================================================
+                        -->
+                        <div class="glass-card anim-card p-4 md:p-6">
+                            <h3 class="text-2xl font-bold mb-4">🏃‍♀️ Preggy Steps</h3>
+                            
+                            <!-- Main Display -->
+                            <div class="w-full h-48 bg-white/5 rounded-lg flex flex-col items-center justify-center mb-4 relative overflow-hidden">
+                                <span id="preggy-timer-display" class="font-bold text-6xl text-white" style="text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);">00:00:00</span>
+                                <span id="preggy-calories-display" class="font-semibold text-lg text-yellow-300">~0 kcal</span>
+                            </div>
+
+                            <div class="space-y-4">
+                                <!-- Timer Controls -->
+                                <div class="flex items-center justify-center gap-4" id="preggy-controls">
+                                    <button id="preggy-play-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg w-28">
+                                        Start
+                                    </button>
+                                    <button id="preggy-pause-btn" class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-6 rounded-lg w-28 hidden">
+                                        Pause
+                                    </button>
+                                    <button id="preggy-stop-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg w-28 hidden">
+                                        Stop
+                                    </button>
+                                </div>
+                                
+                                <!-- Manual Input Toggle -->
+                                <div class="text-center">
+                                    <button id="preggy-manual-toggle-btn" class="text-sm text-indigo-300 hover:text-white transition-colors">Log Manually Instead?</button>
+                                </div>
+
+                                <!-- Activity Selector -->
+                                <div>
+                                    <label for="preggy-activity-select" class="block text-sm font-semibold mb-2">Activity Type</label>
+                                    <select id="preggy-activity-select" class="meal-select text-sm">
+                                        <option value="walking">Walking 🚶</option>
+                                        <option value="yoga">Yoga 🧘‍♀️</option>
+                                        <option value="stretching">Stretching 🧍‍♀️</option>
+                                        <option value="light_exercise">Light Exercise 💪</option>
+                                        <option value="other">Other ✨</option>
+                                    </select>
+                                </div>
+
+                                <!-- Intensity Slider -->
+                                <div>
+                                    <label for="preggy-intensity-slider" class="block text-sm font-semibold mb-2">Intensity</label>
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-xs text-gray-400">Light</span>
+                                        <input type="range" id="preggy-intensity-slider" min="1" max="5" value="3" class="flex-grow">
+                                        <span class="text-xs text-gray-400">Heavy</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Manual Input Form (hidden by default) -->
+                                <div id="preggy-manual-form" class="hidden space-y-3 pt-3 border-t border-white/10">
+                                    <div class="flex items-center gap-3">
+                                        <label for="preggy-manual-input" class_alias="font-semibold">Duration (min):</label>
+                                        <input type="number" id="preggy-manual-input" class="meal-select text-sm flex-grow" placeholder="e.g., 25" min="1">
+                                    </div>
+                                    <button id="preggy-manual-save-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg">
+                                        Save Manual Log
+                                    </button>
+                                </div>
+
+                            </div>
+                        </div>
+                        <!-- === END PREGGY STEPS CARD === -->
+
+
+                        <!-- 
+                        ============================================================
+                        === ITEM 5 (was 4): Daily Summary - ADDED lg:col-span-2
+                        ============================================================
+                        -->
+                        <div id="daily-summary-card" class="glass-card anim-card p-4 md:p-6 transition-colors duration-1000 lg:col-span-2">
                             <h3 class="text-2xl font-bold mb-4">📅 Daily Summary</h3>
                             
                             <div class="relative w-full h-56 flex items-center justify-center mb-4">
@@ -500,6 +575,11 @@
                                 <div class="flex justify-between items-center text-sm">
                                     <span class="font-semibold">💖 Connection:</span>
                                     <span id="summary-meditation-level" class="font-bold text-lg text-pink-300">0 min</span>
+                                </div>
+                                <!-- NEW: Preggy Steps row to be added by ui.js/calm-space.js, but let's add it here for completeness -->
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="font-semibold">🏃‍♀️ Movement:</span>
+                                    <span id="summary-movement-level" class="font-bold text-lg text-green-300">0 min</span>
                                 </div>
                             </div>
 
