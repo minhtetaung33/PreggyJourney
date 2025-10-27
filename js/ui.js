@@ -359,6 +359,22 @@ const switchTab = (activeTab) => {
     }
 };
 
+// === Helper Functions for Formatting (Can be moved from journey.js if preferred) ===
+const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString + 'T00:00:00'); // Adjust for timezone issues
+    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }); // Added year
+};
+
+const formatTime = (timeString) => {
+    if (!timeString) return '';
+    const [hours, minutes] = timeString.split(':');
+    const date = new Date();
+    date.setHours(hours, minutes);
+    return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', hour12: true });
+};
+
+
 // === NEW NOTIFICATION MODAL FUNCTIONS ===
 
 /**
@@ -405,9 +421,7 @@ const closeNotificationModal = () => {
  * @param {Array} notifications - Sorted array of notification objects.
  */
 export const updateNotificationUI = (notifications) => {
-    // --- DEBUGGING ---
     console.log("updateNotificationUI called with", notifications.length, "notifications.");
-    // --- END DEBUGGING ---
     if (!elements.notificationBadge || !elements.notificationList) {
         console.error("Notification UI elements (badge or list) not found.");
         return;
@@ -424,28 +438,58 @@ export const updateNotificationUI = (notifications) => {
     // Populate list
     elements.notificationList.innerHTML = ''; // Clear previous list
     if (notifications.length === 0) {
-        elements.notificationList.innerHTML = '<p class="text-center text-gray-400 p-4">No new notifications.</p>';
-        if (elements.notificationClearAllBtn) elements.notificationClearAllBtn.classList.add('hidden'); // Hide clear button if no notifications
+        elements.notificationList.innerHTML = '<p id="no-notifications-message" class="text-center text-gray-400 p-4">No new notifications.</p>';
+        if (elements.notificationClearAllBtn) elements.notificationClearAllBtn.classList.add('hidden');
     } else {
         notifications.forEach(noti => {
             const item = document.createElement('div');
-            // Add appropriate icon based on type prefix ('todo' or 'wish')
-            const isTodo = noti.type.startsWith('todo');
-            const iconSvg = isTodo
-              ? '<svg class="text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>' // Checklist icon
-              : '<svg class="text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'; // Clock icon (for expiry)
+            item.className = `notification-item flex items-start gap-3 p-3 border-b border-white/10 type-${noti.type}`; // Added gap, padding, border
 
-            item.className = `notification-item flex items-start type-${noti.type}`; // Add type class
+            // --- Determine Icon and Color ---
+            let iconSvg = '';
+            let titleColorClass = 'text-white'; // Default title color
+            const isTodo = noti.id.startsWith('todo');
+
+            if (isTodo) {
+                iconSvg = '<svg class="w-6 h-6 text-purple-300 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>'; // Checklist
+                if (noti.type === 'todo-urgent') titleColorClass = 'text-red-300';
+            } else { // It's a wish (food expiry)
+                iconSvg = '<svg class="w-6 h-6 text-yellow-300 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'; // Clock
+                if (noti.type === 'wish-urgent') titleColorClass = 'text-yellow-300';
+            }
+
+            // --- Build Details HTML ---
+            let detailsHtml = '';
+            if (noti.details.appointment) {
+                const appt = noti.details.appointment;
+                const apptType = appt.customType || appt.type || 'Appointment';
+                const apptName = [appt.fname, appt.lname].filter(Boolean).join(' ');
+                const apptTime = formatTime(noti.details.time);
+
+                detailsHtml += `<p class="text-xs text-indigo-300 font-semibold mt-1 mb-1">${apptType} ${apptTime ? `at ${apptTime}` : ''}</p>`;
+                if (apptName) detailsHtml += `<p class="text-xs text-gray-400"><span class="font-medium text-gray-300">With:</span> ${apptName}</p>`;
+                if (appt.address) detailsHtml += `<p class="text-xs text-gray-400"><span class="font-medium text-gray-300">At:</span> ${appt.address}</p>`;
+                if (appt.contact) detailsHtml += `<p class="text-xs text-gray-400"><span class="font-medium text-gray-300">Call:</span> ${appt.contact}</p>`;
+                 if (appt.email) detailsHtml += `<p class="text-xs text-gray-400"><span class="font-medium text-gray-300">Email:</span> ${appt.email}</p>`;
+            } else if (noti.details.food) {
+                const food = noti.details.food;
+                 detailsHtml += `<p class="text-xs text-indigo-300 font-semibold mt-1 mb-1">Type: ${food.type || 'Food Item'}</p>`;
+                if(food.expiry) detailsHtml += `<p class="text-xs text-yellow-400 font-semibold">Expires: ${formatDate(food.expiry)}</p>`;
+            }
+
+
+            // --- Combine into Inner HTML ---
             item.innerHTML = `
                 ${iconSvg}
-                <div class="flex-1">
-                    <p class="font-semibold text-sm break-words">${noti.title}</p>
-                    <p class="text-xs text-gray-400">${noti.message}</p>
+                <div class="flex-1 min-w-0">
+                    <p class="font-bold text-base break-words ${titleColorClass}">${noti.title}</p>
+                    <p class="text-sm font-medium ${noti.daysLeft <= 0 ? 'text-red-400' : 'text-gray-300'}">${noti.message}</p>
+                    ${detailsHtml ? `<div class="mt-2 pl-1 border-l-2 border-white/10 space-y-0.5">${detailsHtml}</div>` : ''}
                 </div>
             `;
             elements.notificationList.appendChild(item);
         });
-        if (elements.notificationClearAllBtn) elements.notificationClearAllBtn.classList.remove('hidden'); // Show clear button
+        if (elements.notificationClearAllBtn) elements.notificationClearAllBtn.classList.remove('hidden');
     }
 };
 
