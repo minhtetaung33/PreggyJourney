@@ -24,6 +24,34 @@ function formatTime(seconds) {
     return `${Math.floor(safeSeconds / 60)}:${(safeSeconds % 60).toString().padStart(2, '0')}`;
 }
 
+// --- NEW: Helper for HH:MM:SS ---
+function formatTimeHHMMSS(totalSeconds) {
+    const safeSeconds = Math.max(0, Math.floor(totalSeconds));
+    const hours = Math.floor(safeSeconds / 3600);
+    const minutes = Math.floor((safeSeconds % 3600) / 60);
+    const seconds = safeSeconds % 60;
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+}
+
+// --- NEW: Preggy Steps Calorie Data ---
+const CALORIE_DATA = {
+    base: { // Approx. cal/min for a 150lb person at moderate intensity
+        walking: 4.0,
+        yoga: 3.0,
+        stretching: 2.5,
+        light_exercise: 3.5,
+        other: 2.0
+    },
+    intensity: { // Multiplier
+        '1': 0.8, // Light
+        '2': 0.9,
+        '3': 1.0, // Moderate
+        '4': 1.2,
+        '5': 1.5  // Heavy
+    }
+};
+
+
 // --- Data from Instructions ---
 // *** UPDATED with more detailed instructions ***
 const breathingData = {
@@ -376,6 +404,12 @@ let currentStretchPoseIndex = 0;
 let isStretchPaused = true; // Start in paused state
 // --- END UPDATED ---
 
+// --- NEW: Preggy Steps State Variables ---
+let activePreggyTimer = null;
+let preggyTimeElapsed = 0; // in seconds
+let isPreggyTimerPaused = false; // Timer is not running initially
+// --- END NEW ---
+
 let currentBreathingCycle;
 let currentBreathingStep = 0;
 let currentMeditationInstructions = [];
@@ -439,6 +473,14 @@ export function initializeCalmSpace(uid) {
         console.error("Calm Space: Could not find stretch routine buttons to initialize.");
     }
 
+    // --- NEW: Initialize Preggy Steps ---
+    if (elements.preggyPlayBtn) {
+        initPreggySteps();
+    } else {
+        console.error("Calm Space: Could not find preggy steps buttons to initialize.");
+    }
+    // --- END NEW ---
+
     if (elements.mindfulReflectionModal) {
         initReflectionModal();
     } else {
@@ -453,6 +495,7 @@ export function unloadCalmSpace() {
     stopBreathing();
     stopMeditation();
     stopStretches();
+    stopPreggyTimer(false); // NEW: Stop preggy timer, don't show modal
 
     // --- NEW: Unsubscribe from summary listener ---
     if (summaryListenerUnsubscribe) {
@@ -1189,6 +1232,175 @@ function stopStretches() {
     }
 }
 
+// --- NEW: Preggy Steps Functions ---
+
+/**
+ * Initializes all event listeners for the Preggy Steps card
+ */
+function initPreggySteps() {
+    elements.preggyPlayBtn.addEventListener('click', startPreggyTimer);
+    elements.preggyPauseBtn.addEventListener('click', pausePreggyTimer);
+    elements.preggyStopBtn.addEventListener('click', () => stopPreggyTimer(true)); // Pass true to show modal
+    elements.preggyManualToggleBtn.addEventListener('click', togglePreggyManualForm);
+    elements.preggyManualSaveBtn.addEventListener('click', saveManualPreggyLog);
+
+    // Update calorie estimate if inputs change while timer is running
+    elements.preggyActivitySelect.addEventListener('change', updatePreggyCalorieEstimate);
+    elements.preggyIntensitySlider.addEventListener('input', updatePreggyCalorieEstimate); // 'input' for live updates
+
+    resetPreggyStepsUI(); // Set initial state
+}
+
+/**
+ * Starts (or resumes) the movement timer
+ */
+function startPreggyTimer() {
+    isPreggyTimerPaused = false;
+
+    // Update UI
+    elements.preggyPlayBtn.classList.add('hidden');
+    elements.preggyPauseBtn.classList.remove('hidden');
+    elements.preggyStopBtn.classList.remove('hidden');
+    elements.preggyPlayBtn.textContent = 'Start'; // Reset text in case it was "Resume"
+    
+    // Disable manual form and inputs
+    elements.preggyActivitySelect.disabled = true;
+    elements.preggyIntensitySlider.disabled = true;
+    elements.preggyManualToggleBtn.style.pointerEvents = 'none';
+    elements.preggyManualToggleBtn.style.opacity = '0.5';
+
+
+    activePreggyTimer = setInterval(() => {
+        preggyTimeElapsed++;
+        elements.preggyTimerDisplay.textContent = formatTimeHHMMSS(preggyTimeElapsed);
+        updatePreggyCalorieEstimate(); // Update calories every second
+    }, 1000);
+}
+
+/**
+ * Pauses the movement timer
+ */
+function pausePreggyTimer() {
+    isPreggyTimerPaused = true;
+    clearInterval(activePreggyTimer);
+    activePreggyTimer = null;
+
+    // Update UI
+    elements.preggyPlayBtn.classList.remove('hidden');
+    elements.preggyPauseBtn.classList.add('hidden');
+    elements.preggyPlayBtn.textContent = 'Resume';
+    // Keep stop button visible
+}
+
+/**
+ * Stops the movement timer and triggers the reflection modal
+ */
+function stopPreggyTimer(showModal = true) {
+    clearInterval(activePreggyTimer);
+    activePreggyTimer = null;
+    isPreggyTimerPaused = true; 
+
+    if (preggyTimeElapsed > 0 && showModal) {
+        const durationMinutes = Math.round(preggyTimeElapsed / 60);
+        const activity = elements.preggyActivitySelect.options[elements.preggyActivitySelect.selectedIndex].text;
+        
+        // Open reflection modal
+        openReflectionModal('movement', activity, durationMinutes);
+    }
+    
+    // Reset
+    preggyTimeElapsed = 0;
+    resetPreggyStepsUI();
+}
+
+/**
+ * Toggles the manual input form
+ */
+function togglePreggyManualForm() {
+    const isHidden = elements.preggyManualForm.classList.contains('hidden');
+    
+    if (isHidden) {
+        // Show manual form
+        elements.preggyManualForm.classList.remove('hidden');
+        elements.preggyManualToggleBtn.textContent = 'Use Timer Instead?';
+        
+        // Disable timer buttons
+        elements.preggyPlayBtn.disabled = true;
+        elements.preggyPlayBtn.style.opacity = '0.5';
+    } else {
+        // Hide manual form
+        elements.preggyManualForm.classList.add('hidden');
+        elements.preggyManualToggleBtn.textContent = 'Log Manually Instead?';
+        
+        // Enable timer buttons
+        elements.preggyPlayBtn.disabled = false;
+        elements.preggyPlayBtn.style.opacity = '1';
+    }
+    resetPreggyStepsUI(); // Clear timer/calories
+}
+
+/**
+ * Saves a manually logged activity
+ */
+function saveManualPreggyLog() {
+    const durationMinutes = parseInt(elements.preggyManualInput.value);
+    
+    if (isNaN(durationMinutes) || durationMinutes <= 0) {
+        // Show a simple error
+        elements.preggyManualInput.style.borderColor = 'red';
+        return;
+    }
+    
+    elements.preggyManualInput.style.borderColor = ''; // Reset border
+    
+    const activity = elements.preggyActivitySelect.options[elements.preggyActivitySelect.selectedIndex].text;
+
+    // Open reflection modal
+    openReflectionModal('movement', activity, durationMinutes);
+
+    // Reset form
+    elements.preggyManualInput.value = '';
+    togglePreggyManualForm(); // Hide form and re-enable timer
+}
+
+/**
+ * Resets the Preggy Steps UI to its default state
+ */
+function resetPreggyStepsUI() {
+    elements.preggyTimerDisplay.textContent = '00:00:00';
+    elements.preggyCaloriesDisplay.textContent = '~0 kcal';
+    
+    elements.preggyPlayBtn.classList.remove('hidden');
+    elements.preggyPauseBtn.classList.add('hidden');
+    elements.preggyStopBtn.classList.add('hidden');
+    elements.preggyPlayBtn.textContent = 'Start';
+    
+    // Re-enable inputs
+    elements.preggyActivitySelect.disabled = false;
+    elements.preggyIntensitySlider.disabled = false;
+    elements.preggyManualToggleBtn.style.pointerEvents = 'auto';
+    elements.preggyManualToggleBtn.style.opacity = '1';
+}
+
+/**
+ * Updates the calorie estimate based on inputs
+ */
+function updatePreggyCalorieEstimate() {
+    if (!elements.preggyCaloriesDisplay || !elements.preggyActivitySelect || !elements.preggyIntensitySlider) return;
+
+    const activity = elements.preggyActivitySelect.value;
+    const intensity = elements.preggyIntensitySlider.value;
+    const durationMinutes = preggyTimeElapsed / 60;
+    
+    const baseCalsPerMin = CALORIE_DATA.base[activity] || 2.0;
+    const intensityMultiplier = CALORIE_DATA.intensity[intensity] || 1.0;
+    
+    const totalCalories = baseCalsPerMin * intensityMultiplier * durationMinutes;
+    
+    elements.preggyCaloriesDisplay.textContent = `~${totalCalories.toFixed(0)} kcal`;
+}
+
+
 // --- Mindful Reflection Modal ---
 function initReflectionModal() {
     elements.mindfulReflectionCloseBtn.addEventListener('click', closeReflectionModal);
@@ -1214,7 +1426,7 @@ function initReflectionModal() {
 function openReflectionModal(type, name, durationMinutes = 0) {
     reflectionData = { type: type, name: name, mood: '', durationMinutes: parseInt(durationMinutes) };
 
-    elements.mindfulReflectionTitle.textContent = `Reflection for ${name}`;
+    elements.mindfulReflectionTitle.textContent = `How do you feel?`; // Use a generic title
     elements.mindfulReflectionTitle.classList.remove('text-red-400'); // Reset error color
     elements.mindfulReflectionTextarea.value = '';
     document.querySelectorAll('#mindful-mood-buttons button').forEach(btn => btn.classList.remove('selected'));
@@ -1260,6 +1472,7 @@ async function saveReflection() {
             breathingMinutes: 0,
             stretchMinutes: 0,
             meditationMinutes: 0,
+            movementMinutes: 0, // NEW: Add movement minutes
         };
 
         if (docSnap.exists()) {
@@ -1269,6 +1482,7 @@ async function saveReflection() {
             todayData.breathingMinutes = todayData.breathingMinutes || 0;
             todayData.stretchMinutes = todayData.stretchMinutes || 0;
             todayData.meditationMinutes = todayData.meditationMinutes || 0;
+            todayData.movementMinutes = todayData.movementMinutes || 0; // NEW: Ensure movement exists
             todayData.moods = todayData.moods || [];
         }
 
@@ -1281,6 +1495,8 @@ async function saveReflection() {
             todayData.stretchMinutes += reflectionData.durationMinutes;
         } else if (reflectionData.type === 'meditation') {
             todayData.meditationMinutes += reflectionData.durationMinutes;
+        } else if (reflectionData.type === 'movement') { // NEW: Handle movement
+            todayData.movementMinutes += reflectionData.durationMinutes;
         }
 
         todayData.lastUpdated = serverTimestamp();
@@ -1351,7 +1567,8 @@ function initDailySummaryListener() {
                 moods: [],
                 breathingMinutes: 0,
                 stretchMinutes: 0,
-                meditationMinutes: 0
+                meditationMinutes: 0,
+                movementMinutes: 0 // NEW: Add movement
             });
         }
 
@@ -1396,13 +1613,14 @@ function updateDailySummaryUI(summaryData) {
     elements.summaryBreathLevel.textContent = `${todaySummary.breathingMinutes || 0} min`;
     elements.summaryStretchLevel.textContent = `${todaySummary.stretchMinutes || 0} min`;
     elements.summaryMeditationLevel.textContent = `${todaySummary.meditationMinutes || 0} min`;
+    elements.summaryMovementLevel.textContent = `${todaySummary.movementMinutes || 0} min`; // NEW: Update movement
 
     // --- 4. Update Positive Message ---
     const messageIndex = Math.floor(Math.random() * positiveMessages.length);
     elements.summaryPositiveMessage.textContent = positiveMessages[messageIndex];
 
     // --- 5. Update Card Theme ---
-    elements.dailySummaryCard.className = 'glass-card anim-card p-4 md:p-6 transition-colors duration-1000'; // Reset
+    elements.dailySummaryCard.className = 'glass-card anim-card p-4 md:p-6 transition-colors duration-1000 lg:col-span-2'; // Reset
     elements.dailySummaryCard.classList.add(colorTheme.theme);
 
     // --- 6. Update 7-Day Chart ---
@@ -1432,6 +1650,7 @@ function calculateTodayScore(todaySummary) {
     bonus += (todaySummary.breathingMinutes || 0) * 2; // Max 10min = 20pts
     bonus += (todaySummary.stretchMinutes || 0) * 1;  // Max 10min = 10pts
     bonus += (todaySummary.meditationMinutes || 0) * 2; // Max 10min = 20pts
+    bonus += (todaySummary.movementMinutes || 0) * 1; // NEW: Add movement bonus (Max 10min = 10pts)
 
     let totalScore = baseScore + bonus;
 
@@ -1569,20 +1788,9 @@ function playSummaryAnimation(averageMood) {
 
         // Staggered start
         setTimeout(() => {
-            elements.summaryGlowEffect.appendChild(sparkle);
+            elements.summaryGGlowEffect.appendChild(sparkle);
             setTimeout(() => sparkle.remove(), 1000); // Remove after anim (1s duration)
         }, Math.random() * 300); // Start within 0.3s
     }
 
 }
-
-
-
-
-
-
-
-
-
-
-
