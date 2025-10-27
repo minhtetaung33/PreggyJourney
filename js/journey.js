@@ -1,9 +1,10 @@
-import { collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+// Firebase Imports
+import { collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, where, getDocs, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { db } from './firebase.js';
 import { getCurrentUserId } from "./auth.js";
 import { elements } from './ui.js'; // Import elements from ui.js
 
-// DOM Elements (Original)
+// === ORIGINAL DOM Elements ===
 const todoListContainer = document.getElementById('todo-list-container');
 const newTodoInput = document.getElementById('new-todo-input');
 const newTodoCategory = document.getElementById('new-todo-category');
@@ -55,8 +56,6 @@ const collapsibleReflectionContent = document.getElementById('collapsible-reflec
 const reflectionToggleIcon = document.getElementById('reflection-toggle-icon');
 const toggleReflectionsContainer = document.getElementById('toggle-reflections-container');
 const toggleReflectionsBtn = document.getElementById('toggle-reflections-btn');
-
-// New DOM Elements for Reflection Image Feature
 const addReflectionImageBtn = document.getElementById('add-reflection-image-btn');
 const imageLinkModal = document.getElementById('image-link-modal');
 const imageLinkInput = document.getElementById('image-link-input');
@@ -64,38 +63,121 @@ const imageLinkCancelBtn = document.getElementById('image-link-cancel-btn');
 const imageLinkSaveBtn = document.getElementById('image-link-save-btn');
 const reflectionImagePreviewContainer = document.getElementById('reflection-image-preview-container');
 const reflectionImagePreview = document.getElementById('reflection-image-preview');
+let aiTodoSuggestionsContainer = null; // Container for AI To-Do Suggestions
 
-// NEW: Container for AI To-Do Suggestions (will be created dynamically)
-let aiTodoSuggestionsContainer = null;
+// === NEW AI Baby Name Generator DOM Elements ===
+const nameFavoritesToggleBtn = document.getElementById('name-favorites-toggle-btn');
+const nameFavoritesContainer = document.getElementById('name-favorites-container');
+const nameFavoritesList = document.getElementById('name-favorites-list');
+const nameGenderSelector = document.getElementById('name-gender-selector');
+const nameOriginSelect = document.getElementById('name-origin-select');
+const nameOriginCustom = document.getElementById('name-origin-custom');
+const nameStyleSelect = document.getElementById('name-style-select');
+const nameStyleCustom = document.getElementById('name-style-custom');
+const nameMeaningInput = document.getElementById('name-meaning-input');
+const nameSyllableSelector = document.getElementById('name-syllable-selector');
+const nameRandomBtn = document.getElementById('name-random-btn');
+const nameGenerateBtn = document.getElementById('name-generate-btn');
+const nameGenerateBtnText = document.getElementById('name-generate-btn-text');
+const nameGenerateLoader = document.getElementById('name-generate-loader');
+const nameResultsContainer = document.getElementById('name-results-container');
+const nameGenerateAgainBtn = document.getElementById('name-generate-again-btn');
 
-
-let todosRef, wishesRef, reflectionsRef;
-let unsubscribeTodos, unsubscribeWishes, unsubscribeReflections;
-let currentTodos = [], currentWishes = [], currentReflections = [];
+// === State Variables ===
+let todosRef, wishesRef, reflectionsRef, favoriteNamesRef;
+let unsubscribeTodos, unsubscribeWishes, unsubscribeReflections, unsubscribeFavoriteNames;
+let currentTodos = [], currentWishes = [], currentReflections = [], currentFavoriteNames = [];
 let wellnessDataForJourney = {};
 let activeReflectionId = null;
 let activeColor = 'pink';
 let activeTodoId = null;
-let activeWishId = null; // NEW: For editing wishes
+let activeWishId = null;
 let showAllReflections = false;
-let activeReflectionImageUrl = null; // Variable to hold the image URL for the current reflection
+let activeReflectionImageUrl = null;
+
+// === NEW Baby Name Generator State ===
+let selectedNameGender = null;
+let selectedNameOrigin = '';
+let selectedNameStyle = '';
+let selectedNameMeaning = '';
+let selectedNameSyllables = '';
+let currentNameSuggestions = []; // Store the latest suggestions
 
 
+// === Initialization ===
 export function initializeJourney(userId, initialWellnessData) {
     wellnessDataForJourney = initialWellnessData;
+    // Firebase collection references
     todosRef = collection(db, `users/${userId}/todos`);
     wishesRef = collection(db, `users/${userId}/wishes`);
     reflectionsRef = collection(db, `users/${userId}/reflections`);
+    favoriteNamesRef = collection(db, `users/${userId}/favoriteNames`); // NEW
 
+    // Load data
     loadTodos();
     loadWishes();
     loadReflections();
+    loadFavoriteNames(); // NEW
+
+    // Setup listeners
     setupEventListeners();
+    setupNameGeneratorListeners(); // NEW
 }
 
-export function updateWellnessDataForJourney(newData) {
-    wellnessDataForJourney = newData;
+// === Data Loading & Rendering (Original + Name Gen Favorites) ===
+
+function loadTodos() {
+    if (!todosRef) return;
+    if(unsubscribeTodos) unsubscribeTodos();
+    const q = query(todosRef, orderBy("createdAt", "desc"));
+    unsubscribeTodos = onSnapshot(q, (snapshot) => {
+        currentTodos = [];
+        snapshot.forEach(doc => currentTodos.push({ id: doc.id, ...doc.data() }));
+        renderTodos(currentTodos);
+    });
 }
+
+function loadWishes() {
+    if (!wishesRef) return;
+    if(unsubscribeWishes) unsubscribeWishes();
+    const q = query(wishesRef, orderBy("createdAt", "desc"));
+    unsubscribeWishes = onSnapshot(q, (snapshot) => {
+        currentWishes = [];
+        snapshot.forEach(doc => currentWishes.push({ id: doc.id, ...doc.data() }));
+        renderWishes(currentWishes);
+    });
+}
+
+function loadReflections() {
+    if (!reflectionsRef) return;
+    if(unsubscribeReflections) unsubscribeReflections();
+    const q = query(reflectionsRef, orderBy("createdAt", "desc"));
+    unsubscribeReflections = onSnapshot(q, (snapshot) => {
+        currentReflections = [];
+        snapshot.forEach(doc => currentReflections.push({ id: doc.id, ...doc.data() }));
+        renderReflections(currentReflections);
+    });
+}
+
+// NEW: Load Favorite Names
+function loadFavoriteNames() {
+    if (!favoriteNamesRef) return;
+    if (unsubscribeFavoriteNames) unsubscribeFavoriteNames();
+    // Order by name for consistency
+    const q = query(favoriteNamesRef, orderBy("name"));
+    unsubscribeFavoriteNames = onSnapshot(q, (snapshot) => {
+        currentFavoriteNames = [];
+        snapshot.forEach(doc => currentFavoriteNames.push({ id: doc.id, ...doc.data() }));
+        renderFavoriteNames(currentFavoriteNames);
+        // Re-render suggestions if they exist to update heart icons
+        if (currentNameSuggestions.length > 0) {
+            renderNameSuggestions(currentNameSuggestions);
+        }
+    });
+}
+
+// Original render functions (renderTodos, renderWishes, renderReflections, etc.) are assumed to be here
+// ... (Keep existing renderTodos, renderWishes, renderReflections, renderAiWishSuggestions, renderAITodoSuggestions, renderAIRecipes)
 
 const formatDate = (dateString) => {
     if (!dateString) return '';
@@ -119,11 +201,11 @@ function renderTodos(todos) {
     }
     // ADDED 'Recipes'
     const categoryIcons = { Health: '🧘‍♀️', Baby: '🍼', Home: '🏡', Reminder: '💬', Appointment: '🗓️', Recipes: '🍳' };
-    
+
     todos.forEach(todo => {
         const item = document.createElement('div');
         item.className = `todo-item flex items-start justify-between p-3 bg-white/5 rounded-lg ${todo.completed ? 'completed' : ''}`;
-        
+
         const displayDate = formatDate(todo.date);
         const displayTime = formatTime(todo.time);
 
@@ -188,13 +270,13 @@ function renderTodos(todos) {
                 </div>
             `;
         }
-        
+
         const toggleTodo = async () => {
              if (!todosRef) return;
              const todoDocRef = doc(db, `users/${getCurrentUserId()}/todos`, todo.id);
              await updateDoc(todoDocRef, { completed: !todo.completed });
         };
-        
+
         item.querySelector('label').addEventListener('click', (e) => {
             e.preventDefault();
             toggleTodo();
@@ -269,7 +351,7 @@ function renderWishes(wishes) {
     sortedWishes.forEach(wish => {
         const item = document.createElement('div');
         item.className = `wish-item-card p-3 bg-white/5 rounded-lg border border-transparent ${wish.purchased ? 'purchased opacity-60' : ''}`;
-        
+
         // Check for Food category
         let foodDetailsHtml = '';
         if (wish.category === 'Food' && wish.foodDetails) {
@@ -277,7 +359,7 @@ function renderWishes(wishes) {
             const expiryHtml = wish.foodDetails.expiry ? ` | <span class="text-yellow-400">Expires: ${formatDate(wish.foodDetails.expiry)}</span>` : '';
             foodDetailsHtml = `<p class="text-xs text-gray-400 mt-1">${icon} ${wish.foodDetails.type || 'Food'}${expiryHtml}</p>`;
         }
-        
+
         // Use category emoji for display
         const displayCategory = `${categoryDisplayEmojis[wish.category] || '✨'} ${wish.category}`;
 
@@ -286,7 +368,7 @@ function renderWishes(wishes) {
                 <div class="flex-1 min-w-0">
                     <p class="font-bold break-words">${wish.item}</p>
                     <p class="text-xs text-indigo-300">${displayCategory}</p> <!-- Display emoji + name -->
-                    ${foodDetailsHtml} 
+                    ${foodDetailsHtml}
                 </div>
                 <div class="flex items-center ml-2 flex-shrink-0"> <!-- ADDED flex-shrink-0 -->
                     <input type="checkbox" class="h-5 w-5 rounded bg-white/20 text-teal-400 focus:ring-teal-500 border-gray-500 cursor-pointer mr-2"> <!-- Added mr-2 -->
@@ -316,13 +398,12 @@ function renderWishes(wishes) {
 
         wishlistContainer.appendChild(item);
     });
-    
+
     // This calculation remains correct as it's based on the original full 'wishes' array
     const purchasedCount = wishes.filter(w => w.purchased).length;
     wishlistProgressText.textContent = `${purchasedCount}/${wishes.length} Items`;
     wishlistProgressBar.style.width = wishes.length > 0 ? `${(purchasedCount / wishes.length) * 100}%` : '0%';
 }
-
 
 function renderReflections(reflections) {
     reflectionsContainer.innerHTML = '';
@@ -337,13 +418,13 @@ function renderReflections(reflections) {
     if (notesToRender.length === 0 && reflections.length > 0) {
         reflectionsContainer.innerHTML = `<p class="text-center text-gray-400 col-span-full">All notes are hidden. Click "Show All" to see them.</p>`;
     }
-    
+
     notesToRender.forEach(note => {
         const item = document.createElement('div');
         item.className = `reflection-note relative p-4 rounded-lg border-l-4 note-color-${note.color} cursor-pointer flex flex-col`;
-        
+
         // Conditionally add image
-        const imageHtml = note.imageUrl ? 
+        const imageHtml = note.imageUrl ?
             `<img src="${note.imageUrl}" alt="Reflection image" class="mb-3 rounded-md object-cover h-40 w-full">` : '';
 
         item.innerHTML = `
@@ -357,7 +438,7 @@ function renderReflections(reflections) {
             </button>
         `;
         item.addEventListener('click', () => openReflectionModal(note));
-        
+
         item.querySelector('.delete-reflection-btn').addEventListener('click', (e) => {
             e.stopPropagation();
             deleteReflection(note.id);
@@ -374,7 +455,6 @@ function renderReflections(reflections) {
     }
 }
 
-
 function renderAiWishSuggestions(suggestions) {
     const container = document.getElementById('ai-wish-suggestions-container');
     container.innerHTML = ''; // Clear loading spinner or old results
@@ -383,13 +463,13 @@ function renderAiWishSuggestions(suggestions) {
         container.innerHTML = `<p class="text-center text-gray-400 p-2">No suggestions found.</p>`;
         return;
     }
-    
+
     const header = document.createElement('div');
     header.className = 'flex justify-between items-center mb-2 px-1';
     header.innerHTML = `<h4 class="font-semibold text-sm text-indigo-200">AI Suggestions</h4>
                         <button id="clear-suggestions-btn" class="text-xs text-gray-400 hover:text-white">Clear</button>`;
     container.appendChild(header);
-    
+
     header.querySelector('#clear-suggestions-btn').addEventListener('click', () => {
         container.innerHTML = '';
     });
@@ -397,7 +477,7 @@ function renderAiWishSuggestions(suggestions) {
     suggestions.forEach(suggestion => {
         const card = document.createElement('div');
         card.className = 'ai-suggestion-card flex items-start justify-between gap-3';
-        
+
         card.innerHTML = `
             <div class="flex-grow min-w-0">
                 <p class="font-bold text-sm break-words">${suggestion.productName}</p>
@@ -442,13 +522,13 @@ function renderAITodoSuggestions(tasks, container) {
         container.innerHTML = `<p class="text-center text-gray-400 p-2">No suggestions found.</p>`;
         return;
     }
-    
+
     const header = document.createElement('div');
     header.className = 'flex justify-between items-center mb-2 px-1';
     header.innerHTML = `<h4 class="font-semibold text-sm text-indigo-200">AI To-Do Suggestions</h4>
                         <button id="clear-todo-suggestions-btn" class="text-xs text-gray-400 hover:text-white">Clear</button>`;
     container.appendChild(header);
-    
+
     header.querySelector('#clear-todo-suggestions-btn').addEventListener('click', () => {
         container.innerHTML = '';
     });
@@ -456,7 +536,7 @@ function renderAITodoSuggestions(tasks, container) {
     tasks.forEach(task => {
         const card = document.createElement('div');
         card.className = 'ai-suggestion-card flex items-start justify-between gap-3';
-        
+
         card.innerHTML = `
             <div class="flex-grow min-w-0">
                 <p class="font-bold text-sm break-words">${task.task}</p>
@@ -497,7 +577,7 @@ function renderAIRecipes(recipes) {
                 Add Recipe to To-Do List
             </button>
         `;
-        
+
         // Store the data on the button itself for the event listener
         const button = card.querySelector('.add-recipe-btn');
         button.dataset.recipeName = recipe.recipeName;
@@ -507,39 +587,29 @@ function renderAIRecipes(recipes) {
     });
 }
 
-
-function loadTodos() {
-    if (!todosRef) return;
-    if(unsubscribeTodos) unsubscribeTodos();
-    const q = query(todosRef, orderBy("createdAt", "desc"));
-    unsubscribeTodos = onSnapshot(q, (snapshot) => {
-        currentTodos = [];
-        snapshot.forEach(doc => currentTodos.push({ id: doc.id, ...doc.data() }));
-        renderTodos(currentTodos);
-    });
+// NEW: Render Favorite Names List
+function renderFavoriteNames(favNames) {
+    nameFavoritesList.innerHTML = '';
+    if (favNames.length === 0) {
+        nameFavoritesList.innerHTML = `<p class="text-gray-400 text-sm text-center">Your favorite names will appear here.</p>`;
+    } else {
+        favNames.forEach(nameData => {
+            const item = document.createElement('div');
+            item.className = 'flex justify-between items-center p-2 bg-white/5 rounded';
+            item.innerHTML = `
+                <span class="font-semibold">${nameData.name}</span>
+                <button class="icon-btn remove-favorite-name-btn" data-id="${nameData.id}">
+                    <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            `;
+            nameFavoritesList.appendChild(item);
+        });
+    }
+    // Update favorite count on button
+    nameFavoritesToggleBtn.textContent = `❤️ My Favorites (${favNames.length})`;
 }
 
-function loadWishes() {
-    if (!wishesRef) return;
-    if(unsubscribeWishes) unsubscribeWishes();
-    const q = query(wishesRef, orderBy("createdAt", "desc"));
-    unsubscribeWishes = onSnapshot(q, (snapshot) => {
-        currentWishes = [];
-        snapshot.forEach(doc => currentWishes.push({ id: doc.id, ...doc.data() }));
-        renderWishes(currentWishes);
-    });
-}
-
-function loadReflections() {
-    if (!reflectionsRef) return;
-    if(unsubscribeReflections) unsubscribeReflections();
-    const q = query(reflectionsRef, orderBy("createdAt", "desc"));
-    unsubscribeReflections = onSnapshot(q, (snapshot) => {
-        currentReflections = [];
-        snapshot.forEach(doc => currentReflections.push({ id: doc.id, ...doc.data() }));
-        renderReflections(currentReflections);
-    });
-}
+// === Event Listener Setup ===
 
 function setupEventListeners() {
     addTodoBtn.addEventListener('click', async () => {
@@ -588,7 +658,7 @@ function setupEventListeners() {
         newTodoCategory.value = 'Health';
         customTodoCategoryInput.value = '';
         customTodoCategoryInput.classList.add('hidden');
-        
+
         // NEW: Reset appointment fields
         elements.newAppointmentFields.classList.add('hidden');
         elements.newAppointmentFname.value = '';
@@ -616,7 +686,7 @@ function setupEventListeners() {
                     const button = e.target;
                     const task = button.dataset.task;
                     const category = button.dataset.category;
-                    
+
                     if (task && category && todosRef) {
                         await addDoc(todosRef, { text: task, category: category, completed: false, createdAt: serverTimestamp() });
                         button.textContent = 'Added! ✅';
@@ -628,12 +698,12 @@ function setupEventListeners() {
                 }
             });
         }
-        
+
         aiTodoSuggestionsContainer.innerHTML = `<div class="text-center p-4">
             <svg class="animate-spin mx-auto h-6 w-6 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
             <p class="mt-2 text-sm text-gray-300">Generating suggestions...</p>
         </div>`;
-        
+
         const pregnancyWeek = Math.floor(Math.abs(new Date() - new Date(wellnessDataForJourney.pregnancyStartDate)) / (1000 * 60 * 60 * 24 * 7));
         const systemPrompt = `You are a helpful assistant. Generate a to-do list of 4-5 tasks for week ${pregnancyWeek} of pregnancy. Categorize each task as 'Health', 'Baby', 'Home', or 'Reminder'. Your response MUST be ONLY a valid JSON array of objects, where each object has "task" (string) and "category" (string) keys.`;
         const userQuery = `Generate a weekly to-do list for week ${pregnancyWeek}.`;
@@ -644,12 +714,12 @@ function setupEventListeners() {
             const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             if (!response.ok) throw new Error(`API error: ${response.statusText}`);
             const result = await response.json(); const data = JSON.parse(result.candidates[0].content.parts[0].text);
-            
+
             // NEW: Render suggestions instead of auto-adding
             renderAITodoSuggestions(data, aiTodoSuggestionsContainer);
 
-        } catch (error) { 
-            console.error("AI To-do generation failed:", error); 
+        } catch (error) {
+            console.error("AI To-do generation failed:", error);
             aiTodoSuggestionsContainer.innerHTML = `<p class="text-center text-red-300 p-4">Sorry, couldn't generate suggestions right now.</p>`;
         }
     });
@@ -661,7 +731,7 @@ function setupEventListeners() {
             category = customCategoryInput.value.trim();
         }
         if (!item || !wishesRef || !category) return;
-        
+
         // NEW: Create wish data object
         const wishData = {
             item,
@@ -681,7 +751,7 @@ function setupEventListeners() {
         }
 
         await addDoc(wishesRef, wishData); // Use the new data object
-        
+
         newWishItem.value = newWishPrice.value = newWishLink.value = '';
         customCategoryInput.value = '';
         newWishCategory.value = 'Baby Care';
@@ -692,7 +762,7 @@ function setupEventListeners() {
         elements.newWishFoodType.value = '';
         elements.newWishFoodExpiry.value = '';
     });
-    
+
     aiWishForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const prompt = aiWishPrompt.value.trim();
@@ -720,7 +790,8 @@ function setupEventListeners() {
             if (!response.ok) throw new Error(`API error: ${response.statusText}`);
             const result = await response.json();
             let jsonString = result.candidates[0].content.parts[0].text;
-            jsonString = jsonString.replace(/```json/g, '').replace(/```/g, '').trim();
+            // Attempt to clean potential markdown
+            jsonString = jsonString.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
             const data = JSON.parse(jsonString);
             renderAiWishSuggestions(data);
         } catch (error) {
@@ -864,8 +935,8 @@ function setupEventListeners() {
             if (!response.ok) throw new Error(`API error: ${response.statusText}`);
             const result = await response.json();
             aiSummaryContent.textContent = result.candidates[0].content.parts[0].text;
-        } catch (error) { 
-            console.error("AI Summary failed:", error); 
+        } catch (error) {
+            console.error("AI Summary failed:", error);
             aiSummaryContent.textContent = "Sorry, I couldn't generate a summary right now.";
         }
     });
@@ -946,7 +1017,7 @@ function setupEventListeners() {
             const button = e.target;
             const title = button.dataset.recipeName;
             const steps = button.dataset.recipeSteps;
-            
+
             if (title && steps && todosRef) {
                 const todoText = `RECIPE: ${title}\n\n${steps}`;
                 await addDoc(todosRef, {
@@ -980,6 +1051,92 @@ function setupEventListeners() {
 
 }
 
+// === NEW AI Baby Name Generator Listeners ===
+
+function setupNameGeneratorListeners() {
+    // Gender Selection
+    nameGenderSelector.addEventListener('click', (e) => {
+        if (e.target.tagName === 'BUTTON') {
+            // Remove active class from all buttons
+            nameGenderSelector.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+            // Add active class to the clicked button
+            e.target.classList.add('active');
+            selectedNameGender = e.target.dataset.gender;
+        }
+    });
+
+    // Origin Selection
+    nameOriginSelect.addEventListener('change', () => {
+        selectedNameOrigin = nameOriginSelect.value;
+        if (selectedNameOrigin === 'Custom') {
+            nameOriginCustom.classList.remove('hidden');
+        } else {
+            nameOriginCustom.classList.add('hidden');
+            nameOriginCustom.value = ''; // Clear custom input
+        }
+    });
+
+    // Style Selection
+    nameStyleSelect.addEventListener('change', () => {
+        selectedNameStyle = nameStyleSelect.value;
+        if (selectedNameStyle === 'Custom') {
+            nameStyleCustom.classList.remove('hidden');
+        } else {
+            nameStyleCustom.classList.add('hidden');
+            nameStyleCustom.value = ''; // Clear custom input
+        }
+    });
+
+    // Syllable Selection
+    nameSyllableSelector.addEventListener('change', (e) => {
+        if (e.target.type === 'radio' && e.target.checked) {
+            selectedNameSyllables = e.target.value;
+        }
+    });
+
+    // Generate Button
+    nameGenerateBtn.addEventListener('click', () => generateNames(false));
+
+    // Randomize Button
+    nameRandomBtn.addEventListener('click', () => generateNames(true));
+
+    // Generate Again Button
+    nameGenerateAgainBtn.addEventListener('click', () => generateNames(false));
+
+    // Favorites Toggle
+    nameFavoritesToggleBtn.addEventListener('click', () => {
+        nameFavoritesContainer.classList.toggle('hidden');
+    });
+
+    // Delegated listener for favorite/unfavorite buttons in results
+    nameResultsContainer.addEventListener('click', async (e) => {
+        const button = e.target.closest('.toggle-favorite-name-btn');
+        if (button) {
+            const name = button.dataset.name;
+            const meaning = button.dataset.meaning;
+            const origin = button.dataset.origin;
+            await toggleFavoriteName({ name, meaning, origin });
+        }
+    });
+
+    // Delegated listener for removing favorites from the list
+    nameFavoritesList.addEventListener('click', async (e) => {
+        const button = e.target.closest('.remove-favorite-name-btn');
+        if (button) {
+            const docId = button.dataset.id;
+            if (docId && favoriteNamesRef) {
+                const nameDocRef = doc(db, `users/${getCurrentUserId()}/favoriteNames`, docId);
+                await deleteDoc(nameDocRef);
+            }
+        }
+    });
+}
+
+
+// === Helper & Action Functions (Original + Name Gen) ===
+
+// ... (Keep existing openEditTodoModal, closeEditTodoModal, handleSaveTodo, deleteReflection, openReflectionModal, closeReflectionModal, openEditWishModal, closeEditWishModal, handleSaveWish, updateColorTags)
+
 function openEditTodoModal(todo) {
     activeTodoId = todo.id;
     editTodoInput.value = todo.text;
@@ -1007,7 +1164,7 @@ function openEditTodoModal(todo) {
         elements.editAppointmentAddress.value = appt.address || '';
         elements.editAppointmentContact.value = appt.contact || '';
         elements.editAppointmentEmail.value = appt.email || '';
-        
+
         // Handle custom type dropdown
         const standardTypes = ['OB/GYN', 'Ultrasound', 'Pediatrician'];
         if (standardTypes.includes(appt.type)) {
@@ -1043,12 +1200,12 @@ async function handleSaveTodo() {
     }
 
     if (!text || !category) {
-        console.error('Task and category cannot be empty.'); 
+        console.error('Task and category cannot be empty.');
         return;
     }
 
     const todoDocRef = doc(db, `users/${getCurrentUserId()}/todos`, activeTodoId);
-    
+
     // NEW: Create data payload
     const todoData = {
         text: text,
@@ -1076,7 +1233,7 @@ async function handleSaveTodo() {
             customType: customApptType
         };
     }
-    
+
     await updateDoc(todoDocRef, todoData);
     closeEditTodoModal();
 }
@@ -1191,7 +1348,7 @@ async function handleSaveWish() {
     }
 
     const wishDocRef = doc(db, `users/${getCurrentUserId()}/wishes`, activeWishId);
-    
+
     const wishData = {
         item,
         category,
@@ -1207,7 +1364,7 @@ async function handleSaveWish() {
             expiry: elements.editWishFoodExpiry.value
         };
     }
-    
+
     try {
         await updateDoc(wishDocRef, wishData);
         closeEditWishModal();
@@ -1216,7 +1373,6 @@ async function handleSaveWish() {
         // Add user feedback for error here if needed
     }
 }
-
 
 function updateColorTags() {
     reflectionColorTags.querySelectorAll('button').forEach(btn => {
@@ -1228,8 +1384,207 @@ function updateColorTags() {
     });
 }
 
+// === NEW AI Baby Name Generator Functions ===
+
+/**
+ * Calls the Gemini API to generate baby names based on current filters.
+ * @param {boolean} isRandom - If true, ignores most filters for randomization.
+ */
+async function generateNames(isRandom = false) {
+    if (!favoriteNamesRef) return; // Ensure Firebase is ready
+
+    nameGenerateBtnText.textContent = 'Generating...';
+    nameGenerateLoader.classList.remove('hidden');
+    nameGenerateBtn.disabled = true;
+    nameRandomBtn.disabled = true;
+    nameGenerateAgainBtn.disabled = true;
+    nameResultsContainer.innerHTML = `<div class="text-center p-4">
+        <svg class="animate-spin mx-auto h-6 w-6 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+        <p class="mt-2 text-sm text-gray-300">Finding the perfect name...</p>
+    </div>`;
+
+    let userPromptParts = [];
+
+    if (isRandom) {
+        userPromptParts.push("Give me 10 random and interesting baby names.");
+        // Optionally add a random gender if none is selected
+        if (!selectedNameGender) {
+            const genders = ['Boy', 'Girl', 'Neutral'];
+            const randomGender = genders[Math.floor(Math.random() * genders.length)];
+            userPromptParts.push(`Include a mix, or focus on ${randomGender} names.`);
+        } else {
+             userPromptParts.push(`Focus on ${selectedNameGender} names if applicable.`);
+        }
+    } else {
+        userPromptParts.push("Suggest 10 baby names.");
+        if (selectedNameGender) {
+            userPromptParts.push(`Suitable for a ${selectedNameGender}.`);
+        }
+        let origin = selectedNameOrigin === 'Custom' ? nameOriginCustom.value.trim() : selectedNameOrigin;
+        if (origin) {
+            userPromptParts.push(`With ${origin} origin/language.`);
+        }
+        let style = selectedNameStyle === 'Custom' ? nameStyleCustom.value.trim() : selectedNameStyle;
+        if (style) {
+            userPromptParts.push(`The style should be ${style}.`);
+        }
+        let meaning = nameMeaningInput.value.trim();
+        if (meaning) {
+            userPromptParts.push(`Reflecting the meaning or vibe of '${meaning}'.`);
+        }
+        if (selectedNameSyllables) {
+            userPromptParts.push(`Should have ${selectedNameSyllables} syllables.`);
+        }
+    }
+
+    const userQuery = userPromptParts.join(' ');
+    const systemPrompt = `You are a creative and knowledgeable baby name assistant. Provide baby name suggestions based on the user's criteria. Include the name, its origin, and its meaning. Respond ONLY with a valid JSON array of objects. Each object must have "name" (string), "meaning" (string), and "origin" (string) keys.`;
+    const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; // API Key will be injected
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+
+    const payload = {
+        contents: [{ parts: [{ text: userQuery }] }],
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        generationConfig: {
+            responseMimeType: "application/json",
+            responseSchema: {
+                type: "ARRAY",
+                items: {
+                    type: "OBJECT",
+                    properties: {
+                        "name": { "type": "STRING" },
+                        "meaning": { "type": "STRING" },
+                        "origin": { "type": "STRING" }
+                    },
+                    required: ["name", "meaning", "origin"]
+                }
+            }
+        }
+    };
+
+    try {
+        const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (!response.ok) {
+             const errorBody = await response.text();
+             console.error("API Error Response:", errorBody);
+             throw new Error(`API error: ${response.status} ${response.statusText}`);
+        }
+        const result = await response.json();
+
+        if (result.candidates && result.candidates[0].content && result.candidates[0].content.parts[0].text) {
+             const namesData = JSON.parse(result.candidates[0].content.parts[0].text);
+             currentNameSuggestions = namesData; // Store suggestions
+             renderNameSuggestions(namesData);
+        } else {
+             throw new Error("Invalid response structure from API");
+        }
+
+    } catch (error) {
+        console.error("AI Name generation failed:", error);
+        nameResultsContainer.innerHTML = `<p class="text-center text-red-300 p-4">Sorry, couldn't generate names right now. Error: ${error.message}</p>`;
+        currentNameSuggestions = []; // Clear suggestions on error
+    } finally {
+        nameGenerateBtnText.textContent = 'Generate Names';
+        nameGenerateLoader.classList.add('hidden');
+        nameGenerateBtn.disabled = false;
+        nameRandomBtn.disabled = false;
+        nameGenerateAgainBtn.disabled = false;
+    }
+}
+
+/**
+ * Renders the generated name suggestions in the results container.
+ * @param {Array} names - Array of name objects ({name, meaning, origin}).
+ */
+function renderNameSuggestions(names) {
+    nameResultsContainer.innerHTML = ''; // Clear previous results or loader
+
+    if (!names || names.length === 0) {
+        nameResultsContainer.innerHTML = `<p class="text-center text-gray-400 p-2">No names found matching your criteria.</p>`;
+        nameGenerateAgainBtn.classList.add('hidden');
+        return;
+    }
+
+    const favoriteNameSet = new Set(currentFavoriteNames.map(fav => fav.name.toLowerCase()));
+
+    const grid = document.createElement('div');
+    grid.className = 'grid grid-cols-1 sm:grid-cols-2 gap-3'; // Responsive grid
+
+    names.forEach(nameData => {
+        const isFavorite = favoriteNameSet.has(nameData.name.toLowerCase());
+        const card = document.createElement('div');
+        card.className = 'p-3 bg-white/5 rounded-lg flex justify-between items-start name-suggestion-card';
+        card.innerHTML = `
+            <div class="flex-1 mr-2">
+                <p class="font-bold text-lg">${nameData.name}</p>
+                <p class="text-sm text-indigo-300">${nameData.origin || 'Unknown Origin'}</p>
+                <p class="text-xs text-gray-300 mt-1">${nameData.meaning || 'No meaning provided'}</p>
+            </div>
+            <button
+                class="icon-btn toggle-favorite-name-btn p-1 rounded-full ${isFavorite ? 'is-favorite' : ''}"
+                data-name="${nameData.name}"
+                data-meaning="${nameData.meaning || ''}"
+                data-origin="${nameData.origin || ''}"
+                title="${isFavorite ? 'Remove from favorites' : 'Add to favorites'}">
+                <svg class="w-6 h-6" fill="${isFavorite ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 116.364 6.364L12 20.364l-7.682-7.682a4.5 4.5 0 010-6.364z"></path>
+                </svg>
+            </button>
+        `;
+        grid.appendChild(card);
+    });
+
+    nameResultsContainer.appendChild(grid);
+    nameGenerateAgainBtn.classList.remove('hidden'); // Show the 'Generate Again' button
+}
+
+
+/**
+ * Adds or removes a name from the user's favorites in Firestore.
+ * Uses the name itself (lowercase) as the document ID for easy checking.
+ * @param {object} nameData - Object containing {name, meaning, origin}.
+ */
+async function toggleFavoriteName(nameData) {
+    if (!favoriteNamesRef || !nameData || !nameData.name) return;
+
+    const lowerCaseName = nameData.name.toLowerCase();
+    const nameDocRef = doc(favoriteNamesRef, lowerCaseName); // Use lowercase name as ID
+
+    try {
+        const isCurrentlyFavorite = currentFavoriteNames.some(fav => fav.id === lowerCaseName);
+
+        if (isCurrentlyFavorite) {
+            // Remove from favorites
+            await deleteDoc(nameDocRef);
+        } else {
+            // Add to favorites
+            // Use setDoc with the custom ID to ensure no duplicates based on name
+            await setDoc(nameDocRef, {
+                name: nameData.name, // Store original casing
+                meaning: nameData.meaning || '',
+                origin: nameData.origin || '',
+                addedAt: serverTimestamp()
+            });
+        }
+        // The onSnapshot listener will automatically update the UI (renderFavoriteNames)
+    } catch (error) {
+        console.error("Error toggling favorite name:", error);
+    }
+}
+
+
+// === Unloading ===
+
 export function unloadJourney() {
     if (unsubscribeTodos) unsubscribeTodos();
     if (unsubscribeWishes) unsubscribeWishes();
     if (unsubscribeReflections) unsubscribeReflections();
+    if (unsubscribeFavoriteNames) unsubscribeFavoriteNames(); // NEW
+    // Remove specific event listeners if necessary, though often covered by page unload/auth change
+}
+
+// === Utility Functions ===
+export function updateWellnessDataForJourney(newData) {
+    wellnessDataForJourney = newData;
+    // Potentially trigger updates within Journey tab if needed based on wellness data
 }
