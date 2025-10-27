@@ -76,7 +76,7 @@ const babyMessageContent = document.getElementById('baby-message-content');
 // --- End of NEW DOM Elements ---
 
 
-let wellnessDataRef, symptomTrackerCollectionRef, userSupplementsRef, supplementNutrientsRef, supplementLogRef;
+let wellnessDataRef, symptomTrackerCollectionRef, userSupplementsRef, supplementNutrientsRef;
 let unsubscribeWellnessData, unsubscribeUserSupplements, unsubscribeSupplementNutrients, unsubscribeSupplementLog, unsubscribeDailyWellness;
 let wellnessData = {};
 let dailyWellnessData = {}; // To store data from the 'daily' doc (e.g., pregnancy start date)
@@ -95,9 +95,9 @@ let selectedDayKey = 'monday'; // The day being shown in the dashboard (e.g., 'm
 let editDayData = {}; // Temp storage for editing a day's data
 
 
-// --- FIX: Renamed defaultWellnessData to defaultWeeklyLogData ---
-// --- and removed pregnancyStartDate and pregnancyEndDate ---
-const defaultWeeklyLogData = {
+const defaultWellnessData = {
+    pregnancyStartDate: '2025-08-01',
+    pregnancyEndDate: '',
     dailyTip: "Stretch your legs for 5 minutes every hour to reduce swelling.",
     dailyNutrition: {},
     dailySupplements: { monday: [], tuesday: [], wednesday: [], thursday: [], friday: [], saturday: [], sunday: [] },
@@ -312,11 +312,10 @@ export async function initializeWellness(userId, onWellnessDataUpdate) {
             // This triggers the main onSnapshot and the full update chain.
             loadWellnessForDate(wellnessHistoryCurrentDate, onWellnessDataUpdate);
         } else {
-            // If it doesn't exist, create it with a hardcoded default start date
-            // --- FIX: Hardcode default start date here ---
+            // If it doesn't exist, create it with the start date from the default object
             setDoc(dailyWellnessRef, { 
-                pregnancyStartDate: '2025-08-01', 
-                pregnancyEndDate: '' 
+                pregnancyStartDate: defaultWellnessData.pregnancyStartDate, 
+                pregnancyEndDate: defaultWellnessData.pregnancyEndDate 
             });
         }
     });
@@ -331,8 +330,7 @@ async function initializeWellnessData(docRef, onWellnessDataUpdate) {
     if (!docRef) return;
     const docSnap = await getDoc(docRef);
     if (!docSnap.exists()) {
-        // --- FIX: Use defaultWeeklyLogData ---
-        await setDoc(docRef, defaultWeeklyLogData);
+        await setDoc(docRef, defaultWellnessData);
     }
 }
 
@@ -362,11 +360,10 @@ async function loadWellnessForDate(date, onWellnessDataUpdate) {
     await initializeWellnessData(wellnessDataRef); // Ensure doc exists before listening
 
     unsubscribeWellnessData = onSnapshot(wellnessDataRef, (docSnap) => {
-        // --- FIX: Use defaultWeeklyLogData ---
-        const firestoreData = docSnap.exists() ? docSnap.data() : defaultWeeklyLogData;
+        const firestoreData = docSnap.exists() ? docSnap.data() : defaultWellnessData;
         
-        // --- FIX: Change merge order. dailyWellnessData (with correct start date) MUST come last ---
-        wellnessData = { ...defaultWeeklyLogData, ...firestoreData, ...dailyWellnessData };
+        // Merge daily data (like start date) with the weekly log data.
+        wellnessData = { ...defaultWellnessData, ...dailyWellnessData, ...firestoreData };
 
         if (!isHistoryView) {
             const todayIndex = new Date().getDay();
@@ -994,13 +991,7 @@ export function renderWellnessChart() {
 }
 
 function updateDynamicContent() {
-    if(!wellnessData.pregnancyStartDate) {
-        console.warn("updateDynamicContent: pregnancyStartDate is missing. Using default.");
-        // This might happen on first load before daily doc snapshot returns
-        // We can set a sensible default or just return
-        babyGrowthSnapshotEl.innerHTML = `Set your start date! 🍼`;
-        return;
-    }
+    if(!wellnessData.pregnancyStartDate) return;
     const pregnancyStartDate = new Date(wellnessData.pregnancyStartDate);
     const today = new Date();
     const diffTime = Math.abs(today - pregnancyStartDate);
@@ -1063,18 +1054,8 @@ async function populateSupplementList() {
 
     if (unsubscribeSupplementLog) unsubscribeSupplementLog();
 
-    // Check if the doc exists before creating a listener
-    const docSnapCheck = await getDoc(wellnessDocRefForLog);
-    if (!docSnapCheck.exists()) {
-        // If the weekly doc doesn't exist, we can't log supplements for it yet.
-        // We can either create it, or just show an empty state.
-        // Let's create it silently.
-        await setDoc(wellnessDocRefForLog, defaultWeeklyLogData);
-    }
-
     unsubscribeSupplementLog = onSnapshot(wellnessDocRefForLog, (docSnap) => {
-        // --- FIX: Use defaultWeeklyLogData ---
-        const wellnessDataForLog = docSnap.exists() ? docSnap.data() : defaultWeeklyLogData;
+        const wellnessDataForLog = docSnap.exists() ? docSnap.data() : defaultWellnessData;
         const loggedSupplements = wellnessDataForLog.dailySupplements[dayKey] || [];
         
         supplementListContainer.innerHTML = '';
@@ -1118,8 +1099,7 @@ async function toggleSupplementForDay(suppName) {
     const wellnessDocRefForLog = doc(db, `users/${userId}/wellness`, weekId);
 
     const docSnap = await getDoc(wellnessDocRefForLog);
-    // --- FIX: Use defaultWeeklyLogData ---
-    const wellnessDataForLog = docSnap.exists() ? docSnap.data() : defaultWeeklyLogData;
+    const wellnessDataForLog = docSnap.exists() ? docSnap.data() : defaultWellnessData;
     const loggedSupplements = wellnessDataForLog.dailySupplements[dayKey] || [];
 
     const isLogged = loggedSupplements.includes(suppName);
@@ -1189,12 +1169,6 @@ async function handleAddSupplement() {
     finally { supplementApiLoader.classList.add('hidden'); addSupplementText.textContent = 'Check & Add Supplement'; addSupplementBtn.disabled = false; }
 }
 
-function showApiFeedback(message, type = 'success', element) {
-    element.innerHTML = message;
-    element.className = `text-sm p-3 rounded-md bg-opacity-20 ${type === 'success' ? 'bg-green-500 text-green-200' : type === 'warning' ? 'bg-yellow-500 text-yellow-200' : 'bg-red-500 text-red-200'}`;
-    element.classList.remove('hidden');
-}
-
 function openNutritionHistoryModal() {
     nutritionHistoryCurrentDate = new Date(); // Reset to current week
     populateNutritionHistory(nutritionHistoryCurrentDate);
@@ -1224,8 +1198,7 @@ async function populateNutritionHistory(date) {
 
     const weekWellnessRef = doc(db, `users/${userId}/wellness`, weekId);
     const weekWellnessSnap = await getDoc(weekWellnessRef);
-    // --- FIX: Use defaultWeeklyLogData ---
-    const wellnessForWeek = weekWellnessSnap.exists() ? weekWellnessSnap.data() : defaultWeeklyLogData;
+    const wellnessForWeek = weekWellnessSnap.exists() ? weekWellnessSnap.data() : defaultWellnessData;
 
 
     nutritionHistoryContainer.innerHTML = '';
@@ -1300,8 +1273,7 @@ async function populateSleepModal(date) {
     const weekId = getWeekId(date);
     const sleepDocRef = doc(db, `users/${getCurrentUserId()}/wellness`, weekId);
     const docSnap = await getDoc(sleepDocRef);
-    // --- FIX: Use defaultWeeklyLogData ---
-    const sleepDataForWeek = docSnap.exists() ? (docSnap.data().sleep || defaultWeeklyLogData.sleep) : defaultWeeklyLogData.sleep;
+    const sleepDataForWeek = docSnap.exists() ? (docSnap.data().sleep || defaultWellnessData.sleep) : defaultWellnessData.sleep;
 
     sleepScheduleContainer.innerHTML = '';
     const nightLabels = ["Sun/Mon", "Mon/Tue", "Tue/Wed", "Wed/Thu", "Thu/Fri", "Fri/Sat", "Sat/Sun"];
