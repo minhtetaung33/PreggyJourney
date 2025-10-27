@@ -1,7 +1,7 @@
 import { configError } from './firebase.js';
 import { setupAuthentication, getCurrentUserId } from './auth.js';
-// Import the new cacheDomElements function
-import { setupTabs, createBubbleBackground, cacheDomElements } from './ui.js';
+// Import the new cacheDomElements function and the new listener setup function
+import { setupTabs, createBubbleBackground, cacheDomElements, setupNotificationListeners } from './ui.js';
 import { initializeMealPlanner, unloadMealPlanner, updateWellnessDataForMealPlanner } from './meal-planner.js';
 import { 
     initializeWellness, 
@@ -85,6 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
     cacheDomElements(); 
     // Now these functions can safely access elements.
     // -------------------------
+    setupNotificationListeners(); // Set up listeners for the notification UI
 
     setupAuthentication();
     setupTabs(handleTabSwitch);
