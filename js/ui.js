@@ -12,7 +12,7 @@ export const cacheDomElements = () => {
     elements.authButtons = document.getElementById('auth-buttons');
     elements.userInfo = document.getElementById('user-info');
     elements.userNameEl = document.getElementById('user-name');
-    
+
     // Auth
     elements.signUpBtn = document.getElementById('sign-up-btn');
     elements.signOutBtn = document.getElementById('sign-out-btn');
@@ -95,9 +95,26 @@ export const cacheDomElements = () => {
     elements.summaryBreathLevel = document.getElementById('summary-breath-level');
     elements.summaryStretchLevel = document.getElementById('summary-stretch-level');
     elements.summaryMeditationLevel = document.getElementById('summary-meditation-level');
+    // NEW: Preggy Steps summary level
+    elements.summaryMovementLevel = document.getElementById('summary-movement-level');
     elements.summaryPositiveMessage = document.getElementById('summary-positive-message');
     elements.summaryStreakBadge = document.getElementById('summary-streak-badge');
     elements.summaryBarChart = document.getElementById('summary-bar-chart');
+
+    // --- Preggy Steps Elements (NEW SECTION) ---
+    elements.preggyTimerDisplay = document.getElementById('preggy-timer-display');
+    elements.preggyCaloriesDisplay = document.getElementById('preggy-calories-display');
+    elements.preggyPlayBtn = document.getElementById('preggy-play-btn');
+    elements.preggyPauseBtn = document.getElementById('preggy-pause-btn');
+    elements.preggyStopBtn = document.getElementById('preggy-stop-btn');
+    elements.preggyManualToggleBtn = document.getElementById('preggy-manual-toggle-btn');
+    elements.preggyActivitySelect = document.getElementById('preggy-activity-select');
+    elements.preggyIntensitySlider = document.getElementById('preggy-intensity-slider');
+    elements.preggyManualForm = document.getElementById('preggy-manual-form');
+    elements.preggyManualInput = document.getElementById('preggy-manual-input');
+    elements.preggyManualSaveBtn = document.getElementById('preggy-manual-save-btn');
+    // --- END Preggy Steps Elements ---
+
 
     // --- JOURNEY TAB ELEMENTS ---
     // Appointments
@@ -160,7 +177,7 @@ export const createBubbleBackground = () => {
     for (let i = 0; i < numBubbles; i++) {
         const bubble = document.createElement('span');
         bubble.className = 'background-bubble';
-        
+
         const size = Math.random() * 80 + 20; // Size from 20px to 100px
         const duration = Math.random() * 10 + 10; // Duration from 10s to 20s
         const delay = Math.random() * 15; // Start delay up to 15s
@@ -172,13 +189,13 @@ export const createBubbleBackground = () => {
         bubble.style.left = `calc(${horizontal}vw - ${size / 2}px)`;
         bubble.style.animationDuration = `${duration}s`;
         bubble.style.animationDelay = `${delay}s`;
-        
+
         // Custom property for horizontal drift
-        bubble.style.setProperty('--drift', `${drift}vw`); 
-        
+        bubble.style.setProperty('--drift', `${drift}vw`);
+
         elements.bubbleBackground.appendChild(bubble);
     }
-    
+
     // Update keyframes in CSS to use drift (we can't, but we can slightly modify the animation)
     // We'll modify the `rise` keyframe in CSS to include a horizontal movement.
     // For simplicity, we'll stick to the vertical rise defined in CSS.
@@ -194,7 +211,7 @@ const resetTabAnimation = (tabContentElement) => {
     cards.forEach(card => {
         card.classList.remove('anim-bubble-in', 'anim-float');
         // Re-apply initial hidden state
-        card.style.opacity = '0'; 
+        card.style.opacity = '0';
     });
 };
 
@@ -326,7 +343,7 @@ const switchTab = (activeTab) => {
     if (tabs[activeTab].btn && tabs[activeTab].content) {
         tabs[activeTab].btn.classList.add('active');
         tabs[activeTab].content.classList.add('active');
-        
+
         // Play animation for the new active tab
         playTabEntranceAnimation(tabs[activeTab].content);
     }
