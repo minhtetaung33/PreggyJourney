@@ -41,8 +41,22 @@
         <!-- Main Application (Initially hidden) -->
         <div id="main-app" class="hidden">
             <!-- Header -->
-            <header class="mb-8 text-center">
-                <h1 class="text-4xl md:text-5xl font-bold text-white">Pregnancy Wellness Planner</h1>
+            <header class="mb-8 flex justify-between items-center">
+                <!-- Empty div for spacing, keeps title centered -->
+                <div class="w-12 h-1"></div> 
+                
+                <h1 class="text-4xl md:text-5xl font-bold text-white text-center">Pregnancy Wellness Planner</h1>
+
+                <!-- NEW: Notification Bell -->
+                <button id="notification-bell-btn" class="icon-btn relative p-2 rounded-full hover:bg-white/20 transition-colors">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341A6.002 6.002 0 006 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                    </svg>
+                    <!-- Notification Badge -->
+                    <span id="notification-badge" class="absolute top-0 right-0 block h-4 w-4 rounded-full bg-red-600 text-white text-xs font-bold flex items-center justify-center ring-2 ring-gray-800 hidden">
+                        0
+                    </span>
+                </button>
             </header>
 
             <!-- Tab Navigation -->
@@ -785,7 +799,7 @@
 
                                     <div class="flex gap-2">
                                         <input type="text" id="new-wish-price" class="meal-select text-sm w-1/2" placeholder="Price ($)">
-                                        <input type="text" id="new-wish-link" class="meal-select text-sm w-1/2" placeholder="Store Link">
+                                        <input type="text" id="new-wish-link" class="meal-select text-sm w-1/Half" placeholder="Store Link">
                                     </div>
                                     <button id="add-wish-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Add Wish</button>
                                 </div>
@@ -921,6 +935,29 @@
 
     <!-- Modals -->
     <!-- UPDATED z-index for all modals from z-30/40/50 to z-[110] or higher to appear above sparkle container (z-[100]) -->
+    
+    <!-- NEW: Notification Modal -->
+    <div id="notification-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-[120] p-4">
+        <div id="notification-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-white">Notifications</h3>
+                <!-- We will make this button functional later -->
+                <button id="notification-clear-all-btn" class="icon-btn" title="Clear All Notifications">
+                    <svg class="w-6 h-6 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div id="notification-list-container" class="space-y-3 max-h-80 overflow-y-auto modal-scroll pr-2 mb-6">
+                <!-- Notifications will be injected here by ui.js -->
+                <p id="no-notifications-message" class="text-center text-gray-400">No new notifications.</p>
+            </div>
+            
+            <button id="notification-modal-close-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Close</button>
+        </div>
+    </div>
+
     <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-[110] p-4">
         <div id="auth-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-sm transform scale-95 opacity-0 transition-transform transition-opacity duration-300 text-center">
             <h3 class="text-2xl font-bold mb-2">Welcome!</h3>
@@ -1344,5 +1381,3 @@
     <script type="module" src="./js/calm-space.js"></script>
 </body>
 </html>
-
-
