@@ -673,7 +673,8 @@ function updateNutritionTracker() {
     
     if (currentMealPlanData) {
         for (const mealKey in currentMealPlanData) {
-            if (currentMealPlanData[mealKey] && typeof currentMealPlanData[mealKey] === 'object') {
+            // FIX: Added a check here as well (line ~1066)
+            if (currentMealPlanData[mealKey] && typeof currentMealPlanData[mealKey] === 'object' && currentMealPlanData[mealKey][selectedDayKey] !== undefined) {
                 const mealName = currentMealPlanData[mealKey][selectedDayKey];
                 if (mealName && allMealNutrients[mealName]) {
                     const nutrients = allMealNutrients[mealName];
@@ -1216,8 +1217,8 @@ async function populateNutritionHistory(date) {
         const dayTitle = dayTitles[dayKey];
         const totals = { iron: 0, calcium: 0, folate: 0, fiber: 0 };
         for (const mealKey in mealPlanForWeek) {
-            // FIX: Added a check to ensure the property is a valid meal object
-            if (mealPlanForWeek[mealKey] && typeof mealPlanForWeek[mealKey] === 'object') {
+            // FIX: Added a check here too (line ~1232)
+            if (mealPlanForWeek[mealKey] && typeof mealPlanForWeek[mealKey] === 'object' && mealPlanForWeek[mealKey][dayKey] !== undefined) {
                 const mealName = mealPlanForWeek[mealKey][dayKey];
                 if (mealName && allMealNutrients[mealName]) {
                     const nutrients = allMealNutrients[mealName];
