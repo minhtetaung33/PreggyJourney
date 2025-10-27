@@ -20,16 +20,6 @@ export const cacheDomElements = () => {
     elements.googleSignInBtn = document.getElementById('google-signin-btn');
     elements.authModalCloseBtn = document.getElementById('auth-modal-close-btn');
 
-    // NEW: Notification Elements
-    elements.notificationBellBtn = document.getElementById('notification-bell-btn');
-    elements.notificationBadge = document.getElementById('notification-badge');
-    elements.notificationModal = document.getElementById('notification-modal');
-    elements.notificationModalContent = document.getElementById('notification-modal-content');
-    elements.notificationListContainer = document.getElementById('notification-list-container');
-    elements.noNotificationsMessage = document.getElementById('no-notifications-message');
-    elements.notificationModalCloseBtn = document.getElementById('notification-modal-close-btn');
-    elements.notificationClearAllBtn = document.getElementById('notification-clear-all-btn'); // We'll add listener in journey.js
-
     // Tabs
     elements.mealPlanTab = document.getElementById('tab-meal-plan');
     elements.symptomTrackerTab = document.getElementById('tab-symptom-tracker');
@@ -175,6 +165,14 @@ export const cacheDomElements = () => {
     // --- Animation Elements ---
     elements.bubbleBackground = document.getElementById('bubble-background');
     elements.pageLoadOverlay = document.getElementById('page-load-overlay');
+    
+    // --- NEW NOTIFICATION ELEMENTS ---
+    elements.notificationBellBtn = document.getElementById('notification-bell-btn');
+    elements.notificationBadge = document.getElementById('notification-badge');
+    elements.notificationModal = document.getElementById('notification-modal');
+    elements.notificationCloseBtn = document.getElementById('notification-close-btn');
+    elements.notificationList = document.getElementById('notification-list');
+    elements.notificationClearAllBtn = document.getElementById('notification-clear-all-btn');
 };
 
 
@@ -362,83 +360,126 @@ const switchTab = (activeTab) => {
 // === NEW NOTIFICATION MODAL FUNCTIONS ===
 
 /**
- * Opens the notification modal with a smooth animation.
+ * Opens the notification modal.
  */
-export const openNotificationModal = () => {
-    if (!elements.notificationModal) return;
-    elements.notificationModal.classList.remove('hidden');
-    setTimeout(() => elements.notificationModal.classList.add('active'), 10);
+const openNotificationModal = () => {
+    // --- DEBUGGING ---
+    console.log("openNotificationModal called!");
+    if (elements.notificationModal) {
+        console.log("Modal element found, attempting to show...");
+        elements.notificationModal.classList.remove('hidden');
+        // Use setTimeout to allow the display change to register before starting animation
+        setTimeout(() => {
+            elements.notificationModal.classList.add('active');
+            console.log("Modal 'active' class added.");
+        }, 10); // Small delay
+    } else {
+        console.error("Notification modal element not found in 'elements'.");
+    }
+    // --- END DEBUGGING ---
 };
 
 /**
- * Closes the notification modal with a smooth animation.
+ * Closes the notification modal.
  */
-export const closeNotificationModal = () => {
-    if (!elements.notificationModal) return;
-    elements.notificationModal.classList.remove('active');
-    setTimeout(() => elements.notificationModal.classList.add('hidden'), 300);
+const closeNotificationModal = () => {
+    // --- DEBUGGING ---
+    console.log("closeNotificationModal called!");
+    if (elements.notificationModal) {
+        elements.notificationModal.classList.remove('active');
+        // Wait for animation to finish before hiding
+        setTimeout(() => {
+            elements.notificationModal.classList.add('hidden');
+            console.log("Modal 'hidden' class added.");
+        }, 300); // Corresponds to transition duration in CSS
+    } else {
+        console.error("Notification modal element not found in 'elements'.");
+    }
+     // --- END DEBUGGING ---
 };
 
 /**
- * Updates the notification UI with a list of notifications.
- * @param {Array<Object>} notifications - An array of notification objects.
+ * Updates the notification UI (badge count and modal list).
+ * @param {Array} notifications - Sorted array of notification objects.
  */
-export const updateNotificationUI = (notifications = []) => {
-    if (!elements.notificationBadge || !elements.notificationListContainer || !elements.noNotificationsMessage) return;
+export const updateNotificationUI = (notifications) => {
+    // --- DEBUGGING ---
+    console.log("updateNotificationUI called with", notifications.length, "notifications.");
+    // --- END DEBUGGING ---
+    if (!elements.notificationBadge || !elements.notificationList) {
+        console.error("Notification UI elements (badge or list) not found.");
+        return;
+    }
 
-    // --- Update Badge ---
+    // Update badge
     if (notifications.length > 0) {
-        elements.notificationBadge.textContent = notifications.length > 9 ? '9+' : notifications.length;
+        elements.notificationBadge.textContent = notifications.length;
         elements.notificationBadge.classList.remove('hidden');
     } else {
         elements.notificationBadge.classList.add('hidden');
     }
 
-    // --- Update List ---
-    elements.notificationListContainer.innerHTML = ''; // Clear old list
+    // Populate list
+    elements.notificationList.innerHTML = ''; // Clear previous list
     if (notifications.length === 0) {
-        elements.noNotificationsMessage.classList.remove('hidden');
+        elements.notificationList.innerHTML = '<p class="text-center text-gray-400 p-4">No new notifications.</p>';
+        if (elements.notificationClearAllBtn) elements.notificationClearAllBtn.classList.add('hidden'); // Hide clear button if no notifications
     } else {
-        elements.noNotificationsMessage.classList.add('hidden');
-        notifications.forEach(notification => {
+        notifications.forEach(noti => {
             const item = document.createElement('div');
-            item.className = `notification-item flex items-start type-${notification.type}`;
-            
-            // Icon logic
-            let iconHtml = '';
-            if (notification.type.includes('todo')) {
-                iconHtml = `<svg class="text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002-2h2a2 2 0 002 2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>`;
-            } else if (notification.type.includes('wish')) {
-                iconHtml = `<svg class="text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zM8 8H6a2 2 0 100 4h2v6H6a2 2 0 100 4h2V8zm8 0h2a2 2 0 100-4h-2v6h2a2 2 0 100-4h-2V8zM8 5V3m8 2V3"></path></svg>`;
-            }
+            // Add appropriate icon based on type prefix ('todo' or 'wish')
+            const isTodo = noti.type.startsWith('todo');
+            const iconSvg = isTodo
+              ? '<svg class="text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>' // Checklist icon
+              : '<svg class="text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'; // Clock icon (for expiry)
 
+            item.className = `notification-item flex items-start type-${noti.type}`; // Add type class
             item.innerHTML = `
-                ${iconHtml}
+                ${iconSvg}
                 <div class="flex-1">
-                    <p class="font-semibold text-white">${notification.title}</p>
-                    <p class="text-sm text-gray-300">${notification.message}</p>
+                    <p class="font-semibold text-sm break-words">${noti.title}</p>
+                    <p class="text-xs text-gray-400">${noti.message}</p>
                 </div>
             `;
-            elements.notificationListContainer.appendChild(item);
+            elements.notificationList.appendChild(item);
         });
+        if (elements.notificationClearAllBtn) elements.notificationClearAllBtn.classList.remove('hidden'); // Show clear button
     }
 };
 
-// --- Setup Notification Listeners ---
-// We can set these up here since ui.js is guaranteed to run after cacheDomElements
-document.addEventListener('DOMContentLoaded', () => {
-    // Wait for elements to be cached
+// --- Add Event Listeners ---
+// Moved event listeners here from cacheDomElements to ensure elements exist first
+export const setupNotificationListeners = () => {
     if (elements.notificationBellBtn) {
         elements.notificationBellBtn.addEventListener('click', openNotificationModal);
+        console.log("Event listener added to notification bell.");
+    } else {
+        console.error("Notification bell button not found to add listener.");
     }
-    if (elements.notificationModalCloseBtn) {
-        elements.notificationModalCloseBtn.addEventListener('click', closeNotificationModal);
+
+    if (elements.notificationCloseBtn) {
+        elements.notificationCloseBtn.addEventListener('click', closeNotificationModal);
+        console.log("Event listener added to notification close button.");
+    } else {
+        console.error("Notification close button not found to add listener.");
     }
-    if (elements.notificationModal) {
+
+     if (elements.notificationModal) {
+        // Close modal if clicking outside the content area
         elements.notificationModal.addEventListener('click', (e) => {
             if (e.target === elements.notificationModal) {
                 closeNotificationModal();
             }
         });
+         console.log("Event listener added to notification modal background.");
+    } else {
+         console.error("Notification modal not found to add background click listener.");
     }
-});
+
+     if (elements.notificationClearAllBtn) {
+         // The actual clear logic is in journey.js, just log here if needed
+         console.log("Clear All button found.");
+     } else {
+         console.error("Notification Clear All button not found.");
+     }
+}
