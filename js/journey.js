@@ -189,7 +189,8 @@ function loadFavoriteNames() {
 const formatDate = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString + 'T00:00:00'); // Adjust for timezone issues
-    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    // UPDATED FORMAT
+    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
 const formatTime = (timeString) => {
