@@ -843,6 +843,52 @@ h1, h2, h3 {
     fill: #ec4899; /* Darker pink on hover when favorited */
 }
 
+/* === NEW QUANTITY INPUT STYLES === */
+.quantity-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 9999px; /* Fully rounded */
+    width: 2rem; /* 32px */
+    height: 2rem; /* 32px */
+    font-weight: bold;
+    font-size: 1.25rem; /* Larger font */
+    color: #cbd5e1; /* gray-300 */
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1; /* Ensure text is centered vertically */
+}
+.quantity-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+.quantity-input {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 0.5rem;
+    color: #f0f0f0;
+    padding: 0.5rem 0.75rem; /* Slightly less padding than meal-select */
+    transition: background-color 0.2s;
+    font-size: 1rem;
+    color-scheme: dark;
+    text-align: center;
+    width: 4rem; /* Fixed width */
+    /* Hide default number input arrows */
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+.quantity-input::-webkit-outer-spin-button,
+.quantity-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.quantity-input:focus {
+    outline: 2px solid #a78bfa;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
 /* === NEW NOTIFICATION STYLES === */
 @keyframes badge-pulse {
     0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 100, 100, 0.7); }
