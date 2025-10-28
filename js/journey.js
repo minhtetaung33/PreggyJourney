@@ -313,13 +313,18 @@ function renderWishes(wishes) {
     // 2. Fully purchased (purchasedCount === quantity) items second.
     // 3. Within groups, sort by creation date (newest first).
     const sortedWishes = [...wishes].sort((a, b) => {
-        const aPurchased = (a.purchasedCount || 0) >= (a.quantity || 1);
-        const bPurchased = (b.purchasedCount || 0) >= (b.quantity || 1);
+        // --- THIS IS THE OLD LOGIC, LET'S FIX IT ---
+        // const aPurchased = (a.purchasedCount || 0) >= (a.quantity || 1);
+        // const bPurchased = (b.purchasedCount || 0) >= (b.quantity || 1);
+        
+        // --- THIS IS THE NEW LOGIC YOU REQUESTED ---
+        const aNeeded = (a.purchasedCount || 0) === 0;
+        const bNeeded = (b.purchasedCount || 0) === 0;
 
-        if (aPurchased !== bPurchased) {
-            return aPurchased - bPurchased; // false (0) comes before true (1)
+        if (aNeeded !== bNeeded) {
+            return bNeeded - aNeeded; // true (1) comes before false (0)
         }
-        // If 'purchased' status is the same, sort by 'createdAt' descending
+        // If 'needed' status is the same, sort by 'createdAt' descending
         const dateA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
         const dateB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
         return dateB - dateA; // Newest first
@@ -366,12 +371,16 @@ function renderWishes(wishes) {
         const item = document.createElement('div');
         const quantity = wish.quantity || 1;
         const purchasedCount = wish.purchasedCount || 0;
-        const isComplete = purchasedCount >= quantity;
+        
+        // --- DEFINE BOTH LOGICS ---
+        const isComplete = purchasedCount >= quantity; // For buttons/text
+        const isNeeded = purchasedCount === 0; // For card style
 
         totalTarget += quantity;
         totalPurchased += purchasedCount;
 
-        item.className = `wish-item-card p-3 bg-white/5 rounded-lg border border-transparent ${isComplete ? 'purchased opacity-60' : ''}`;
+        // --- APPLY 'isNeeded' LOGIC TO CLASSNAME ---
+        item.className = `wish-item-card p-3 bg-white/5 rounded-lg border border-transparent ${isNeeded ? '' : 'purchased opacity-60'}`;
 
         // Check for Food category
         let foodDetailsHtml = '';
@@ -396,8 +405,10 @@ function renderWishes(wishes) {
                     <div class="flex items-center gap-2">
                         <button class="quantity-btn wish-quantity-minus" ${purchasedCount <= 0 ? 'disabled' : ''} style="width: 1.75rem; height: 1.75rem; font-size: 1rem; ${purchasedCount <= 0 ? 'opacity: 0.5; cursor: not-allowed;' : ''}">-</button>
                         <span class="font-bold text-lg w-12 text-center">
+                            <!-- USE 'isComplete' FOR TEXT COLOR -->
                             <span class="${isComplete ? 'text-teal-300' : 'text-white'}">${purchasedCount}</span><span class="text-gray-400 text-sm">/${quantity}</span>
                         </span>
+                        <!-- USE 'isComplete' FOR BUTTON DISABLED -->
                         <button class="quantity-btn wish-quantity-plus" ${isComplete ? 'disabled' : ''} style="width: 1.75rem; height: 1.75rem; font-size: 1rem; ${isComplete ? 'opacity: 0.5; cursor: not-allowed;' : ''}">+</button>
                     </div>
                     <!-- NEW EDIT BUTTON -->
@@ -419,15 +430,6 @@ function renderWishes(wishes) {
             handleUpdateWishPurchasedCount(wish, purchasedCount - 1);
         });
         
-        // Set checkbox state AFTER innerHTML is set
-        // item.querySelector('input[type="checkbox"]').checked = wish.purchased;
-
-        /*
-        item.querySelector('input[type="checkbox"]').addEventListener('change', async (e) => {
-            const wishDocRef = doc(db, `users/${getCurrentUserId()}/wishes`, wish.id);
-            await updateDoc(wishDocRef, { purchased: e.target.checked });
-        });
-        */
         item.querySelector('.delete-wish-btn').addEventListener('click', async () => {
             const wishDocRef = doc(db, `users/${getCurrentUserId()}/wishes`, wish.id);
             await deleteDoc(wishDocRef);
