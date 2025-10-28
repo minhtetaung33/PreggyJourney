@@ -799,8 +799,24 @@
 
                                     <div class="flex gap-2">
                                         <input type="text" id="new-wish-price" class="meal-select text-sm w-1/2" placeholder="Price ($)">
-                                        <input type="text" id="new-wish-link" class="meal-select text-sm w-1/Half" placeholder="Store Link">
+                                        <input type="text" id="new-wish-link" class="meal-select text-sm w-1/2" placeholder="Store Link">
                                     </div>
+
+                                    <!-- ================================== -->
+                                    <!-- === NEW WISH QUANTITY INPUT === -->
+                                    <!-- ================================== -->
+                                    <div>
+                                        <label for="new-wish-quantity" class="text-sm text-gray-300 mb-1 block">Quantity</label>
+                                        <div class="flex items-center gap-2">
+                                            <button type="button" id="new-wish-quantity-minus" class="quantity-btn">-</button>
+                                            <input type="number" id="new-wish-quantity" class="quantity-input" value="1" min="1">
+                                            <button type="button" id="new-wish-quantity-plus" class="quantity-btn">+</button>
+                                        </div>
+                                    </div>
+                                    <!-- ================================== -->
+                                    <!-- === END NEW WISH QUANTITY INPUT === -->
+                                    <!-- ================================== -->
+
                                     <button id="add-wish-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Add Wish</button>
                                 </div>
                                 <div class="mt-6 text-center">
@@ -1179,7 +1195,7 @@
              <div id="nutrition-history-container" class="space-y-3 max-h-80 overflow-y-auto modal-scroll pr-2 my-4">
                 <!-- JS will populate this -->
              </div>
-             <button id="nutrition-history-close-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors mt-6">Close</button>
+             <button id="nutrition-history-close-btn" class_alias="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors mt-6">Close</button>
         </div>
     </div>
     
@@ -1346,7 +1362,7 @@
                          <option value="Snack">🥨 Snack</option>
                          <option value="Diary">🧀 Diary</option>
                          <!-- ADDED Grain and Soup -->
-                         <option value="Grain">🍚 Grain</option> 
+                         <option value="Grain">🍚 Grain</option> I
                          <option value="Soup">🍲 Soup</option>
                          <option value="Dog">🐶 Dog Food</option>
                          <option value="Drinks">🥤 Drinks</option>
@@ -1359,6 +1375,22 @@
                      <input type="text" id="edit-wish-price" class="meal-select text-sm w-1/2" placeholder="Price ($)">
                      <input type="text" id="edit-wish-link" class="meal-select text-sm w-1/2" placeholder="Store Link">
                  </div>
+
+                 <!-- ================================== -->
+                 <!-- === NEW WISH QUANTITY INPUT (EDIT) === -->
+                 <!-- ================================== -->
+                 <div>
+                    <label for="edit-wish-quantity" class="text-sm text-gray-300 mb-1 block">Quantity</label>
+                    <div class="flex items-center gap-2">
+                        <button type="button" id="edit-wish-quantity-minus" class="quantity-btn">-</button>
+                        <input type="number" id="edit-wish-quantity" class="quantity-input" value="1" min="1">
+                        <button type="button" id="edit-wish-quantity-plus" class="quantity-btn">+</button>
+                    </div>
+                 </div>
+                 <!-- ================================== -->
+                 <!-- === END NEW WISH QUANTITY INPUT (EDIT) === -->
+                 <!-- ================================== -->
+
             </div>
             <div class="flex gap-4 mt-6">
                 <button id="edit-wish-modal-cancel-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg">Cancel</button>
