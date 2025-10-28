@@ -309,11 +309,15 @@ function renderWishes(wishes) {
     wishlistContainer.innerHTML = '';
 
     // Sort wishes:
-    // 1. Un-purchased (false) items first.
-    // 2. Within purchased/un-purchased groups, sort by creation date (newest first).
+    // 1. Un-purchased (purchasedCount < quantity) items first.
+    // 2. Fully purchased (purchasedCount === quantity) items second.
+    // 3. Within groups, sort by creation date (newest first).
     const sortedWishes = [...wishes].sort((a, b) => {
-        if (a.purchased !== b.purchased) {
-            return a.purchased - b.purchased; // false (0) comes before true (1)
+        const aPurchased = (a.purchasedCount || 0) >= (a.quantity || 1);
+        const bPurchased = (b.purchasedCount || 0) >= (b.quantity || 1);
+
+        if (aPurchased !== bPurchased) {
+            return aPurchased - bPurchased; // false (0) comes before true (1)
         }
         // If 'purchased' status is the same, sort by 'createdAt' descending
         const dateA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
@@ -354,10 +358,20 @@ function renderWishes(wishes) {
     };
 
 
+    let totalTarget = 0;
+    let totalPurchased = 0;
+
     // Iterate over the newly sorted list
     sortedWishes.forEach(wish => {
         const item = document.createElement('div');
-        item.className = `wish-item-card p-3 bg-white/5 rounded-lg border border-transparent ${wish.purchased ? 'purchased opacity-60' : ''}`;
+        const quantity = wish.quantity || 1;
+        const purchasedCount = wish.purchasedCount || 0;
+        const isComplete = purchasedCount >= quantity;
+
+        totalTarget += quantity;
+        totalPurchased += purchasedCount;
+
+        item.className = `wish-item-card p-3 bg-white/5 rounded-lg border border-transparent ${isComplete ? 'purchased opacity-60' : ''}`;
 
         // Check for Food category
         let foodDetailsHtml = '';
@@ -378,9 +392,16 @@ function renderWishes(wishes) {
                     ${foodDetailsHtml}
                 </div>
                 <div class="flex items-center ml-2 flex-shrink-0"> <!-- ADDED flex-shrink-0 -->
-                    <input type="checkbox" class="h-5 w-5 rounded bg-white/20 text-teal-400 focus:ring-teal-500 border-gray-500 cursor-pointer mr-2"> <!-- Added mr-2 -->
+                    <!-- NEW: Quantity controls -->
+                    <div class="flex items-center gap-2">
+                        <button class="quantity-btn wish-quantity-minus" ${purchasedCount <= 0 ? 'disabled' : ''} style="width: 1.75rem; height: 1.75rem; font-size: 1rem; ${purchasedCount <= 0 ? 'opacity: 0.5; cursor: not-allowed;' : ''}">-</button>
+                        <span class="font-bold text-lg w-12 text-center">
+                            <span class="${isComplete ? 'text-teal-300' : 'text-white'}">${purchasedCount}</span><span class="text-gray-400 text-sm">/${quantity}</span>
+                        </span>
+                        <button class="quantity-btn wish-quantity-plus" ${isComplete ? 'disabled' : ''} style="width: 1.75rem; height: 1.75rem; font-size: 1rem; ${isComplete ? 'opacity: 0.5; cursor: not-allowed;' : ''}">+</button>
+                    </div>
                     <!-- NEW EDIT BUTTON -->
-                    <button class="icon-btn edit-wish-btn"><svg class="w-5 h-5 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L14.732 3.732z"></path></svg></button>
+                    <button class="icon-btn edit-wish-btn ml-2"><svg class="w-5 h-5 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L14.732 3.732z"></path></svg></button>
                     <button class="icon-btn delete-wish-btn ml-1"><svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
                 </div>
             </div>
@@ -389,13 +410,24 @@ function renderWishes(wishes) {
                 ${wish.link ? `<a href="${wish.link}" target="_blank" class="text-blue-400 hover:underline">Store Link</a>` : ''}
             </div>
         `;
-        // Set checkbox state AFTER innerHTML is set
-        item.querySelector('input[type="checkbox"]').checked = wish.purchased;
 
+        // Add event listeners for new + and - buttons
+        item.querySelector('.wish-quantity-plus').addEventListener('click', () => {
+            handleUpdateWishPurchasedCount(wish, purchasedCount + 1);
+        });
+        item.querySelector('.wish-quantity-minus').addEventListener('click', () => {
+            handleUpdateWishPurchasedCount(wish, purchasedCount - 1);
+        });
+        
+        // Set checkbox state AFTER innerHTML is set
+        // item.querySelector('input[type="checkbox"]').checked = wish.purchased;
+
+        /*
         item.querySelector('input[type="checkbox"]').addEventListener('change', async (e) => {
             const wishDocRef = doc(db, `users/${getCurrentUserId()}/wishes`, wish.id);
             await updateDoc(wishDocRef, { purchased: e.target.checked });
         });
+        */
         item.querySelector('.delete-wish-btn').addEventListener('click', async () => {
             const wishDocRef = doc(db, `users/${getCurrentUserId()}/wishes`, wish.id);
             await deleteDoc(wishDocRef);
@@ -407,9 +439,8 @@ function renderWishes(wishes) {
     });
 
     // This calculation remains correct as it's based on the original full 'wishes' array
-    const purchasedCount = wishes.filter(w => w.purchased).length;
-    wishlistProgressText.textContent = `${purchasedCount}/${wishes.length} Items`;
-    wishlistProgressBar.style.width = wishes.length > 0 ? `${(purchasedCount / wishes.length) * 100}%` : '0%';
+    wishlistProgressText.textContent = `${totalPurchased}/${totalTarget} Items`;
+    wishlistProgressBar.style.width = totalTarget > 0 ? `${(totalPurchased / totalTarget) * 100}%` : '0%';
 }
 
 function renderReflections(reflections) {
@@ -514,6 +545,7 @@ function renderAiWishSuggestions(suggestions) {
                 customCategoryInput.value = suggestion.category;
                 elements.newWishFoodFields.classList.add('hidden'); // Hide for custom
             }
+            elements.newWishQuantityInput.value = 1; // NEW: Reset quantity
             newWishItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
             newWishItem.focus();
         });
@@ -737,6 +769,7 @@ function setupEventListeners() {
         if (category === 'Custom') {
             category = customCategoryInput.value.trim();
         }
+        const quantityVal = parseInt(elements.newWishQuantityInput.value, 10) || 1; // NEW: Get quantity
         if (!item || !wishesRef || !category) return;
 
         // NEW: Create wish data object
@@ -745,7 +778,8 @@ function setupEventListeners() {
             category: category,
             price: newWishPrice.value.trim(),
             link: newWishLink.value.trim(),
-            purchased: false,
+            quantity: quantityVal, // NEW: Save quantity
+            purchasedCount: 0, // NEW: Initialize purchased count
             createdAt: serverTimestamp()
         };
 
@@ -760,6 +794,7 @@ function setupEventListeners() {
         await addDoc(wishesRef, wishData); // Use the new data object
 
         newWishItem.value = newWishPrice.value = newWishLink.value = '';
+        elements.newWishQuantityInput.value = 1; // NEW: Reset quantity
         customCategoryInput.value = '';
         newWishCategory.value = 'Baby Care';
         customCategoryInput.classList.add('hidden');
@@ -819,6 +854,9 @@ function setupEventListeners() {
             elements.newWishFoodFields.classList.add('hidden');
         }
     });
+
+    // NEW: Listeners for Add Wish quantity buttons
+    setupQuantityButtons(elements.newWishQuantityInput, elements.newWishQuantityMinusBtn, elements.newWishQuantityPlusBtn);
 
     newTodoCategory.addEventListener('change', () => {
         if (newTodoCategory.value === 'Custom') {
@@ -1043,6 +1081,8 @@ function setupEventListeners() {
     elements.editWishModalSaveBtn.addEventListener('click', handleSaveWish);
     elements.editWishModalCancelBtn.addEventListener('click', closeEditWishModal);
     elements.editWishModal.addEventListener('click', e => e.target === elements.editWishModal && closeEditWishModal());
+    // NEW: Listeners for Edit Wish quantity buttons
+    setupQuantityButtons(elements.editWishQuantityInput, elements.editWishQuantityMinusBtn, elements.editWishQuantityPlusBtn);
     elements.editWishCategory.addEventListener('change', () => { // Listener for category change *inside* edit modal
         if (elements.editWishCategory.value === 'Custom') {
             elements.editCustomCategoryInput.classList.remove('hidden');
@@ -1146,7 +1186,59 @@ function setupNameGeneratorListeners() {
 
 // === Helper & Action Functions (Original + Name Gen) ===
 
-// ... (Keep existing openEditTodoModal, closeEditTodoModal, handleSaveTodo, deleteReflection, openReflectionModal, closeReflectionModal, openEditWishModal, closeEditWishModal, handleSaveWish, updateColorTags)
+// NEW: Helper function to manage quantity input fields
+/**
+ * Sets up listeners for a quantity input block (+ and - buttons).
+ * @param {HTMLInputElement} inputElement - The number input element.
+ * @param {HTMLButtonElement} minusBtn - The minus button.
+ * @param {HTMLButtonElement} plusBtn - The plus button.
+ */
+function setupQuantityButtons(inputElement, minusBtn, plusBtn) {
+    minusBtn.addEventListener('click', () => {
+        let currentValue = parseInt(inputElement.value, 10);
+        if (isNaN(currentValue)) currentValue = 1;
+        if (currentValue > 1) {
+            inputElement.value = currentValue - 1;
+        }
+    });
+
+    plusBtn.addEventListener('click', () => {
+        let currentValue = parseInt(inputElement.value, 10);
+        if (isNaN(currentValue)) currentValue = 1;
+        inputElement.value = currentValue + 1;
+    });
+
+    inputElement.addEventListener('change', () => {
+        let currentValue = parseInt(inputElement.value, 10);
+        if (isNaN(currentValue) || currentValue < 1) {
+            inputElement.value = 1;
+        }
+    });
+}
+
+// NEW: Helper function to update a wish's purchased count
+/**
+ * Updates the 'purchasedCount' for a wish in Firestore.
+ * @param {object} wish - The wish object.
+ * @param {number} newCount - The new purchasedCount to set.
+ */
+async function handleUpdateWishPurchasedCount(wish, newCount) {
+    if (!wishesRef) return;
+
+    const quantity = wish.quantity || 1;
+    // Clamp newCount between 0 and quantity
+    const clampedCount = Math.max(0, Math.min(newCount, quantity));
+
+    if (clampedCount === (wish.purchasedCount || 0)) return; // No change needed
+
+    const wishDocRef = doc(db, `users/${getCurrentUserId()}/wishes`, wish.id);
+    try {
+        await updateDoc(wishDocRef, { purchasedCount: clampedCount });
+    } catch (error) {
+        console.error("Error updating purchased count:", error);
+    }
+}
+
 
 function openEditTodoModal(todo) {
     activeTodoId = todo.id;
@@ -1310,6 +1402,7 @@ function openEditWishModal(wish) {
     elements.editWishItem.value = wish.item;
     elements.editWishPrice.value = wish.price || '';
     elements.editWishLink.value = wish.link || '';
+    elements.editWishQuantityInput.value = wish.quantity || 1; // NEW: Set quantity
 
     // Set category and handle custom/food fields
     const standardCategories = ['Baby Care', 'Nursery', 'Hospital Bag', 'Health', 'Postpartum', 'Food'];
@@ -1352,6 +1445,7 @@ async function handleSaveWish() {
     if (category === 'Custom') {
         category = elements.editCustomCategoryInput.value.trim();
     }
+    const newQuantity = parseInt(elements.editWishQuantityInput.value, 10) || 1; // NEW: Get quantity
 
     if (!item || !category) {
         console.error('Item name and category cannot be empty.');
@@ -1359,12 +1453,21 @@ async function handleSaveWish() {
     }
 
     const wishDocRef = doc(db, `users/${getCurrentUserId()}/wishes`, activeWishId);
+    
+    // NEW: Check if new quantity is less than current purchased count
+    const currentWish = currentWishes.find(w => w.id === activeWishId);
+    let currentPurchasedCount = currentWish.purchasedCount || 0;
+    if (newQuantity < currentPurchasedCount) {
+        currentPurchasedCount = newQuantity; // Cap purchased count at new quantity
+    }
 
     const wishData = {
         item,
         category,
         price: elements.editWishPrice.value.trim(),
         link: elements.editWishLink.value.trim(),
+        quantity: newQuantity, // NEW: Save quantity
+        purchasedCount: currentPurchasedCount, // NEW: Save potentially adjusted purchased count
         foodDetails: null // Default to null
     };
 
