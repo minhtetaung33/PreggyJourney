@@ -140,6 +140,11 @@ export const cacheDomElements = () => {
     elements.newWishFoodType = document.getElementById('new-wish-food-type');
     elements.newWishFoodExpiry = document.getElementById('new-wish-food-expiry');
 
+    // NEW: Wish Quantity Fields (Add form)
+    elements.newWishQuantityInput = document.getElementById('new-wish-quantity');
+    elements.newWishQuantityMinusBtn = document.getElementById('new-wish-quantity-minus');
+    elements.newWishQuantityPlusBtn = document.getElementById('new-wish-quantity-plus');
+
     // NEW: Edit Wish Modal Fields
     elements.editWishModal = document.getElementById('edit-wish-modal');
     elements.editWishItem = document.getElementById('edit-wish-item');
@@ -150,6 +155,11 @@ export const cacheDomElements = () => {
     elements.editWishFoodExpiry = document.getElementById('edit-wish-food-expiry');
     elements.editWishPrice = document.getElementById('edit-wish-price');
     elements.editWishLink = document.getElementById('edit-wish-link');
+    // NEW: Wish Quantity Fields (Edit modal)
+    elements.editWishQuantityInput = document.getElementById('edit-wish-quantity');
+    elements.editWishQuantityMinusBtn = document.getElementById('edit-wish-quantity-minus');
+    elements.editWishQuantityPlusBtn = document.getElementById('edit-wish-quantity-plus');
+    // --- End Wish Quantity Fields (Edit modal) ---
     elements.editWishModalCancelBtn = document.getElementById('edit-wish-modal-cancel-btn');
     elements.editWishModalSaveBtn = document.getElementById('edit-wish-modal-save-btn');
     // --- END JOURNEY TAB ELEMENTS ---
