@@ -168,6 +168,17 @@ h1, h2, h3 {
     color: #f0f0f0;
 }
 
+/* Specific styling for wishlist search and sort */
+#wishlist-search-input, #wishlist-sort-select {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    font-size: 0.875rem; /* text-sm */
+}
+#wishlist-search-input {
+    padding-left: 2.5rem; /* Adjust based on icon size */
+}
+
+
 /* Tab Styles */
 .tab-btn {
     padding: 0.75rem 1.5rem;
@@ -372,8 +383,138 @@ h1, h2, h3 {
 @keyframes check-anim { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 .todo-checkbox:checked + div svg { animation: check-anim 0.3s ease-out forwards; }
 
-.wish-item-card { transition: all 0.3s ease; }
-.wish-item-card.purchased { box-shadow: 0 0 15px rgba(5, 255, 161, 0.4); border-color: rgba(5, 255, 161, 0.6); }
+/* === REMOVED OLD wish-item-card STYLES === */
+/* .wish-item-card { transition: all 0.3s ease; } */
+/* .wish-item-card.purchased { box-shadow: 0 0 15px rgba(5, 255, 161, 0.4); border-color: rgba(5, 255, 161, 0.6); } */
+
+/* === NEW Wishlist Card Styles === */
+.wish-item-card {
+    background: rgba(255, 255, 255, 0.07);
+    border-radius: 1rem; /* rounded-lg */
+    padding: 1rem; /* p-4 */
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Push actions/meta to bottom */
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 100%);
+}
+
+.wish-item-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(148, 111, 255, 0.2); /* Use accent color on hover */
+    border-color: rgba(167, 139, 250, 0.3);
+}
+
+.wish-item-card .item-details {
+    flex-grow: 1;
+    margin-bottom: 0.75rem; /* mb-3 */
+}
+
+.wish-item-card .item-name {
+    font-weight: 700; /* font-bold */
+    font-size: 1.125rem; /* text-lg */
+    margin-bottom: 0.25rem; /* mb-1 */
+    word-break: break-word; /* Prevent long names from overflowing */
+    color: #fff; /* Ensure contrast */
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.wish-item-card .item-category {
+    font-size: 0.75rem; /* text-xs */
+    color: #a78bfa; /* text-indigo-300 */
+    margin-bottom: 0.25rem; /* mb-1 */
+    font-weight: 500; /* medium */
+}
+
+.wish-item-card .item-food-details {
+    font-size: 0.75rem; /* text-xs */
+    color: #d1d5db; /* text-gray-300 */
+}
+
+.wish-item-card .item-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.75rem; /* mt-3 */
+    padding-top: 0.75rem; /* pt-3 */
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.wish-item-card .item-quantity-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem; /* gap-2 */
+}
+
+.wish-item-card .quantity-display {
+    font-weight: 600; /* font-semibold */
+    font-size: 1rem; /* text-base */
+    width: 3rem; /* w-12 */
+    text-align: center;
+}
+
+.wish-item-card .item-buttons {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem; /* gap-1 */
+}
+
+.wish-item-card .item-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.875rem; /* text-sm */
+    margin-top: 0.5rem; /* mt-2 */
+}
+
+.wish-item-card .item-price {
+    font-weight: 600; /* font-semibold */
+    color: #6ee7b7; /* text-teal-300 */
+}
+
+.wish-item-card .item-link {
+    color: #93c5fd; /* text-blue-300 */
+    text-decoration: none;
+    transition: color 0.2s;
+}
+.wish-item-card .item-link:hover {
+    text-decoration: underline;
+    color: #bfdbfe; /* text-blue-200 */
+}
+
+/* Style for purchased items - more subtle than before */
+.wish-item-card.purchased {
+    opacity: 0.65;
+    background: rgba(100, 116, 139, 0.1); /* Slightly grayer background */
+    border-color: rgba(255, 255, 255, 0.1); /* Less prominent border */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); /* Reduced shadow */
+}
+
+.wish-item-card.purchased:hover {
+    transform: none; /* Disable hover lift */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Ensure quantity buttons look good inside cards */
+.wish-item-card .quantity-btn {
+    width: 1.75rem;
+    height: 1.75rem;
+    font-size: 1rem;
+    background: rgba(255, 255, 255, 0.15);
+}
+.wish-item-card .quantity-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+.wish-item-card .quantity-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* === END Wishlist Card Styles === */
+
 
 /* New styles for AI Wish Suggestions */
 .ai-suggestion-card {
