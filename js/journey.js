@@ -84,6 +84,10 @@ const nameGenerateLoader = document.getElementById('name-generate-loader');
 const nameResultsContainer = document.getElementById('name-results-container');
 const nameGenerateAgainBtn = document.getElementById('name-generate-again-btn');
 
+// === NEW Wishlist Search/Sort Elements ===
+const wishlistSearchInput = document.getElementById('wishlist-search-input');
+const wishlistSortSelect = document.getElementById('wishlist-sort-select');
+
 // === State Variables ===
 let todosRef, wishesRef, reflectionsRef, favoriteNamesRef;
 let unsubscribeTodos, unsubscribeWishes, unsubscribeReflections, unsubscribeFavoriteNames;
@@ -95,6 +99,10 @@ let activeTodoId = null;
 let activeWishId = null; // Added for edit wish modal
 let showAllReflections = false;
 let activeReflectionImageUrl = null;
+
+// === NEW Wishlist State ===
+let currentWishlistSearchTerm = '';
+let currentWishlistSortBy = 'default';
 
 // === NEW Notification State ===
 let allNotifications = [];
@@ -146,11 +154,13 @@ function loadTodos() {
 function loadWishes() {
     if (!wishesRef) return;
     if(unsubscribeWishes) unsubscribeWishes();
-    const q = query(wishesRef, orderBy("createdAt", "desc"));
+    // No longer ordering by 'createdAt' here, will handle sorting in renderWishes
+    const q = query(wishesRef);
     unsubscribeWishes = onSnapshot(q, (snapshot) => {
         currentWishes = [];
         snapshot.forEach(doc => currentWishes.push({ id: doc.id, ...doc.data() }));
-        renderWishes(currentWishes);
+        // Pass current search/sort state when data updates
+        renderWishes(currentWishes, currentWishlistSearchTerm, currentWishlistSortBy);
         checkNotifications(); // NEW: Check notifications when wishes load
     });
 }
@@ -183,8 +193,8 @@ function loadFavoriteNames() {
     });
 }
 
-// Original render functions (renderTodos, renderWishes, renderReflections, etc.) are assumed to be here
-// ... (Keep existing renderTodos, renderWishes, renderReflections, renderAiWishSuggestions, renderAITodoSuggestions, renderAIRecipes)
+// Original render functions (renderTodos, renderReflections, etc.) are assumed to be here
+// ... (Keep existing renderTodos, renderReflections, renderAiWishSuggestions, renderAITodoSuggestions, renderAIRecipes)
 
 const formatDate = (dateString) => {
     if (!dateString) return '';
@@ -303,148 +313,160 @@ function renderTodos(todos) {
 }
 
 /**
- * Renders the wish list, sorting un-purchased items to the top.
- * @param {Array} wishes - The array of wish items from Firestore.
+ * Renders the wish list based on search term and sort criteria.
+ * @param {Array} wishes - The full array of wish items from Firestore.
+ * @param {string} [searchTerm=''] - The current search term.
+ * @param {string} [sortBy='default'] - The current sort criteria ('default', 'category', 'foodType').
  */
-function renderWishes(wishes) {
-    wishlistContainer.innerHTML = '';
+function renderWishes(wishes, searchTerm = '', sortBy = 'default') {
+    wishlistContainer.innerHTML = ''; // Clear previous content
 
-    // Sort wishes:
-    // 1. Un-purchased (purchasedCount < quantity) items first.
-    // 2. Fully purchased (purchasedCount === quantity) items second.
-    // 3. Within groups, sort by creation date (newest first).
-    const sortedWishes = [...wishes].sort((a, b) => {
-        // --- THIS IS THE OLD LOGIC, LET'S FIX IT ---
-        // const aPurchased = (a.purchasedCount || 0) >= (a.quantity || 1);
-        // const bPurchased = (b.purchasedCount || 0) >= (b.quantity || 1);
-        
-        // --- THIS IS THE NEW LOGIC YOU REQUESTED ---
+    // 1. Filter based on search term (case-insensitive)
+    const lowerSearchTerm = searchTerm.toLowerCase();
+    const filteredWishes = wishes.filter(wish => 
+        wish.item.toLowerCase().includes(lowerSearchTerm)
+    );
+
+    // 2. Sort the filtered wishes
+    const sortedWishes = filteredWishes.sort((a, b) => {
         const aNeeded = (a.purchasedCount || 0) === 0;
         const bNeeded = (b.purchasedCount || 0) === 0;
 
+        // Primary sort: "Not bought" items first
         if (aNeeded !== bNeeded) {
             return bNeeded - aNeeded; // true (1) comes before false (0)
         }
-        // If 'needed' status is the same, sort by 'createdAt' descending
+
+        // Secondary sort: Based on dropdown selection
+        if (sortBy === 'category') {
+            const categoryCompare = (a.category || '').localeCompare(b.category || '');
+            if (categoryCompare !== 0) return categoryCompare;
+        } else if (sortBy === 'foodType') {
+            const aFoodType = a.foodDetails?.type || '';
+            const bFoodType = b.foodDetails?.type || '';
+            const foodTypeCompare = aFoodType.localeCompare(bFoodType);
+            if (foodTypeCompare !== 0) return foodTypeCompare;
+            // If food types are the same (or non-food), fall back to category
+            const categoryCompare = (a.category || '').localeCompare(b.category || '');
+            if (categoryCompare !== 0) return categoryCompare;
+        }
+
+        // Tertiary sort (fallback for default or if secondary criteria are equal): Newest first
         const dateA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
         const dateB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
-        return dateB - dateA; // Newest first
+        return dateB - dateA;
     });
 
+    // 3. Render the sorted and filtered list
     if (sortedWishes.length === 0) {
-        wishlistContainer.innerHTML = `<p class="text-center text-gray-400">No wishes yet. Add one below!</p>`;
-        // Reset progress bar for empty list
-        wishlistProgressText.textContent = `0/0 Items`;
-        wishlistProgressBar.style.width = '0%';
+        wishlistContainer.innerHTML = `<p class="text-center text-gray-400 md:col-span-2">No wishes found ${searchTerm ? 'matching your search' : 'yet. Add one below!'}</p>`;
+        // Reset progress bar for empty list - based on the *original* full list
+        updateWishlistProgress(wishes);
         return; // Exit function
     }
 
-    // UPDATED food icons map
     const foodIcons = {
-        'Meat': '🥩',
-        'Fruit': '🍎',
-        'Vege': '🥦',
-        'Snack': '🥨',
-        'Diary': '🧀',
-        'Grain': '🍚', // Added Grain
-        'Soup': '🍲', // Added Soup
-        'Dog': '🐶',
-        'Drinks': '🥤',
-        '': '🥕' // Default
+        'Meat': '🥩', 'Fruit': '🍎', 'Vege': '🥦', 'Snack': '🥨', 'Diary': '🧀',
+        'Grain': '🍚', 'Soup': '🍲', 'Dog': '🐶', 'Drinks': '🥤', '': '🥕'
     };
-    // NEW: Emojis for other categories (used in display)
     const categoryDisplayEmojis = {
-        'Baby Care': '🍼',
-        'Nursery': '🧸',
-        'Hospital Bag': '👜',
-        'Health': '🧘‍♀️',
-        'Postpartum': '💖',
-        'Food': '🥕',
-        'Custom': '✨'
+        'Baby Care': '🍼', 'Nursery': '🧸', 'Hospital Bag': '👜', 'Health': '🧘‍♀️',
+        'Postpartum': '💖', 'Food': '🥕', 'Custom': '✨'
     };
 
-
-    let totalTarget = 0;
-    let totalPurchased = 0;
-
-    // Iterate over the newly sorted list
     sortedWishes.forEach(wish => {
-        const item = document.createElement('div');
+        const card = document.createElement('div');
         const quantity = wish.quantity || 1;
         const purchasedCount = wish.purchasedCount || 0;
-        
-        // --- DEFINE BOTH LOGICS ---
-        const isComplete = purchasedCount >= quantity; // For buttons/text
-        const isNeeded = purchasedCount === 0; // For card style
+        const isComplete = purchasedCount >= quantity;
+        const isNeeded = purchasedCount === 0; // Use this for styling
 
-        totalTarget += quantity;
-        totalPurchased += purchasedCount;
+        // Adjust card style based on 'isNeeded'
+        card.className = `wish-item-card ${isNeeded ? '' : 'purchased'}`;
 
-        // --- APPLY 'isNeeded' LOGIC TO CLASSNAME ---
-        item.className = `wish-item-card p-3 bg-white/5 rounded-lg border border-transparent ${isNeeded ? '' : 'purchased opacity-60'}`;
-
-        // Check for Food category
+        // Build Food Details HTML
         let foodDetailsHtml = '';
         if (wish.category === 'Food' && wish.foodDetails) {
             const icon = foodIcons[wish.foodDetails.type] || '🥕';
             const expiryHtml = wish.foodDetails.expiry ? ` | <span class="text-yellow-400">Expires: ${formatDate(wish.foodDetails.expiry)}</span>` : '';
-            foodDetailsHtml = `<p class="text-xs text-gray-400 mt-1">${icon} ${wish.foodDetails.type || 'Food'}${expiryHtml}</p>`;
+            foodDetailsHtml = `<p class="item-food-details mt-1">${icon} ${wish.foodDetails.type || 'Food'}${expiryHtml}</p>`;
         }
 
-        // Use category emoji for display
+        // Build Category Display
         const displayCategory = `${categoryDisplayEmojis[wish.category] || '✨'} ${wish.category}`;
+        
+        // Calculate card height/size (simple example based on name length)
+        // You can make this more complex based on other inputs too
+        let sizeClass = 'h-auto'; // Default auto height
+        if (wish.item.length > 30) {
+            sizeClass = 'min-h-[160px]'; // Slightly taller for long names
+        }
+        card.classList.add(sizeClass);
 
-        item.innerHTML = `
-            <div class="flex items-start justify-between">
-                <div class="flex-1 min-w-0">
-                    <p class="font-bold break-words">${wish.item}</p>
-                    <p class="text-xs text-indigo-300">${displayCategory}</p> <!-- Display emoji + name -->
-                    ${foodDetailsHtml}
+        card.innerHTML = `
+            <div class="item-details">
+                <p class="item-name">${wish.item}</p>
+                <p class="item-category">${displayCategory}</p>
+                ${foodDetailsHtml}
+            </div>
+            
+            <div class="item-actions">
+                <div class="item-quantity-controls">
+                    <button class="quantity-btn wish-quantity-minus" ${purchasedCount <= 0 ? 'disabled' : ''}>-</button>
+                    <span class="quantity-display">
+                        <span class="${isComplete ? 'text-teal-300' : 'text-white'}">${purchasedCount}</span><span class="text-gray-400 text-sm">/${quantity}</span>
+                    </span>
+                    <button class="quantity-btn wish-quantity-plus" ${isComplete ? 'disabled' : ''}>+</button>
                 </div>
-                <div class="flex items-center ml-2 flex-shrink-0"> <!-- ADDED flex-shrink-0 -->
-                    <!-- NEW: Quantity controls -->
-                    <div class="flex items-center gap-2">
-                        <button class="quantity-btn wish-quantity-minus" ${purchasedCount <= 0 ? 'disabled' : ''} style="width: 1.75rem; height: 1.75rem; font-size: 1rem; ${purchasedCount <= 0 ? 'opacity: 0.5; cursor: not-allowed;' : ''}">-</button>
-                        <span class="font-bold text-lg w-12 text-center">
-                            <!-- USE 'isComplete' FOR TEXT COLOR -->
-                            <span class="${isComplete ? 'text-teal-300' : 'text-white'}">${purchasedCount}</span><span class="text-gray-400 text-sm">/${quantity}</span>
-                        </span>
-                        <!-- USE 'isComplete' FOR BUTTON DISABLED -->
-                        <button class="quantity-btn wish-quantity-plus" ${isComplete ? 'disabled' : ''} style="width: 1.75rem; height: 1.75rem; font-size: 1rem; ${isComplete ? 'opacity: 0.5; cursor: not-allowed;' : ''}">+</button>
-                    </div>
-                    <!-- NEW EDIT BUTTON -->
-                    <button class="icon-btn edit-wish-btn ml-2"><svg class="w-5 h-5 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L14.732 3.732z"></path></svg></button>
-                    <button class="icon-btn delete-wish-btn ml-1"><svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                <div class="item-buttons">
+                    <button class="icon-btn edit-wish-btn"><svg class="w-5 h-5 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L14.732 3.732z"></path></svg></button>
+                    <button class="icon-btn delete-wish-btn"><svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
                 </div>
             </div>
-            <div class="flex justify-between items-center mt-2 text-sm">
-                <span class="font-semibold text-teal-300">${wish.price ? `$${wish.price}`: ''}</span>
-                ${wish.link ? `<a href="${wish.link}" target="_blank" class="text-blue-400 hover:underline">Store Link</a>` : ''}
+
+            <div class="item-meta">
+                <span class="item-price">${wish.price ? `$${wish.price}` : ''}</span>
+                ${wish.link ? `<a href="${wish.link}" target="_blank" class="item-link">Store Link</a>` : ''}
             </div>
         `;
 
-        // Add event listeners for new + and - buttons
-        item.querySelector('.wish-quantity-plus').addEventListener('click', () => {
+        // Add event listeners
+        card.querySelector('.wish-quantity-plus').addEventListener('click', () => {
             handleUpdateWishPurchasedCount(wish, purchasedCount + 1);
         });
-        item.querySelector('.wish-quantity-minus').addEventListener('click', () => {
+        card.querySelector('.wish-quantity-minus').addEventListener('click', () => {
             handleUpdateWishPurchasedCount(wish, purchasedCount - 1);
         });
-        
-        item.querySelector('.delete-wish-btn').addEventListener('click', async () => {
+        card.querySelector('.delete-wish-btn').addEventListener('click', async () => {
             const wishDocRef = doc(db, `users/${getCurrentUserId()}/wishes`, wish.id);
             await deleteDoc(wishDocRef);
         });
-        // NEW Event listener for edit button
-        item.querySelector('.edit-wish-btn').addEventListener('click', () => openEditWishModal(wish));
+        card.querySelector('.edit-wish-btn').addEventListener('click', () => openEditWishModal(wish));
 
-        wishlistContainer.appendChild(item);
+        wishlistContainer.appendChild(card);
     });
 
-    // This calculation remains correct as it's based on the original full 'wishes' array
+    // 4. Update progress bar based on the *original* full list
+    updateWishlistProgress(wishes);
+}
+
+/**
+ * Helper function to calculate and update the wishlist progress bar.
+ * @param {Array} allWishes - The unfiltered, unsorted list of all wishes.
+ */
+function updateWishlistProgress(allWishes) {
+    let totalTarget = 0;
+    let totalPurchased = 0;
+
+    allWishes.forEach(wish => {
+        totalTarget += wish.quantity || 1;
+        totalPurchased += wish.purchasedCount || 0;
+    });
+
     wishlistProgressText.textContent = `${totalPurchased}/${totalTarget} Items`;
     wishlistProgressBar.style.width = totalTarget > 0 ? `${(totalPurchased / totalTarget) * 100}%` : '0%';
 }
+
 
 function renderReflections(reflections) {
     reflectionsContainer.innerHTML = '';
@@ -749,13 +771,18 @@ function setupEventListeners() {
         const pregnancyWeek = Math.floor(Math.abs(new Date() - new Date(wellnessDataForJourney.pregnancyStartDate)) / (1000 * 60 * 60 * 24 * 7));
         const systemPrompt = `You are a helpful assistant. Generate a to-do list of 4-5 tasks for week ${pregnancyWeek} of pregnancy. Categorize each task as 'Health', 'Baby', 'Home', or 'Reminder'. Your response MUST be ONLY a valid JSON array of objects, where each object has "task" (string) and "category" (string) keys.`;
         const userQuery = `Generate a weekly to-do list for week ${pregnancyWeek}.`;
-        const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; // API Key will be injected
+        const apiKey = ""; // API Key will be injected by the environment
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
         const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json" } };
         try {
             const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             if (!response.ok) throw new Error(`API error: ${response.statusText}`);
-            const result = await response.json(); const data = JSON.parse(result.candidates[0].content.parts[0].text);
+            const result = await response.json(); 
+            // Check for potential errors in the response structure
+            if (!result.candidates || !result.candidates[0] || !result.candidates[0].content || !result.candidates[0].content.parts || !result.candidates[0].content.parts[0].text) {
+                throw new Error("Invalid API response structure");
+            }
+            const data = JSON.parse(result.candidates[0].content.parts[0].text);
 
             // NEW: Render suggestions instead of auto-adding
             renderAITodoSuggestions(data, aiTodoSuggestionsContainer);
@@ -823,7 +850,7 @@ function setupEventListeners() {
         // MODIFIED: Added 'Food' to the list of categories
         const systemPrompt = `You are a helpful shopping assistant for a pregnant woman. Based on the user's request and their pregnancy week (${pregnancyWeek}), use the Google Search tool to find 3-4 real, relevant products. For each item, you MUST extract the actual product name, a relevant category (from "Baby Care", "Nursery", "Hospital Bag", "Health", "Postpartum", "Food"), price, and a working URL to the product page. Your response MUST be ONLY a valid JSON array of objects, with no other text or formatting. Each object must have these keys: "productName", "category", "price", "productUrl".`;
         const userQuery = `My request: "${prompt}". I am in week ${pregnancyWeek} of pregnancy.`;
-        const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; // API Key will be injected
+        const apiKey = ""; // API Key will be injected by the environment
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
         const payload = {
             contents: [{ parts: [{ text: userQuery }] }],
@@ -834,6 +861,10 @@ function setupEventListeners() {
             const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             if (!response.ok) throw new Error(`API error: ${response.statusText}`);
             const result = await response.json();
+            // Check for potential errors in the response structure
+            if (!result.candidates || !result.candidates[0] || !result.candidates[0].content || !result.candidates[0].content.parts || !result.candidates[0].content.parts[0].text) {
+                throw new Error("Invalid API response structure");
+            }
             let jsonString = result.candidates[0].content.parts[0].text;
             // Attempt to clean potential markdown
             jsonString = jsonString.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
@@ -970,7 +1001,7 @@ function setupEventListeners() {
         const notesToSummarize = currentReflections.slice(0, 3).map(n => `Title: ${n.title}\nContent: ${n.content}`).join('\n\n---\n\n');
         const systemPrompt = "You are an empathetic assistant. Summarize the user's reflection notes into one short, insightful, and emotional paragraph. Focus on the underlying feelings and themes.";
         const userQuery = `Here are my last few notes:\n${notesToSummarize}`;
-        const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; // API Key will be injected
+        const apiKey = ""; // API Key will be injected by the environment
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
         const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }};
 
@@ -982,6 +1013,10 @@ function setupEventListeners() {
             const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             if (!response.ok) throw new Error(`API error: ${response.statusText}`);
             const result = await response.json();
+            // Check for potential errors in the response structure
+            if (!result.candidates || !result.candidates[0] || !result.candidates[0].content || !result.candidates[0].content.parts || !result.candidates[0].content.parts[0].text) {
+                throw new Error("Invalid API response structure");
+            }
             aiSummaryContent.textContent = result.candidates[0].content.parts[0].text;
         } catch (error) {
             console.error("AI Summary failed:", error);
@@ -1034,7 +1069,7 @@ function setupEventListeners() {
 
         const systemPrompt = `You are a world-class, professional chef, like Gordon Ramsay, but you are also encouraging and helpful, not rude. A pregnant user is asking for recipe ideas. Provide three (3) distinct, healthy, and pregnancy-safe recipes based on their craving. For each recipe, provide a 'recipeName', a 'chefPersona' (e.g., 'Gordon Ramsay', 'Massimo Bottura', 'Clare Smyth'), and 'steps' as an array of strings. Your response MUST be ONLY a valid JSON object with a single key 'recipes' which is an array of these three recipe objects. Example: { "recipes": [ { "recipeName": "...", "chefPersona": "...", "steps": ["Step 1...", "Step 2..."] } ] }`;
         const userQuery = `My craving: "${prompt}"`;
-        const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; // API Key will be injected
+        const apiKey = ""; // API Key will be injected by the environment
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
         const payload = {
             contents: [{ parts: [{ text: userQuery }] }],
@@ -1046,6 +1081,10 @@ function setupEventListeners() {
             const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             if (!response.ok) throw new Error(`API error: ${response.statusText}`);
             const result = await response.json();
+             // Check for potential errors in the response structure
+             if (!result.candidates || !result.candidates[0] || !result.candidates[0].content || !result.candidates[0].content.parts || !result.candidates[0].content.parts[0].text) {
+                throw new Error("Invalid API response structure");
+            }
             const data = JSON.parse(result.candidates[0].content.parts[0].text);
             renderAIRecipes(data.recipes);
         } catch (error) {
@@ -1097,6 +1136,19 @@ function setupEventListeners() {
             elements.editCustomCategoryInput.classList.add('hidden');
             elements.editWishFoodFields.classList.add('hidden');
         }
+    });
+
+    // --- NEW Event Listeners for Wishlist Search and Sort ---
+    wishlistSearchInput.addEventListener('input', (e) => {
+        currentWishlistSearchTerm = e.target.value;
+        // Re-render the list with the current data, search term, and sort order
+        renderWishes(currentWishes, currentWishlistSearchTerm, currentWishlistSortBy);
+    });
+
+    wishlistSortSelect.addEventListener('change', (e) => {
+        currentWishlistSortBy = e.target.value;
+        // Re-render the list with the current data, search term, and sort order
+        renderWishes(currentWishes, currentWishlistSearchTerm, currentWishlistSortBy);
     });
 
     // NEW: Add listener for Clear All Notifications button
@@ -1556,7 +1608,7 @@ async function generateNames(isRandom = false) {
 
     const userQuery = userPromptParts.join(' ');
     const systemPrompt = `You are a creative and knowledgeable baby name assistant. Provide baby name suggestions based on the user's criteria. Include the name, its origin, and its meaning. Respond ONLY with a valid JSON array of objects. Each object must have "name" (string), "meaning" (string), and "origin" (string) keys.`;
-    const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; // API Key will be injected
+    const apiKey = ""; // API Key will be injected by the environment
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
 
     const payload = {
@@ -1779,9 +1831,15 @@ function checkWishNotifications(wishes) {
 
     wishes.forEach(wish => {
         // Skip purchased, non-food, or items without an expiry date
-        if (wish.purchased || wish.category !== 'Food' || !wish.foodDetails || !wish.foodDetails.expiry) {
+        // --- UPDATED LOGIC: Check purchasedCount against quantity ---
+        const quantity = wish.quantity || 1;
+        const purchasedCount = wish.purchasedCount || 0;
+        const isFullyPurchased = purchasedCount >= quantity;
+
+        if (isFullyPurchased || wish.category !== 'Food' || !wish.foodDetails || !wish.foodDetails.expiry) {
             return;
         }
+        // --- END UPDATED LOGIC ---
 
         try {
             const expiryDate = new Date(wish.foodDetails.expiry + 'T00:00:00').getTime();
