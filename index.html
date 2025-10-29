@@ -734,7 +734,38 @@
                                             <div id="wishlist-progress-bar" class="bg-gradient-to-r from-teal-400 to-blue-500 h-2.5 rounded-full" style="width: 0%; transition: width 0.5s ease;"></div>
                                         </div>
                                     </div>
-                                    <div id="wishlist-container" class="space-y-3 max-h-[28rem] overflow-y-auto modal-scroll pr-2 mb-4"></div>
+
+                                    <!-- ================================== -->
+                                    <!-- === NEW SEARCH & SORT CONTROLS === -->
+                                    <!-- ================================== -->
+                                    <div class="flex flex-col md:flex-row gap-3 mb-4">
+                                        <!-- Search Bar -->
+                                        <div class="relative flex-grow">
+                                            <input type="text" id="wishlist-search-input" class="meal-select text-sm w-full pl-10" placeholder="Find an item...">
+                                            <svg class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                            </svg>
+                                        </div>
+                                        <!-- Sort Dropdown -->
+                                        <select id="wishlist-sort-select" class="meal-select text-sm md:w-48">
+                                            <option value="default">Sort by... (Default)</option>
+                                            <option value="category">Sort by Category</option>
+                                            <option value="foodType">Sort by Food Type</option>
+                                        </select>
+                                    </div>
+                                    <!-- ================================== -->
+                                    <!-- === END SEARCH & SORT CONTROLS === -->
+                                    <!-- ================================== -->
+                                    
+                                    <!-- 
+                                        UPDATED WISHLIST CONTAINER:
+                                        - Removed space-y-3 (cards will have their own margin/padding)
+                                        - Added grid layout classes
+                                        - Kept max-h, overflow, etc. for scrolling
+                                    -->
+                                    <div id="wishlist-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[28rem] overflow-y-auto modal-scroll pr-2 mb-4">
+                                        <!-- Wishlist cards will be rendered here by journey.js -->
+                                    </div>
                                 </div>
                                 
                                 <div class="pt-4 border-t border-white/10 space-y-3">
