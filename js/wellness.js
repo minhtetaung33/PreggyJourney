@@ -286,10 +286,13 @@ function getWeekId(d) {
 }
 
 function formatWeekDisplay(d) {
-    const monday = new Date(getWeekId(d) + 'T00:00:00Z');
+    // --- FIX: Use local timezone for display ---
+    const monday = new Date(getWeekId(d) + 'T00:00:00'); // No 'Z'
     const sunday = new Date(monday);
     sunday.setDate(monday.getDate() + 6);
     
+    // Use 'UTC' timeZone for formatting to *prevent* it from shifting again
+    // This reads the local date as if it were UTC, keeping the date number correct
     const options = { month: 'short', day: 'numeric', timeZone: 'UTC' };
     const mondayStr = monday.toLocaleDateString('en-US', options);
     const sundayStr = sunday.toLocaleDateString('en-US', options);
@@ -1480,7 +1483,14 @@ function openEditDayModal(dayKey) {
     editDayData.energy = dayData.energy || 3;
     editDayData.waterIntake = dayData.waterIntake || 0;
 
-    const mondayOfRelevantWeek = new Date(getWeekId(wellnessHistoryCurrentDate) + 'T00:00:00Z');
+    //
+    // --- THIS IS FIX #2 ---
+    // Removed the 'Z' from the end of the timestamp string.
+    // This creates the date in the user's local timezone, preventing the one-day shift.
+    //
+    const mondayOfRelevantWeek = new Date(getWeekId(wellnessHistoryCurrentDate) + 'T00:00:00'); // No 'Z' here
+    //
+    //
     const dayDate = new Date(mondayOfRelevantWeek);
     dayDate.setDate(mondayOfRelevantWeek.getDate() + days.indexOf(dayKey));
     editDayModalTitle.textContent = `Edit Log for ${dayDate.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}`;
