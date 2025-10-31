@@ -117,6 +117,9 @@ export const cacheDomElements = () => {
 
 
     // --- JOURNEY TAB ELEMENTS ---
+    // NEW: To-Do Calendar
+    elements.todoCalendarContainer = document.getElementById('todo-calendar-container');
+    
     // Appointments
     elements.newAppointmentFields = document.getElementById('new-appointment-fields');
     elements.newAppointmentFname = document.getElementById('new-appointment-fname');
