@@ -4,6 +4,8 @@ import { db } from './firebase.js';
 import { getCurrentUserId } from "./auth.js";
 // IMPORT THE NEW NOTIFICATION UI FUNCTION
 import { elements, updateNotificationUI } from './ui.js'; 
+// NEW: Import Calendar
+import VanillaCalendar from './vanilla-calendar.modern.js';
 
 // === ORIGINAL DOM Elements ===
 const todoListContainer = document.getElementById('todo-list-container');
@@ -100,6 +102,10 @@ let activeWishId = null; // Added for edit wish modal
 let showAllReflections = false;
 let activeReflectionImageUrl = null;
 
+// === NEW Calendar State ===
+let todoCalendar = null;
+let selectedCalendarDate = null; // Stores the selected date string 'YYYY-MM-DD'
+
 // === NEW Wishlist State ===
 let currentWishlistSearchTerm = '';
 let currentWishlistSortBy = 'default';
@@ -132,6 +138,9 @@ export function initializeJourney(userId, initialWellnessData) {
     loadReflections();
     loadFavoriteNames(); // NEW
 
+    // NEW: Initialize the To-Do calendar
+    initializeTodoCalendar();
+
     // Setup listeners
     setupEventListeners();
     setupNameGeneratorListeners(); // NEW
@@ -146,7 +155,9 @@ function loadTodos() {
     unsubscribeTodos = onSnapshot(q, (snapshot) => {
         currentTodos = [];
         snapshot.forEach(doc => currentTodos.push({ id: doc.id, ...doc.data() }));
+        // NEW: Render todos based on selection AND update calendar markers
         renderTodos(currentTodos);
+        updateCalendarMarkers(currentTodos); 
         checkNotifications(); // NEW: Check notifications when todos load
     });
 }
@@ -211,16 +222,33 @@ const formatTime = (timeString) => {
     return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', hour12: true });
 };
 
+// NEW: This function is now a filter and a renderer
 function renderTodos(todos) {
     todoListContainer.innerHTML = '';
-    if (todos.length === 0) {
-        todoListContainer.innerHTML = `<p class="text-center text-gray-400">No tasks yet. Add one below!</p>`;
+    
+    // --- NEW FILTER LOGIC ---
+    let filteredTodos = [];
+    if (selectedCalendarDate) {
+        // If a date is selected, show ALL (complete and incomplete) for that date
+        filteredTodos = todos.filter(todo => todo.date === selectedCalendarDate);
+    } else {
+        // If no date is selected, show all INCOMPLETE tasks
+        filteredTodos = todos.filter(todo => !todo.completed);
+    }
+    // --- END NEW FILTER LOGIC ---
+
+    if (filteredTodos.length === 0) {
+        if (selectedCalendarDate) {
+            todoListContainer.innerHTML = `<p class="text-center text-gray-400">No tasks for this day.</p>`;
+        } else {
+            todoListContainer.innerHTML = `<p class="text-center text-gray-400">No tasks yet. Add one below!</p>`;
+        }
         return;
     }
     // ADDED 'Recipes'
     const categoryIcons = { Health: '🧘‍♀️', Baby: '🍼', Home: '🏡', Reminder: '💬', Appointment: '🗓️', Recipes: '🍳' };
 
-    todos.forEach(todo => {
+    filteredTodos.forEach(todo => {
         const item = document.createElement('div');
         item.className = `todo-item flex items-start justify-between p-3 bg-white/5 rounded-lg ${todo.completed ? 'completed' : ''}`;
 
@@ -673,6 +701,116 @@ function renderFavoriteNames(favNames) {
     nameFavoritesToggleBtn.textContent = `❤️ (${favNames.length})`;
 }
 
+// === NEW CALENDAR FUNCTIONS ===
+
+/**
+ * Initializes the VanillaCalendar instance for the To-Do list.
+ */
+function initializeTodoCalendar() {
+    if (todoCalendar) {
+        todoCalendar.destroy();
+    }
+    
+    const options = {
+        DOMTemplates: {
+            // Use our custom dark-theme-arrows
+            arrowPrev: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>',
+            arrowNext: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>',
+        },
+        settings: {
+            visibility: {
+                theme: 'dark', // Use dark theme
+                daysOutside: false, // Hide days from other months
+            },
+            selected: {
+                dates: [], // No date selected by default
+                month: true, // Allow clicking month
+                year: true, // Allow clicking year
+            },
+            selection: {
+                day: 'single', // Allow only one day to be selected
+                month: false,
+                year: false,
+            },
+        },
+        actions: {
+            /**
+             * Handles click events on a calendar day.
+             * @param {Event} e - The click event.
+             * @param {object} self - The calendar instance.
+             */
+            clickDay(e, self) {
+                // self.selectedDates is an array, e.g., ['2023-10-31']
+                // If a date is selected, store it. If deselected, it's empty.
+                if (self.selectedDates[0]) {
+                    selectedCalendarDate = self.selectedDates[0];
+                } else {
+                    selectedCalendarDate = null;
+                }
+                
+                // Re-render the to-do list based on the new selection
+                renderTodos(currentTodos);
+            },
+        },
+    };
+
+    // Ensure the element exists before creating
+    if (elements.todoCalendarContainer) {
+        todoCalendar = new VanillaCalendar(elements.todoCalendarContainer, options);
+        todoCalendar.init();
+    } else {
+        console.error("Calendar container element not found!");
+    }
+}
+
+/**
+ * Updates the markers (dots) on the calendar based on the current to-do list.
+ * @param {Array} todos - The full list of todo items.
+ */
+function updateCalendarMarkers(todos) {
+    if (!todoCalendar) return;
+
+    // Use a Map to store the highest priority marker for each date
+    const datesMap = new Map();
+    
+    // Define marker priorities
+    const markerPriority = {
+        'vanilla-calendar-day__marker_appointment': 3, // Highest
+        'vanilla-calendar-day__marker_task': 2,
+        'vanilla-calendar-day__marker': 1, // Default
+    };
+
+    todos.forEach(todo => {
+        if (todo.date && !todo.completed) { // Only show markers for incomplete tasks with dates
+            let markerClass = 'vanilla-calendar-day__marker'; // Default (teal)
+            
+            if (todo.category === 'Appointment') {
+                markerClass = 'vanilla-calendar-day__marker_appointment'; // Pink
+            } else if (['Health', 'Baby', 'Home', 'Reminder'].includes(todo.category)) {
+                markerClass = 'vanilla-calendar-day__marker_task'; // Blue
+            }
+
+            const existing = datesMap.get(todo.date);
+            
+            if (!existing || markerPriority[markerClass] > markerPriority[existing.markerClass]) {
+                // If no marker for this date, or new marker is higher priority, set it
+                datesMap.set(todo.date, {
+                    date: todo.date,
+                    marker: true,
+                    markerClass: markerClass,
+                });
+            }
+        }
+    });
+
+    // Convert the Map values to an array
+    const dates = Array.from(datesMap.values());
+
+    // Update the calendar settings and refresh the UI
+    todoCalendar.settings.dates = dates;
+    todoCalendar.update();
+}
+
 // === Event Listener Setup ===
 
 function setupEventListeners() {
@@ -733,6 +871,13 @@ function setupEventListeners() {
         elements.newAppointmentType.value = '';
         elements.newAppointmentCustomType.value = '';
         elements.newAppointmentCustomType.classList.add('hidden');
+
+        // NEW: Clear calendar selection to show the new task in the main list
+        if (todoCalendar) {
+            selectedCalendarDate = null;
+            todoCalendar.settings.selected.dates = [];
+            todoCalendar.update();
+        }
     });
 
     aiGenerateTodosBtn.addEventListener('click', async () => {
@@ -943,9 +1088,21 @@ function setupEventListeners() {
         wishlistToggleIcon.classList.toggle('rotate-180');
     });
 
+    // UPDATED: todoHeader listener now also clears calendar selection
     todoHeader.addEventListener('click', () => {
+        // Toggle visibility
         collapsibleTodoContent.classList.toggle('hidden');
         todoToggleIcon.classList.toggle('rotate-180');
+
+        // NEW: Clear calendar selection
+        if (todoCalendar) {
+            selectedCalendarDate = null;
+            todoCalendar.settings.selected.dates = [];
+            todoCalendar.update();
+        }
+        
+        // Re-render the default list (all incomplete)
+        renderTodos(currentTodos);
     });
 
     reflectionHeader.addEventListener('click', () => {
@@ -1394,6 +1551,13 @@ async function handleSaveTodo() {
 
     await updateDoc(todoDocRef, todoData);
     closeEditTodoModal();
+    
+    // NEW: Clear calendar selection to show the updated task
+    if (todoCalendar) {
+        selectedCalendarDate = null;
+        todoCalendar.settings.selected.dates = [];
+        todoCalendar.update();
+    }
 }
 
 async function deleteReflection(noteId) {
@@ -1920,6 +2084,14 @@ export function unloadJourney() {
     if (unsubscribeWishes) unsubscribeWishes();
     if (unsubscribeReflections) unsubscribeReflections();
     if (unsubscribeFavoriteNames) unsubscribeFavoriteNames(); // NEW
+    
+    // NEW: Destroy calendar instance
+    if (todoCalendar) {
+        todoCalendar.destroy();
+        todoCalendar = null;
+    }
+    selectedCalendarDate = null; // Reset state
+
     // Remove specific event listeners if necessary, though often covered by page unload/auth change
 }
 
