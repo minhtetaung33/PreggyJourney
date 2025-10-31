@@ -7,6 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- NEW CALENDAR CSS LINK -->
+    <link href="https://cdn.jsdelivr.net/npm/vanilla-calendar-pro@2.9.6/build/vanilla-calendar.min.css" rel="stylesheet">
     <!-- Updated path to /css/style.css -->
     <link rel="stylesheet" href="./css/style.css">
 </head>
@@ -636,85 +638,110 @@
                         ============================================================
                         -->
                         <div class="lg:col-span-2 space-y-8">
-                            <!-- To-Do List -->
-                            <!-- Added anim-card class -->
+                            <!-- 
+                            ============================================================
+                            === TO-DO LIST CARD - UPDATED WITH NEW LAYOUT
+                            ============================================================
+                            -->
                             <div class="glass-card anim-card p-4 md:p-6">
-                                <div id="todo-header" class="flex justify-between items-center mb-4 cursor-pointer">
+                                <!-- HEADER: Removed cursor-pointer, icon is hidden -->
+                                <div id="todo-header" class="flex justify-between items-center mb-6">
                                     <h3 class="text-2xl font-bold">✅ To-Do List</h3>
-                                    <svg id="todo-toggle-icon" class="w-6 h-6 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    <svg id="todo-toggle-icon" class="w-6 h-6 transition-transform hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </div>
-                                <div id="collapsible-todo-content" class="hidden">
-                                    <div id="todo-list-container" class="space-y-3 max-h-72 overflow-y-auto modal-scroll pr-2 mb-4"></div>
-                                </div>
-                                <div class="pt-4 border-t border-white/10 space-y-3">
-                                    <p class="text-lg font-semibold text-white">Add New Task</p>
-                                    <textarea id="new-todo-input" class="symptom-input text-sm min-h-[60px]" placeholder="New task or note..."></textarea>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                        <input type="date" id="new-todo-date" class="date-input text-sm">
-                                        <input type="time" id="new-todo-time" class="date-input text-sm">
-                                    </div>
-                                    <select id="new-todo-category" class="meal-select text-sm">
-                                        <option value="Health">🧘‍♀️ Health</option>
-                                        <option value="Baby">🍼 Baby Prep</option>
-                                        <option value="Home">🏡 Home</option>
-                                        <option value="Appointment">🗓️ Appointment</option>
-                                        <!-- NEW RECIPE CATEGORY -->
-                                        <option value="Recipes">🍳 Recipes</option>
-                                        <option value="Reminder">💬 Reminder</option>
-                                        <option value="Custom">✨ Custom</option>
-                                    </select>
-                                    <input type="text" id="custom-todo-category-input" class="meal-select text-sm hidden" placeholder="Your custom category...">
-                                    
-                                    <!-- NEW APPOINTMENT FIELDS -->
-                                    <div id="new-appointment-fields" class="hidden space-y-3 pt-3 mt-3 border-t border-white/10">
-                                        <p class="text-sm font-semibold text-indigo-200">Appointment Details</p>
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                            <input type="text" id="new-appointment-fname" class="meal-select text-sm" placeholder="First Name">
-                                            <input type="text" id="new-appointment-lname" class="meal-select text-sm" placeholder="Last Name">
-                                        </div>
-                                        <input type="text" id="new-appointment-address" class="meal-select text-sm" placeholder="Address">
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                            <input type="tel" id="new-appointment-contact" class="meal-select text-sm" placeholder="Contact Number">
-                                            <input type="email" id="new-appointment-email" class="meal-select text-sm" placeholder="Email">
-                                        </div>
-                                        <div class="flex gap-3">
-                                            <select id="new-appointment-type" class="meal-select text-sm flex-grow">
-                                                <option value="">Appointment Type</option>
-                                                <option value="OB/GYN">OB/GYN</option>
-                                                <option value="Ultrasound">Ultrasound</option>
-                                                <option value="Pediatrician">Pediatrician</option>
-                                                <option value="Custom">Custom Type</option>
-                                            </select>
-                                            <input type="text" id="new-appointment-custom-type" class="meal-select text-sm flex-grow hidden" placeholder="Custom Appointment Type">
-                                        </div>
-                                    </div>
-                                    <!-- END NEW APPOINTMENT FIELDS -->
-                                    
-                                    <button id="add-todo-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Add Task</button>
-                                </div>
-                                <div class="mt-6 pt-6 border-t border-white/10 text-center">
-                                    <p class="mb-2 text-indigo-200">Need ideas? Let AI help!</p>
-                                    <button id="ai-generate-todos-btn" class="btn-secondary font-semibold py-2 px-5 rounded-lg">Generate Weekly To-Do List</button>
-                                </div>
-                                
-                                <!-- =============================== -->
-                                <!-- === NEW AI RECIPE ASSISTANT === -->
-                                <!-- =============================== -->
-                                <div class="mt-8 pt-6 border-t border-white/10 space-y-3">
-                                    <h3 class="text-xl font-bold text-center">🧑‍🍳 AI Recipe Assistant</h3>
-                                    <p class="text-sm text-center text-gray-300">Craving something specific? Ask for recipes from the world's best chefs!</p>
-                                    <textarea id="ai-recipe-prompt" class="symptom-input min-h-[80px]" placeholder="e.g., I'm craving a simple, healthy pasta dish..."></textarea>
-                                    <button id="ai-generate-recipe-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
-                                        <span id="ai-recipe-btn-text">Find Recipes</span>
-                                        <svg id="ai-recipe-loader" class="animate-spin ml-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                    </button>
-                                    <div id="ai-recipe-results-container" class="mt-4 space-y-4">
-                                        <!-- AI Recipes will be injected here by journey.js -->
-                                    </div>
-                                </div>
-                                <!-- === END AI RECIPE ASSISTANT === -->
 
+                                <!-- NEW 2-COLUMN LAYOUT -->
+                                <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                                    
+                                    <!-- LEFT COLUMN: CALENDAR -->
+                                    <div class="lg:col-span-3">
+                                        <div id="todo-calendar-container" class="rounded-lg bg-white/5 p-2 md:p-4">
+                                            <!-- Calendar will be mounted here by journey.js -->
+                                        </div>
+                                    </div>
+
+                                    <!-- RIGHT COLUMN: TO-DO CONTENT -->
+                                    <div class="lg:col-span-2 space-y-6">
+                                        
+                                        <!-- Existing Collapsible Content (now always visible) -->
+                                        <div id="collapsible-todo-content" class="">
+                                            <div id="todo-list-container" class="space-y-3 max-h-72 overflow-y-auto modal-scroll pr-2 mb-4"></div>
+                                        </div>
+
+                                        <!-- Existing Add Task Form -->
+                                        <div class="pt-4 border-t border-white/10 space-y-3">
+                                            <p class="text-lg font-semibold text-white">Add New Task</p>
+                                            <textarea id="new-todo-input" class="symptom-input text-sm min-h-[60px]" placeholder="New task or note..."></textarea>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                <input type="date" id="new-todo-date" class="date-input text-sm">
+                                                <input type="time" id="new-todo-time" class="date-input text-sm">
+                                            </div>
+                                            <select id="new-todo-category" class="meal-select text-sm">
+                                                <option value="Health">🧘‍♀️ Health</option>
+                                                <option value="Baby">🍼 Baby Prep</option>
+                                                <option value="Home">🏡 Home</option>
+                                                <option value="Appointment">🗓️ Appointment</option>
+                                                <!-- NEW RECIPE CATEGORY -->
+                                                <option value="Recipes">🍳 Recipes</option>
+                                                <option value="Reminder">💬 Reminder</option>
+                                                <option value="Custom">✨ Custom</option>
+                                            </select>
+                                            <input type="text" id="custom-todo-category-input" class="meal-select text-sm hidden" placeholder="Your custom category...">
+                                            
+                                            <!-- NEW APPOINTMENT FIELDS -->
+                                            <div id="new-appointment-fields" class="hidden space-y-3 pt-3 mt-3 border-t border-white/10">
+                                                <p class="text-sm font-semibold text-indigo-200">Appointment Details</p>
+                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                    <input type="text" id="new-appointment-fname" class="meal-select text-sm" placeholder="First Name">
+                                                    <input type="text" id="new-appointment-lname" class="meal-select text-sm" placeholder="Last Name">
+                                                </div>
+                                                <input type="text" id="new-appointment-address" class="meal-select text-sm" placeholder="Address">
+                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                    <input type="tel" id="new-appointment-contact" class="meal-select text-sm" placeholder="Contact Number">
+                                                    <input type="email" id="new-appointment-email" class="meal-select text-sm" placeholder="Email">
+                                                </div>
+                                                <div class="flex gap-3">
+                                                    <select id="new-appointment-type" class="meal-select text-sm flex-grow">
+                                                        <option value="">Appointment Type</option>
+                                                        <option value="OB/GYN">OB/GYN</option>
+                                                        <option value="Ultrasound">Ultrasound</option>
+                                                        <option value="Pediatrician">Pediatrician</option>
+                                                        <option value="Custom">Custom Type</option>
+                                                    </select>
+                                                    <input type="text" id="new-appointment-custom-type" class="meal-select text-sm flex-grow hidden" placeholder="Custom Appointment Type">
+                                                </div>
+                                            </div>
+                                            <!-- END NEW APPOINTMENT FIELDS -->
+                                            
+                                            <button id="add-todo-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Add Task</button>
+                                        </div>
+
+                                        <!-- Existing AI To-Do Button -->
+                                        <div class="mt-6 pt-6 border-t border-white/10 text-center">
+                                            <p class="mb-2 text-indigo-200">Need ideas? Let AI help!</p>
+                                            <button id="ai-generate-todos-btn" class="btn-secondary font-semibold py-2 px-5 rounded-lg">Generate Weekly To-Do List</button>
+                                        </div>
+                                        
+                                        <!-- Existing AI Recipe Assistant -->
+                                        <div class="mt-8 pt-6 border-t border-white/10 space-y-3">
+                                            <h3 class="text-xl font-bold text-center">🧑‍🍳 AI Recipe Assistant</h3>
+                                            <p class="text-sm text-center text-gray-300">Craving something specific? Ask for recipes from the world's best chefs!</p>
+                                            <textarea id="ai-recipe-prompt" class="symptom-input min-h-[80px]" placeholder="e.g., I'm craving a simple, healthy pasta dish..."></textarea>
+                                            <button id="ai-generate-recipe-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
+                                                <span id="ai-recipe-btn-text">Find Recipes</span>
+                                                <svg id="ai-recipe-loader" class="animate-spin ml-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                            </button>
+                                            <div id="ai-recipe-results-container" class="mt-4 space-y-4">
+                                                <!-- AI Recipes will be injected here by journey.js -->
+                                            </div>
+                                        </div>
+                                        <!-- === END AI RECIPE ASSISTANT === -->
+
+                                    </div> <!-- END RIGHT COLUMN -->
+                                </div> <!-- END 2-COLUMN LAYOUT -->
                             </div>
+                            <!-- === END TO-DO LIST CARD === -->
+
 
                             <!-- Little Wishes (MOVED FROM RIGHT COLUMN) -->
                             <!-- Added anim-card class -->
@@ -1453,5 +1480,8 @@
     <script type="module" src="./js/journey.js"></script>
     <!-- NEW SCRIPT TAG -->
     <script type="module" src="./js/calm-space.js"></script>
+
+    <!-- NEW CALENDAR SCRIPT -->
+    <script src="https://cdn.jsdelivr.net/npm/vanilla-calendar-pro@2.9.6/build/vanilla-calendar.min.js"></script>
 </body>
 </html>
