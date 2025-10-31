@@ -1074,3 +1074,140 @@ h1, h2, h3 {
 .notification-item.type-wish-urgent p:first-child {
      color: #fde68a; /* yellow-200 for urgent */
 }
+
+/* ============================================================
+=== NEW TO-DO CALENDAR STYLES (vanilla-calendar)
+============================================================
+*/
+
+/* Main container */
+.vanilla-calendar {
+    width: 100%;
+    background: transparent !important; /* Override default bg */
+    border: none !important; /* Override default border */
+    padding: 0 !important; /* Override default padding */
+    color: #cbd5e1; /* gray-300 */
+    margin-bottom: 1rem;
+}
+
+/* Header: "Month Year" and Arrows */
+.vanilla-calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0.25rem;
+    margin-bottom: 0.75rem;
+}
+
+.vanilla-calendar-header__label {
+    font-size: 1.125rem !important; /* text-lg */
+    font-weight: 700 !important; /* font-bold */
+    color: #fff !important;
+    text-shadow: 0 0 8px rgba(232, 217, 255, 0.5);
+}
+
+/* Arrow buttons */
+.vanilla-calendar-btn {
+    width: 2.25rem; /* w-9 */
+    height: 2.25rem; /* h-9 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px; /* rounded-full */
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #fff !important;
+    transition: background-color 0.2s;
+}
+.vanilla-calendar-btn:hover {
+    background: rgba(255, 255, 255, 0.2) !important;
+}
+.vanilla-calendar-btn svg {
+    width: 1.25rem; /* w-5 */
+    height: 1.25rem; /* h-5 */
+}
+
+/* Weekday names (Sun, Mon, Tue...) */
+.vanilla-calendar-week {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    color: #a78bfa; /* purple-400 */
+    font-weight: 600;
+    font-size: 0.875rem; /* text-sm */
+    margin-bottom: 0.5rem;
+}
+.vanilla-calendar-week__day {
+    text-align: center;
+    padding: 0.25rem;
+}
+
+/* Days container */
+.vanilla-calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.25rem; /* gap-1 */
+}
+
+/* Individual day */
+.vanilla-calendar-day {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 2.5rem; /* h-10 */
+    border-radius: 9999px; /* rounded-full */
+    background: transparent;
+    color: #e5e7eb; /* gray-200 */
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+    position: relative; /* For the marker */
+}
+
+.vanilla-calendar-day:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Day not in current month */
+.vanilla-calendar-day_disabled {
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+/* Today's date */
+.vanilla-calendar-day_today {
+    color: #fff !important;
+    background: rgba(167, 139, 250, 0.2) !important; /* purple-400 with 20% opacity */
+    border: 1px solid rgba(167, 139, 250, 0.4);
+}
+
+/* Selected date */
+.vanilla-calendar-day_selected {
+    color: #fff !important;
+    background: rgba(167, 139, 250, 0.5) !important; /* purple-400 with 50% opacity */
+    font-weight: 700;
+}
+.vanilla-calendar-day_selected:hover {
+    background: rgba(167, 139, 250, 0.6) !important;
+}
+
+/* To-Do Marker Dot - Default (Recipes, Custom, etc.) */
+.vanilla-calendar-day__marker {
+    position: absolute;
+    bottom: 4px; /* Adjust position */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #6ee7b7; /* teal-300 */
+    box-shadow: 0 0 5px #6ee7b7;
+}
+
+/* Different color marker for Appointments */
+.vanilla-calendar-day__marker_appointment {
+    background-color: #f871b3; /* pink-400 */
+    box-shadow: 0 0 5px #f871b3;
+}
+/* Different color marker for Health/Baby/Home/Reminder */
+.vanilla-calendar-day__marker_task {
+    background-color: #93c5fd; /* blue-300 */
+    box-shadow: 0 0 5px #93c5fd;
+}
