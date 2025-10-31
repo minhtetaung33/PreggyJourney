@@ -4,8 +4,8 @@ import { db } from './firebase.js';
 import { getCurrentUserId } from "./auth.js";
 // IMPORT THE NEW NOTIFICATION UI FUNCTION
 import { elements, updateNotificationUI } from './ui.js'; 
-// NEW: Import Calendar
-import VanillaCalendar from './vanilla-calendar.modern.js';
+// NEW: Import Calendar - REMOVED INCORRECT IMPORT
+// import VanillaCalendar from './vanilla-calendar.modern.js'; // <-- This line was removed
 
 // === ORIGINAL DOM Elements ===
 const todoListContainer = document.getElementById('todo-list-container');
