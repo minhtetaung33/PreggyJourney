@@ -559,8 +559,33 @@ async function generateAiMealPlan(dayKey, craving) {
     const lunchOpts = dynamicMealOptions.lunch || [];
     const snackOpts = dynamicMealOptions.snack || [];
     const dinnerOpts = dynamicMealOptions.dinner || [];
-    const cravingText = craving ? `The user's specific craving today is "${craving}".` : "The user has not specified a craving, so create a generally balanced and appealing plan.";
-    const systemPrompt = `You are an expert prenatal nutritionist creating a one-day meal plan for a woman in week ${pregnancyWeek} of her pregnancy. Create a complete, balanced, and varied one-day meal plan for all five meal slots: Breakfast, Snack AM, Lunch, Snack PM, and Dinner. ${cravingText} You can use the user's 'Available meal options' or invent new, healthy suggestions. For each of the five meals, provide an estimated calorie count and calculate the total daily calories. Provide a summary of the day's estimated nutrient levels (iron, calcium, folate, fiber) as "Low", "Okay", or "Good". Provide a brief, one-sentence nutritional feedback. Your response MUST be ONLY a valid JSON object with the keys "plan" (containing objects for each meal with "name" and "calories"), "nutritionSummary" (object with nutrient statuses), "totalCalories", and "feedback".`;
+    const cravingText = craving ? `The user's specific craving today is "${craving}". Please try to incorporate this.` : "The user has not specified a craving, so create a generally balanced and appealing plan.";
+    
+    // --- THIS IS THE FIX ---
+    // The systemPrompt has been made much more specific to match the display function.
+    const systemPrompt = `You are an expert prenatal nutritionist creating a one-day meal plan for a woman in week ${pregnancyWeek} of her pregnancy.
+Create a complete, balanced, and varied one-day meal plan. ${cravingText}
+You can use the user's 'Available meal options' or invent new, healthy suggestions.
+Your response MUST be ONLY a valid JSON object.
+The object must have a top-level key "plan". The "plan" key's value must be an object containing exactly five keys: "breakfast", "snackAM", "lunch", "snackPM", and "dinner".
+Each of these five keys must have an object as its value, containing "name" (string) and "calories" (number).
+The response must also include top-level keys for "totalCalories" (number), "nutritionSummary" (an object with nutrient statuses like "iron": "Good"), and "feedback" (string).
+
+Example structure:
+{
+  "plan": {
+    "breakfast": { "name": "Oatmeal with berries", "calories": 350 },
+    "snackAM": { "name": "Apple slices with almond butter", "calories": 180 },
+    "lunch": { "name": "Grilled chicken salad", "calories": 500 },
+    "snackPM": { "name": "Greek yogurt with honey", "calories": 150 },
+    "dinner": { "name": "Baked salmon with quinoa", "calories": 600 }
+  },
+  "totalCalories": 1780,
+  "nutritionSummary": { "iron": "Good", "calcium": "Okay", "folate": "Good", "fiber": "Good" },
+  "feedback": "This plan provides a good balance of nutrients, focusing on your craving for salmon."
+}`;
+    // --- END OF FIX ---
+
     let userQuery = `Available meal options:\n- Breakfast: [${breakfastOpts.join(', ')}]\n- Lunch: [${lunchOpts.join(', ')}]\n- Snack: [${snackOpts.join(', ')}]\n- Dinner: [${dinnerOpts.join(', ')}]\n\nGenerate a new, unique meal plan for a user in week ${pregnancyWeek}.`;
     if(craving) userQuery += ` The user is craving: "${craving}".`
     const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI";
@@ -588,6 +613,14 @@ async function generateAiMealPlan(dayKey, craving) {
 
 function displayAiMealPlan(data) {
     const { plan, feedback, totalCalories } = data;
+    
+    // Check if 'plan' exists. If not, the API response was malformed.
+    if (!plan) {
+         aiMealPlanDisplay.innerHTML = `<p class="text-center text-red-300">Sorry, the AI returned an invalid plan. Please try generating again.</p>`;
+         console.error("Invalid AI plan data received:", data);
+         return;
+    }
+
     aiMealPlanDisplay.innerHTML = `
         <div class="p-3 bg-white/5 rounded-lg flex justify-between items-center"><span><strong>Breakfast:</strong> ${plan.breakfast?.name || 'N/A'}</span> <span class="text-sm font-semibold text-purple-300">${plan.breakfast?.calories || 0} kcal</span></div>
         <div class="p-3 bg-white/5 rounded-lg flex justify-between items-center"><span><strong>Snack (AM):</strong> ${plan.snackAM?.name || 'N/A'}</span> <span class="text-sm font-semibold text-purple-300">${plan.snackAM?.calories || 0} kcal</span></div>
