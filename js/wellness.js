@@ -1147,14 +1147,23 @@ function updateDailySupplementsUI(dayKey) {
         <button class="ml-2 remove-supp-btn" data-supp="${suppName}">
             <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
         </button>`;
-        pill.querySelector('.remove-supp-btn').addEventListener('click', () => removeSupplementFromDay(suppName));
+        //
+        // --- THIS IS FIX #2 ---
+        // Pass the 'dayKey' to the remove function so it knows *which* day to remove from.
+        pill.querySelector('.remove-supp-btn').addEventListener('click', () => removeSupplementFromDay(suppName, dayKey));
+        //
+        //
         dailySupplementsList.appendChild(pill);
     });
 }
 
-async function removeSupplementFromDay(suppName) {
-     const todayIndex = new Date().getDay(); const dayKey = days[(todayIndex === 0 ? 6 : todayIndex - 1)];
-     await updateDoc(wellnessDataRef, { [`dailySupplements.${dayKey}`]: arrayRemove(suppName) });
+//
+// --- THIS IS FIX #2 ---
+// Added the 'dayKeyToRemoveFrom' parameter to replace the hard-coded 'today' logic.
+//
+async function removeSupplementFromDay(suppName, dayKeyToRemoveFrom) {
+    // const todayIndex = new Date().getDay(); const dayKey = days[(todayIndex === 0 ? 6 : todayIndex - 1)]; // OLD incorrect logic
+    await updateDoc(wellnessDataRef, { [`dailySupplements.${dayKeyToRemoveFrom}`]: arrayRemove(suppName) });
 }
 
 async function deleteSupplement(suppToDelete) {
@@ -1272,7 +1281,15 @@ async function populateNutritionHistory(date) {
                 <div>Fiber: <span class="font-semibold ${nutritionData.fiber.color}">${nutritionData.fiber.status} (${nutritionData.fiber.percentage}%)</span></div>
             </div>
         `;
-        const mondayOfRelevantWeek = new Date(getWeekId(date) + 'T00:00:00Z');
+        
+        //
+        // --- THIS IS FIX #1 ---
+        // Removed the 'Z' from the end of the timestamp string.
+        // This creates the date in the user's local timezone, preventing the one-day shift.
+        //
+        const mondayOfRelevantWeek = new Date(getWeekId(date) + 'T00:00:00'); // No 'Z' here
+        //
+        //
         const dayDate = new Date(mondayOfRelevantWeek);
         dayDate.setDate(mondayOfRelevantWeek.getDate() + index);
 
