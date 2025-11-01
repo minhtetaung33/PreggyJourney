@@ -145,7 +145,7 @@ const formatTime = (timeString) => {
 };
 
 function renderTodos(todos) {
-    // Use the cached element
+    if (!elements.todoListContainer) return;
     elements.todoListContainer.innerHTML = '';
     if (todos.length === 0) {
         elements.todoListContainer.innerHTML = `<p class="text-center text-gray-400">No tasks yet. Add one below!</p>`;
@@ -156,6 +156,7 @@ function renderTodos(todos) {
 
     todos.forEach(todo => {
         const item = document.createElement('div');
+        item.id = `todo-item-${todo.id}`; // <-- ADDED THIS ID
         item.className = `todo-item flex items-start justify-between p-3 bg-white/5 rounded-lg ${todo.completed ? 'completed' : ''}`;
 
         const displayDate = formatDate(todo.date);
@@ -638,7 +639,7 @@ function changeMonth(offset) {
  * Renders the calendar grid for the `currentCalendarDate` month.
  */
 function renderCalendar() {
-    if (!elements.calendarGrid) return; // Exit if elements aren't cached yet
+    if (!elements.calendarGrid || !elements.calendarMonthYear) return; // Exit if elements aren't cached yet
 
     // Add animation class
     elements.calendarGrid.classList.remove('calendar-grid-anim'); // Remove old one
@@ -687,20 +688,18 @@ function renderCalendar() {
         }
 
         // Find tasks for this day
-        const tasksForDay = currentTodos.filter(todo => {
-            if (!todo.date) return false;
-            // Compare string-to-string (e.g., "2025-10-31")
-            const todoDate = new Date(todo.date + 'T00:00:00'); // Local time
-            return isSameDay(date, todoDate);
-        });
-
+        // This is the date string we'll use for comparison
+        const isoDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+        
         // Create task markers
         let markersHtml = '';
+        const tasksForDay = currentTodos.filter(todo => todo.date === isoDate);
+
         if (tasksForDay.length > 0) {
             markersHtml = '<div class="task-markers">';
             // Use .slice(0, 6) to show a max of 6 markers
             tasksForDay.slice(0, 6).forEach(task => {
-                const categoryClass = task.category.replace(/[^a-zA-Z0-9]/g, '') || 'Default';
+                const categoryClass = (task.category || 'Default').replace(/[^a-zA-Z0-9]/g, '');
                 markersHtml += `<div class="task-marker task-marker-${categoryClass}" title="${task.text}"></div>`;
             });
             markersHtml += '</div>';
@@ -712,6 +711,14 @@ function renderCalendar() {
                 ${markersHtml}
             </div>
         `;
+        
+        // --- NEW CLICK LISTENER ---
+        if (tasksForDay.length > 0) {
+            day.classList.add('cursor-pointer');
+            day.addEventListener('click', () => handleCalendarDayClick(isoDate));
+        }
+        // --- END NEW CLICK LISTENER ---
+
         elements.calendarGrid.appendChild(day);
     }
 
@@ -1217,85 +1224,44 @@ function setupEventListeners() {
     elements.calendarNextBtn.addEventListener('click', () => changeMonth(1));
 }
 
-// === NEW AI Baby Name Generator Listeners ===
+// === NEW FUNCTION: Handle clicks on calendar days ===
+/**
+ * Handles clicks on a calendar day, finds the first to-do for that day,
+ * opens the list, and scrolls to the item.
+ * @param {string} isoDate - The date string (YYYY-MM-DD) of the clicked day.
+ */
+function handleCalendarDayClick(isoDate) {
+    if (!currentTodos || !elements.collapsibleTodoContent || !elements.todoListToggleIcon) return;
 
-function setupNameGeneratorListeners() {
-    // Gender Selection
-    elements.nameGenderSelector.addEventListener('click', (e) => {
-        if (e.target.tagName === 'BUTTON') {
-            // Remove active class from all buttons
-            elements.nameGenderSelector.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
-            // Add active class to the clicked button
-            e.target.classList.add('active');
-            selectedNameGender = e.target.dataset.gender;
-        }
-    });
+    // Find the first to-do item for that day
+    const firstTodo = currentTodos.find(todo => todo.date === isoDate);
+    if (!firstTodo) return;
 
-    // Origin Selection
-    elements.nameOriginSelect.addEventListener('change', () => {
-        selectedNameOrigin = elements.nameOriginSelect.value;
-        if (selectedNameOrigin === 'Custom') {
-            elements.nameOriginCustom.classList.remove('hidden');
-        } else {
-            elements.nameOriginCustom.classList.add('hidden');
-            elements.nameOriginCustom.value = ''; // Clear custom input
-        }
-    });
+    // Find the corresponding DOM element
+    const todoElement = document.getElementById(`todo-item-${firstTodo.id}`);
+    if (!todoElement) return;
 
-    // Style Selection
-    elements.nameStyleSelect.addEventListener('change', () => {
-        selectedNameStyle = elements.nameStyleSelect.value;
-        if (selectedNameStyle === 'Custom') {
-            elements.nameStyleCustom.classList.remove('hidden');
-        } else {
-            elements.nameStyleCustom.classList.add('hidden');
-            elements.nameStyleCustom.value = ''; // Clear custom input
-        }
-    });
+    // Open the to-do list if it's closed
+    if (elements.collapsibleTodoContent.classList.contains('hidden')) {
+        elements.collapsibleTodoContent.classList.remove('hidden');
+        elements.todoListToggleIcon.classList.add('rotate-180');
+    }
 
-    // Syllable Selection
-    elements.nameSyllableSelector.addEventListener('change', (e) => {
-        if (e.target.type === 'radio' && e.target.checked) {
-            selectedNameSyllables = e.target.value;
-        }
-    });
+    // Scroll the item into view
+    todoElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-    // Generate Button
-    elements.nameGenerateBtn.addEventListener('click', () => generateNames(false));
+    // Apply the highlight animation
+    // Remove any existing class first
+    todoElement.classList.remove('todo-item-highlight');
+    // Force a browser reflow
+    void todoElement.offsetWidth;
+    // Add the class to trigger the animation
+    todoElement.classList.add('todo-item-highlight');
 
-    // Randomize Button
-    elements.nameRandomBtn.addEventListener('click', () => generateNames(true));
-
-    // Generate Again Button
-    elements.nameGenerateAgainBtn.addEventListener('click', () => generateNames(false));
-
-    // Favorites Toggle
-    elements.nameFavoritesToggleBtn.addEventListener('click', () => {
-        elements.nameFavoritesContainer.classList.toggle('hidden');
-    });
-
-    // Delegated listener for favorite/unfavorite buttons in results
-    elements.nameResultsContainer.addEventListener('click', async (e) => {
-        const button = e.target.closest('.toggle-favorite-name-btn');
-        if (button) {
-            const name = button.dataset.name;
-            const meaning = button.dataset.meaning;
-            const origin = button.dataset.origin;
-            await toggleFavoriteName({ name, meaning, origin });
-        }
-    });
-
-    // Delegated listener for removing favorites from the list
-    elements.nameFavoritesList.addEventListener('click', async (e) => {
-        const button = e.target.closest('.remove-favorite-name-btn');
-        if (button) {
-            const docId = button.dataset.id;
-            if (docId && favoriteNamesRef) {
-                const nameDocRef = doc(db, `users/${getCurrentUserId()}/favoriteNames`, docId);
-                await deleteDoc(nameDocRef);
-            }
-        }
-    });
+    // Remove the class after the animation (1.5s)
+    setTimeout(() => {
+        todoElement.classList.remove('todo-item-highlight');
+    }, 1500);
 }
 
 
@@ -1614,6 +1580,86 @@ function updateColorTags() {
 }
 
 // === NEW AI Baby Name Generator Functions ===
+
+function setupNameGeneratorListeners() {
+    // Gender Selection
+    elements.nameGenderSelector.addEventListener('click', (e) => {
+        if (e.target.tagName === 'BUTTON') {
+            // Remove active class from all buttons
+            elements.nameGenderSelector.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+            // Add active class to the clicked button
+            e.target.classList.add('active');
+            selectedNameGender = e.target.dataset.gender;
+        }
+    });
+
+    // Origin Selection
+    elements.nameOriginSelect.addEventListener('change', () => {
+        selectedNameOrigin = elements.nameOriginSelect.value;
+        if (selectedNameOrigin === 'Custom') {
+            elements.nameOriginCustom.classList.remove('hidden');
+        } else {
+            elements.nameOriginCustom.classList.add('hidden');
+            elements.nameOriginCustom.value = ''; // Clear custom input
+        }
+    });
+
+    // Style Selection
+    elements.nameStyleSelect.addEventListener('change', () => {
+        selectedNameStyle = elements.nameStyleSelect.value;
+        if (selectedNameStyle === 'Custom') {
+            elements.nameStyleCustom.classList.remove('hidden');
+        } else {
+            elements.nameStyleCustom.classList.add('hidden');
+            elements.nameStyleCustom.value = ''; // Clear custom input
+        }
+    });
+
+    // Syllable Selection
+    elements.nameSyllableSelector.addEventListener('change', (e) => {
+        if (e.target.type === 'radio' && e.target.checked) {
+            selectedNameSyllables = e.target.value;
+        }
+    });
+
+    // Generate Button
+    elements.nameGenerateBtn.addEventListener('click', () => generateNames(false));
+
+    // Randomize Button
+    elements.nameRandomBtn.addEventListener('click', () => generateNames(true));
+
+    // Generate Again Button
+    elements.nameGenerateAgainBtn.addEventListener('click', () => generateNames(false));
+
+    // Favorites Toggle
+    elements.nameFavoritesToggleBtn.addEventListener('click', () => {
+        elements.nameFavoritesContainer.classList.toggle('hidden');
+    });
+
+    // Delegated listener for favorite/unfavorite buttons in results
+    elements.nameResultsContainer.addEventListener('click', async (e) => {
+        const button = e.target.closest('.toggle-favorite-name-btn');
+        if (button) {
+            const name = button.dataset.name;
+            const meaning = button.dataset.meaning;
+            const origin = button.dataset.origin;
+            await toggleFavoriteName({ name, meaning, origin });
+        }
+    });
+
+    // Delegated listener for removing favorites from the list
+    elements.nameFavoritesList.addEventListener('click', async (e) => {
+        const button = e.target.closest('.remove-favorite-name-btn');
+        if (button) {
+            const docId = button.dataset.id;
+            if (docId && favoriteNamesRef) {
+                const nameDocRef = doc(db, `users/${getCurrentUserId()}/favoriteNames`, docId);
+                await deleteDoc(nameDocRef);
+            }
+        }
+    });
+}
+
 
 /**
  * Calls the Gemini API to generate baby names based on current filters.
