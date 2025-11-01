@@ -189,7 +189,10 @@ export const cacheDomElements = () => {
     elements.editWishModal = document.getElementById('edit-wish-modal');
     elements.editWishItem = document.getElementById('edit-wish-item');
     elements.editWishCategory = document.getElementById('edit-wish-category');
-    // Note: editCustomCategoryInput is reused ID, already cached
+    // --- THIS IS THE FIX ---
+    // The line below was missing, causing the error.
+    elements.editCustomCategoryInput = document.getElementById('edit-custom-category-input');
+    // --- END OF FIX ---
     elements.editWishFoodFields = document.getElementById('edit-wish-food-fields');
     elements.editWishFoodType = document.getElementById('edit-wish-food-type');
     elements.editWishFoodExpiry = document.getElementById('edit-wish-food-expiry');
@@ -578,7 +581,7 @@ export const updateNotificationUI = (notifications) => {
             } else if (noti.details.food) {
                 const food = noti.details.food;
                  detailsHtml += `<p class="text-xs text-indigo-300 font-semibold mt-1 mb-1">Type: ${food.type || 'Food Item'}</p>`;
-                if(food.expiry) detailsHtml += `<p class="text-xs text-yellow-400 font-semibold">Expires: ${formatDate(food.expiry)}</p>`;
+                if(food.expiry) detailsHtml += `<p classxs="text-xs text-yellow-400 font-semibold">Expires: ${formatDate(food.expiry)}</p>`;
             }
 
 
