@@ -1075,139 +1075,103 @@ h1, h2, h3 {
      color: #fde68a; /* yellow-200 for urgent */
 }
 
-/* ============================================================
-=== NEW TO-DO CALENDAR STYLES (vanilla-calendar)
-============================================================
-*/
+/* === NEW CALENDAR STYLES === */
 
-/* Main container */
-.vanilla-calendar {
-    width: 100%;
-    background: transparent !important; /* Override default bg */
-    border: none !important; /* Override default border */
-    padding: 0 !important; /* Override default padding */
-    color: #cbd5e1; /* gray-300 */
-    margin-bottom: 1rem;
+#calendar-container {
+    position: relative;
+    overflow: hidden; /* Needed for month switch animation */
 }
 
-/* Header: "Month Year" and Arrows */
-.vanilla-calendar-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.5rem 0.25rem;
-    margin-bottom: 0.75rem;
+@keyframes month-fade-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-.vanilla-calendar-header__label {
-    font-size: 1.125rem !important; /* text-lg */
-    font-weight: 700 !important; /* font-bold */
-    color: #fff !important;
-    text-shadow: 0 0 8px rgba(232, 217, 255, 0.5);
+.calendar-grid-anim {
+    animation: month-fade-in 0.4s ease-out;
 }
 
-/* Arrow buttons */
-.vanilla-calendar-btn {
-    width: 2.25rem; /* w-9 */
-    height: 2.25rem; /* h-9 */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 9999px; /* rounded-full */
-    background: rgba(255, 255, 255, 0.1) !important;
-    color: #fff !important;
-    transition: background-color 0.2s;
-}
-.vanilla-calendar-btn:hover {
-    background: rgba(255, 255, 255, 0.2) !important;
-}
-.vanilla-calendar-btn svg {
-    width: 1.25rem; /* w-5 */
-    height: 1.25rem; /* h-5 */
+.calendar-day {
+    position: relative;
+    height: 0;
+    padding-bottom: 100%; /* Creates a square aspect ratio */
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 0.75rem; /* rounded-lg */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.2s ease-in-out;
 }
 
-/* Weekday names (Sun, Mon, Tue...) */
-.vanilla-calendar-week {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    color: #a78bfa; /* purple-400 */
-    font-weight: 600;
-    font-size: 0.875rem; /* text-sm */
-    margin-bottom: 0.5rem;
-}
-.vanilla-calendar-week__day {
-    text-align: center;
-    padding: 0.25rem;
+.calendar-day:not(.other-month):hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    transform: scale(1.05);
 }
 
-/* Days container */
-.vanilla-calendar-days {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 0.25rem; /* gap-1 */
-}
-
-/* Individual day */
-.vanilla-calendar-day {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 2.5rem; /* h-10 */
-    border-radius: 9999px; /* rounded-full */
-    background: transparent;
-    color: #e5e7eb; /* gray-200 */
-    cursor: pointer;
-    transition: background-color 0.2s, color 0.2s;
-    position: relative; /* For the marker */
-}
-
-.vanilla-calendar-day:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-/* Day not in current month */
-.vanilla-calendar-day_disabled {
-    opacity: 0.3;
-    pointer-events: none;
-}
-
-/* Today's date */
-.vanilla-calendar-day_today {
-    color: #fff !important;
-    background: rgba(167, 139, 250, 0.2) !important; /* purple-400 with 20% opacity */
-    border: 1px solid rgba(167, 139, 250, 0.4);
-}
-
-/* Selected date */
-.vanilla-calendar-day_selected {
-    color: #fff !important;
-    background: rgba(167, 139, 250, 0.5) !important; /* purple-400 with 50% opacity */
-    font-weight: 700;
-}
-.vanilla-calendar-day_selected:hover {
-    background: rgba(167, 139, 250, 0.6) !important;
-}
-
-/* To-Do Marker Dot - Default (Recipes, Custom, etc.) */
-.vanilla-calendar-day__marker {
+.day-content {
     position: absolute;
-    bottom: 4px; /* Adjust position */
-    left: 50%;
-    transform: translateX(-50%);
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background-color: #6ee7b7; /* teal-300 */
-    box-shadow: 0 0 5px #6ee7b7;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 0.5rem; /* p-2 */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
-/* Different color marker for Appointments */
-.vanilla-calendar-day__marker_appointment {
-    background-color: #f871b3; /* pink-400 */
-    box-shadow: 0 0 5px #f871b3;
+.day-number {
+    font-weight: 600; /* font-semibold */
+    font-size: 0.875rem; /* text-sm */
 }
-/* Different color marker for Health/Baby/Home/Reminder */
-.vanilla-calendar-day__marker_task {
-    background-color: #93c5fd; /* blue-300 */
-    box-shadow: 0 0 5px #93c5fd;
+
+.calendar-day.other-month .day-content {
+    opacity: 0.3;
+    background-color: transparent;
+    border-color: transparent;
+}
+
+.calendar-day.is-today .day-content {
+    background-color: rgba(167, 139, 250, 0.3); /* bg-purple-400/30 */
+    border-radius: 0.75rem;
+    box-shadow: 0 0 10px rgba(167, 139, 250, 0.2);
+}
+
+.calendar-day.is-today .day-number {
+    color: #fff;
+    font-weight: 700; /* font-bold */
+}
+
+.task-markers {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px; /* gap-1 */
+    margin-top: 0.5rem; /* mt-2 */
+    max-height: 2.5rem; /* Limit height */
+    overflow: hidden;
+}
+
+.task-marker {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Category colors for markers */
+.task-marker-Health { background-color: #a78bfa; } /* purple-400 */
+.task-marker-Baby { background-color: #f472b6; } /* pink-400 */
+.task-marker-Home { background-color: #34d399; } /* green-400 */
+.task-marker-Appointment { background-color: #fbbf24; } /* amber-400 */
+.task-marker-Recipes { background-color: #60a5fa; } /* blue-400 */
+.task-marker-Reminder { background-color: #f87171; } /* red-400 */
+.task-marker-Custom,
+.task-marker-Default { background-color: #9ca3af; } /* gray-400 */
+
+/* Style for the collapsible to-do list icon */
+#todo-list-toggle-icon {
+    transition: transform 0.3s ease;
+}
+/* rotate-180 is already in tailwind, but we add it here just in case */
+.rotate-180 {
+    transform: rotate(180deg);
 }
