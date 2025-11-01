@@ -117,6 +117,28 @@ export const cacheDomElements = () => {
 
 
     // --- JOURNEY TAB ELEMENTS ---
+
+    // NEW: Calendar and To-Do List Elements
+    elements.calendarHeader = document.getElementById('calendar-header');
+    elements.calendarPrevBtn = document.getElementById('calendar-prev-btn');
+    elements.calendarMonthYear = document.getElementById('calendar-month-year');
+    elements.calendarNextBtn = document.getElementById('calendar-next-btn');
+    elements.calendarContainer = document.getElementById('calendar-container');
+    elements.calendarGrid = document.getElementById('calendar-grid');
+    elements.todoListHeader = document.getElementById('todo-list-header'); // Replaces todo-header
+    elements.todoListToggleIcon = document.getElementById('todo-list-toggle-icon'); // Replaces todo-toggle-icon
+    elements.collapsibleTodoContent = document.getElementById('collapsible-todo-content');
+    elements.todoListContainer = document.getElementById('todo-list-container');
+    
+    // To-Do Inputs
+    elements.addTodoBtn = document.getElementById('add-todo-btn');
+    elements.newTodoInput = document.getElementById('new-todo-input');
+    elements.newTodoCategory = document.getElementById('new-todo-category');
+    elements.customTodoCategoryInput = document.getElementById('custom-todo-category-input');
+    elements.newTodoDate = document.getElementById('new-todo-date');
+    elements.newTodoTime = document.getElementById('new-todo-time');
+    elements.aiGenerateTodosBtn = document.getElementById('ai-generate-todos-btn');
+
     // Appointments
     elements.newAppointmentFields = document.getElementById('new-appointment-fields');
     elements.newAppointmentFname = document.getElementById('new-appointment-fname');
@@ -135,45 +157,105 @@ export const cacheDomElements = () => {
     elements.editAppointmentType = document.getElementById('edit-appointment-type');
     elements.editAppointmentCustomType = document.getElementById('edit-appointment-custom-type');
 
+    // Wishlist
+    elements.wishlistContainer = document.getElementById('wishlist-container');
+    elements.wishlistProgressText = document.getElementById('wishlist-progress-text');
+    elements.wishlistProgressBar = document.getElementById('wishlist-progress-bar');
+    elements.newWishItem = document.getElementById('new-wish-item');
+    elements.newWishCategory = document.getElementById('new-wish-category');
+    elements.customCategoryInput = document.getElementById('custom-category-input');
+    elements.newWishPrice = document.getElementById('new-wish-price');
+    elements.newWishLink = document.getElementById('new-wish-link');
+    elements.addWishBtn = document.getElementById('add-wish-btn');
+    elements.aiWishForm = document.getElementById('ai-wish-form');
+    elements.aiWishPrompt = document.getElementById('ai-wish-prompt');
+    elements.wishlistHeader = document.getElementById('wishlist-header');
+    elements.collapsibleWishlistContent = document.getElementById('collapsible-wishlist-content');
+    elements.wishlistToggleIcon = document.getElementById('wishlist-toggle-icon');
+    elements.wishlistSearchInput = document.getElementById('wishlist-search-input');
+    elements.wishlistSortSelect = document.getElementById('wishlist-sort-select');
+    
     // Wishlist Food Fields
     elements.newWishFoodFields = document.getElementById('new-wish-food-fields');
     elements.newWishFoodType = document.getElementById('new-wish-food-type');
     elements.newWishFoodExpiry = document.getElementById('new-wish-food-expiry');
 
-    // NEW: Wish Quantity Fields (Add form)
+    // Wish Quantity Fields (Add form)
     elements.newWishQuantityInput = document.getElementById('new-wish-quantity');
     elements.newWishQuantityMinusBtn = document.getElementById('new-wish-quantity-minus');
     elements.newWishQuantityPlusBtn = document.getElementById('new-wish-quantity-plus');
 
-    // NEW: Edit Wish Modal Fields
+    // Edit Wish Modal Fields
     elements.editWishModal = document.getElementById('edit-wish-modal');
     elements.editWishItem = document.getElementById('edit-wish-item');
     elements.editWishCategory = document.getElementById('edit-wish-category');
-    elements.editCustomCategoryInput = document.getElementById('edit-custom-category-input'); // Reused ID, ensure correct element is selected in journey.js
+    // Note: editCustomCategoryInput is reused ID, already cached
     elements.editWishFoodFields = document.getElementById('edit-wish-food-fields');
     elements.editWishFoodType = document.getElementById('edit-wish-food-type');
     elements.editWishFoodExpiry = document.getElementById('edit-wish-food-expiry');
     elements.editWishPrice = document.getElementById('edit-wish-price');
     elements.editWishLink = document.getElementById('edit-wish-link');
-    // NEW: Wish Quantity Fields (Edit modal)
     elements.editWishQuantityInput = document.getElementById('edit-wish-quantity');
     elements.editWishQuantityMinusBtn = document.getElementById('edit-wish-quantity-minus');
     elements.editWishQuantityPlusBtn = document.getElementById('edit-wish-quantity-plus');
-    // --- End Wish Quantity Fields (Edit modal) ---
     elements.editWishModalCancelBtn = document.getElementById('edit-wish-modal-cancel-btn');
     elements.editWishModalSaveBtn = document.getElementById('edit-wish-modal-save-btn');
 
-    // NEW: Calendar and To-Do List Elements
-    elements.calendarHeader = document.getElementById('calendar-header');
-    elements.calendarPrevBtn = document.getElementById('calendar-prev-btn');
-    elements.calendarMonthYear = document.getElementById('calendar-month-year');
-    elements.calendarNextBtn = document.getElementById('calendar-next-btn');
-    elements.calendarContainer = document.getElementById('calendar-container');
-    elements.calendarGrid = document.getElementById('calendar-grid');
-    elements.todoListHeader = document.getElementById('todo-list-header'); // Replaces todo-header
-    elements.todoListToggleIcon = document.getElementById('todo-list-toggle-icon'); // Replaces todo-toggle-icon
-    elements.collapsibleTodoContent = document.getElementById('collapsible-todo-content');
-    elements.todoListContainer = document.getElementById('todo-list-container');
+    // Reflections
+    elements.reflectionsContainer = document.getElementById('reflections-container');
+    elements.reflectionHeader = document.getElementById('reflection-header');
+    elements.collapsibleReflectionContent = document.getElementById('collapsible-reflection-content');
+    elements.reflectionToggleIcon = document.getElementById('reflection-toggle-icon');
+    elements.toggleReflectionsContainer = document.getElementById('toggle-reflections-container');
+    elements.toggleReflectionsBtn = document.getElementById('toggle-reflections-btn');
+    elements.addReflectionBtn = document.getElementById('add-reflection-btn');
+    elements.reflectionModal = document.getElementById('reflection-modal');
+    elements.reflectionModalTitle = document.getElementById('reflection-modal-title');
+    elements.reflectionTitleInput = document.getElementById('reflection-title-input');
+    elements.reflectionContentInput = document.getElementById('reflection-content-input');
+    elements.reflectionColorTags = document.getElementById('reflection-color-tags');
+    elements.reflectionModalCancelBtn = document.getElementById('reflection-modal-cancel-btn');
+    elements.reflectionModalSaveBtn = document.getElementById('reflection-modal-save-btn');
+    elements.aiSummarizeReflectionsBtn = document.getElementById('ai-summarize-reflections-btn');
+    elements.aiSummaryModal = document.getElementById('ai-summary-modal');
+    elements.aiSummaryContent = document.getElementById('ai-summary-content');
+    elements.aiSummaryCloseBtn = document.getElementById('ai-summary-close-btn');
+    elements.addReflectionImageBtn = document.getElementById('add-reflection-image-btn');
+    elements.imageLinkModal = document.getElementById('image-link-modal');
+    elements.imageLinkInput = document.getElementById('image-link-input');
+    elements.imageLinkCancelBtn = document.getElementById('image-link-cancel-btn');
+    elements.imageLinkSaveBtn = document.getElementById('image-link-save-btn');
+    elements.reflectionImagePreviewContainer = document.getElementById('reflection-image-preview-container');
+    elements.reflectionImagePreview = document.getElementById('reflection-image-preview');
+
+    // Edit To-Do Modal
+    elements.editTodoModal = document.getElementById('edit-todo-modal');
+    elements.editTodoInput = document.getElementById('edit-todo-input');
+    elements.editTodoDate = document.getElementById('edit-todo-date');
+    elements.editTodoTime = document.getElementById('edit-todo-time');
+    elements.editTodoCategory = document.getElementById('edit-todo-category');
+    elements.editCustomTodoCategoryInput = document.getElementById('edit-custom-todo-category-input');
+    elements.editTodoModalCancelBtn = document.getElementById('edit-todo-modal-cancel-btn');
+    elements.editTodoModalSaveBtn = document.getElementById('edit-todo-modal-save-btn');
+    
+    // Baby Name Generator
+    elements.nameFavoritesToggleBtn = document.getElementById('name-favorites-toggle-btn');
+    elements.nameFavoritesContainer = document.getElementById('name-favorites-container');
+    elements.nameFavoritesList = document.getElementById('name-favorites-list');
+    elements.nameGenderSelector = document.getElementById('name-gender-selector');
+    elements.nameOriginSelect = document.getElementById('name-origin-select');
+    elements.nameOriginCustom = document.getElementById('name-origin-custom');
+    elements.nameStyleSelect = document.getElementById('name-style-select');
+    elements.nameStyleCustom = document.getElementById('name-style-custom');
+    elements.nameMeaningInput = document.getElementById('name-meaning-input');
+    elements.nameSyllableSelector = document.getElementById('name-syllable-selector');
+    elements.nameRandomBtn = document.getElementById('name-random-btn');
+    elements.nameGenerateBtn = document.getElementById('name-generate-btn');
+    elements.nameGenerateBtnText = document.getElementById('name-generate-btn-text');
+    elements.nameGenerateLoader = document.getElementById('name-generate-loader');
+    elements.nameResultsContainer = document.getElementById('name-results-container');
+    elements.nameGenerateAgainBtn = document.getElementById('name-generate-again-btn');
+    
     // --- END JOURNEY TAB ELEMENTS ---
 
     // --- AI RECIPE ASSISTANT FIELDS ---
