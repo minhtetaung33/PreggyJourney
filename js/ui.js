@@ -117,9 +117,6 @@ export const cacheDomElements = () => {
 
 
     // --- JOURNEY TAB ELEMENTS ---
-    // NEW: To-Do Calendar
-    elements.todoCalendarContainer = document.getElementById('todo-calendar-container');
-    
     // Appointments
     elements.newAppointmentFields = document.getElementById('new-appointment-fields');
     elements.newAppointmentFname = document.getElementById('new-appointment-fname');
@@ -165,6 +162,18 @@ export const cacheDomElements = () => {
     // --- End Wish Quantity Fields (Edit modal) ---
     elements.editWishModalCancelBtn = document.getElementById('edit-wish-modal-cancel-btn');
     elements.editWishModalSaveBtn = document.getElementById('edit-wish-modal-save-btn');
+
+    // NEW: Calendar and To-Do List Elements
+    elements.calendarHeader = document.getElementById('calendar-header');
+    elements.calendarPrevBtn = document.getElementById('calendar-prev-btn');
+    elements.calendarMonthYear = document.getElementById('calendar-month-year');
+    elements.calendarNextBtn = document.getElementById('calendar-next-btn');
+    elements.calendarContainer = document.getElementById('calendar-container');
+    elements.calendarGrid = document.getElementById('calendar-grid');
+    elements.todoListHeader = document.getElementById('todo-list-header'); // Replaces todo-header
+    elements.todoListToggleIcon = document.getElementById('todo-list-toggle-icon'); // Replaces todo-toggle-icon
+    elements.collapsibleTodoContent = document.getElementById('collapsible-todo-content');
+    elements.todoListContainer = document.getElementById('todo-list-container');
     // --- END JOURNEY TAB ELEMENTS ---
 
     // --- AI RECIPE ASSISTANT FIELDS ---
