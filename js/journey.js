@@ -2,93 +2,8 @@
 import { collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, where, getDocs, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { db } from './firebase.js';
 import { getCurrentUserId } from "./auth.js";
-// IMPORT THE NEW NOTIFICATION UI FUNCTION
+// IMPORT THE NEW NOTIFICATION UI FUNCTION and ELEMENTS
 import { elements, updateNotificationUI } from './ui.js'; 
-// NEW: Import Calendar - REMOVED INCORRECT IMPORT
-// import VanillaCalendar from './vanilla-calendar.modern.js'; // <-- This line was removed
-
-// === ORIGINAL DOM Elements ===
-const todoListContainer = document.getElementById('todo-list-container');
-const newTodoInput = document.getElementById('new-todo-input');
-const newTodoCategory = document.getElementById('new-todo-category');
-const addTodoBtn = document.getElementById('add-todo-btn');
-const aiGenerateTodosBtn = document.getElementById('ai-generate-todos-btn');
-const wishlistContainer = document.getElementById('wishlist-container');
-const wishlistProgressText = document.getElementById('wishlist-progress-text');
-const wishlistProgressBar = document.getElementById('wishlist-progress-bar');
-const newWishItem = document.getElementById('new-wish-item');
-const newWishCategory = document.getElementById('new-wish-category');
-const newWishPrice = document.getElementById('new-wish-price');
-const newWishLink = document.getElementById('new-wish-link');
-const addWishBtn = document.getElementById('add-wish-btn');
-const aiWishForm = document.getElementById('ai-wish-form');
-const aiWishPrompt = document.getElementById('ai-wish-prompt');
-const reflectionsContainer = document.getElementById('reflections-container');
-const addReflectionBtn = document.getElementById('add-reflection-btn');
-const reflectionModal = document.getElementById('reflection-modal');
-const reflectionModalTitle = document.getElementById('reflection-modal-title');
-const reflectionTitleInput = document.getElementById('reflection-title-input');
-const reflectionContentInput = document.getElementById('reflection-content-input');
-const reflectionColorTags = document.getElementById('reflection-color-tags');
-const reflectionModalCancelBtn = document.getElementById('reflection-modal-cancel-btn');
-const reflectionModalSaveBtn = document.getElementById('reflection-modal-save-btn');
-const aiSummarizeReflectionsBtn = document.getElementById('ai-summarize-reflections-btn');
-const aiSummaryModal = document.getElementById('ai-summary-modal');
-const aiSummaryContent = document.getElementById('ai-summary-content');
-const aiSummaryCloseBtn = document.getElementById('ai-summary-close-btn');
-const customCategoryInput = document.getElementById('custom-category-input');
-const todoHeader = document.getElementById('todo-header');
-const collapsibleTodoContent = document.getElementById('collapsible-todo-content');
-const todoToggleIcon = document.getElementById('todo-toggle-icon');
-const wishlistHeader = document.getElementById('wishlist-header');
-const collapsibleWishlistContent = document.getElementById('collapsible-wishlist-content');
-const wishlistToggleIcon = document.getElementById('wishlist-toggle-icon');
-const newTodoDate = document.getElementById('new-todo-date');
-const newTodoTime = document.getElementById('new-todo-time');
-const customTodoCategoryInput = document.getElementById('custom-todo-category-input');
-const editTodoModal = document.getElementById('edit-todo-modal');
-const editTodoInput = document.getElementById('edit-todo-input');
-const editTodoDate = document.getElementById('edit-todo-date');
-const editTodoTime = document.getElementById('edit-todo-time');
-const editTodoCategory = document.getElementById('edit-todo-category');
-const editCustomTodoCategoryInput = document.getElementById('edit-custom-todo-category-input');
-const editTodoModalCancelBtn = document.getElementById('edit-todo-modal-cancel-btn');
-const editTodoModalSaveBtn = document.getElementById('edit-todo-modal-save-btn');
-const reflectionHeader = document.getElementById('reflection-header');
-const collapsibleReflectionContent = document.getElementById('collapsible-reflection-content');
-const reflectionToggleIcon = document.getElementById('reflection-toggle-icon');
-const toggleReflectionsContainer = document.getElementById('toggle-reflections-container');
-const toggleReflectionsBtn = document.getElementById('toggle-reflections-btn');
-const addReflectionImageBtn = document.getElementById('add-reflection-image-btn');
-const imageLinkModal = document.getElementById('image-link-modal');
-const imageLinkInput = document.getElementById('image-link-input');
-const imageLinkCancelBtn = document.getElementById('image-link-cancel-btn');
-const imageLinkSaveBtn = document.getElementById('image-link-save-btn');
-const reflectionImagePreviewContainer = document.getElementById('reflection-image-preview-container');
-const reflectionImagePreview = document.getElementById('reflection-image-preview');
-let aiTodoSuggestionsContainer = null; // Container for AI To-Do Suggestions
-
-// === NEW AI Baby Name Generator DOM Elements ===
-const nameFavoritesToggleBtn = document.getElementById('name-favorites-toggle-btn');
-const nameFavoritesContainer = document.getElementById('name-favorites-container');
-const nameFavoritesList = document.getElementById('name-favorites-list');
-const nameGenderSelector = document.getElementById('name-gender-selector');
-const nameOriginSelect = document.getElementById('name-origin-select');
-const nameOriginCustom = document.getElementById('name-origin-custom');
-const nameStyleSelect = document.getElementById('name-style-select');
-const nameStyleCustom = document.getElementById('name-style-custom');
-const nameMeaningInput = document.getElementById('name-meaning-input');
-const nameSyllableSelector = document.getElementById('name-syllable-selector');
-const nameRandomBtn = document.getElementById('name-random-btn');
-const nameGenerateBtn = document.getElementById('name-generate-btn');
-const nameGenerateBtnText = document.getElementById('name-generate-btn-text');
-const nameGenerateLoader = document.getElementById('name-generate-loader');
-const nameResultsContainer = document.getElementById('name-results-container');
-const nameGenerateAgainBtn = document.getElementById('name-generate-again-btn');
-
-// === NEW Wishlist Search/Sort Elements ===
-const wishlistSearchInput = document.getElementById('wishlist-search-input');
-const wishlistSortSelect = document.getElementById('wishlist-sort-select');
 
 // === State Variables ===
 let todosRef, wishesRef, reflectionsRef, favoriteNamesRef;
@@ -101,10 +16,6 @@ let activeTodoId = null;
 let activeWishId = null; // Added for edit wish modal
 let showAllReflections = false;
 let activeReflectionImageUrl = null;
-
-// === NEW Calendar State ===
-let todoCalendar = null;
-let selectedCalendarDate = null; // Stores the selected date string 'YYYY-MM-DD'
 
 // === NEW Wishlist State ===
 let currentWishlistSearchTerm = '';
@@ -122,6 +33,18 @@ let selectedNameMeaning = '';
 let selectedNameSyllables = '';
 let currentNameSuggestions = []; // Store the latest suggestions
 
+// === NEW CALENDAR STATE ===
+// Initialize to the user's local "today"
+// We get the user's timezone, respecting their GMT-7 request by using their local system's setting.
+const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+let currentCalendarDate = new Date(); // This will be in the user's local timezone
+
+// === Helper function to get the start of a given date in the user's local timezone ===
+function getStartOfDayInLocalTZ(date) {
+    // Creates a new date object representing midnight *in the local timezone*
+    const localDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    return localDate;
+}
 
 // === Initialization ===
 export function initializeJourney(userId, initialWellnessData) {
@@ -138,12 +61,12 @@ export function initializeJourney(userId, initialWellnessData) {
     loadReflections();
     loadFavoriteNames(); // NEW
 
-    // NEW: Initialize the To-Do calendar
-    initializeTodoCalendar();
-
     // Setup listeners
     setupEventListeners();
     setupNameGeneratorListeners(); // NEW
+
+    // NEW: Render initial calendar
+    renderCalendar();
 }
 
 // === Data Loading & Rendering (Original + Name Gen Favorites) ===
@@ -155,9 +78,8 @@ function loadTodos() {
     unsubscribeTodos = onSnapshot(q, (snapshot) => {
         currentTodos = [];
         snapshot.forEach(doc => currentTodos.push({ id: doc.id, ...doc.data() }));
-        // NEW: Render todos based on selection AND update calendar markers
         renderTodos(currentTodos);
-        updateCalendarMarkers(currentTodos); 
+        renderCalendar(); // NEW: Re-render calendar to update task markers
         checkNotifications(); // NEW: Check notifications when todos load
     });
 }
@@ -222,33 +144,17 @@ const formatTime = (timeString) => {
     return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', hour12: true });
 };
 
-// NEW: This function is now a filter and a renderer
 function renderTodos(todos) {
-    todoListContainer.innerHTML = '';
-    
-    // --- NEW FILTER LOGIC ---
-    let filteredTodos = [];
-    if (selectedCalendarDate) {
-        // If a date is selected, show ALL (complete and incomplete) for that date
-        filteredTodos = todos.filter(todo => todo.date === selectedCalendarDate);
-    } else {
-        // If no date is selected, show all INCOMPLETE tasks
-        filteredTodos = todos.filter(todo => !todo.completed);
-    }
-    // --- END NEW FILTER LOGIC ---
-
-    if (filteredTodos.length === 0) {
-        if (selectedCalendarDate) {
-            todoListContainer.innerHTML = `<p class="text-center text-gray-400">No tasks for this day.</p>`;
-        } else {
-            todoListContainer.innerHTML = `<p class="text-center text-gray-400">No tasks yet. Add one below!</p>`;
-        }
+    // Use the cached element
+    elements.todoListContainer.innerHTML = '';
+    if (todos.length === 0) {
+        elements.todoListContainer.innerHTML = `<p class="text-center text-gray-400">No tasks yet. Add one below!</p>`;
         return;
     }
     // ADDED 'Recipes'
     const categoryIcons = { Health: '🧘‍♀️', Baby: '🍼', Home: '🏡', Reminder: '💬', Appointment: '🗓️', Recipes: '🍳' };
 
-    filteredTodos.forEach(todo => {
+    todos.forEach(todo => {
         const item = document.createElement('div');
         item.className = `todo-item flex items-start justify-between p-3 bg-white/5 rounded-lg ${todo.completed ? 'completed' : ''}`;
 
@@ -336,7 +242,7 @@ function renderTodos(todos) {
             await deleteDoc(todoDocRef);
         });
 
-        todoListContainer.appendChild(item);
+        elements.todoListContainer.appendChild(item);
     });
 }
 
@@ -347,7 +253,7 @@ function renderTodos(todos) {
  * @param {string} [sortBy='default'] - The current sort criteria ('default', 'category', 'foodType').
  */
 function renderWishes(wishes, searchTerm = '', sortBy = 'default') {
-    wishlistContainer.innerHTML = ''; // Clear previous content
+    elements.wishlistContainer.innerHTML = ''; // Clear previous content
 
     // 1. Filter based on search term (case-insensitive)
     const lowerSearchTerm = searchTerm.toLowerCase();
@@ -387,7 +293,7 @@ function renderWishes(wishes, searchTerm = '', sortBy = 'default') {
 
     // 3. Render the sorted and filtered list
     if (sortedWishes.length === 0) {
-        wishlistContainer.innerHTML = `<p class="text-center text-gray-400 md:col-span-2">No wishes found ${searchTerm ? 'matching your search' : 'yet. Add one below!'}</p>`;
+        elements.wishlistContainer.innerHTML = `<p class="text-center text-gray-400 md:col-span-2">No wishes found ${searchTerm ? 'matching your search' : 'yet. Add one below!'}</p>`;
         // Reset progress bar for empty list - based on the *original* full list
         updateWishlistProgress(wishes);
         return; // Exit function
@@ -471,7 +377,7 @@ function renderWishes(wishes, searchTerm = '', sortBy = 'default') {
         });
         card.querySelector('.edit-wish-btn').addEventListener('click', () => openEditWishModal(wish));
 
-        wishlistContainer.appendChild(card);
+        elements.wishlistContainer.appendChild(card);
     });
 
     // 4. Update progress bar based on the *original* full list
@@ -491,23 +397,23 @@ function updateWishlistProgress(allWishes) {
         totalPurchased += wish.purchasedCount || 0;
     });
 
-    wishlistProgressText.textContent = `${totalPurchased}/${totalTarget} Items`;
-    wishlistProgressBar.style.width = totalTarget > 0 ? `${(totalPurchased / totalTarget) * 100}%` : '0%';
+    elements.wishlistProgressText.textContent = `${totalPurchased}/${totalTarget} Items`;
+    elements.wishlistProgressBar.style.width = totalTarget > 0 ? `${(totalPurchased / totalTarget) * 100}%` : '0%';
 }
 
 
 function renderReflections(reflections) {
-    reflectionsContainer.innerHTML = '';
+    elements.reflectionsContainer.innerHTML = '';
     const notesToRender = showAllReflections ? reflections : reflections.slice(0, 3);
 
     if (reflections.length === 0) {
-        reflectionsContainer.innerHTML = `<p class="text-center text-gray-400 col-span-full">No reflections yet. Add a new note to begin!</p>`;
-        toggleReflectionsContainer.classList.add('hidden');
+        elements.reflectionsContainer.innerHTML = `<p class="text-center text-gray-400 col-span-full">No reflections yet. Add a new note to begin!</p>`;
+        elements.toggleReflectionsContainer.classList.add('hidden');
         return;
     }
 
     if (notesToRender.length === 0 && reflections.length > 0) {
-        reflectionsContainer.innerHTML = `<p class="text-center text-gray-400 col-span-full">All notes are hidden. Click "Show All" to see them.</p>`;
+        elements.reflectionsContainer.innerHTML = `<p class="text-center text-gray-400 col-span-full">All notes are hidden. Click "Show All" to see them.</p>`;
     }
 
     notesToRender.forEach(note => {
@@ -535,14 +441,14 @@ function renderReflections(reflections) {
             deleteReflection(note.id);
         });
 
-        reflectionsContainer.appendChild(item);
+        elements.reflectionsContainer.appendChild(item);
     });
 
     if (reflections.length > 3) {
-        toggleReflectionsContainer.classList.remove('hidden');
-        toggleReflectionsBtn.textContent = showAllReflections ? 'Show Less' : `Show All (${reflections.length})`;
+        elements.toggleReflectionsContainer.classList.remove('hidden');
+        elements.toggleReflectionsBtn.textContent = showAllReflections ? 'Show Less' : `Show All (${reflections.length})`;
     } else {
-        toggleReflectionsContainer.classList.add('hidden');
+        elements.toggleReflectionsContainer.classList.add('hidden');
     }
 }
 
@@ -578,14 +484,14 @@ function renderAiWishSuggestions(suggestions) {
             <button class="btn-secondary text-xs font-semibold py-1.5 px-3 rounded-md add-suggestion-btn flex-shrink-0 self-center">Add</button>
         `;
         card.querySelector('.add-suggestion-btn').addEventListener('click', () => {
-            newWishItem.value = suggestion.productName;
-            newWishPrice.value = suggestion.price;
-            newWishLink.value = suggestion.productUrl;
+            elements.newWishItem.value = suggestion.productName;
+            elements.newWishPrice.value = suggestion.price;
+            elements.newWishLink.value = suggestion.productUrl;
 
-            const categoryOption = Array.from(newWishCategory.options).find(opt => opt.value === suggestion.category);
+            const categoryOption = Array.from(elements.newWishCategory.options).find(opt => opt.value === suggestion.category);
             if (categoryOption) {
-                newWishCategory.value = suggestion.category;
-                customCategoryInput.classList.add('hidden');
+                elements.newWishCategory.value = suggestion.category;
+                elements.customCategoryInput.classList.add('hidden');
                 // NEW: Show/hide food fields based on AI category
                 if (suggestion.category === 'Food') {
                     elements.newWishFoodFields.classList.remove('hidden');
@@ -593,14 +499,14 @@ function renderAiWishSuggestions(suggestions) {
                     elements.newWishFoodFields.classList.add('hidden');
                 }
             } else {
-                newWishCategory.value = 'Custom';
-                customCategoryInput.classList.remove('hidden');
-                customCategoryInput.value = suggestion.category;
+                elements.newWishCategory.value = 'Custom';
+                elements.customCategoryInput.classList.remove('hidden');
+                elements.customCategoryInput.value = suggestion.category;
                 elements.newWishFoodFields.classList.add('hidden'); // Hide for custom
             }
             elements.newWishQuantityInput.value = 1; // NEW: Reset quantity
-            newWishItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            newWishItem.focus();
+            elements.newWishItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            elements.newWishItem.focus();
         });
         container.appendChild(card);
     });
@@ -681,9 +587,9 @@ function renderAIRecipes(recipes) {
 
 // NEW: Render Favorite Names List
 function renderFavoriteNames(favNames) {
-    nameFavoritesList.innerHTML = '';
+    elements.nameFavoritesList.innerHTML = '';
     if (favNames.length === 0) {
-        nameFavoritesList.innerHTML = `<p class="text-gray-400 text-sm text-center">Your favorite names will appear here.</p>`;
+        elements.nameFavoritesList.innerHTML = `<p class="text-gray-400 text-sm text-center">Your favorite names will appear here.</p>`;
     } else {
         favNames.forEach(nameData => {
             const item = document.createElement('div');
@@ -694,131 +600,140 @@ function renderFavoriteNames(favNames) {
                     <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             `;
-            nameFavoritesList.appendChild(item);
+            elements.nameFavoritesList.appendChild(item);
         });
     }
     // Update favorite count on button - REMOVED "My Favorites" text
-    nameFavoritesToggleBtn.textContent = `❤️ (${favNames.length})`;
+    elements.nameFavoritesToggleBtn.textContent = `❤️ (${favNames.length})`;
 }
 
-// === NEW CALENDAR FUNCTIONS ===
+
+// === NEW CALENDAR RENDERING LOGIC ===
 
 /**
- * Initializes the VanillaCalendar instance for the To-Do list.
+ * Checks if two Date objects represent the same day (ignoring time).
+ * @param {Date} d1 - First date.
+ * @param {Date} d2 - Second date.
+ * @returns {boolean} True if they are the same day.
  */
-function initializeTodoCalendar() {
-    if (todoCalendar) {
-        todoCalendar.destroy();
-    }
-    
-    const options = {
-        DOMTemplates: {
-            // Use our custom dark-theme-arrows
-            arrowPrev: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>',
-            arrowNext: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>',
-        },
-        settings: {
-            visibility: {
-                theme: 'dark', // Use dark theme
-                daysOutside: false, // Hide days from other months
-            },
-            selected: {
-                dates: [], // No date selected by default
-                month: true, // Allow clicking month
-                year: true, // Allow clicking year
-            },
-            selection: {
-                day: 'single', // Allow only one day to be selected
-                month: false,
-                year: false,
-            },
-        },
-        actions: {
-            /**
-             * Handles click events on a calendar day.
-             * @param {Event} e - The click event.
-             * @param {object} self - The calendar instance.
-             */
-            clickDay(e, self) {
-                // self.selectedDates is an array, e.g., ['2023-10-31']
-                // If a date is selected, store it. If deselected, it's empty.
-                if (self.selectedDates[0]) {
-                    selectedCalendarDate = self.selectedDates[0];
-                } else {
-                    selectedCalendarDate = null;
-                }
-                
-                // Re-render the to-do list based on the new selection
-                renderTodos(currentTodos);
-            },
-        },
-    };
-
-    // Ensure the element exists before creating
-    if (elements.todoCalendarContainer) {
-        todoCalendar = new VanillaCalendar(elements.todoCalendarContainer, options);
-        todoCalendar.init();
-    } else {
-        console.error("Calendar container element not found!");
-    }
+function isSameDay(d1, d2) {
+    if (!d1 || !d2) return false;
+    return d1.getFullYear() === d2.getFullYear() &&
+           d1.getMonth() === d2.getMonth() &&
+           d1.getDate() === d2.getDate();
 }
 
 /**
- * Updates the markers (dots) on the calendar based on the current to-do list.
- * @param {Array} todos - The full list of todo items.
+ * Changes the displayed month on the calendar.
+ * @param {number} offset - -1 to go to the previous month, 1 for the next month.
  */
-function updateCalendarMarkers(todos) {
-    if (!todoCalendar) return;
+function changeMonth(offset) {
+    // Set the date to the 1st of the month to avoid issues with different day counts
+    currentCalendarDate.setDate(1); 
+    currentCalendarDate.setMonth(currentCalendarDate.getMonth() + offset);
+    renderCalendar();
+}
 
-    // Use a Map to store the highest priority marker for each date
-    const datesMap = new Map();
+/**
+ * Renders the calendar grid for the `currentCalendarDate` month.
+ */
+function renderCalendar() {
+    if (!elements.calendarGrid) return; // Exit if elements aren't cached yet
+
+    // Add animation class
+    elements.calendarGrid.classList.remove('calendar-grid-anim'); // Remove old one
+    void elements.calendarGrid.offsetWidth; // Trigger reflow
+    elements.calendarGrid.classList.add('calendar-grid-anim'); // Add new one
+
+    // 1. Get info about the current month
+    const year = currentCalendarDate.getFullYear();
+    const month = currentCalendarDate.getMonth(); // 0-11
     
-    // Define marker priorities
-    const markerPriority = {
-        'vanilla-calendar-day__marker_appointment': 3, // Highest
-        'vanilla-calendar-day__marker_task': 2,
-        'vanilla-calendar-day__marker': 1, // Default
-    };
-
-    todos.forEach(todo => {
-        if (todo.date && !todo.completed) { // Only show markers for incomplete tasks with dates
-            let markerClass = 'vanilla-calendar-day__marker'; // Default (teal)
-            
-            if (todo.category === 'Appointment') {
-                markerClass = 'vanilla-calendar-day__marker_appointment'; // Pink
-            } else if (['Health', 'Baby', 'Home', 'Reminder'].includes(todo.category)) {
-                markerClass = 'vanilla-calendar-day__marker_task'; // Blue
-            }
-
-            const existing = datesMap.get(todo.date);
-            
-            if (!existing || markerPriority[markerClass] > markerPriority[existing.markerClass]) {
-                // If no marker for this date, or new marker is higher priority, set it
-                datesMap.set(todo.date, {
-                    date: todo.date,
-                    marker: true,
-                    markerClass: markerClass,
-                });
-            }
-        }
+    // Update header: "October 2025"
+    elements.calendarMonthYear.textContent = new Date(year, month).toLocaleDateString(undefined, {
+        month: 'long',
+        year: 'numeric',
+        timeZone: userTimeZone // Ensure header matches local timezone
     });
 
-    // Convert the Map values to an array
-    const dates = Array.from(datesMap.values());
+    // 2. Find start/end dates
+    const firstDayOfMonth = new Date(year, month, 1);
+    const lastDayOfMonth = new Date(year, month + 1, 0);
+    const firstDayOfWeek = firstDayOfMonth.getDay(); // 0 (Sun) - 6 (Sat)
+    
+    // 3. Find "today" in the user's local timezone
+    const today = getStartOfDayInLocalTZ(new Date());
 
-    // Update the calendar settings and refresh the UI
-    todoCalendar.settings.dates = dates;
-    todoCalendar.update();
+    // 4. Clear grid and render days
+    elements.calendarGrid.innerHTML = ''; // Clear old days
+
+    // 5. Create days from the previous month
+    for (let i = 0; i < firstDayOfWeek; i++) {
+        const day = document.createElement('div');
+        day.className = 'calendar-day other-month';
+        elements.calendarGrid.appendChild(day);
+    }
+
+    // 6. Create days for the current month
+    for (let dayNum = 1; dayNum <= lastDayOfMonth.getDate(); dayNum++) {
+        const day = document.createElement('div');
+        day.className = 'calendar-day';
+
+        const date = new Date(year, month, dayNum);
+        
+        // Check if this is "today"
+        if (isSameDay(date, today)) {
+            day.classList.add('is-today');
+        }
+
+        // Find tasks for this day
+        const tasksForDay = currentTodos.filter(todo => {
+            if (!todo.date) return false;
+            // Compare string-to-string (e.g., "2025-10-31")
+            const todoDate = new Date(todo.date + 'T00:00:00'); // Local time
+            return isSameDay(date, todoDate);
+        });
+
+        // Create task markers
+        let markersHtml = '';
+        if (tasksForDay.length > 0) {
+            markersHtml = '<div class="task-markers">';
+            // Use .slice(0, 6) to show a max of 6 markers
+            tasksForDay.slice(0, 6).forEach(task => {
+                const categoryClass = task.category.replace(/[^a-zA-Z0-9]/g, '') || 'Default';
+                markersHtml += `<div class="task-marker task-marker-${categoryClass}" title="${task.text}"></div>`;
+            });
+            markersHtml += '</div>';
+        }
+        
+        day.innerHTML = `
+            <div class="day-content">
+                <span class="day-number">${dayNum}</span>
+                ${markersHtml}
+            </div>
+        `;
+        elements.calendarGrid.appendChild(day);
+    }
+
+    // 7. Create days for the next month (to fill the grid)
+    const remainingDays = 42 - (firstDayOfWeek + lastDayOfMonth.getDate()); // 6 weeks * 7 days
+     for (let i = 0; i < remainingDays; i++) {
+        const day = document.createElement('div');
+        day.className = 'calendar-day other-month';
+        elements.calendarGrid.appendChild(day);
+    }
 }
+
 
 // === Event Listener Setup ===
 
 function setupEventListeners() {
-    addTodoBtn.addEventListener('click', async () => {
-        const text = newTodoInput.value.trim();
-        let category = newTodoCategory.value;
+    // Use cached elements
+    elements.addTodoBtn.addEventListener('click', async () => {
+        const text = elements.newTodoInput.value.trim();
+        let category = elements.newTodoCategory.value;
         if (category === 'Custom') {
-            category = customTodoCategoryInput.value.trim();
+            category = elements.customTodoCategoryInput.value.trim();
         }
 
         if (!text || !category || !todosRef) return;
@@ -827,8 +742,8 @@ function setupEventListeners() {
         const todoData = {
             text,
             category,
-            date: newTodoDate.value,
-            time: newTodoTime.value,
+            date: elements.newTodoDate.value,
+            time: elements.newTodoTime.value,
             completed: false,
             createdAt: serverTimestamp()
         };
@@ -854,12 +769,12 @@ function setupEventListeners() {
         await addDoc(todosRef, todoData);
 
         // Reset fields
-        newTodoInput.value = '';
-        newTodoDate.value = '';
-        newTodoTime.value = '';
-        newTodoCategory.value = 'Health';
-        customTodoCategoryInput.value = '';
-        customTodoCategoryInput.classList.add('hidden');
+        elements.newTodoInput.value = '';
+        elements.newTodoDate.value = '';
+        elements.newTodoTime.value = '';
+        elements.newTodoCategory.value = 'Health';
+        elements.customTodoCategoryInput.value = '';
+        elements.customTodoCategoryInput.classList.add('hidden');
 
         // NEW: Reset appointment fields
         elements.newAppointmentFields.classList.add('hidden');
@@ -871,23 +786,17 @@ function setupEventListeners() {
         elements.newAppointmentType.value = '';
         elements.newAppointmentCustomType.value = '';
         elements.newAppointmentCustomType.classList.add('hidden');
-
-        // NEW: Clear calendar selection to show the new task in the main list
-        if (todoCalendar) {
-            selectedCalendarDate = null;
-            todoCalendar.settings.selected.dates = [];
-            todoCalendar.update();
-        }
     });
 
-    aiGenerateTodosBtn.addEventListener('click', async () => {
+    elements.aiGenerateTodosBtn.addEventListener('click', async () => {
         // NEW: Create and cache the suggestions container if it doesn't exist
+        let aiTodoSuggestionsContainer = document.getElementById('ai-todo-suggestions-container');
         if (!aiTodoSuggestionsContainer) {
             aiTodoSuggestionsContainer = document.createElement('div');
             aiTodoSuggestionsContainer.id = 'ai-todo-suggestions-container';
             aiTodoSuggestionsContainer.className = 'mt-4 space-y-3';
             // Insert it after the button's parent container
-            aiGenerateTodosBtn.parentElement.insertAdjacentElement('afterend', aiTodoSuggestionsContainer);
+            elements.aiGenerateTodosBtn.parentElement.insertAdjacentElement('afterend', aiTodoSuggestionsContainer);
 
             // Add a delegated listener to this new container
             aiTodoSuggestionsContainer.addEventListener('click', async (e) => {
@@ -938,11 +847,11 @@ function setupEventListeners() {
         }
     });
 
-    addWishBtn.addEventListener('click', async () => {
-        const item = newWishItem.value.trim();
-        let category = newWishCategory.value;
+    elements.addWishBtn.addEventListener('click', async () => {
+        const item = elements.newWishItem.value.trim();
+        let category = elements.newWishCategory.value;
         if (category === 'Custom') {
-            category = customCategoryInput.value.trim();
+            category = elements.customCategoryInput.value.trim();
         }
         const quantityVal = parseInt(elements.newWishQuantityInput.value, 10) || 1; // NEW: Get quantity
         if (!item || !wishesRef || !category) return;
@@ -951,8 +860,8 @@ function setupEventListeners() {
         const wishData = {
             item,
             category: category,
-            price: newWishPrice.value.trim(),
-            link: newWishLink.value.trim(),
+            price: elements.newWishPrice.value.trim(),
+            link: elements.newWishLink.value.trim(),
             quantity: quantityVal, // NEW: Save quantity
             purchasedCount: 0, // NEW: Initialize purchased count
             createdAt: serverTimestamp()
@@ -968,11 +877,11 @@ function setupEventListeners() {
 
         await addDoc(wishesRef, wishData); // Use the new data object
 
-        newWishItem.value = newWishPrice.value = newWishLink.value = '';
+        elements.newWishItem.value = elements.newWishPrice.value = elements.newWishLink.value = '';
         elements.newWishQuantityInput.value = 1; // NEW: Reset quantity
-        customCategoryInput.value = '';
-        newWishCategory.value = 'Baby Care';
-        customCategoryInput.classList.add('hidden');
+        elements.customCategoryInput.value = '';
+        elements.newWishCategory.value = 'Baby Care';
+        elements.customCategoryInput.classList.add('hidden');
 
         // NEW: Reset food fields
         elements.newWishFoodFields.classList.add('hidden');
@@ -980,9 +889,9 @@ function setupEventListeners() {
         elements.newWishFoodExpiry.value = '';
     });
 
-    aiWishForm.addEventListener('submit', async (e) => {
+    elements.aiWishForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const prompt = aiWishPrompt.value.trim();
+        const prompt = elements.aiWishPrompt.value.trim();
         if(!prompt) return;
 
         const suggestionsContainer = document.getElementById('ai-wish-suggestions-container');
@@ -1021,15 +930,15 @@ function setupEventListeners() {
         }
     });
 
-    newWishCategory.addEventListener('change', () => {
-        if (newWishCategory.value === 'Custom') {
-            customCategoryInput.classList.remove('hidden');
+    elements.newWishCategory.addEventListener('change', () => {
+        if (elements.newWishCategory.value === 'Custom') {
+            elements.customCategoryInput.classList.remove('hidden');
             elements.newWishFoodFields.classList.add('hidden'); // Hide food fields
-        } else if (newWishCategory.value === 'Food') {
+        } else if (elements.newWishCategory.value === 'Food') {
             elements.newWishFoodFields.classList.remove('hidden');
-            customCategoryInput.classList.add('hidden'); // Hide custom input
+            elements.customCategoryInput.classList.add('hidden'); // Hide custom input
         } else {
-            customCategoryInput.classList.add('hidden');
+            elements.customCategoryInput.classList.add('hidden');
             elements.newWishFoodFields.classList.add('hidden');
         }
     });
@@ -1037,14 +946,14 @@ function setupEventListeners() {
     // NEW: Listeners for Add Wish quantity buttons
     setupQuantityButtons(elements.newWishQuantityInput, elements.newWishQuantityMinusBtn, elements.newWishQuantityPlusBtn);
 
-    newTodoCategory.addEventListener('change', () => {
-        if (newTodoCategory.value === 'Custom') {
-            customTodoCategoryInput.classList.remove('hidden');
+    elements.newTodoCategory.addEventListener('change', () => {
+        if (elements.newTodoCategory.value === 'Custom') {
+            elements.customTodoCategoryInput.classList.remove('hidden');
         } else {
-            customTodoCategoryInput.classList.add('hidden');
+            elements.customTodoCategoryInput.classList.add('hidden');
         }
         // NEW: Show/hide appointment fields
-        if (newTodoCategory.value === 'Appointment') {
+        if (elements.newTodoCategory.value === 'Appointment') {
             elements.newAppointmentFields.classList.remove('hidden');
         } else {
             elements.newAppointmentFields.classList.add('hidden');
@@ -1069,66 +978,56 @@ function setupEventListeners() {
     });
 
 
-    editTodoCategory.addEventListener('change', () => {
-        if (editTodoCategory.value === 'Custom') {
-            editCustomTodoCategoryInput.classList.remove('hidden');
+    elements.editTodoCategory.addEventListener('change', () => {
+        if (elements.editTodoCategory.value === 'Custom') {
+            elements.editCustomTodoCategoryInput.classList.remove('hidden');
         } else {
-            editCustomTodoCategoryInput.classList.add('hidden');
+            elements.editCustomTodoCategoryInput.classList.add('hidden');
         }
         // NEW: Show/hide edit appointment fields
-        if (editTodoCategory.value === 'Appointment') {
+        if (elements.editTodoCategory.value === 'Appointment') {
             elements.editAppointmentFields.classList.remove('hidden');
         } else {
             elements.editAppointmentFields.classList.add('hidden');
         }
     });
 
-    wishlistHeader.addEventListener('click', () => {
-        collapsibleWishlistContent.classList.toggle('hidden');
-        wishlistToggleIcon.classList.toggle('rotate-180');
+    elements.wishlistHeader.addEventListener('click', () => {
+        elements.collapsibleWishlistContent.classList.toggle('hidden');
+        elements.wishlistToggleIcon.classList.toggle('rotate-180');
     });
 
-    // UPDATED: todoHeader listener now also clears calendar selection
-    todoHeader.addEventListener('click', () => {
-        // Toggle visibility
-        collapsibleTodoContent.classList.toggle('hidden');
-        todoToggleIcon.classList.toggle('rotate-180');
+    // === NEW TODO COLLAPSE LISTENER ===
+    elements.todoListHeader.addEventListener('click', () => {
+        elements.collapsibleTodoContent.classList.toggle('hidden');
+        elements.todoListToggleIcon.classList.toggle('rotate-180');
+    });
+    // === END NEW TODO COLLAPSE LISTENER ===
 
-        // NEW: Clear calendar selection
-        if (todoCalendar) {
-            selectedCalendarDate = null;
-            todoCalendar.settings.selected.dates = [];
-            todoCalendar.update();
-        }
-        
-        // Re-render the default list (all incomplete)
-        renderTodos(currentTodos);
+    elements.reflectionHeader.addEventListener('click', () => {
+        elements.collapsibleReflectionContent.classList.toggle('hidden');
+        elements.reflectionToggleIcon.classList.toggle('rotate-180');
     });
 
-    reflectionHeader.addEventListener('click', () => {
-        collapsibleReflectionContent.classList.toggle('hidden');
-        reflectionToggleIcon.classList.toggle('rotate-180');
-    });
-
-    toggleReflectionsBtn.addEventListener('click', () => {
+    elements.toggleReflectionsBtn.addEventListener('click', () => {
         showAllReflections = !showAllReflections;
         renderReflections(currentReflections);
     });
 
-    addReflectionBtn.addEventListener('click', () => openReflectionModal());
-    reflectionModalCancelBtn.addEventListener('click', closeReflectionModal);
-    reflectionModal.addEventListener('click', e => e.target === reflectionModal && closeReflectionModal());
+    elements.addReflectionBtn.addEventListener('click', () => openReflectionModal());
+    elements.reflectionModalCancelBtn.addEventListener('click', closeReflectionModal);
+    elements.reflectionModal.addEventListener('click', e => e.target === elements.reflectionModal && closeReflectionModal());
 
-    reflectionColorTags.addEventListener('click', (e) => {
+    elements.reflectionColorTags.addEventListener('click', (e) => {
         if (e.target.tagName === 'BUTTON') {
             activeColor = e.target.dataset.color;
             updateColorTags();
         }
     });
 
-    reflectionModalSaveBtn.addEventListener('click', async () => {
-        const title = reflectionTitleInput.value.trim();
-        const content = reflectionContentInput.value.trim();
+    elements.reflectionModalSaveBtn.addEventListener('click', async () => {
+        const title = elements.reflectionTitleInput.value.trim();
+        const content = elements.reflectionContentInput.value.trim();
         if (!title || !content) return;
 
         const reflectionData = {
@@ -1148,11 +1047,11 @@ function setupEventListeners() {
         closeReflectionModal();
     });
 
-    aiSummarizeReflectionsBtn.addEventListener('click', async () => {
+    elements.aiSummarizeReflectionsBtn.addEventListener('click', async () => {
         if (currentReflections.length < 2) {
-            aiSummaryContent.textContent = "You need at least two notes for a summary.";
-            aiSummaryModal.classList.remove('hidden');
-            setTimeout(() => aiSummaryModal.classList.add('active'), 10);
+            elements.aiSummaryContent.textContent = "You need at least two notes for a summary.";
+            elements.aiSummaryModal.classList.remove('hidden');
+            setTimeout(() => elements.aiSummaryModal.classList.add('active'), 10);
             return;
         }
         const notesToSummarize = currentReflections.slice(0, 3).map(n => `Title: ${n.title}\nContent: ${n.content}`).join('\n\n---\n\n');
@@ -1162,9 +1061,9 @@ function setupEventListeners() {
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
         const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }};
 
-        aiSummaryContent.textContent = "Summarizing your thoughts...";
-        aiSummaryModal.classList.remove('hidden');
-        setTimeout(() => aiSummaryModal.classList.add('active'), 10);
+        elements.aiSummaryContent.textContent = "Summarizing your thoughts...";
+        elements.aiSummaryModal.classList.remove('hidden');
+        setTimeout(() => elements.aiSummaryModal.classList.add('active'), 10);
 
         try {
             const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -1174,42 +1073,42 @@ function setupEventListeners() {
             if (!result.candidates || !result.candidates[0] || !result.candidates[0].content || !result.candidates[0].content.parts || !result.candidates[0].content.parts[0].text) {
                 throw new Error("Invalid API response structure");
             }
-            aiSummaryContent.textContent = result.candidates[0].content.parts[0].text;
+            elements.aiSummaryContent.textContent = result.candidates[0].content.parts[0].text;
         } catch (error) {
             console.error("AI Summary failed:", error);
-            aiSummaryContent.textContent = "Sorry, I couldn't generate a summary right now.";
+            elements.aiSummaryContent.textContent = "Sorry, I couldn't generate a summary right now.";
         }
     });
 
-    aiSummaryCloseBtn.addEventListener('click', () => {
-        aiSummaryModal.classList.remove('active');
-        setTimeout(() => aiSummaryModal.classList.add('hidden'), 300);
+    elements.aiSummaryCloseBtn.addEventListener('click', () => {
+        elements.aiSummaryModal.classList.remove('active');
+        setTimeout(() => elements.aiSummaryModal.classList.add('hidden'), 300);
     });
 
-    editTodoModalSaveBtn.addEventListener('click', handleSaveTodo);
-    editTodoModalCancelBtn.addEventListener('click', closeEditTodoModal);
-    editTodoModal.addEventListener('click', e => e.target === editTodoModal && closeEditTodoModal());
+    elements.editTodoModalSaveBtn.addEventListener('click', handleSaveTodo);
+    elements.editTodoModalCancelBtn.addEventListener('click', closeEditTodoModal);
+    elements.editTodoModal.addEventListener('click', e => e.target === elements.editTodoModal && closeEditTodoModal());
 
     // --- New Event Listeners for Image Link Modal ---
     const openImageLinkModal = () => {
-        imageLinkModal.classList.remove('hidden');
-        setTimeout(() => imageLinkModal.classList.add('active'), 10);
+        elements.imageLinkModal.classList.remove('hidden');
+        setTimeout(() => elements.imageLinkModal.classList.add('active'), 10);
     };
     const closeImageLinkModal = () => {
-        imageLinkModal.classList.remove('active');
-        setTimeout(() => imageLinkModal.classList.add('hidden'), 300);
+        elements.imageLinkModal.classList.remove('active');
+        setTimeout(() => elements.imageLinkModal.classList.add('hidden'), 300);
     };
 
-    addReflectionImageBtn.addEventListener('click', openImageLinkModal);
-    imageLinkCancelBtn.addEventListener('click', closeImageLinkModal);
-    imageLinkModal.addEventListener('click', e => e.target === imageLinkModal && closeImageLinkModal());
+    elements.addReflectionImageBtn.addEventListener('click', openImageLinkModal);
+    elements.imageLinkCancelBtn.addEventListener('click', closeImageLinkModal);
+    elements.imageLinkModal.addEventListener('click', e => e.target === elements.imageLinkModal && closeImageLinkModal());
 
-    imageLinkSaveBtn.addEventListener('click', () => {
-        const url = imageLinkInput.value.trim();
+    elements.imageLinkSaveBtn.addEventListener('click', () => {
+        const url = elements.imageLinkInput.value.trim();
         if (url) {
             activeReflectionImageUrl = url;
-            reflectionImagePreview.src = url;
-            reflectionImagePreviewContainer.classList.remove('hidden');
+            elements.reflectionImagePreview.src = url;
+            elements.reflectionImagePreviewContainer.classList.remove('hidden');
         }
         closeImageLinkModal();
     });
@@ -1296,13 +1195,13 @@ function setupEventListeners() {
     });
 
     // --- NEW Event Listeners for Wishlist Search and Sort ---
-    wishlistSearchInput.addEventListener('input', (e) => {
+    elements.wishlistSearchInput.addEventListener('input', (e) => {
         currentWishlistSearchTerm = e.target.value;
         // Re-render the list with the current data, search term, and sort order
         renderWishes(currentWishes, currentWishlistSearchTerm, currentWishlistSortBy);
     });
 
-    wishlistSortSelect.addEventListener('change', (e) => {
+    elements.wishlistSortSelect.addEventListener('change', (e) => {
         currentWishlistSortBy = e.target.value;
         // Re-render the list with the current data, search term, and sort order
         renderWishes(currentWishes, currentWishlistSearchTerm, currentWishlistSortBy);
@@ -1312,16 +1211,20 @@ function setupEventListeners() {
     if (elements.notificationClearAllBtn) {
         elements.notificationClearAllBtn.addEventListener('click', clearAllNotifications);
     }
+
+    // === NEW CALENDAR LISTENERS ===
+    elements.calendarPrevBtn.addEventListener('click', () => changeMonth(-1));
+    elements.calendarNextBtn.addEventListener('click', () => changeMonth(1));
 }
 
 // === NEW AI Baby Name Generator Listeners ===
 
 function setupNameGeneratorListeners() {
     // Gender Selection
-    nameGenderSelector.addEventListener('click', (e) => {
+    elements.nameGenderSelector.addEventListener('click', (e) => {
         if (e.target.tagName === 'BUTTON') {
             // Remove active class from all buttons
-            nameGenderSelector.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+            elements.nameGenderSelector.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
             // Add active class to the clicked button
             e.target.classList.add('active');
             selectedNameGender = e.target.dataset.gender;
@@ -1329,50 +1232,50 @@ function setupNameGeneratorListeners() {
     });
 
     // Origin Selection
-    nameOriginSelect.addEventListener('change', () => {
-        selectedNameOrigin = nameOriginSelect.value;
+    elements.nameOriginSelect.addEventListener('change', () => {
+        selectedNameOrigin = elements.nameOriginSelect.value;
         if (selectedNameOrigin === 'Custom') {
-            nameOriginCustom.classList.remove('hidden');
+            elements.nameOriginCustom.classList.remove('hidden');
         } else {
-            nameOriginCustom.classList.add('hidden');
-            nameOriginCustom.value = ''; // Clear custom input
+            elements.nameOriginCustom.classList.add('hidden');
+            elements.nameOriginCustom.value = ''; // Clear custom input
         }
     });
 
     // Style Selection
-    nameStyleSelect.addEventListener('change', () => {
-        selectedNameStyle = nameStyleSelect.value;
+    elements.nameStyleSelect.addEventListener('change', () => {
+        selectedNameStyle = elements.nameStyleSelect.value;
         if (selectedNameStyle === 'Custom') {
-            nameStyleCustom.classList.remove('hidden');
+            elements.nameStyleCustom.classList.remove('hidden');
         } else {
-            nameStyleCustom.classList.add('hidden');
-            nameStyleCustom.value = ''; // Clear custom input
+            elements.nameStyleCustom.classList.add('hidden');
+            elements.nameStyleCustom.value = ''; // Clear custom input
         }
     });
 
     // Syllable Selection
-    nameSyllableSelector.addEventListener('change', (e) => {
+    elements.nameSyllableSelector.addEventListener('change', (e) => {
         if (e.target.type === 'radio' && e.target.checked) {
             selectedNameSyllables = e.target.value;
         }
     });
 
     // Generate Button
-    nameGenerateBtn.addEventListener('click', () => generateNames(false));
+    elements.nameGenerateBtn.addEventListener('click', () => generateNames(false));
 
     // Randomize Button
-    nameRandomBtn.addEventListener('click', () => generateNames(true));
+    elements.nameRandomBtn.addEventListener('click', () => generateNames(true));
 
     // Generate Again Button
-    nameGenerateAgainBtn.addEventListener('click', () => generateNames(false));
+    elements.nameGenerateAgainBtn.addEventListener('click', () => generateNames(false));
 
     // Favorites Toggle
-    nameFavoritesToggleBtn.addEventListener('click', () => {
-        nameFavoritesContainer.classList.toggle('hidden');
+    elements.nameFavoritesToggleBtn.addEventListener('click', () => {
+        elements.nameFavoritesContainer.classList.toggle('hidden');
     });
 
     // Delegated listener for favorite/unfavorite buttons in results
-    nameResultsContainer.addEventListener('click', async (e) => {
+    elements.nameResultsContainer.addEventListener('click', async (e) => {
         const button = e.target.closest('.toggle-favorite-name-btn');
         if (button) {
             const name = button.dataset.name;
@@ -1383,7 +1286,7 @@ function setupNameGeneratorListeners() {
     });
 
     // Delegated listener for removing favorites from the list
-    nameFavoritesList.addEventListener('click', async (e) => {
+    elements.nameFavoritesList.addEventListener('click', async (e) => {
         const button = e.target.closest('.remove-favorite-name-btn');
         if (button) {
             const docId = button.dataset.id;
@@ -1454,20 +1357,20 @@ async function handleUpdateWishPurchasedCount(wish, newCount) {
 
 function openEditTodoModal(todo) {
     activeTodoId = todo.id;
-    editTodoInput.value = todo.text;
-    editTodoDate.value = todo.date || '';
-    editTodoTime.value = todo.time || '';
+    elements.editTodoInput.value = todo.text;
+    elements.editTodoDate.value = todo.date || '';
+    elements.editTodoTime.value = todo.time || '';
 
    // NEW: Added 'Recipes'
    const standardCategories = ['Health', 'Baby', 'Home', 'Reminder', 'Appointment', 'Recipes'];
     if (standardCategories.includes(todo.category)) {
-        editTodoCategory.value = todo.category;
-        editCustomTodoCategoryInput.classList.add('hidden');
-        editCustomTodoCategoryInput.value = '';
+        elements.editTodoCategory.value = todo.category;
+        elements.editCustomTodoCategoryInput.classList.add('hidden');
+        elements.editCustomTodoCategoryInput.value = '';
     } else {
-        editTodoCategory.value = 'Custom';
-        editCustomTodoCategoryInput.classList.remove('hidden');
-        editCustomTodoCategoryInput.value = todo.category;
+        elements.editTodoCategory.value = 'Custom';
+        elements.editCustomTodoCategoryInput.classList.remove('hidden');
+        elements.editCustomTodoCategoryInput.value = todo.category;
     }
 
     // NEW: Handle Appointment Fields
@@ -1496,22 +1399,22 @@ function openEditTodoModal(todo) {
         elements.editAppointmentFields.classList.add('hidden');
     }
 
-    editTodoModal.classList.remove('hidden');
-    setTimeout(() => editTodoModal.classList.add('active'), 10);
+    elements.editTodoModal.classList.remove('hidden');
+    setTimeout(() => elements.editTodoModal.classList.add('active'), 10);
 }
 
 function closeEditTodoModal() {
-    editTodoModal.classList.remove('active');
-    setTimeout(() => editTodoModal.classList.add('hidden'), 300);
+    elements.editTodoModal.classList.remove('active');
+    setTimeout(() => elements.editTodoModal.classList.add('hidden'), 300);
 }
 
 async function handleSaveTodo() {
     if (!activeTodoId) return;
 
-    const text = editTodoInput.value.trim();
-    let category = editTodoCategory.value;
+    const text = elements.editTodoInput.value.trim();
+    let category = elements.editTodoCategory.value;
     if (category === 'Custom') {
-        category = editCustomTodoCategoryInput.value.trim();
+        category = elements.editCustomTodoCategoryInput.value.trim();
     }
 
     if (!text || !category) {
@@ -1525,8 +1428,8 @@ async function handleSaveTodo() {
     const todoData = {
         text: text,
         category: category,
-        date: editTodoDate.value,
-        time: editTodoTime.value,
+        date: elements.editTodoDate.value,
+        time: elements.editTodoTime.value,
         appointment: null // Default to null
     };
 
@@ -1551,13 +1454,6 @@ async function handleSaveTodo() {
 
     await updateDoc(todoDocRef, todoData);
     closeEditTodoModal();
-    
-    // NEW: Clear calendar selection to show the updated task
-    if (todoCalendar) {
-        selectedCalendarDate = null;
-        todoCalendar.settings.selected.dates = [];
-        todoCalendar.update();
-    }
 }
 
 async function deleteReflection(noteId) {
@@ -1569,48 +1465,48 @@ async function deleteReflection(noteId) {
 function openReflectionModal(note = null) {
     if (note) {
         activeReflectionId = note.id;
-        reflectionModalTitle.textContent = "Edit Reflection";
-        reflectionTitleInput.value = note.title;
-        reflectionContentInput.value = note.content;
+        elements.reflectionModalTitle.textContent = "Edit Reflection";
+        elements.reflectionTitleInput.value = note.title;
+        elements.reflectionContentInput.value = note.content;
         activeColor = note.color;
         // Handle image
         if (note.imageUrl) {
             activeReflectionImageUrl = note.imageUrl;
-            reflectionImagePreview.src = note.imageUrl;
-            reflectionImagePreviewContainer.classList.remove('hidden');
-            imageLinkInput.value = note.imageUrl;
+            elements.reflectionImagePreview.src = note.imageUrl;
+            elements.reflectionImagePreviewContainer.classList.remove('hidden');
+            elements.imageLinkInput.value = note.imageUrl;
         } else {
             activeReflectionImageUrl = null;
-            reflectionImagePreviewContainer.classList.add('hidden');
-            reflectionImagePreview.src = '';
-            imageLinkInput.value = '';
+            elements.reflectionImagePreviewContainer.classList.add('hidden');
+            elements.reflectionImagePreview.src = '';
+            elements.imageLinkInput.value = '';
         }
     } else {
         activeReflectionId = null;
-        reflectionModalTitle.textContent = "New Reflection";
-        reflectionTitleInput.value = '';
-        reflectionContentInput.value = '';
+        elements.reflectionModalTitle.textContent = "New Reflection";
+        elements.reflectionTitleInput.value = '';
+        elements.reflectionContentInput.value = '';
         activeColor = 'pink';
         // Reset image for new note
         activeReflectionImageUrl = null;
-        reflectionImagePreviewContainer.classList.add('hidden');
-        reflectionImagePreview.src = '';
-        imageLinkInput.value = ''; // Also clear the input for next time
+        elements.reflectionImagePreviewContainer.classList.add('hidden');
+        elements.reflectionImagePreview.src = '';
+        elements.imageLinkInput.value = ''; // Also clear the input for next time
     }
     updateColorTags();
-    reflectionModal.classList.remove('hidden');
-    setTimeout(() => reflectionModal.classList.add('active'), 10);
+    elements.reflectionModal.classList.remove('hidden');
+    setTimeout(() => elements.reflectionModal.classList.add('active'), 10);
 }
 
 function closeReflectionModal() {
-    reflectionModal.classList.remove('active');
+    elements.reflectionModal.classList.remove('active');
     setTimeout(() => {
-        reflectionModal.classList.add('hidden');
+        elements.reflectionModal.classList.add('hidden');
         // Also reset image state when modal is fully closed
         activeReflectionImageUrl = null;
-        reflectionImagePreviewContainer.classList.add('hidden');
-        reflectionImagePreview.src = '';
-        imageLinkInput.value = '';
+        elements.reflectionImagePreviewContainer.classList.add('hidden');
+        elements.reflectionImagePreview.src = '';
+        elements.imageLinkInput.value = '';
     }, 300);
 }
 
@@ -1708,7 +1604,7 @@ async function handleSaveWish() {
 }
 
 function updateColorTags() {
-    reflectionColorTags.querySelectorAll('button').forEach(btn => {
+    elements.reflectionColorTags.querySelectorAll('button').forEach(btn => {
         if (btn.dataset.color === activeColor) {
             btn.classList.add('border-white');
         } else {
@@ -1726,12 +1622,12 @@ function updateColorTags() {
 async function generateNames(isRandom = false) {
     if (!favoriteNamesRef) return; // Ensure Firebase is ready
 
-    nameGenerateBtnText.textContent = 'Generating...';
-    nameGenerateLoader.classList.remove('hidden');
-    nameGenerateBtn.disabled = true;
-    nameRandomBtn.disabled = true;
-    nameGenerateAgainBtn.disabled = true;
-    nameResultsContainer.innerHTML = `<div class="text-center p-4">
+    elements.nameGenerateBtnText.textContent = 'Generating...';
+    elements.nameGenerateLoader.classList.remove('hidden');
+    elements.nameGenerateBtn.disabled = true;
+    elements.nameRandomBtn.disabled = true;
+    elements.nameGenerateAgainBtn.disabled = true;
+    elements.nameResultsContainer.innerHTML = `<div class="text-center p-4">
         <svg class="animate-spin mx-auto h-6 w-6 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
         <p class="mt-2 text-sm text-gray-300">Finding the perfect name...</p>
     </div>`;
@@ -1753,15 +1649,15 @@ async function generateNames(isRandom = false) {
         if (selectedNameGender) {
             userPromptParts.push(`Suitable for a ${selectedNameGender}.`);
         }
-        let origin = selectedNameOrigin === 'Custom' ? nameOriginCustom.value.trim() : selectedNameOrigin;
+        let origin = selectedNameOrigin === 'Custom' ? elements.nameOriginCustom.value.trim() : selectedNameOrigin;
         if (origin) {
             userPromptParts.push(`With ${origin} origin/language.`);
         }
-        let style = selectedNameStyle === 'Custom' ? nameStyleCustom.value.trim() : selectedNameStyle;
+        let style = selectedNameStyle === 'Custom' ? elements.nameStyleCustom.value.trim() : selectedNameStyle;
         if (style) {
             userPromptParts.push(`The style should be ${style}.`);
         }
-        let meaning = nameMeaningInput.value.trim();
+        let meaning = elements.nameMeaningInput.value.trim();
         if (meaning) {
             userPromptParts.push(`Reflecting the meaning or vibe of '${meaning}'.`);
         }
@@ -1814,14 +1710,14 @@ async function generateNames(isRandom = false) {
 
     } catch (error) {
         console.error("AI Name generation failed:", error);
-        nameResultsContainer.innerHTML = `<p class="text-center text-red-300 p-4">Sorry, couldn't generate names right now. Error: ${error.message}</p>`;
+        elements.nameResultsContainer.innerHTML = `<p class="text-center text-red-300 p-4">Sorry, couldn't generate names right now. Error: ${error.message}</p>`;
         currentNameSuggestions = []; // Clear suggestions on error
     } finally {
-        nameGenerateBtnText.textContent = 'Generate Names';
-        nameGenerateLoader.classList.add('hidden');
-        nameGenerateBtn.disabled = false;
-        nameRandomBtn.disabled = false;
-        nameGenerateAgainBtn.disabled = false;
+        elements.nameGenerateBtnText.textContent = 'Generate Names';
+        elements.nameGenerateLoader.classList.add('hidden');
+        elements.nameGenerateBtn.disabled = false;
+        elements.nameRandomBtn.disabled = false;
+        elements.nameGenerateAgainBtn.disabled = false;
     }
 }
 
@@ -1830,11 +1726,11 @@ async function generateNames(isRandom = false) {
  * @param {Array} names - Array of name objects ({name, meaning, origin}).
  */
 function renderNameSuggestions(names) {
-    nameResultsContainer.innerHTML = ''; // Clear previous results or loader
+    elements.nameResultsContainer.innerHTML = ''; // Clear previous results or loader
 
     if (!names || names.length === 0) {
-        nameResultsContainer.innerHTML = `<p class="text-center text-gray-400 p-2">No names found matching your criteria.</p>`;
-        nameGenerateAgainBtn.classList.add('hidden');
+        elements.nameResultsContainer.innerHTML = `<p class="text-center text-gray-400 p-2">No names found matching your criteria.</p>`;
+        elements.nameGenerateAgainBtn.classList.add('hidden');
         return;
     }
 
@@ -1867,8 +1763,8 @@ function renderNameSuggestions(names) {
         grid.appendChild(card);
     });
 
-    nameResultsContainer.appendChild(grid);
-    nameGenerateAgainBtn.classList.remove('hidden'); // Show the 'Generate Again' button
+    elements.nameResultsContainer.appendChild(grid);
+    elements.nameGenerateAgainBtn.classList.remove('hidden'); // Show the 'Generate Again' button
 }
 
 
@@ -2084,14 +1980,6 @@ export function unloadJourney() {
     if (unsubscribeWishes) unsubscribeWishes();
     if (unsubscribeReflections) unsubscribeReflections();
     if (unsubscribeFavoriteNames) unsubscribeFavoriteNames(); // NEW
-    
-    // NEW: Destroy calendar instance
-    if (todoCalendar) {
-        todoCalendar.destroy();
-        todoCalendar = null;
-    }
-    selectedCalendarDate = null; // Reset state
-
     // Remove specific event listeners if necessary, though often covered by page unload/auth change
 }
 
