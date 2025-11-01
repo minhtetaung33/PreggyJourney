@@ -7,8 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- NEW CALENDAR CSS LINK -->
-    <link href="https://cdn.jsdelivr.net/npm/vanilla-calendar-pro@2.9.6/build/vanilla-calendar.min.css" rel="stylesheet">
     <!-- Updated path to /css/style.css -->
     <link rel="stylesheet" href="./css/style.css">
 </head>
@@ -628,123 +626,152 @@
                 <!-- === END RE-ORGANIZED CALM SPACE === -->
 
 
-                 <!-- Journey Tab -->
+                 <!-- 
+                ============================================================
+                === JOURNEY TAB - RESTRUCTURED
+                ============================================================
+                -->
                 <div id="content-journey" class="tab-content">
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- This is the new outer container for the tab content -->
+                    <div class="space-y-8">
                         
                         <!-- 
                         ============================================================
-                        === LEFT COLUMN - UPDATED
+                        === NEW TO-DO LIST / CALENDAR CARD (FULL WIDTH)
                         ============================================================
                         -->
-                        <div class="lg:col-span-2 space-y-8">
-                            <!-- 
-                            ============================================================
-                            === TO-DO LIST CARD - UPDATED WITH NEW LAYOUT
-                            ============================================================
-                            -->
-                            <div class="glass-card anim-card p-4 md:p-6">
-                                <!-- HEADER: Removed cursor-pointer, icon is hidden -->
-                                <div id="todo-header" class="flex justify-between items-center mb-6">
-                                    <h3 class="text-2xl font-bold">✅ To-Do List</h3>
-                                    <svg id="todo-toggle-icon" class="w-6 h-6 transition-transform hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                                </div>
-
-                                <!-- NEW 2-COLUMN LAYOUT -->
-                                <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
-                                    
-                                    <!-- LEFT COLUMN: CALENDAR -->
-                                    <div class="lg:col-span-3">
-                                        <div id="todo-calendar-container" class="rounded-lg bg-white/5 p-2 md:p-4">
-                                            <!-- Calendar will be mounted here by journey.js -->
+                        <div class="glass-card anim-card p-4 md:p-6">
+                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                
+                                <!-- === CALENDAR (LEFT) === -->
+                                <div class="lg:col-span-2">
+                                    <h3 class="text-2xl font-bold mb-4">✅ To-Do Calendar</h3>
+                                    <!-- Calendar Header -->
+                                    <div id="calendar-header" class="flex justify-between items-center mb-4">
+                                        <button id="calendar-prev-btn" class="icon-btn p-2 rounded-full hover:bg-white/20 transition-colors">
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                                        </button>
+                                        <h4 id="calendar-month-year" class="text-xl font-semibold text-center w-48"></h4>
+                                        <button id="calendar-next-btn" class="icon-btn p-2 rounded-full hover:bg-white/20 transition-colors">
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                        </button>
+                                    </div>
+                                    <!-- Calendar Grid -->
+                                    <div id="calendar-container">
+                                        <!-- Day of Week Headers -->
+                                        <div class="grid grid-cols-7 gap-1 text-center text-xs font-semibold text-indigo-300 uppercase mb-2">
+                                            <div>Sun</div>
+                                            <div>Mon</div>
+                                            <div>Tue</div>
+                                            <div>Wed</div>
+                                            <div>Thu</div>
+                                            <div>Fri</div>
+                                            <div>Sat</div>
+                                        </div>
+                                        <!-- Calendar Day Cells -->
+                                        <div id="calendar-grid" class="grid grid-cols-7 gap-1">
+                                            <!-- Calendar days will be populated by journey.js -->
                                         </div>
                                     </div>
+                                </div>
 
-                                    <!-- RIGHT COLUMN: TO-DO CONTENT -->
-                                    <div class="lg:col-span-2 space-y-6">
-                                        
-                                        <!-- Existing Collapsible Content (now always visible) -->
-                                        <div id="collapsible-todo-content" class="">
-                                            <div id="todo-list-container" class="space-y-3 max-h-72 overflow-y-auto modal-scroll pr-2 mb-4"></div>
+                                <!-- === TO-DO CONTROLS (RIGHT) === -->
+                                <div class="lg:col-span-1 space-y-6">
+                                    <!-- To-Do List (Collapsible) -->
+                                    <div>
+                                        <div id="todo-list-header" class="flex justify-between items-center mb-4 cursor-pointer">
+                                            <h3 class="text-xl font-bold">Task List</h3>
+                                            <!-- This is the new toggle icon for the list -->
+                                            <svg id="todo-list-toggle-icon" class="w-6 h-6 transition-transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                         </div>
-
-                                        <!-- Existing Add Task Form -->
-                                        <div class="pt-4 border-t border-white/10 space-y-3">
-                                            <p class="text-lg font-semibold text-white">Add New Task</p>
-                                            <textarea id="new-todo-input" class="symptom-input text-sm min-h-[60px]" placeholder="New task or note..."></textarea>
+                                        <!-- This container is now hidden by default as requested -->
+                                        <div id="collapsible-todo-content" class="hidden">
+                                            <div id="todo-list-container" class="space-y-3 max-h-72 overflow-y-auto modal-scroll pr-2 mb-4">
+                                                <!-- To-do items populated by journey.js -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Add New Task Section -->
+                                    <div class="pt-4 border-t border-white/10 space-y-3">
+                                        <p class="text-lg font-semibold text-white">Add New Task</p>
+                                        <textarea id="new-todo-input" class="symptom-input text-sm min-h-[60px]" placeholder="New task or note..."></textarea>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                            <input type="date" id="new-todo-date" class="date-input text-sm">
+                                            <input type="time" id="new-todo-time" class="date-input text-sm">
+                                        </div>
+                                        <select id="new-todo-category" class="meal-select text-sm">
+                                            <option value="Health">🧘‍♀️ Health</option>
+                                            <option value="Baby">🍼 Baby Prep</option>
+                                            <option value="Home">🏡 Home</option>
+                                            <option value="Appointment">🗓️ Appointment</option>
+                                            <option value="Recipes">🍳 Recipes</option>
+                                            <option value="Reminder">💬 Reminder</option>
+                                            <option value="Custom">✨ Custom</option>
+                                        </select>
+                                        <input type="text" id="custom-todo-category-input" class="meal-select text-sm hidden" placeholder="Your custom category...">
+                                        
+                                        <!-- NEW APPOINTMENT FIELDS -->
+                                        <div id="new-appointment-fields" class="hidden space-y-3 pt-3 mt-3 border-t border-white/10">
+                                            <p class="text-sm font-semibold text-indigo-200">Appointment Details</p>
                                             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                                <input type="date" id="new-todo-date" class="date-input text-sm">
-                                                <input type="time" id="new-todo-time" class="date-input text-sm">
+                                                <input type="text" id="new-appointment-fname" class="meal-select text-sm" placeholder="First Name">
+                                                <input type="text" id="new-appointment-lname" class="meal-select text-sm" placeholder="Last Name">
                                             </div>
-                                            <select id="new-todo-category" class="meal-select text-sm">
-                                                <option value="Health">🧘‍♀️ Health</option>
-                                                <option value="Baby">🍼 Baby Prep</option>
-                                                <option value="Home">🏡 Home</option>
-                                                <option value="Appointment">🗓️ Appointment</option>
-                                                <!-- NEW RECIPE CATEGORY -->
-                                                <option value="Recipes">🍳 Recipes</option>
-                                                <option value="Reminder">💬 Reminder</option>
-                                                <option value="Custom">✨ Custom</option>
-                                            </select>
-                                            <input type="text" id="custom-todo-category-input" class="meal-select text-sm hidden" placeholder="Your custom category...">
-                                            
-                                            <!-- NEW APPOINTMENT FIELDS -->
-                                            <div id="new-appointment-fields" class="hidden space-y-3 pt-3 mt-3 border-t border-white/10">
-                                                <p class="text-sm font-semibold text-indigo-200">Appointment Details</p>
-                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                                    <input type="text" id="new-appointment-fname" class="meal-select text-sm" placeholder="First Name">
-                                                    <input type="text" id="new-appointment-lname" class="meal-select text-sm" placeholder="Last Name">
-                                                </div>
-                                                <input type="text" id="new-appointment-address" class="meal-select text-sm" placeholder="Address">
-                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                                    <input type="tel" id="new-appointment-contact" class="meal-select text-sm" placeholder="Contact Number">
-                                                    <input type="email" id="new-appointment-email" class="meal-select text-sm" placeholder="Email">
-                                                </div>
-                                                <div class="flex gap-3">
-                                                    <select id="new-appointment-type" class="meal-select text-sm flex-grow">
-                                                        <option value="">Appointment Type</option>
-                                                        <option value="OB/GYN">OB/GYN</option>
-                                                        <option value="Ultrasound">Ultrasound</option>
-                                                        <option value="Pediatrician">Pediatrician</option>
-                                                        <option value="Custom">Custom Type</option>
-                                                    </select>
-                                                    <input type="text" id="new-appointment-custom-type" class="meal-select text-sm flex-grow hidden" placeholder="Custom Appointment Type">
-                                                </div>
+                                            <input type="text" id="new-appointment-address" class="meal-select text-sm" placeholder="Address">
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                <input type="tel" id="new-appointment-contact" class="meal-select text-sm" placeholder="Contact Number">
+                                                <input type="email" id="new-appointment-email" class="meal-select text-sm" placeholder="Email">
                                             </div>
-                                            <!-- END NEW APPOINTMENT FIELDS -->
-                                            
-                                            <button id="add-todo-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Add Task</button>
+                                            <div class="flex gap-3">
+                                                <select id="new-appointment-type" class="meal-select text-sm flex-grow">
+                                                    <option value="">Appointment Type</option>
+                                                    <option value="OB/GYN">OB/GYN</option>
+                                                    <option value="Ultrasound">Ultrasound</option>
+                                                    <option value="Pediatrician">Pediatrician</option>
+                                                    <option value="Custom">Custom Type</option>
+                                                </select>
+                                                <input type="text" id="new-appointment-custom-type" class="meal-select text-sm flex-grow hidden" placeholder="Custom Appointment Type">
+                                            </div>
                                         </div>
-
-                                        <!-- Existing AI To-Do Button -->
-                                        <div class="mt-6 pt-6 border-t border-white/10 text-center">
-                                            <p class="mb-2 text-indigo-200">Need ideas? Let AI help!</p>
-                                            <button id="ai-generate-todos-btn" class="btn-secondary font-semibold py-2 px-5 rounded-lg">Generate Weekly To-Do List</button>
-                                        </div>
+                                        <!-- END NEW APPOINTMENT FIELDS -->
                                         
-                                        <!-- Existing AI Recipe Assistant -->
-                                        <div class="mt-8 pt-6 border-t border-white/10 space-y-3">
-                                            <h3 class="text-xl font-bold text-center">🧑‍🍳 AI Recipe Assistant</h3>
-                                            <p class="text-sm text-center text-gray-300">Craving something specific? Ask for recipes from the world's best chefs!</p>
-                                            <textarea id="ai-recipe-prompt" class="symptom-input min-h-[80px]" placeholder="e.g., I'm craving a simple, healthy pasta dish..."></textarea>
-                                            <button id="ai-generate-recipe-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
-                                                <span id="ai-recipe-btn-text">Find Recipes</span>
-                                                <svg id="ai-recipe-loader" class="animate-spin ml-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                            </button>
-                                            <div id="ai-recipe-results-container" class="mt-4 space-y-4">
-                                                <!-- AI Recipes will be injected here by journey.js -->
-                                            </div>
+                                        <button id="add-todo-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Add Task</button>
+                                    </div>
+
+                                    <!-- AI Generate To-Dos -->
+                                    <div class="mt-6 pt-6 border-t border-white/10 text-center">
+                                        <p class="mb-2 text-indigo-200">Need ideas? Let AI help!</p>
+                                        <button id="ai-generate-todos-btn" class="btn-secondary font-semibold py-2 px-5 rounded-lg">Generate Weekly To-Do List</button>
+                                    </div>
+                                    
+                                    <!-- AI Recipe Assistant -->
+                                    <div class="mt-8 pt-6 border-t border-white/10 space-y-3">
+                                        <h3 class="text-xl font-bold text-center">🧑‍🍳 AI Recipe Assistant</h3>
+                                        <p class="text-sm text-center text-gray-300">Craving something specific?</p>
+                                        <textarea id="ai-recipe-prompt" class="symptom-input min-h-[80px]" placeholder="e.g., I'm craving a simple, healthy pasta dish..."></textarea>
+                                        <button id="ai-generate-recipe-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
+                                            <span id="ai-recipe-btn-text">Find Recipes</span>
+                                            <svg id="ai-recipe-loader" class="animate-spin ml-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                        </button>
+                                        <div id="ai-recipe-results-container" class="mt-4 space-y-4">
+                                            <!-- AI Recipes will be injected here by journey.js -->
                                         </div>
-                                        <!-- === END AI RECIPE ASSISTANT === -->
+                                    </div>
+                                    <!-- === END AI RECIPE ASSISTANT === -->
+                                </div>
 
-                                    </div> <!-- END RIGHT COLUMN -->
-                                </div> <!-- END 2-COLUMN LAYOUT -->
                             </div>
-                            <!-- === END TO-DO LIST CARD === -->
+                        </div> <!-- End of new To-Do Card -->
 
+                        <!-- 
+                        ============================================================
+                        === NEW 3-COLUMN GRID FOR OTHER CARDS
+                        ============================================================
+                        -->
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-                            <!-- Little Wishes (MOVED FROM RIGHT COLUMN) -->
-                            <!-- Added anim-card class -->
+                            <!-- Little Wishes (Column 1) -->
                             <div class="glass-card anim-card p-4 md:p-6">
                                 <div id="wishlist-header" class="flex justify-between items-center mb-4 cursor-pointer">
                                     <h3 class="text-2xl font-bold">🎁 Little Wishes</h3>
@@ -761,36 +788,23 @@
                                             <div id="wishlist-progress-bar" class="bg-gradient-to-r from-teal-400 to-blue-500 h-2.5 rounded-full" style="width: 0%; transition: width 0.5s ease;"></div>
                                         </div>
                                     </div>
-
-                                    <!-- ================================== -->
-                                    <!-- === NEW SEARCH & SORT CONTROLS === -->
-                                    <!-- ================================== -->
+                                    
                                     <div class="flex flex-col md:flex-row gap-3 mb-4">
-                                        <!-- Search Bar -->
                                         <div class="relative flex-grow">
                                             <input type="text" id="wishlist-search-input" class="meal-select text-sm w-full pl-10" placeholder="Find an item...">
                                             <svg class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                                             </svg>
                                         </div>
-                                        <!-- Sort Dropdown -->
                                         <select id="wishlist-sort-select" class="meal-select text-sm md:w-48">
                                             <option value="default">Sort by... (Default)</option>
                                             <option value="category">Sort by Category</option>
                                             <option value="foodType">Sort by Food Type</option>
                                         </select>
                                     </div>
-                                    <!-- ================================== -->
-                                    <!-- === END SEARCH & SORT CONTROLS === -->
-                                    <!-- ================================== -->
                                     
-                                    <!-- 
-                                        UPDATED WISHLIST CONTAINER:
-                                        - Removed space-y-3 (cards will have their own margin/padding)
-                                        - Added grid layout classes
-                                        - Kept max-h, overflow, etc. for scrolling
-                                    -->
-                                    <div id="wishlist-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[28rem] overflow-y-auto modal-scroll pr-2 mb-4">
+                                    <!-- Wishlist container is now single-column in this layout -->
+                                    <div id="wishlist-container" class="grid grid-cols-1 gap-4 max-h-[28rem] overflow-y-auto modal-scroll pr-2 mb-4">
                                         <!-- Wishlist cards will be rendered here by journey.js -->
                                     </div>
                                 </div>
@@ -798,7 +812,6 @@
                                 <div class="pt-4 border-t border-white/10 space-y-3">
                                     <input type="text" id="new-wish-item" class="meal-select text-sm" placeholder="Item name (e.g., Baby Monitor)">
                                     <select id="new-wish-category" class="meal-select text-sm">
-                                        <!-- ADDED EMOJIS -->
                                         <option value="Baby Care">🍼 Baby Care</option>
                                         <option value="Nursery">🧸 Nursery</option>
                                         <option value="Hospital Bag">👜 Hospital Bag</option>
@@ -809,7 +822,6 @@
                                     </select>
                                     <input type="text" id="custom-category-input" class="meal-select text-sm hidden" placeholder="Your custom category...">
                                     
-                                    <!-- NEW FOOD FIELDS CONTAINER -->
                                     <div id="new-wish-food-fields" class="hidden space-y-3 pt-3 mt-3 border-t border-white/10">
                                         <p class="text-sm font-semibold text-indigo-200">Food Details</p>
                                         <select id="new-wish-food-type" class="meal-select text-sm">
@@ -819,7 +831,6 @@
                                             <option value="Vege">🥦 Vege</option>
                                             <option value="Snack">🥨 Snack</option>
                                             <option value="Diary">🧀 Diary</option>
-                                            <!-- ADDED Grain and Soup -->
                                             <option value="Grain">🍚 Grain</option> 
                                             <option value="Soup">🍲 Soup</option>
                                             <option value="Dog">🐶 Dog Food</option>
@@ -828,16 +839,12 @@
                                         <label for="new-wish-food-expiry" class="text-sm text-gray-300 -mb-2 block">Expiration Date:</label>
                                         <input type="date" id="new-wish-food-expiry" class="date-input text-sm">
                                     </div>
-                                    <!-- END NEW FOOD FIELDS CONTAINER -->
 
                                     <div class="flex gap-2">
                                         <input type="text" id="new-wish-price" class="meal-select text-sm w-1/2" placeholder="Price ($)">
-                                        <input type="text" id="new-wish-link" class="meal-select text-sm w-1/2" placeholder="Store Link">
+                                        <input type="text" id="new-wish-link" class="meal-select text-sm w-1/DABwB" placeholder="Store Link">
                                     </div>
 
-                                    <!-- ================================== -->
-                                    <!-- === NEW WISH QUANTITY INPUT === -->
-                                    <!-- ================================== -->
                                     <div>
                                         <label for="new-wish-quantity" class="text-sm text-gray-300 mb-1 block">Quantity</label>
                                         <div class="flex items-center gap-2">
@@ -846,9 +853,6 @@
                                             <button type="button" id="new-wish-quantity-plus" class="quantity-btn">+</button>
                                         </div>
                                     </div>
-                                    <!-- ================================== -->
-                                    <!-- === END NEW WISH QUANTITY INPUT === -->
-                                    <!-- ================================== -->
 
                                     <button id="add-wish-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Add Wish</button>
                                 </div>
@@ -861,21 +865,9 @@
                                 </div>
                                 <div id="ai-wish-suggestions-container" class="mt-4 space-y-3"></div>
                             </div>
-                            <!-- END OF MOVED LITTLE WISHES -->
 
-                        </div>
-                        <!-- END OF LEFT COLUMN -->
-
-                        <!-- 
-                        ============================================================
-                        === RIGHT COLUMN - UPDATED
-                        ============================================================
-                        -->
-                        <div class="space-y-8">
-                            
-                            <!-- Tiny Reflections (MOVED FROM LEFT COLUMN) -->
-                            <!-- Added anim-card class -->
-                             <div class="glass-card anim-card p-4 md:p-6">
+                            <!-- Tiny Reflections (Column 2) -->
+                            <div class="glass-card anim-card p-4 md:p-6">
                                 <div id="reflection-header" class="flex justify-between items-center mb-4 cursor-pointer">
                                     <h3 class="text-2xl font-bold">📝 Tiny Reflections</h3>
                                     <div class="flex items-center">
@@ -889,21 +881,15 @@
                                             <svg class="w-6 h-6 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
                                         </button>
                                     </div>
-                                    <div id="reflections-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
+                                    <div id="reflections-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
                                     <div id="toggle-reflections-container" class="text-center mt-4 hidden">
                                         <button id="toggle-reflections-btn" class="btn-secondary text-sm font-semibold py-2 px-4 rounded-lg">Show All</button>
                                     </div>
                                 </div>
                             </div>
-                            <!-- END OF MOVED TINY REFLECTIONS -->
                         
-                            <!-- 
-                            ============================================================
-                            === NEW: AI BABY NAME GENERATOR CARD
-                            ============================================================
-                            -->
+                            <!-- AI Baby Name Generator (Column 3) -->
                             <div id="dream-name-card" class="glass-card anim-card p-4 md:p-6">
-                                <!-- Header -->
                                 <div class="flex justify-between items-center mb-4">
                                     <h3 class="text-2xl font-bold">🍼 Dream Name</h3>
                                     <button id="name-favorites-toggle-btn" class="btn-secondary text-sm font-semibold py-2 px-4 rounded-lg">
@@ -911,18 +897,14 @@
                                     </button>
                                 </div>
 
-                                <!-- Collapsible Favorites List -->
                                 <div id="name-favorites-container" class="hidden mb-6 pt-4 border-t border-white/10">
                                     <h4 class="font-bold text-lg mb-3">Saved Names</h4>
                                     <div id="name-favorites-list" class="space-y-2 max-h-48 overflow-y-auto modal-scroll pr-2">
                                         <p class="text-gray-400 text-sm text-center">Your favorite names will appear here.</p>
-                                        <!-- Favorite names will be populated by JS -->
                                     </div>
                                 </div>
 
-                                <!-- Generator Form -->
                                 <div class="space-y-4">
-                                    <!-- Gender Selector -->
                                     <div>
                                         <label class="block text-sm font-semibold mb-2">Gender</label>
                                         <div id="name-gender-selector" class="flex flex-wrap gap-2">
@@ -932,9 +914,7 @@
                                         </div>
                                     </div>
 
-                                    <!-- Filters Grid -->
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <!-- Origin / Language -->
                                         <div>
                                             <label for="name-origin-select" class="block text-sm font-semibold mb-2">Origin / Language</label>
                                             <select id="name-origin-select" class="meal-select text-sm">
@@ -951,7 +931,6 @@
                                             <input type="text" id="name-origin-custom" class="meal-select text-sm mt-2 hidden" placeholder="Type custom origin...">
                                         </div>
 
-                                        <!-- Style / Mood -->
                                         <div>
                                             <label for="name-style-select" class="block text-sm font-semibold mb-2">Style / Mood</label>
                                             <select id="name-style-select" class="meal-select text-sm">
@@ -968,13 +947,11 @@
                                         </div>
                                     </div>
 
-                                    <!-- Meaning Filter -->
                                     <div>
                                         <label for="name-meaning-input" class="block text-sm font-semibold mb-2">Meaning / Vibe</label>
                                         <input type="text" id="name-meaning-input" class="meal-select text-sm" placeholder="e.g., 'peace', 'strong', 'light'">
                                     </div>
 
-                                    <!-- Syllable Count -->
                                     <div>
                                         <label class="block text-sm font-semibold mb-2">Syllables</label>
                                         <div id="name-syllable-selector" class="flex flex-wrap gap-3">
@@ -985,7 +962,6 @@
                                         </div>
                                     </div>
 
-                                    <!-- Action Buttons -->
                                     <div class="grid grid-cols-2 gap-3 pt-4 border-t border-white/10">
                                         <button id="name-random-btn" class="btn-secondary font-semibold py-3 px-4 rounded-lg text-sm">
                                             🔀 Randomize
@@ -997,22 +973,20 @@
                                     </div>
                                 </div>
 
-                                <!-- Results Display -->
                                 <div id="name-results-container" class="mt-6 pt-6 border-t border-white/10 space-y-3">
-                                    <!-- AI-generated names will appear here -->
                                     <p class="text-gray-400 text-sm text-center">Your name suggestions will appear here.</p>
                                 </div>
                                 
-                                <!-- Generate Again Button (appears after first results) -->
                                 <button id="name-generate-again-btn" class="w-full btn-secondary font-semibold py-2 px-4 rounded-lg mt-4 hidden">
                                     🔁 Generate Again
                                 </button>
                             </div>
-                        </div>
-                        <!-- END OF RIGHT COLUMN -->
-                        
+
+                        </div> <!-- End of 3-column grid -->
+
                     </div>
-                </div>
+                </div> <!-- End of Journey Tab Content -->
+
 
             </main>
         </div>
@@ -1480,8 +1454,5 @@
     <script type="module" src="./js/journey.js"></script>
     <!-- NEW SCRIPT TAG -->
     <script type="module" src="./js/calm-space.js"></script>
-
-    <!-- NEW CALENDAR SCRIPT -->
-    <script src="https://cdn.jsdelivr.net/npm/vanilla-calendar-pro@2.9.6/build/vanilla-calendar.min.js"></script>
 </body>
 </html>
