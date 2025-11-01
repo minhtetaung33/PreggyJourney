@@ -1093,102 +1093,128 @@ h1, h2, h3 {
 
 
 /* === NEW CALENDAR STYLES === */
+#calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px; /* A small gap between cells */
+    min-height: 480px; /* Give it a fixed height */
+}
+
+.calendar-day {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 0.5rem;
+    padding: 4px;
+    min-height: 80px; /* Give cells a minimum height */
+    transition: background-color 0.2s ease-in-out;
+    display: flex; /* Use flex to align number */
+    flex-direction: column; /* Stack number and markers */
+}
+
+.calendar-day:hover:not(.other-month) {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.calendar-day .day-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* Make content fill the day cell */
+}
+
+
+.calendar-day .day-number {
+    font-size: 0.875rem; /* text-sm */
+    font-weight: 500;
+    color: #cbd5e1; /* text-gray-300 */
+}
+
+.calendar-day.is-today .day-number {
+    color: #fff;
+    font-weight: 700;
+    background-color: #a78bfa; /* purple-400 */
+    border-radius: 50%;
+    width: 1.75rem;
+    height: 1.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.calendar-day.other-month {
+    opacity: 0.3;
+    background: transparent;
+}
+
+.task-markers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    margin-top: auto; /* Push markers to the bottom */
+    padding-bottom: 2px; /* Add a little space from the bottom */
+    padding-left: 2px;
+}
+
+.task-marker {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* Category colors */
+.task-marker-Health { background-color: #a78bfa; } /* purple-400 */
+.task-marker-Baby { background-color: #f472b6; } /* pink-400 */
+.task-marker-Home { background-color: #6ee7b7; } /* teal-300 */
+.task-marker-Appointment { background-color: #f87171; } /* red-400 */
+.task-marker-Recipes { background-color: #facc15; } /* yellow-400 */
+.task-marker-Reminder { background-color: #60a5fa; } /* blue-400 */
+.task-marker-Custom { background-color: #9ca3af; } /* gray-400 */
+.task-marker-Default { background-color: #9ca3af; } /* gray-400 */
+
 
 #calendar-container {
     position: relative;
     overflow: hidden; /* Needed for month switch animation */
 }
 
-@keyframes month-fade-in {
+@keyframes calendar-fade-in {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
 .calendar-grid-anim {
-    animation: month-fade-in 0.4s ease-out;
+    animation: calendar-fade-in 0.5s ease-out;
 }
 
-.calendar-day {
-    position: relative;
-    height: 0;
-    padding-bottom: 100%; /* Creates a square aspect ratio */
-    background-color: rgba(255, 255, 255, 0.05);
-    border-radius: 0.75rem; /* rounded-lg */
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: all 0.2s ease-in-out;
-}
+/* === NEW MOBILE STYLES FOR CALENDAR === */
+@media (max-width: 768px) {
+    #calendar-grid {
+        gap: 2px; /* Tighter gap on mobile */
+        min-height: auto; /* Let content define height */
+    }
 
-.calendar-day:not(.other-month):hover {
-    background-color: rgba(255, 255, 255, 0.15);
-    transform: scale(1.05);
-}
+    .calendar-day {
+        min-height: 60px; /* Shorter cells for mobile */
+        padding: 2px; /* Tighter padding on mobile */
+    }
 
-.day-content {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    padding: 0.5rem; /* p-2 */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
+    .calendar-day .day-number {
+        font-size: 0.75rem; /* text-xs, smaller number */
+    }
 
-.day-number {
-    font-weight: 600; /* font-semibold */
-    font-size: 0.875rem; /* text-sm */
-}
+    .task-marker {
+        width: 8px; /* Larger, more visible markers */
+        height: 8px; /* Larger, more visible markers */
+    }
 
-.calendar-day.other-month .day-content {
-    opacity: 0.3;
-    background-color: transparent;
-    border-color: transparent;
-}
+    .task-markers {
+        gap: 2px;
+        padding: 1px;
+        margin-top: 4px; /* Add a little space from the number */
+        justify-content: flex-start; /* Align markers to the left */
+    }
 
-.calendar-day.is-today .day-content {
-    background-color: rgba(167, 139, 250, 0.3); /* bg-purple-400/30 */
-    border-radius: 0.75rem;
-    box-shadow: 0 0 10px rgba(167, 139, 250, 0.2);
-}
-
-.calendar-day.is-today .day-number {
-    color: #fff;
-    font-weight: 700; /* font-bold */
-}
-
-.task-markers {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 4px; /* gap-1 */
-    margin-top: 0.5rem; /* mt-2 */
-    max-height: 2.5rem; /* Limit height */
-    overflow: hidden;
-}
-
-.task-marker {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-/* Category colors for markers */
-.task-marker-Health { background-color: #a78bfa; } /* purple-400 */
-.task-marker-Baby { background-color: #f472b6; } /* pink-400 */
-.task-marker-Home { background-color: #34d399; } /* green-400 */
-.task-marker-Appointment { background-color: #fbbf24; } /* amber-400 */
-.task-marker-Recipes { background-color: #60a5fa; } /* blue-400 */
-.task-marker-Reminder { background-color: #f87171; } /* red-400 */
-.task-marker-Custom,
-.task-marker-Default { background-color: #9ca3af; } /* gray-400 */
-
-/* Style for the collapsible to-do list icon */
-#todo-list-toggle-icon {
-    transition: transform 0.3s ease;
-}
-/* rotate-180 is already in tailwind, but we add it here just in case */
-.rotate-180 {
-    transform: rotate(180deg);
+    /* Make day of week headers smaller */
+    #calendar-header + div .text-sm {
+        font-size: 0.75rem; /* text-xs */
+    }
 }
