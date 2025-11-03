@@ -469,6 +469,18 @@ function setupEventListeners() {
             // Save to the 'daily' document. The onSnapshot listener will handle the UI updates.
             const userDocRef = doc(db, `users/${getCurrentUserId()}/wellness`, 'daily'); 
             await setDoc(userDocRef, { pregnancyStartDate: newStartDate, pregnancyEndDate: newEndDate }, { merge: true });
+            
+            // --- START FIX: Force UI update after saving permanent date ---
+            // Update the temporary in-memory data used for the UI calculations
+            dailyWellnessData.pregnancyStartDate = newStartDate;
+            dailyWellnessData.pregnancyEndDate = newEndDate;
+            
+            // Force the dependent UI elements to re-render using the new data
+            updateDynamicContent(); // Updates the week/size display
+            // updateDashboardUI() will be called indirectly by updateDynamicContent() if necessary, 
+            // but calling it explicitly ensures everything is refreshed.
+            updateDashboardUI();
+            // --- END FIX ---
         }
         closeStartDateModal();
     });
