@@ -122,6 +122,17 @@ const defaultWellnessData = {
     waterGoal: 10,
 };
 
+// --- FIX: Define defaults for WEEKLY data only, excluding the permanent date fields ---
+const weeklyLogDefaults = {
+    dailyTip: defaultWellnessData.dailyTip,
+    dailyNutrition: defaultWellnessData.dailyNutrition,
+    dailySupplements: defaultWellnessData.dailySupplements,
+    sleep: defaultWellnessData.sleep,
+    weeklyLog: defaultWellnessData.weeklyLog,
+    waterGoal: defaultWellnessData.waterGoal,
+};
+// --- END FIX ---
+
 const defaultMealPlan = {
     breakfast: { monday: "", tuesday: "", wednesday: "", thursday: "", friday: "", saturday: "", sunday: "" },
     lunch: { monday: "", tuesday: "", wednesday: "", thursday: "", friday: "", saturday: "", sunday: "" },
@@ -335,11 +346,12 @@ export async function initializeWellness(userId, onWellnessDataUpdate) {
     setupEventListeners();
 }
 
-async function initializeWellnessData(docRef, onWellnessDataUpdate) {
+async function initializeWellnessData(docRef) {
     if (!docRef) return;
     const docSnap = await getDoc(docRef);
     if (!docSnap.exists()) {
-        await setDoc(docRef, defaultWellnessData);
+        // --- FIX: Only set the weekly log specific data, NOT the pregnancy dates ---
+        await setDoc(docRef, weeklyLogDefaults);
     }
 }
 
@@ -369,11 +381,13 @@ async function loadWellnessForDate(date, onWellnessDataUpdate) {
     await initializeWellnessData(wellnessDataRef); // Ensure doc exists before listening
 
     unsubscribeWellnessData = onSnapshot(wellnessDataRef, (docSnap) => {
-        const firestoreData = docSnap.exists() ? docSnap.data() : defaultWellnessData;
+        // The firestoreData here will ONLY contain weekly log data (mood, sleep, etc.) 
+        // because of the fix in initializeWellnessData.
+        const firestoreData = docSnap.exists() ? docSnap.data() : weeklyLogDefaults;
         
         // Merge daily data (like start date) with the weekly log data.
-        // This ensures the start date is always present.
-        wellnessData = { ...defaultWellnessData, ...dailyWellnessData, ...firestoreData };
+        // This ensures the start date is always pulled from the permanent 'daily' document.
+        wellnessData = { ...weeklyLogDefaults, ...dailyWellnessData, ...firestoreData };
 
         if (!isHistoryView) {
             const todayIndex = new Date().getDay();
@@ -1074,7 +1088,7 @@ async function populateSupplementList() {
     if (unsubscribeSupplementLog) unsubscribeSupplementLog();
 
     unsubscribeSupplementLog = onSnapshot(wellnessDocRefForLog, (docSnap) => {
-        const wellnessDataForLog = docSnap.exists() ? docSnap.data() : defaultWellnessData;
+        const wellnessDataForLog = docSnap.exists() ? docSnap.data() : weeklyLogDefaults;
         
         // *** FIX: Safely access dailySupplements ***
         const loggedSupplements = (wellnessDataForLog.dailySupplements || {})[dayKey] || [];
@@ -1120,7 +1134,7 @@ async function toggleSupplementForDay(suppName) {
     const wellnessDocRefForLog = doc(db, `users/${userId}/wellness`, weekId);
 
     const docSnap = await getDoc(wellnessDocRefForLog);
-    const wellnessDataForLog = docSnap.exists() ? docSnap.data() : defaultWellnessData;
+    const wellnessDataForLog = docSnap.exists() ? docSnap.data() : weeklyLogDefaults;
     
     // *** FIX: Safely access dailySupplements ***
     const loggedSupplements = (wellnessDataForLog.dailySupplements || {})[dayKey] || [];
@@ -1231,7 +1245,8 @@ async function populateNutritionHistory(date) {
 
     const weekWellnessRef = doc(db, `users/${userId}/wellness`, weekId);
     const weekWellnessSnap = await getDoc(weekWellnessRef);
-    const wellnessForWeek = weekWellnessSnap.exists() ? weekWellnessSnap.data() : defaultWellnessData;
+    // --- FIX: Use weeklyLogDefaults here as well ---
+    const wellnessForWeek = weekWellnessSnap.exists() ? weekWellnessSnap.data() : weeklyLogDefaults;
 
 
     nutritionHistoryContainer.innerHTML = '';
@@ -1316,7 +1331,8 @@ async function populateSleepModal(date) {
     const weekId = getWeekId(date);
     const sleepDocRef = doc(db, `users/${getCurrentUserId()}/wellness`, weekId);
     const docSnap = await getDoc(sleepDocRef);
-    const sleepDataForWeek = docSnap.exists() ? (docSnap.data().sleep || defaultWellnessData.sleep) : defaultWellnessData.sleep;
+    // --- FIX: Use weeklyLogDefaults here as well ---
+    const sleepDataForWeek = docSnap.exists() ? (docSnap.data().sleep || weeklyLogDefaults.sleep) : weeklyLogDefaults.sleep;
 
     sleepScheduleContainer.innerHTML = '';
     const nightLabels = ["Sun/Mon", "Mon/Tue", "Tue/Wed", "Wed/Thu", "Thu/Fri", "Fri/Sat", "Sat/Sun"];
