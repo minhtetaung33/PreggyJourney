@@ -94,10 +94,13 @@ let isHistoryView = false;
 let selectedDayKey = 'monday'; // The day being shown in the dashboard (e.g., 'monday')
 let editDayData = {}; // Temp storage for editing a day's data
 
+// --- FIX 1: Define the default start date separately ---
+const defaultStartDate = '2025-08-01';
 
 const defaultWellnessData = {
-    pregnancyStartDate: '2025-08-01',
-    pregnancyEndDate: '',
+    // --- FIX 2: Remove pregnancyStartDate and pregnancyEndDate from the *weekly* defaults ---
+    // pregnancyStartDate: '2025-08-01',  <-- REMOVED
+    // pregnancyEndDate: '',                 <-- REMOVED
     dailyTip: "Stretch your legs for 5 minutes every hour to reduce swelling.",
     dailyNutrition: {},
     dailySupplements: { monday: [], tuesday: [], wednesday: [], thursday: [], friday: [], saturday: [], sunday: [] },
@@ -121,17 +124,6 @@ const defaultWellnessData = {
     },
     waterGoal: 10,
 };
-
-// --- FIX: Define defaults for WEEKLY data only, excluding the permanent date fields ---
-const weeklyLogDefaults = {
-    dailyTip: defaultWellnessData.dailyTip,
-    dailyNutrition: defaultWellnessData.dailyNutrition,
-    dailySupplements: defaultWellnessData.dailySupplements,
-    sleep: defaultWellnessData.sleep,
-    weeklyLog: defaultWellnessData.weeklyLog,
-    waterGoal: defaultWellnessData.waterGoal,
-};
-// --- END FIX ---
 
 const defaultMealPlan = {
     breakfast: { monday: "", tuesday: "", wednesday: "", thursday: "", friday: "", saturday: "", sunday: "" },
@@ -323,15 +315,14 @@ export async function initializeWellness(userId, onWellnessDataUpdate) {
         if (docSnap.exists()) {
             dailyWellnessData = docSnap.data();
         } else {
-            // If it doesn't exist, create it with the start date from the default object
-            setDoc(dailyWellnessRef, { 
-                pregnancyStartDate: defaultWellnessData.pregnancyStartDate, 
-                pregnancyEndDate: defaultWellnessData.pregnancyEndDate 
-            });
-            dailyWellnessData = { // Assume default data for this first run
-                pregnancyStartDate: defaultWellnessData.pregnancyStartDate, 
-                pregnancyEndDate: defaultWellnessData.pregnancyEndDate 
+            // --- FIX 3: Use the separate defaultStartDate when creating the 'daily' doc ---
+            // If it doesn't exist, create it with the default start date
+            const initialDailyData = { 
+                pregnancyStartDate: defaultStartDate, 
+                pregnancyEndDate: '' 
             };
+            setDoc(dailyWellnessRef, initialDailyData);
+            dailyWellnessData = initialDailyData; // Assume default data for this first run
         }
         // FIX: This now runs *after* dailyWellnessData is set.
         // It was previously being called synchronously below, creating a race condition.
@@ -346,12 +337,13 @@ export async function initializeWellness(userId, onWellnessDataUpdate) {
     setupEventListeners();
 }
 
-async function initializeWellnessData(docRef) {
+async function initializeWellnessData(docRef, onWellnessDataUpdate) {
     if (!docRef) return;
     const docSnap = await getDoc(docRef);
     if (!docSnap.exists()) {
-        // --- FIX: Only set the weekly log specific data, NOT the pregnancy dates ---
-        await setDoc(docRef, weeklyLogDefaults);
+        // --- FIX 4: When creating a new weekly doc, use defaultWellnessData,
+        // which no longer contains the start date. This is correct.
+        await setDoc(docRef, defaultWellnessData);
     }
 }
 
@@ -381,13 +373,17 @@ async function loadWellnessForDate(date, onWellnessDataUpdate) {
     await initializeWellnessData(wellnessDataRef); // Ensure doc exists before listening
 
     unsubscribeWellnessData = onSnapshot(wellnessDataRef, (docSnap) => {
-        // The firestoreData here will ONLY contain weekly log data (mood, sleep, etc.) 
-        // because of the fix in initializeWellnessData.
-        const firestoreData = docSnap.exists() ? docSnap.data() : weeklyLogDefaults;
+        const firestoreData = docSnap.exists() ? docSnap.data() : {}; // Don't use defaultWellnessData here
         
-        // Merge daily data (like start date) with the weekly log data.
-        // This ensures the start date is always pulled from the permanent 'daily' document.
-        wellnessData = { ...weeklyLogDefaults, ...dailyWellnessData, ...firestoreData };
+        // --- FIX 5: Re-order the merge. dailyWellnessData MUST come last
+        // to ensure its fields (like pregnancyStartDate) overwrite anything
+        // that might be in the other objects.
+        wellnessData = { 
+            ...defaultWellnessData, // 1. Start with weekly defaults
+            ...firestoreData,      // 2. Overlay saved weekly data
+            ...dailyWellnessData   // 3. Overlay persistent daily data (like the correct start date)
+        };
+
 
         if (!isHistoryView) {
             const todayIndex = new Date().getDay();
@@ -456,31 +452,22 @@ function setupEventListeners() {
 
     symptomCheckBtn.addEventListener('click', handleSymptomCheck);
     babyGrowthCard.addEventListener('click', () => {
-        startDateInput.value = wellnessData.pregnancyStartDate; endDateInput.value = wellnessData.pregnancyEndDate || '';
-        startDateModal.classList.remove('hidden'); setTimeout(() => startDateModal.classList.add('active'), 10);
+        // The wellnessData object will now have the correct start date from the merge
+        startDateInput.value = wellnessData.pregnancyStartDate; 
+        endDateInput.value = wellnessData.pregnancyEndDate || '';
+        startDateModal.classList.remove('hidden'); 
+        setTimeout(() => startDateModal.classList.add('active'), 10);
     });
     startDateModalCancelBtn.addEventListener('click', closeStartDateModal);
     startDateModal.addEventListener('click', (e) => e.target === startDateModal && closeStartDateModal());
     startDateModalSaveBtn.addEventListener('click', async () => {
         const newStartDate = startDateInput.value; let newEndDate = endDateInput.value;
         if (newStartDate) {
-            if (!newEndDate) { const startDate = new Date(newStartDate); startDate.setDate(startDate.getDate() + (40 * 7)); newEndDate = startDate.toISOString().split('T')[0]; }
+            if (!newEndDate) { const startDate = new Date(newStartDate + 'T00:00:00'); startDate.setDate(startDate.getDate() + (40 * 7)); newEndDate = startDate.toISOString().split('T')[0]; }
             
             // Save to the 'daily' document. The onSnapshot listener will handle the UI updates.
             const userDocRef = doc(db, `users/${getCurrentUserId()}/wellness`, 'daily'); 
             await setDoc(userDocRef, { pregnancyStartDate: newStartDate, pregnancyEndDate: newEndDate }, { merge: true });
-            
-            // --- START FIX: Force UI update after saving permanent date ---
-            // Update the temporary in-memory data used for the UI calculations
-            dailyWellnessData.pregnancyStartDate = newStartDate;
-            dailyWellnessData.pregnancyEndDate = newEndDate;
-            
-            // Force the dependent UI elements to re-render using the new data
-            updateDynamicContent(); // Updates the week/size display
-            // updateDashboardUI() will be called indirectly by updateDynamicContent() if necessary, 
-            // but calling it explicitly ensures everything is refreshed.
-            updateDashboardUI();
-            // --- END FIX ---
         }
         closeStartDateModal();
     });
@@ -1036,11 +1023,17 @@ export function renderWellnessChart() {
 }
 
 function updateDynamicContent() {
-    if(!wellnessData.pregnancyStartDate) return;
-    const pregnancyStartDate = new Date(wellnessData.pregnancyStartDate);
+    // wellnessData will *always* have the correct start date now because of the merge fix
+    if(!wellnessData.pregnancyStartDate) {
+        console.error("Pregnancy start date is missing from wellnessData object.");
+        return;
+    }
+
+    const pregnancyStartDate = new Date(wellnessData.pregnancyStartDate + 'T00:00:00'); // Use local time
     const today = new Date();
-    const diffTime = Math.abs(today - pregnancyStartDate);
-    const diffWeeks = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) || 1; // Default to 1
+    // Fix for week calculation: ensure we are comparing dates correctly
+    const diffTime = Math.max(0, today.getTime() - pregnancyStartDate.getTime());
+    const diffWeeks = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) + 1; // Start at week 1
     
     const babySizes = {
         4: {fruit: 'poppy seed', emoji: '🌱'}, 5: {fruit: 'peppercorn', emoji: '🌶️'}, 6: {fruit: 'sweet pea', emoji: '🟢'}, 7: {fruit: 'blueberry', emoji: '🫐'}, 8: {fruit: 'raspberry', emoji: '🍓'}, 9: {fruit: 'cherry', emoji: '🍒'}, 10: {fruit: 'strawberry', emoji: '🍓'}, 11: {fruit: 'lime', emoji: '🍈'}, 12: {fruit: 'plum', emoji: '🍑'}, 13: {fruit: 'peach', emoji: '🍑'}, 14: {fruit: 'lemon', emoji: '🍋'}, 15: {fruit: 'apple', emoji: '🍎'}, 16: {fruit: 'avocado', emoji: '🥑'}, 17: {fruit: 'pear', emoji: '🍐'}, 18: {fruit: 'bell pepper', emoji: '🫑'}, 19: {fruit: 'mango', emoji: '🥭'}, 20: {fruit: 'banana', emoji: '🍌'},
@@ -1048,25 +1041,26 @@ function updateDynamicContent() {
         21: { fruit: 'carrot', emoji: '🥕' }, 22: { fruit: 'spaghetti squash', emoji: '🎃' }, 23: { fruit: 'large mango', emoji: '🥭' }, 24: { fruit: 'ear of corn', emoji: '🌽' }, 25: { fruit: 'rutabaga', emoji: ' turnips' }, 26: { fruit: 'head of lettuce', emoji: '🥬' }, 27: { fruit: 'cauliflower', emoji: '🥦' }, 28: { fruit: 'eggplant', emoji: '🍆' }, 29: { fruit: 'butternut squash', emoji: '🎃' }, 30: { fruit: 'cabbage', emoji: '🥬' }, 31: { fruit: 'coconut', emoji: '🥥' }, 32: { fruit: 'jicama', emoji: '🥔' }, 33: { fruit: 'pineapple', emoji: '🍍' }, 34: { fruit: 'cantaloupe', emoji: '🍈' }, 35: { fruit: 'honeydew melon', emoji: '🍈' }, 36: { fruit: 'romaine lettuce', emoji: '🥬' }, 37: { fruit: 'swiss chard', emoji: '🥬' }, 38: { fruit: 'pumpkin', emoji: '🎃' }, 39: { fruit: 'watermelon', emoji: '🍉' }, 40: { fruit: 'small pumpkin', emoji: '🎃' }
     };
 
-    const size = babySizes[diffWeeks] || {fruit: 'a little miracle', emoji: '✨'};
-    babyGrowthSnapshotEl.innerHTML = `Week ${diffWeeks} — baby is the size of a ${size.fruit} ${size.emoji}`;
+    const displayWeek = diffWeeks > 40 ? 40 : (diffWeeks < 1 ? 1 : diffWeeks);
+    const size = babySizes[displayWeek] || {fruit: 'a little miracle', emoji: '✨'};
+    babyGrowthSnapshotEl.innerHTML = `Week ${displayWeek} — baby is the size of a ${size.fruit} ${size.emoji}`;
     
     // --- NEW WELLNESS TIP, GLOW, and FUN FACT LOGIC ---
     const wellnessTipEl = document.getElementById('wellness-tip');
-    const tip = wellnessTipsByWeek[diffWeeks] || "Stay hydrated and listen to your body's needs today.";
+    const tip = wellnessTipsByWeek[displayWeek] || "Stay hydrated and listen to your body's needs today.";
     wellnessTipEl.textContent = tip;
 
     // Update Fun Fact
-    funFactEl.textContent = funFacts[diffWeeks] || "Did you know? You're doing an amazing job!";
+    funFactEl.textContent = funFacts[displayWeek] || "Did you know? You're doing an amazing job!";
 
     // Update Baby Message
-    babyMessageContent.textContent = babyMessages[diffWeeks] || "I'm growing every day thanks to you, Mama! 💖";
+    babyMessageContent.textContent = babyMessages[displayWeek] || "I'm growing every day thanks to you, Mama! 💖";
     
     // Update Glow Color based on Trimester
     wellnessGlow.className = "wellness-glow"; // Reset classes
-    if (diffWeeks <= 13) {
+    if (displayWeek <= 13) {
         wellnessGlow.classList.add('glow-green'); // First trimester
-    } else if (diffWeeks <= 27) {
+    } else if (displayWeek <= 27) {
         wellnessGlow.classList.add('glow-lavender'); // Second trimester
     } else {
         wellnessGlow.classList.add('glow-blue'); // Third trimester
@@ -1100,7 +1094,8 @@ async function populateSupplementList() {
     if (unsubscribeSupplementLog) unsubscribeSupplementLog();
 
     unsubscribeSupplementLog = onSnapshot(wellnessDocRefForLog, (docSnap) => {
-        const wellnessDataForLog = docSnap.exists() ? docSnap.data() : weeklyLogDefaults;
+        // We need to initialize the doc if it doesn't exist for this listener
+        const wellnessDataForLog = docSnap.exists() ? docSnap.data() : defaultWellnessData;
         
         // *** FIX: Safely access dailySupplements ***
         const loggedSupplements = (wellnessDataForLog.dailySupplements || {})[dayKey] || [];
@@ -1145,8 +1140,13 @@ async function toggleSupplementForDay(suppName) {
     const userId = getCurrentUserId();
     const wellnessDocRefForLog = doc(db, `users/${userId}/wellness`, weekId);
 
+    // Ensure the doc exists before trying to update it
     const docSnap = await getDoc(wellnessDocRefForLog);
-    const wellnessDataForLog = docSnap.exists() ? docSnap.data() : weeklyLogDefaults;
+    if (!docSnap.exists()) {
+        await setDoc(wellnessDocRefForLog, defaultWellnessData);
+    }
+    
+    const wellnessDataForLog = docSnap.exists() ? docSnap.data() : defaultWellnessData;
     
     // *** FIX: Safely access dailySupplements ***
     const loggedSupplements = (wellnessDataForLog.dailySupplements || {})[dayKey] || [];
@@ -1257,8 +1257,7 @@ async function populateNutritionHistory(date) {
 
     const weekWellnessRef = doc(db, `users/${userId}/wellness`, weekId);
     const weekWellnessSnap = await getDoc(weekWellnessRef);
-    // --- FIX: Use weeklyLogDefaults here as well ---
-    const wellnessForWeek = weekWellnessSnap.exists() ? weekWellnessSnap.data() : weeklyLogDefaults;
+    const wellnessForWeek = weekWellnessSnap.exists() ? weekWellnessSnap.data() : defaultWellnessData;
 
 
     nutritionHistoryContainer.innerHTML = '';
@@ -1343,8 +1342,7 @@ async function populateSleepModal(date) {
     const weekId = getWeekId(date);
     const sleepDocRef = doc(db, `users/${getCurrentUserId()}/wellness`, weekId);
     const docSnap = await getDoc(sleepDocRef);
-    // --- FIX: Use weeklyLogDefaults here as well ---
-    const sleepDataForWeek = docSnap.exists() ? (docSnap.data().sleep || weeklyLogDefaults.sleep) : weeklyLogDefaults.sleep;
+    const sleepDataForWeek = docSnap.exists() ? (docSnap.data().sleep || defaultWellnessData.sleep) : defaultWellnessData.sleep;
 
     sleepScheduleContainer.innerHTML = '';
     const nightLabels = ["Sun/Mon", "Mon/Tue", "Tue/Wed", "Wed/Thu", "Thu/Fri", "Fri/Sat", "Sat/Sun"];
@@ -1421,10 +1419,10 @@ export async function generateAllWellnessTips() {
         }
 
         // --- 1. Gather all context ---
-        const pregnancyStartDate = new Date(wellnessData.pregnancyStartDate);
+        const pregnancyStartDate = new Date(wellnessData.pregnancyStartDate + 'T00:00:00');
         const today = new Date();
-        const diffTime = Math.abs(today - pregnancyStartDate);
-        const pregnancyWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) || 5; // Default to 5 if calculation is 0
+        const diffTime = Math.max(0, today.getTime() - pregnancyStartDate.getTime());
+        const pregnancyWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) + 1; // Default to 5 if calculation is 0
         const todayIndex = today.getDay();
         const dayKey = days[todayIndex === 0 ? 6 : todayIndex - 1];
         const currentMealPlanData = getCurrentMealPlan();
