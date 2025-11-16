@@ -7,21 +7,16 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Updated path to /css/style.css -->
     <link rel="stylesheet" href="./css/style.css">
 </head>
 <body class="antialiased text-gray-200">
 
-    <!-- Page load overlay for initial fade -->
     <div id="page-load-overlay"></div>
-    <!-- Background for rising bubbles -->
     <div id="bubble-background"></div>
 
-    <!-- Sparkle Animation Container -->
     <div id="sparkle-container" class="fixed inset-0 pointer-events-none z-[100]"></div>
 
     <div id="app-container" class="container mx-auto p-4 md:p-8 max-w-7xl">
-        <!-- New Hero Section -->
         <section id="hero-section" class="hero-section text-center py-16 md:py-24">
             <h1 class="text-4xl md:text-6xl font-bold text-white mb-4">Your Journey, Beautifully Planned</h1>
             <p class="text-lg md:text-xl text-indigo-200 max-w-3xl mx-auto mb-8">
@@ -38,41 +33,31 @@
             </div>
         </section>
 
-        <!-- Main Application (Initially hidden) -->
         <div id="main-app" class="hidden">
-            <!-- Header -->
             <header class="mb-8 flex justify-between items-center">
-                <!-- Empty div for spacing, keeps title centered -->
                 <div class="w-12 h-1"></div> 
                 
                 <h1 class="text-4xl md:text-5xl font-bold text-white text-center">Pregnancy Wellness Planner</h1>
 
-                <!-- NEW: Notification Bell -->
                 <button id="notification-bell-btn" class="icon-btn relative p-2 rounded-full hover:bg-white/20 transition-colors">
                     <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341A6.002 6.002 0 006 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
                     </svg>
-                    <!-- Notification Badge -->
                     <span id="notification-badge" class="absolute top-0 right-0 block h-4 w-4 rounded-full bg-red-600 text-white text-xs font-bold flex items-center justify-center ring-2 ring-gray-800 hidden">
                         0
                     </span>
                 </button>
             </header>
 
-            <!-- Tab Navigation -->
             <div class="flex flex-wrap justify-center gap-2 md:gap-4 mb-8">
                 <button id="tab-meal-plan" class="tab-btn active">🥣 Meal Plan</button>
                 <button id="tab-symptom-tracker" class="tab-btn">💗 Wellness</button>
-                <!-- NEW CALM SPACE TAB -->
                 <button id="tab-calm-space" class="tab-btn">🧘‍♀️ Calm Space</button>
                 <button id="tab-journey" class="tab-btn">✨ Journey</button>
             </div>
 
-            <!-- Main Content -->
             <main>
-                <!-- Meal Planner Tab -->
                 <div id="content-meal-plan" class="tab-content active">
-                    <!-- Added anim-card class -->
                     <div class="glass-card anim-card p-4 md:p-6">
                         <div class="flex items-center justify-between mb-6 px-2">
                             <h2 class="text-2xl font-bold flex items-center">
@@ -88,8 +73,7 @@
                         
                         <div class="overflow-x-auto horizontal-scroll pb-4 -mx-4 px-4 md:mx-0 md:px-0">
                             <div id="meal-plan-grid" class="grid grid-cols-8 gap-2 md:gap-4 min-w-[60rem]">
-                                <!-- Grid will be populated by JS -->
-                            </div>
+                                </div>
                         </div>
                         
                         <div id="loading-spinner" class="flex justify-center items-center h-64">
@@ -107,12 +91,10 @@
                                     🫶 Tips for the Partner
                                 </h3>
                                 <div id="partner-tips-container" class="space-y-2 text-gray-300 list-disc list-inside">
-                                    <!-- AI-generated tips will go here -->
                                     <p id="partner-tips-loader" class="text-gray-400">Loading personalized tips...</p>
                                 </div>
                                 <h4 class="text-lg font-bold mt-6 mb-2 text-red-400">To Avoid</h4>
                                 <div id="partner-avoid-container" class="space-y-2 text-gray-300 list-disc list-inside">
-                                    <!-- AI-generated avoid tips will go here -->
                                     <p id="partner-avoid-loader" class="text-gray-400">Loading personalized tips...</p>
                                 </div>
                             </div>
@@ -122,12 +104,10 @@
                                     Hydration & Snacks
                                 </h3>
                                  <div id="hydration-snacks-container" class="space-y-2 text-gray-300 list-disc list-inside">
-                                    <!-- AI-generated tips will go here -->
                                     <p id="hydration-snacks-loader" class="text-gray-400">Loading personalized tips...</p>
                                  </div>
                                 <h4 class="text-lg font-bold mt-6 mb-2 text-red-400">To Avoid</h4>
                                 <div id="hydration-avoid-container" class="space-y-2 text-gray-300 list-disc list-inside">
-                                    <!-- AI-generated avoid tips will go here -->
                                     <p id="hydration-avoid-loader" class="text-gray-400">Loading personalized tips...</p>
                                 </div>
                             </div>
@@ -135,13 +115,9 @@
                     </div>
                 </div>
 
-                <!-- Symptom Tracker Tab -->
                 <div id="content-symptom-tracker" class="tab-content">
                     <div class="space-y-8">
-                        <!-- Top Row -->
                         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                            <!-- AI Symptom Assistant -->
-                            <!-- Added anim-card class -->
                             <div class="glass-card anim-card p-4 md:p-6 lg:col-span-2">
                                 <h3 class="text-xl font-bold mb-4 flex items-center">🤖 AI Symptom Assistant</h3>
                                 <p class="text-gray-300 mb-4">Feeling something? Describe it below for gentle, non-medical suggestions.</p>
@@ -152,22 +128,17 @@
                                 </button>
                                 <div id="symptom-response" class="mt-4"></div>
                             </div>
-                            <!-- Side Cards -->
                             <div class="space-y-8">
-                               <!-- Wellness Tip Card - UPDATED -->
-                               <!-- Added anim-card class -->
                                <div id="wellness-tip-card" class="glass-card anim-card p-4 md:p-6 text-center relative overflow-hidden cursor-pointer no-hover">
                                     <div id="wellness-glow" class="wellness-glow"></div>
                                     <div class="relative z-10">
                                         <h3 class="text-xl font-bold mb-3">💡 Wellness Tip</h3>
                                         <p id="wellness-tip" class="text-gray-300 mb-3">Eat small meals every 3 hours to help with nausea and maintain energy.</p>
-                                        <!-- Fun Fact Marquee -->
                                         <div class="marquee text-xs text-indigo-200">
                                             <span id="fun-fact-content">Did you know? Your baby can already hear your voice!</span>
                                         </div>
                                     </div>
                                </div>
-                               <!-- Added anim-card class -->
                                <div id="baby-growth-card" class="glass-card anim-card p-4 md:p-6 text-center cursor-pointer hover:bg-white/10 transition-colors">
                                     <h3 class="text-xl font-bold mb-2">🍼 Baby Growth</h3>
                                     <p id="baby-growth-snapshot" class="text-gray-300 text-lg">Week 10 — baby is the size of a strawberry 🍓</p>
@@ -175,8 +146,6 @@
                             </div>
                         </div>
                         
-                        <!-- Wellness Dashboard -->
-                        <!-- Added anim-card class -->
                         <div class="glass-card anim-card p-4 md:p-6">
                             <div class="flex items-center justify-between mb-6">
                                 <h3 class="text-2xl font-bold flex items-center">📈 Wellness Dashboard</h3>
@@ -192,7 +161,6 @@
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-                                <!-- Daily Health Summary -->
                                 <div class="bg-white/5 rounded-xl p-4 space-y-3">
                                     <h4 class="font-bold text-lg">🩺 Daily Summary</h4>
                                     <div class="flex justify-between items-center text-sm"><span>Mood:</span> <span id="summary-mood" class="font-semibold text-lg"></span></div>
@@ -202,7 +170,6 @@
                                     <div id="summary-ai-insight" class="ai-insight mt-2"></div>
                                 </div>
 
-                                 <!-- Hydration Tracker -->
                                  <div class="bg-white/5 rounded-xl p-4 flex flex-col items-center justify-center">
                                     <h4 class="font-bold text-lg mb-2">💧 Hydration</h4>
                                     <div class="relative w-32 h-32">
@@ -220,7 +187,6 @@
                                     <p id="hydration-ai-insight" class="ai-insight text-center mt-2 w-full"></p>
                                 </div>
 
-                                <!-- Mood & Energy Log -->
                                 <div class="bg-white/5 rounded-xl p-4">
                                     <h4 class="font-bold text-lg mb-3">💬 Daily Logs</h4>
                                     <p class="text-sm text-gray-400 mb-2">How are you feeling today?</p>
@@ -246,14 +212,12 @@
                                     <div id="mood-ai-insight" class="ai-insight"></div>
                                 </div>
                                 
-                                <!-- Weekly Wellness Chart -->
                                 <div class="bg-white/5 rounded-xl p-4 md:col-span-2 lg:col-span-3">
                                     <h4 class="font-bold text-lg mb-2">📊 Weekly Wellness</h4>
                                     <canvas id="wellnessChart"></canvas>
                                     <div id="chart-ai-insight" class="ai-insight mt-3"></div>
                                 </div>
 
-                                <!-- Nutrition Tracker -->
                                 <div class="bg-white/5 rounded-xl p-4 lg:col-span-2">
                                     <div class="flex justify-between items-center mb-3">
                                         <h4 class="font-bold text-lg">🍽️ Nutrition Tracker</h4>
@@ -291,8 +255,7 @@
                                     <div id="nutrition-ai-insight" class="ai-insight mt-4"></div>
                                 </div>
                                 
-                                 <!-- Sleep Monitor -->
-                                <div id="sleep-monitor-card" class="bg-white/5 rounded-xl p-4 cursor-pointer hover:bg-white/10 transition-colors">
+                                 <div id="sleep-monitor-card" class="bg-white/5 rounded-xl p-4 cursor-pointer hover:bg-white/10 transition-colors">
                                     <h4 class="font-bold text-lg mb-3">😴 Sleep Monitor</h4>
                                     <div id="sleep-monitor-display" class="text-center mb-3">
                                         <p class="text-4xl font-bold"><span id="sleep-hours"></span> <span class="text-lg font-normal">hrs</span></p>
@@ -306,29 +269,18 @@
                     </div>
                 </div>
 
-                <!-- 
-                ============================================================
-                === NEW CALM SPACE TAB CONTENT (RE-ORGANIZED) ===
-                ============================================================
-                -->
                 <div id="content-calm-space" class="tab-content">
-                    <!-- CHANGED: from lg:grid-cols-3 to lg:grid-cols-2 to create a 2x2 grid -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         
-                        <!-- Item 1: Breathing Visualizer -->
                         <div class="glass-card anim-card p-4 md:p-6">
-                            <!-- UPDATE: Changed "Guided" to "Gentle" -->
                             <h3 class="text-2xl font-bold mb-4">🌬️ Gentle Breathing</h3>
                             <div id="breathing-visualizer-container" class="relative w-full h-64 md:h-96 rounded-lg overflow-hidden flex items-center justify-center transition-colors duration-1000" style="background-color: #3a506b;">
                                 <div id="breathing-orb" class="w-32 h-32 bg-white/30 rounded-full transition-transform duration-3000 ease-in-out"></div>
-                                <div id="breathing-animation-element" class=""></div> <!-- For box/wave animations -->
-                                <!-- UPDATE: Replaced #breathing-text with #breathing-visual-emoji -->
-                                <span id="breathing-visual-emoji" class="absolute text-5xl text-white z-10">🧘‍♀️</span>
+                                <div id="breathing-animation-element" class=""></div> <span id="breathing-visual-emoji" class="absolute text-5xl text-white z-10">🧘‍♀️</span>
                             </div>
                             <div class="pt-4 mt-4 border-t border-white/10">
                                 <div class="flex flex-wrap items-center justify-between gap-4">
                                     <div class="flex flex-wrap gap-2" id="breathing-exercise-buttons">
-                                        <!-- FIX: Renamed data-exercise to data-breath to match JS -->
                                         <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-breath="4-7-8">4-7-8 Breathing</button>
                                         <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-breath="box">Box Breathing</button>
                                         <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-breath="wave">Wave Breathing</button>
@@ -336,36 +288,27 @@
                                         <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-breath="energizer">Morning Energizer</button>
                                         <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-breath="sleep">Sleep Wind-Down</button>
                                     </div>
-                                    <!-- UPDATE: Removed hidden stop button. New buttons below -->
-                                </div>
+                                    </div>
                                 <div class="flex flex-wrap items-center justify-between gap-4 mt-4">
                                     
-                                    <!-- 
-                                    *** UPDATE: Replaced timer buttons with a number input ***
-                                    -->
                                     <div class="flex items-center gap-3 flex-grow">
                                         <label for="breathing-timer-input" class="font-semibold">Timer (min):</label>
                                         <input type="number" id="breathing-timer-input" class="meal-select text-sm flex-grow" placeholder="Minutes..." min="1" value="3">
                                     </div>
                                     
-                                    <!-- UPDATE: New Play/Stop buttons -->
                                     <div class="flex items-center gap-3">
                                         <button id="breathing-play-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-5 rounded-lg w-20">Play</button>
                                         <button id="breathing-stop-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-5 rounded-lg w-20 hidden">Stop</button>
                                     </div>
                                     <div class="flex items-center gap-3">
-                                        <!-- UPDATE: Removed unused breathing-voice-btn -->
-                                        <!-- FIX: Renamed id to "breathing-silent-toggle" and changed to a checkbox -->
                                         <input type="checkbox" id="breathing-silent-toggle" class="hidden">
                                         <label for="breathing-silent-toggle" class="icon-btn p-2 rounded-full cursor-pointer" title="Toggle Silent Mode (Animation Only)">
-                                            <!-- This label will now show both states -->
                                             <svg id="breathing-sound-on-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M20 4a9 9 0 010 12.728M6.717 3.342A.5.5 0 017.5 3.85v16.298a.5.5 0 01-.783.41l-4-3.5H1a1 1 0 01-1-1V7.94a1 1 0 011-1h1.717l4-3.5a.5.5 0 01.783-.088z"></path></svg>
                                             <svg id="breathing-sound-off-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.866 3.866M21 21l-3.866-3.866"></path></svg>
                                         </label>
                                         <span id="breathing-timer-display" class="font-semibold text-lg ml-2">0:00</span>
                                     </div>
                                 </div>
-                                <!-- FIX: Renamed id to "breathing-instruction" and added a placeholder for steps -->
                                 <div id="breathing-instruction" class="ai-insight mt-4">
                                     <p>Select an exercise and timer to begin.</p>
                                     <ul id="breathing-steps-list" class="list-disc list-inside mt-2"></ul>
@@ -373,13 +316,10 @@
                             </div>
                         </div>
 
-                        <!-- Item 2: Baby Connection -->
                         <div class="glass-card anim-card p-4 md:p-6">
                             <h3 class="text-2xl font-bold mb-4">💖 Baby Connection</h3>
-                            <!-- FIX: Renamed id to "meditation-visual-container" -->
                             <div id="meditation-visual-container" class="w-full h-48 bg-white/5 rounded-lg flex items-center justify-center mb-4 relative overflow-hidden">
                                 <div id="meditation-orb" class="w-24 h-24 bg-pink-400/30 rounded-full transition-all duration-3000 ease-in-out"></div>
-                                <!-- UPDATE: Removed timer, added emoji -->
                                 <span id="meditation-visual-emoji" class="absolute text-5xl z-10">💖</span>
                             </div>
                             <div class="space-y-3">
@@ -391,49 +331,36 @@
                                     <button class="btn-secondary py-3 px-2 rounded-lg text-sm" data-meditation="morning-gratitude">Morning Gratitude</button>
                                 </div>
                                 <div class="flex items-center justify-between gap-4 pt-3 border-t border-white/10">
-                                    <!-- FIX: Renamed id to "meditation-timer-input" and changed to input type="number" -->
                                     <input type="number" id="meditation-timer-input" class="meal-select text-sm flex-grow" placeholder="Minutes..." min="1" value="3">
                                     
-                                    <!-- UPDATE: Moved timer display here -->
                                     <span id="meditation-timer-display" class="font-semibold text-lg">0:00</span>
 
-                                    <!-- FIX: Renamed id to "meditation-voice-toggle" and changed to checkbox -->
                                     <input type="checkbox" id="meditation-voice-toggle" class="hidden">
                                     <label for="meditation-voice-toggle" class="icon-btn p-2 rounded-full cursor-pointer" title="Toggle Voice Guide">
-                                        <!-- This label will now show both states -->
                                         <svg id="meditation-sound-on-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M20 4a9 9 0 010 12.728M6.717 3.342A.5.5 0 017.5 3.85v16.298a.5.5 0 01-.783.41l-4-3.5H1a1 1 0 01-1-1V7.94a1 1 0 011-1h1.717l4-3.5a.5.5 0 01.783-.088z"></path></svg>
                                         <svg id="meditation-sound-off-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.866 3.866M21 21l-3.866-3.866"></path></svg>
                                     </label>
                                 </div>
-                                <!-- UPDATE: Added Stop button -->
                                 <div class="grid grid-cols-2 gap-3">
                                     <button id="start-meditation-btn" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Start Meditation</button>
                                     <button id="stop-meditation-btn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition-colors hidden">Stop Meditation</button>
                                 </div>
-                                <!-- FIX: Renamed id to "meditation-instruction" -->
                                 <div id="meditation-instruction" class="ai-insight mt-2">
                                     <p>Select a meditation type and duration to begin.</p>
                                 </div>
                             </div>
-                            <!-- FIX: Added hidden audio player -->
                             <audio id="meditation-audio-player" loop class="hidden"></audio>
                         </div>
 
-                        <!-- Item 3: Gentle Stretch & Posture -->
                         <div class="glass-card anim-card p-4 md:p-6">
-                            <!-- UPDATE: Added timer display -->
                             <div class="flex justify-between items-center mb-4">
                                 <h3 class="text-2xl font-bold">🧘‍♀️ Gentle Stretch Guide</h3>
                                 <span id="stretch-timer-display" class="font-semibold text-2xl text-purple-300">0:00</span>
                             </div>
                             <div class="flex flex-col md:flex-row gap-6">
-                                <!-- FIX: Renamed id to "stretch-visual-container" -->
                                 <div id="stretch-visual-container" class="w-full md:w-1/2 h-64 bg-white/5 rounded-lg flex items-center justify-center relative overflow-hidden">
-                                    <!-- UPDATE: This will now hold an emoji -->
                                     <div id="stretch-visual" class="transition-all duration-500 text-6xl">
-                                        <!-- JS will add emoji here -->
-                                    </div>
-                                    <!-- FIX: Renamed id to "stretch-pose-display" -->
+                                        </div>
                                     <span id="stretch-pose-display" class="absolute bottom-4 text-lg font-semibold">Select a routine</span>
                                 </div>
                                 <div class="w-full md:w-1/2">
@@ -445,21 +372,13 @@
                                         <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-stretch="sleep-wind">Sleep Wind-Down</button>
                                     </div>
                                     <div class="flex items-center justify-between gap-4 mb-4">
-                                        <!-- 
-                                            *** UPDATE: Replaced trimester selector with timer input ***
-                                        -->
                                         <input type="number" id="stretch-timer-input" class="meal-select text-sm flex-grow" placeholder="Minutes..." min="1" value="5">
 
-                                        <!-- FIX: Renamed id to "stretch-voice-toggle" and changed to checkbox -->
                                         <input type="checkbox" id="stretch-voice-toggle" class="hidden">
                                         <label for="stretch-voice-toggle" class="icon-btn p-2 rounded-full cursor-pointer" title="Toggle Voice Guide">
-                                            <!-- This label will now show both states -->
                                             <svg id="stretch-sound-on-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M20 4a9 9 0 010 12.728M6.717 3.342A.5.5 0 017.5 3.85v16.298a.5.5 0 01-.783.41l-4-3.5H1a1 1 0 01-1-1V7.94a1 1 0 011-1h1.717l4-3.5a.5.5 0 01.783-.088z"></path></svg>
                                             <svg id="stretch-sound-off-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.866 3.866M21 21l-3.866-3.866"></path></svg>
                                         </label>
-                                        <!-- 
-                                            *** UPDATE: Hid loop toggle as it's now implicit with the timer ***
-                                        -->
                                         <input type="checkbox" id="stretch-loop-toggle" class="hidden">
                                         <label for="stretch-loop-toggle" class="icon-btn p-2 rounded-full cursor-pointer hidden" title="Toggle Loop">
                                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9.5m0 5a8.001 8.001 0 0014.836 2.5m.582 5v-5h-.582"></path></svg>
@@ -468,7 +387,6 @@
                                     <div class="flex items-center justify-center gap-4" id="stretch-controls">
                                         <button id="stretch-prev-pose-btn" class="btn-secondary py-2 px-4 rounded-lg">Prev</button>
                                         <button id="stretch-play-pause-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-5 rounded-lg w-20">
-                                            <!-- FIX: Added play/pause icons -->
                                             <span id="stretch-play-icon">Play</span>
                                             <span id="stretch-pause-icon" style="display: none;">Pause</span>
                                         </button>
@@ -476,28 +394,20 @@
                                     </div>
                                 </div>
                             </div>
-                            <!-- FIX: Renamed id to "stretch-instruction" -->
                             <div id="stretch-instruction" class="ai-insight mt-4">
                                 <p>Select a routine. Stretches are filtered by trimester for your safety.</p>
                             </div>
                         </div>
                         
-                        <!-- 
-                        ============================================================
-                        === NEW PREGGY STEPS CARD ===
-                        ============================================================
-                        -->
                         <div class="glass-card anim-card p-4 md:p-6">
                             <h3 class="text-2xl font-bold mb-4">🏃‍♀️ Preggy Steps</h3>
                             
-                            <!-- Main Display -->
                             <div class="w-full h-48 bg-white/5 rounded-lg flex flex-col items-center justify-center mb-4 relative overflow-hidden">
                                 <span id="preggy-timer-display" class="font-bold text-6xl text-white" style="text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);">00:00:00</span>
                                 <span id="preggy-calories-display" class="font-semibold text-lg text-yellow-300">~0 kcal</span>
                             </div>
 
                             <div class="space-y-4">
-                                <!-- Timer Controls -->
                                 <div class="flex items-center justify-center gap-4" id="preggy-controls">
                                     <button id="preggy-play-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg w-28">
                                         Start
@@ -510,12 +420,10 @@
                                     </button>
                                 </div>
                                 
-                                <!-- Manual Input Toggle -->
                                 <div class="text-center">
                                     <button id="preggy-manual-toggle-btn" class="text-sm text-indigo-300 hover:text-white transition-colors">Log Manually Instead?</button>
                                 </div>
 
-                                <!-- Activity Selector -->
                                 <div>
                                     <label for="preggy-activity-select" class="block text-sm font-semibold mb-2">Activity Type</label>
                                     <select id="preggy-activity-select" class="meal-select text-sm">
@@ -527,7 +435,6 @@
                                     </select>
                                 </div>
 
-                                <!-- Intensity Slider -->
                                 <div>
                                     <label for="preggy-intensity-slider" class="block text-sm font-semibold mb-2">Intensity</label>
                                     <div class="flex items-center gap-3">
@@ -537,7 +444,6 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Manual Input Form (hidden by default) -->
                                 <div id="preggy-manual-form" class="hidden space-y-3 pt-3 border-t border-white/10">
                                     <div class="flex items-center gap-3">
                                         <label for="preggy-manual-input" class_alias="font-semibold">Duration (min):</label>
@@ -550,33 +456,21 @@
 
                             </div>
                         </div>
-                        <!-- === END PREGGY STEPS CARD === -->
-
-
-                        <!-- 
-                        ============================================================
-                        === ITEM 5 (was 4): Daily Summary - ADDED lg:col-span-2
-                        ============================================================
-                        -->
                         <div id="daily-summary-card" class="glass-card anim-card p-4 md:p-6 transition-colors duration-1000 lg:col-span-2">
                             <h3 class="text-2xl font-bold mb-4">📅 Daily Summary</h3>
                             
                             <div class="relative w-full h-56 flex items-center justify-center mb-4">
-                                <!-- Mood Meter Gauge -->
                                 <div id="summary-mood-gauge" class="w-56 h-56 rounded-full p-4" style="background-image: conic-gradient(from 0deg, #4d5bf9 0%, #00d4ff 0%, #1a203c 0%);">
                                     <div class="w-full h-full bg-gray-900 rounded-full flex items-center justify-center">
-                                        <!-- Central Emoji & Text -->
                                         <div class="text-center">
                                             <span id="summary-mood-emoji" class="text-6xl">😌</span>
                                             <p id="summary-mood-label" class="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">Finding Balance</p>
                                         </div>
                                     </div>
                                 </div>
-                                <!-- Sparkle/Glow Effect -->
                                 <div id="summary-glow-effect" class="absolute inset-0"></div>
                             </div>
 
-                            <!-- Activity Levels -->
                             <div classs="space-y-3 mb-4">
                                 <div class="flex justify-between items-center text-sm">
                                     <span class="font-semibold">🌬️ Breathing:</span>
@@ -590,26 +484,22 @@
                                     <span class="font-semibold">💖 Connection:</span>
                                     <span id="summary-meditation-level" class="font-bold text-lg text-pink-300">0 min</span>
                                 </div>
-                                <!-- NEW: Preggy Steps row to be added by ui.js/calm-space.js, but let's add it here for completeness -->
                                 <div class="flex justify-between items-center text-sm">
                                     <span class="font-semibold">🏃‍♀️ Movement:</span>
                                     <span id="summary-movement-level" class="font-bold text-lg text-green-300">0 min</span>
                                 </div>
                             </div>
 
-                            <!-- Positive Message -->
                             <div id="summary-positive-message" class="ai-insight text-center my-4">
                                 Your calm energy is shining bright ✨
                             </div>
 
-                            <!-- Streak & 7-Day Chart -->
                             <div class="pt-4 border-t border-white/10">
                                 <div class="flex justify-between items-center mb-3">
                                     <h4 class="font-semibold">Your 7-Day Trend</h4>
                                     <span id="summary-streak-badge" class="text-xs font-bold bg-yellow-500/30 text-yellow-300 py-1 px-3 rounded-full">🔥 0 Day Streak</span>
                                 </div>
                                 <div id="summary-bar-chart" class="flex justify-between items-end h-16 w-full gap-1">
-                                    <!-- Bars will be generated by JS -->
                                     <div class="summary-bar" style="height: 20%;" title="Mon: 😌"></div>
                                     <div class="summary-bar" style="height: 40%;" title="Tue: 🙂"></div>
                                     <div class="summary-bar" style="height: 60%;" title="Wed: 😊"></div>
@@ -623,22 +513,9 @@
 
                     </div>
                 </div>
-                <!-- === END RE-ORGANIZED CALM SPACE === -->
-
-
-                 <!-- 
-                ============================================================
-                === JOURNEY TAB ===
-                ============================================================
-                -->
                 <div id="content-journey" class="tab-content">
                     <div class="space-y-8">
 
-                        <!-- 
-                        ============================================================
-                        === FIRST ROW: CALENDAR + TODO LIST
-                        ============================================================
-                        -->
                         <div class="glass-card anim-card p-4 md:p-6">
                             <div id="calendar-header" class="flex items-center justify-between mb-4">
                                 <button id="calendar-prev-btn" class="icon-btn p-2 rounded-full hover:bg-white/20 transition-colors">
@@ -650,11 +527,9 @@
                                 </button>
                             </div>
 
-                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                 
-                                <!-- Calendar Grid -->
                                 <div id="calendar-container" class="lg:col-span-2">
-                                    <!-- Day of Week Headers -->
                                     <div class="grid grid-cols-7 gap-2 mb-2">
                                         <div class="text-center font-bold text-indigo-300 text-sm">SUN</div>
                                         <div class="text-center font-bold text-indigo-300 text-sm">MON</div>
@@ -664,28 +539,36 @@
                                         <div class="text-center font-bold text-indigo-300 text-sm">FRI</div>
                                         <div class="text-center font-bold text-indigo-300 text-sm">SAT</div>
                                     </div>
-                                    <!-- Calendar Days Grid -->
                                     <div id="calendar-grid" class="grid grid-cols-7 gap-1">
-                                        <!-- Days will be populated by journey.js -->
-                                    </div>
+                                        </div>
                                 </div>
-
-                                <!-- To-Do List Column -->
+                                
                                 <div class="lg:col-span-1 space-y-6">
-                                    <!-- To-Do List -->
                                     <div class="bg-white/5 rounded-lg p-4">
                                         <div id="todo-list-header" class="flex justify-between items-center cursor-pointer">
                                             <h3 class="text-xl font-bold">✅ To-Do List</h3>
                                             <svg id="todo-list-toggle-icon" class="w-6 h-6 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                         </div>
-                                        <div id="collapsible-todo-content" class="hidden pt-4 mt-4 border-t border-white/10">
+                                        <div id="collapsible-todo-content" class="pt-4 mt-4 border-t border-white/10">
                                             <div id="todo-list-container" class="space-y-3 max-h-72 overflow-y-auto modal-scroll pr-2">
-                                                <!-- To-do items will be populated by journey.js -->
-                                            </div>
+                                                </div>
                                         </div>
                                     </div>
-
-                                    <!-- Add New Task -->
+                                </div>
+                                
+                                <div class="lg:col-span-1 space-y-6">
+                                    <div class="bg-white/5 rounded-lg p-4">
+                                        <div id="recipe-list-header" class="flex justify-between items-center cursor-pointer">
+                                            <h3 class="text-xl font-bold">🍳 Recipes</h3>
+                                            <svg id="recipe-list-toggle-icon" class="w-6 h-6 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                        </div>
+                                        <div id="collapsible-recipe-content" class="pt-4 mt-4 border-t border-white/10"> 
+                                            <div id="recipe-list-container" class="space-y-3 max-h-72 overflow-y-auto modal-scroll pr-2">
+                                                </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="lg:col-span-2 space-y-6">
                                     <div class="bg-white/5 rounded-lg p-4">
                                         <p class="text-lg font-semibold text-white mb-3">Add New Task</p>
                                         <div class="space-y-3">
@@ -705,7 +588,6 @@
                                             </select>
                                             <input type="text" id="custom-todo-category-input" class="meal-select text-sm hidden" placeholder="Your custom category...">
                                             
-                                            <!-- NEW APPOINTMENT FIELDS -->
                                             <div id="new-appointment-fields" class="hidden space-y-3 pt-3 mt-3 border-t border-white/10">
                                                 <p class="text-sm font-semibold text-indigo-200">Appointment Details</p>
                                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -728,8 +610,6 @@
                                                     <input type="text" id="new-appointment-custom-type" class="meal-select text-sm flex-grow hidden" placeholder="Custom Appointment Type">
                                                 </div>
                                             </div>
-                                            <!-- END NEW APPOINTMENT FIELDS -->
-                                            
                                             <button id="add-todo-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Add Task</button>
                                         </div>
                                         <div class="mt-6 pt-6 border-t border-white/10 text-center">
@@ -737,8 +617,9 @@
                                             <button id="ai-generate-todos-btn" class="btn-secondary font-semibold py-2 px-5 rounded-lg">Generate Weekly To-Do List</button>
                                         </div>
                                     </div>
-                                    
-                                    <!-- AI Recipe Assistant -->
+                                </div>
+
+                                <div class="lg:col-span-2 space-y-6">
                                     <div class="bg-white/5 rounded-lg p-4">
                                         <h3 class="text-xl font-bold text-center mb-3">🧑‍🍳 AI Recipe Assistant</h3>
                                         <div class="space-y-3">
@@ -748,26 +629,15 @@
                                                 <svg id="ai-recipe-loader" class="animate-spin ml-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                                             </button>
                                             <div id="ai-recipe-results-container" class="mt-4 space-y-4">
-                                                <!-- AI Recipes will be injected here by journey.js -->
-                                            </div>
+                                                </div>
                                         </div>
                                     </div>
-                                    <!-- === END AI RECIPE ASSISTANT === -->
-
                                 </div>
-                            </div>
+                                </div>
                         </div>
 
-                        <!-- 
-                        ============================================================
-                        === SECOND ROW: OTHER CARDS (Wishes, Reflections, Names)
-                        ============================================================
-                        -->
-                        <!-- This is the grid for the other cards -->
                         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                             
-                            <!-- Card 1: Little Wishes (MOVED & UPDATED) -->
-                            <!-- UPDATED: Changed lg:col-span-1 to lg:col-span-2 -->
                             <div class="glass-card anim-card p-4 md:p-6 lg:col-span-2">
                                 <div id="wishlist-header" class="flex justify-between items-center mb-4 cursor-pointer">
                                     <h3 class="text-2xl font-bold">🎁 Little Wishes</h3>
@@ -785,43 +655,26 @@
                                         </div>
                                     </div>
 
-                                    <!-- ================================== -->
-                                    <!-- === NEW SEARCH & SORT CONTROLS === -->
-                                    <!-- ================================== -->
                                     <div class="flex flex-col md:flex-row gap-3 mb-4">
-                                        <!-- Search Bar -->
                                         <div class="relative flex-grow">
                                             <input type="text" id="wishlist-search-input" class="meal-select text-sm w-full pl-10" placeholder="Find an item...">
                                             <svg class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                                             </svg>
                                         </div>
-                                        <!-- Sort Dropdown -->
                                         <select id="wishlist-sort-select" class="meal-select text-sm md:w-48">
                                             <option value="default">Sort by... (Default)</option>
                                             <option value="category">Sort by Category</option>
                                             <option value="foodType">Sort by Food Type</option>
                                         </select>
                                     </div>
-                                    <!-- ================================== -->
-                                    <!-- === END SEARCH & SORT CONTROLS === -->
-                                    <!-- ================================== -->
-                                    
-                                    <!-- 
-                                        UPDATED WISHLIST CONTAINER:
-                                        - Removed space-y-3 (cards will have their own margin/padding)
-                                        - Added grid layout classes
-                                        - Kept max-h, overflow, etc. for scrolling
-                                    -->
                                     <div id="wishlist-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[28rem] overflow-y-auto modal-scroll pr-2 mb-4">
-                                        <!-- Wishlist cards will be rendered here by journey.js -->
-                                    </div>
+                                        </div>
                                 </div>
                                 
                                 <div class="pt-4 border-t border-white/10 space-y-3">
                                     <input type="text" id="new-wish-item" class="meal-select text-sm" placeholder="Item name (e.g., Baby Monitor)">
                                     <select id="new-wish-category" class="meal-select text-sm">
-                                        <!-- ADDED EMOJIS -->
                                         <option value="Baby Care">🍼 Baby Care</option>
                                         <option value="Nursery">🧸 Nursery</option>
                                         <option value="Hospital Bag">👜 Hospital Bag</option>
@@ -832,7 +685,6 @@
                                     </select>
                                     <input type="text" id="custom-category-input" class="meal-select text-sm hidden" placeholder="Your custom category...">
                                     
-                                    <!-- NEW FOOD FIELDS CONTAINER -->
                                     <div id="new-wish-food-fields" class="hidden space-y-3 pt-3 mt-3 border-t border-white/10">
                                         <p class="text-sm font-semibold text-indigo-200">Food Details</p>
                                         <select id="new-wish-food-type" class="meal-select text-sm">
@@ -842,7 +694,6 @@
                                             <option value="Vege">🥦 Vege</option>
                                             <option value="Snack">🥨 Snack</option>
                                             <option value="Diary">🧀 Diary</option>
-                                            <!-- ADDED Grain and Soup -->
                                             <option value="Grain">🍚 Grain</option> 
                                             <option value="Soup">🍲 Soup</option>
                                             <option value="Dog">🐶 Dog Food</option>
@@ -851,16 +702,11 @@
                                         <label for="new-wish-food-expiry" class="text-sm text-gray-300 -mb-2 block">Expiration Date:</label>
                                         <input type="date" id="new-wish-food-expiry" class="date-input text-sm">
                                     </div>
-                                    <!-- END NEW FOOD FIELDS CONTAINER -->
-
                                     <div class="flex gap-2">
                                         <input type="text" id="new-wish-price" class="meal-select text-sm w-1/2" placeholder="Price ($)">
                                         <input type="text" id="new-wish-link" class="meal-select text-sm w-1/2" placeholder="Store Link">
                                     </div>
 
-                                    <!-- ================================== -->
-                                    <!-- === NEW WISH QUANTITY INPUT === -->
-                                    <!-- ================================== -->
                                     <div>
                                         <label for="new-wish-quantity" class="text-sm text-gray-300 mb-1 block">Quantity</label>
                                         <div class="flex items-center gap-2">
@@ -869,10 +715,6 @@
                                             <button type="button" id="new-wish-quantity-plus" class="quantity-btn">+</button>
                                         </div>
                                     </div>
-                                    <!-- ================================== -->
-                                    <!-- === END NEW WISH QUANTITY INPUT === -->
-                                    <!-- ================================== -->
-
                                     <button id="add-wish-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Add Wish</button>
                                 </div>
                                 <div class="mt-6 text-center">
@@ -884,13 +726,8 @@
                                 </div>
                                 <div id="ai-wish-suggestions-container" class="mt-4 space-y-3"></div>
                             </div>
-                            <!-- END OF LITTLE WISHES -->
-
-                            <!-- NEW: Column wrapper for stacking Reflections and Name Generator -->
                             <div class="lg:col-span-1 space-y-8">
 
-                                <!-- Card 2: Tiny Reflections (MOVED) -->
-                                <!-- REMOVED lg:col-span-1 -->
                                 <div class="glass-card anim-card p-4 md:p-6">
                                     <div id="reflection-header" class="flex justify-between items-center mb-4 cursor-pointer">
                                         <h3 class="text-2xl font-bold">📝 Tiny Reflections</h3>
@@ -911,12 +748,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <!-- END OF TINY REFLECTIONS -->
-                            
-                                <!-- Card 3: AI BABY NAME GENERATOR CARD (MOVED) -->
-                                <!-- REMOVED lg:col-span-1 -->
                                 <div id="dream-name-card" class="glass-card anim-card p-4 md:p-6">
-                                    <!-- Header -->
                                     <div class="flex justify-between items-center mb-4">
                                         <h3 class="text-2xl font-bold">🍼 Dream Name</h3>
                                         <button id="name-favorites-toggle-btn" class="btn-secondary text-sm font-semibold py-2 px-4 rounded-lg">
@@ -924,18 +756,14 @@
                                         </button>
                                     </div>
 
-                                    <!-- Collapsible Favorites List -->
                                     <div id="name-favorites-container" class="hidden mb-6 pt-4 border-t border-white/10">
                                         <h4 class="font-bold text-lg mb-3">Saved Names</h4>
                                         <div id="name-favorites-list" class="space-y-2 max-h-48 overflow-y-auto modal-scroll pr-2">
                                             <p class="text-gray-400 text-sm text-center">Your favorite names will appear here.</p>
-                                            <!-- Favorite names will be populated by JS -->
-                                        </div>
+                                            </div>
                                     </div>
 
-                                    <!-- Generator Form -->
                                     <div class="space-y-4">
-                                        <!-- Gender Selector -->
                                         <div>
                                             <label class="block text-sm font-semibold mb-2">Gender</label>
                                             <div id="name-gender-selector" class="flex flex-wrap gap-2">
@@ -945,9 +773,7 @@
                                             </div>
                                         </div>
 
-                                        <!-- Filters Grid -->
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <!-- Origin / Language -->
                                             <div>
                                                 <label for="name-origin-select" class="block text-sm font-semibold mb-2">Origin / Language</label>
                                                 <select id="name-origin-select" class="meal-select text-sm">
@@ -964,7 +790,6 @@
                                                 <input type="text" id="name-origin-custom" class="meal-select text-sm mt-2 hidden" placeholder="Type custom origin...">
                                             </div>
 
-                                            <!-- Style / Mood -->
                                             <div>
                                                 <label for="name-style-select" class="block text-sm font-semibold mb-2">Style / Mood</label>
                                                 <select id="name-style-select" class="meal-select text-sm">
@@ -981,13 +806,11 @@
                                             </div>
                                         </div>
 
-                                        <!-- Meaning Filter -->
                                         <div>
                                             <label for="name-meaning-input" class="block text-sm font-semibold mb-2">Meaning / Vibe</label>
                                             <input type="text" id="name-meaning-input" class="meal-select text-sm" placeholder="e.g., 'peace', 'strong', 'light'">
                                         </div>
 
-                                        <!-- Syllable Count -->
                                         <div>
                                             <label class="block text-sm font-semibold mb-2">Syllables</label>
                                             <div id="name-syllable-selector" class="flex flex-wrap gap-3">
@@ -998,7 +821,6 @@
                                             </div>
                                         </div>
 
-                                        <!-- Action Buttons -->
                                         <div class="grid grid-cols-2 gap-3 pt-4 border-t border-white/10">
                                             <button id="name-random-btn" class="btn-secondary font-semibold py-3 px-4 rounded-lg text-sm">
                                                 🔀 Randomize
@@ -1010,40 +832,26 @@
                                         </div>
                                     </div>
 
-                                    <!-- Results Display -->
                                     <div id="name-results-container" class="mt-6 pt-6 border-t border-white/10 space-y-3">
-                                        <!-- AI-generated names will appear here -->
                                         <p class="text-gray-400 text-sm text-center">Your name suggestions will appear here.</p>
                                     </div>
                                     
-                                    <!-- Generate Again Button (appears after first results) -->
                                     <button id="name-generate-again-btn" class="w-full btn-secondary font-semibold py-2 px-4 rounded-lg mt-4 hidden">
                                         🔁 Generate Again
                                     </button>
                                 </div>
-                                <!-- END OF DREAM NAME -->
-
+                                </div>
                             </div>
-                            <!-- END: Column wrapper -->
-                            
-                        </div>
                     </div>
                 </div>
-                <!-- === END JOURNEY TAB === -->
-
-            </main>
+                </main>
         </div>
     </div>
 
-    <!-- Modals -->
-    <!-- UPDATED z-index for all modals from z-30/40/50 to z-[110] or higher to appear above sparkle container (z-[100]) -->
-    
-    <!-- NEW: Notification Modal -->
     <div id="notification-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-[120] p-4">
         <div id="notification-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-2xl font-bold text-white">Notifications</h3>
-                <!-- We will make this button functional later -->
                 <button id="notification-clear-all-btn" class="icon-btn" title="Clear All Notifications">
                     <svg class="w-6 h-6 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -1052,7 +860,6 @@
             </div>
             
             <div id="notification-list-container" class="space-y-3 max-h-80 overflow-y-auto modal-scroll pr-2 mb-6">
-                <!-- Notifications will be injected here by ui.js -->
                 <p id="no-notifications-message" class="text-center text-gray-400">No new notifications.</p>
             </div>
             
@@ -1129,7 +936,6 @@
         <div id="ai-meal-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300 modal-scroll">
              <h3 id="ai-modal-title" class="text-2xl font-bold mb-4 text-center">AI Meal Plan for Monday</h3>
              
-             <!-- Initial View: Craving Input -->
              <div id="ai-meal-initial-view" class="my-6">
                 <p class="text-center text-gray-300 mb-4">What are you craving today? Or let our AI suggest a balanced plan for you.</p>
                 <textarea id="craving-input" class="symptom-input" placeholder="e.g., something savory, like chicken soup..."></textarea>
@@ -1141,7 +947,6 @@
                 </div>
                 <button id="ai-suggestion-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg transition-colors">Get AI Suggestion</button>
              </div>
-             <!-- Loading/Display View -->
              <div id="ai-meal-plan-container" class="my-6 min-h-[200px] hidden">
                 <div id="ai-meal-loader" class="flex flex-col justify-center items-center h-full">
                     <svg class="animate-spin h-8 w-8 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
@@ -1150,7 +955,6 @@
                 <div id="ai-meal-plan-display" class="hidden space-y-3"></div>
                 <div id="ai-meal-feedback" class="ai-insight mt-4 hidden"></div>
              </div>
-             <!-- Action Buttons -->
              <div id="ai-meal-buttons" class="flex gap-4 hidden">
                 <button id="ai-meal-regenerate-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg transition-colors">Generate Different</button>
                 <button id="ai-meal-save-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Save to Meal Plan</button>
@@ -1178,7 +982,6 @@
         <div id="reflection-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
             <h3 id="reflection-modal-title" class="text-2xl font-bold mb-4 text-center">New Reflection</h3>
             <input type="text" id="reflection-title-input" class="meal-select mb-4" placeholder="Note Title...">
-            <!-- Image Preview -->
             <div id="reflection-image-preview-container" class="mb-4 hidden">
                 <img id="reflection-image-preview" src="" alt="Reflection image preview" class="max-h-48 w-auto mx-auto rounded-lg">
             </div>
@@ -1192,7 +995,6 @@
                         <button data-color="yellow" class="w-8 h-8 rounded-full bg-yellow-500/50 border-2 border-transparent"></button>
                     </div>
                 </div>
-                <!-- New Image Icon Button -->
                 <button id="add-reflection-image-btn" class="icon-btn" title="Add Image from Link">
                     <svg class="w-6 h-6 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                 </button>
@@ -1217,14 +1019,12 @@
                     <option value="Baby">🍼 Baby Prep</option>
                     <option value="Home">🏡 Home</option>
                     <option value="Appointment">🗓️ Appointment</option>
-                    <!-- NEW RECIPE CATEGORY -->
                     <option value="Recipes">🍳 Recipes</option>
                     <option value="Reminder">💬 Reminder</option>
                     <option value="Custom">✨ Custom</option>
                 </select>
                 <input type="text" id="edit-custom-todo-category-input" class="meal-select text-sm hidden" placeholder="Your custom category...">
             
-                <!-- NEW EDIT APPOINTMENT FIELDS -->
                 <div id="edit-appointment-fields" class="hidden space-y-3 pt-3 mt-3 border-t border-white/10">
                     <p class="text-sm font-semibold text-indigo-200">Appointment Details</p>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -1247,9 +1047,7 @@
                         <input type="text" id="edit-appointment-custom-type" class="meal-select text-sm flex-grow hidden" placeholder="Custom Appointment Type">
                     </div>
                 </div>
-                <!-- END NEW EDIT APPOINTMENT FIELDS -->
-
-            </div>
+                </div>
             <div class="flex gap-4 mt-6">
                 <button id="edit-todo-modal-cancel-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg">Cancel</button>
                 <button id="edit-todo-modal-save-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg">Save Changes</button>
@@ -1279,13 +1077,11 @@
             </div>
              <p class="text-center text-gray-300 mb-4">A summary of your nutrient intake for the selected week.</p>
              <div id="nutrition-history-container" class="space-y-3 max-h-80 overflow-y-auto modal-scroll pr-2 my-4">
-                <!-- JS will populate this -->
-             </div>
+                </div>
              <button id="nutrition-history-close-btn" class_alias="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors mt-6">Close</button>
         </div>
     </div>
     
-    <!-- Sleep Modal -->
     <div id="sleep-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-[110] p-4">
         <div id="sleep-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
              <div class="flex items-center justify-between mb-4">
@@ -1302,8 +1098,7 @@
             </div>
              <p class="text-gray-300 mb-4 text-center">Log your sleep and wake up times for each night.</p>
              <div id="sleep-schedule-container" class="space-y-3 max-h-60 overflow-y-auto modal-scroll pr-2 my-4">
-                <!-- JS will populate this -->
-             </div>
+                </div>
              <div class="flex gap-4 mt-6">
                 <button id="sleep-modal-cancel-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg transition-colors">Cancel</button>
                 <button id="sleep-modal-save-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Save Schedule</button>
@@ -1311,12 +1106,10 @@
         </div>
     </div>
 
-    <!-- Edit Wellness Day Modal -->
     <div id="edit-day-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-[110] p-4">
         <div id="edit-day-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
             <h3 id="edit-day-modal-title" class="text-2xl font-bold mb-6 text-center">Edit Log for Wednesday</h3>
             <div class="space-y-6">
-                <!-- Mood -->
                 <div>
                     <p class="text-center font-semibold mb-2">Mood</p>
                     <div id="edit-mood-log-buttons" class="flex justify-around">
@@ -1327,7 +1120,6 @@
                          <button class="text-4xl hover:scale-125 transition-transform mood-btn" data-mood="🥰">🥰</button>
                     </div>
                 </div>
-                <!-- Energy -->
                 <div>
                     <p class="text-center font-semibold mb-2">Energy Level</p>
                     <div id="edit-energy-log-buttons" class="flex justify-around">
@@ -1338,7 +1130,6 @@
                         <button class="text-3xl hover:scale-125 transition-transform energy-btn p-1 rounded-full" data-energy="5">⚡️</button>
                     </div>
                 </div>
-                <!-- Water -->
                 <div>
                     <p class="text-center font-semibold mb-2">Water Intake (glasses)</p>
                     <div class="flex items-center justify-center gap-4">
@@ -1355,7 +1146,6 @@
         </div>
     </div>
     
-    <!-- New Image Link Modal -->
     <div id="image-link-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-[120] p-4">
         <div id="image-link-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-md transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
             <h3 class="text-2xl font-bold mb-4 text-center">Add Image Link</h3>
@@ -1368,38 +1158,19 @@
         </div>
     </div>
 
-    <!-- New Baby Message Modal - UPDATED -->
     <div id="baby-message-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-[110] p-4">
-        <!-- 
-          UPDATES:
-          - Removed 'glass-card' and 'text-center' from this div.
-          - Added 'chat-bubble-style' for the light, transparent text message look.
-          - Made 'max-w-md' for a bit more space.
-        -->
         <div id="baby-message-modal-content" class="chat-bubble-style p-6 md:p-8 rounded-lg w-full max-w-md transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
-             <!-- 
-               UPDATES:
-               - Title changed to "Mini Piggy" with animated emoji (Task 2 & 3).
-               - Aligned to the start (left).
-             -->
              <h3 class="text-xl font-bold mb-4 flex items-center justify-start gap-2">
                  Mini Piggy <span class="baby-emoji-animate">👶</span>
              </h3>
-             <!-- 
-               UPDATES:
-               - Text color changed for readability on light background.
-             -->
              <div id="baby-message-content" class="text-lg min-h-[80px] flex items-center justify-start relative">
                 Hi Mama, I’m just a tiny speck now, but I already feel your love 💕
              </div>
-             <!-- Close button removed (Task 1) -->
-        </div>
+             </div>
     </div>
 
-    <!-- CALM SPACE: Mindful Reflection Modal -->
     <div id="mindful-reflection-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-[110] p-4">
         <div id="mindful-reflection-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-md transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
-            <!-- FIX: Added id "mindful-reflection-title" -->
             <h3 id="mindful-reflection-title" class="text-2xl font-bold mb-4 text-center">How do you feel?</h3>
             <p class="text-center text-gray-300 mb-6">Take a moment to check in after your session.</p>
             <div class="flex justify-around mb-6" id="mindful-mood-buttons">
@@ -1409,25 +1180,20 @@
                 <button class="text-4xl hover:scale-125 transition-transform mindful-mood-btn" data-mood="4">😊</button>
                 <button class="text-4xl hover:scale-125 transition-transform mindful-mood-btn" data-mood="5">🥰</button>
             </div>
-            <!-- FIX: Renamed id to "mindful-reflection-textarea" -->
-            <!-- UPDATED: Added 'hidden' class to remove the text area -->
             <textarea id="mindful-reflection-textarea" class="symptom-input min-h-[100px] mb-4 hidden" placeholder="A quick thought... (optional)"></textarea>
             <div class="flex gap-4">
-                <!-- FIX: Renamed id to "mindful-reflection-close-btn" -->
                 <button id="mindful-reflection-close-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg">Skip</button>
                 <button id="mindful-reflection-save-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg">Save</button>
             </div>
         </div>
     </div>
     
-    <!-- NEW EDIT WISH MODAL -->
     <div id="edit-wish-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-[110] p-4">
         <div id="edit-wish-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
             <h3 class="text-2xl font-bold mb-4 text-center">Edit Wish</h3>
             <div class="space-y-3">
                 <input type="text" id="edit-wish-item" class="meal-select text-sm" placeholder="Item name">
                 <select id="edit-wish-category" class="meal-select text-sm">
-                     <!-- ADDED EMOJIS -->
                      <option value="Baby Care">🍼 Baby Care</option>
                      <option value="Nursery">🧸 Nursery</option>
                      <option value="Hospital Bag">👜 Hospital Bag</option>
@@ -1447,7 +1213,6 @@
                          <option value="Vege">🥦 Vege</option>
                          <option value="Snack">🥨 Snack</option>
                          <option value="Diary">🧀 Diary</option>
-                         <!-- ADDED Grain and Soup -->
                          <option value="Grain">🍚 Grain</option> I
                          <option value="Soup">🍲 Soup</option>
                          <option value="Dog">🐶 Dog Food</option>
@@ -1462,9 +1227,6 @@
                      <input type="text" id="edit-wish-link" class="meal-select text-sm w-1/2" placeholder="Store Link">
                  </div>
 
-                 <!-- ================================== -->
-                 <!-- === NEW WISH QUANTITY INPUT (EDIT) === -->
-                 <!-- ================================== -->
                  <div>
                     <label for="edit-wish-quantity" class="text-sm text-gray-300 mb-1 block">Quantity</label>
                     <div class="flex items-center gap-2">
@@ -1473,11 +1235,7 @@
                         <button type="button" id="edit-wish-quantity-plus" class="quantity-btn">+</button>
                     </div>
                  </div>
-                 <!-- ================================== -->
-                 <!-- === END NEW WISH QUANTITY INPUT (EDIT) === -->
-                 <!-- ================================== -->
-
-            </div>
+                 </div>
             <div class="flex gap-4 mt-6">
                 <button id="edit-wish-modal-cancel-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg">Cancel</button>
                 <button id="edit-wish-modal-save-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg">Save Changes</button>
@@ -1486,16 +1244,13 @@
     </div>
 
 
-    <!-- Updated paths to /js/ folder -->
     <script type="module" src="./js/main.js"></script>
     <script type="module" src="./js/ui.js"></script>
     <script type="module" src="./js/auth.js"></script>
     <script type="module" src="./js/firebase.js"></script>
-    <!-- FIX: Corrected typo in script tag -->
     <script type="module" src="./js/meal-planner.js"></script>
     <script type="module" src="./js/wellness.js"></script>
     <script type="module" src="./js/journey.js"></script>
-    <!-- NEW SCRIPT TAG -->
     <script type="module" src="./js/calm-space.js"></script>
 </body>
 </html>
