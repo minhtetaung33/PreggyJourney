@@ -130,6 +130,13 @@ export const cacheDomElements = () => {
     elements.collapsibleTodoContent = document.getElementById('collapsible-todo-content');
     elements.todoListContainer = document.getElementById('todo-list-container');
     
+    // === MODIFICATION START: Task 2 & 3 - Recipe List Elements ===
+    elements.recipeListHeader = document.getElementById('recipe-list-header');
+    elements.recipeListToggleIcon = document.getElementById('recipe-list-toggle-icon');
+    elements.collapsibleRecipeContent = document.getElementById('collapsible-recipe-content');
+    elements.recipeListContainer = document.getElementById('recipe-list-container');
+    // === MODIFICATION END: Task 2 & 3 - Recipe List Elements ===
+
     // To-Do Inputs
     elements.addTodoBtn = document.getElementById('add-todo-btn');
     elements.newTodoInput = document.getElementById('new-todo-input');
@@ -488,39 +495,33 @@ const formatTime = (timeString) => {
  * Opens the notification modal.
  */
 const openNotificationModal = () => {
-    // --- DEBUGGING ---
     console.log("openNotificationModal called!");
     if (elements.notificationModal) {
         console.log("Modal element found, attempting to show...");
         elements.notificationModal.classList.remove('hidden');
-        // Use setTimeout to allow the display change to register before starting animation
         setTimeout(() => {
             elements.notificationModal.classList.add('active');
             console.log("Modal 'active' class added.");
-        }, 10); // Small delay
+        }, 10); 
     } else {
         console.error("Notification modal element not found in 'elements'.");
     }
-    // --- END DEBUGGING ---
 };
 
 /**
  * Closes the notification modal.
  */
 const closeNotificationModal = () => {
-    // --- DEBUGGING ---
     console.log("closeNotificationModal called!");
     if (elements.notificationModal) {
         elements.notificationModal.classList.remove('active');
-        // Wait for animation to finish before hiding
         setTimeout(() => {
             elements.notificationModal.classList.add('hidden');
             console.log("Modal 'hidden' class added.");
-        }, 300); // Corresponds to transition duration in CSS
+        }, 300); 
     } else {
         console.error("Notification modal element not found in 'elements'.");
     }
-     // --- END DEBUGGING ---
 };
 
 /**
