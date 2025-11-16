@@ -8,12 +8,15 @@ import { elements, updateNotificationUI } from './ui.js';
 // === State Variables ===
 let todosRef, wishesRef, reflectionsRef, favoriteNamesRef;
 let unsubscribeTodos, unsubscribeWishes, unsubscribeReflections, unsubscribeFavoriteNames;
+// === MODIFICATION START: Task 2 - Separate Recipes State ===
 let currentTodos = [], currentWishes = [], currentReflections = [], currentFavoriteNames = [];
+let currentRecipeTodos = []; // New state for Recipes tasks
+// === MODIFICATION END: Task 2 - Separate Recipes State ===
 let wellnessDataForJourney = {};
 let activeReflectionId = null;
 let activeColor = 'pink';
 let activeTodoId = null;
-let activeWishId = null; // Added for edit wish modal
+let activeWishId = null; 
 let showAllReflections = false;
 let activeReflectionImageUrl = null;
 
@@ -31,17 +34,14 @@ let selectedNameOrigin = '';
 let selectedNameStyle = '';
 let selectedNameMeaning = '';
 let selectedNameSyllables = '';
-let currentNameSuggestions = []; // Store the latest suggestions
+let currentNameSuggestions = []; 
 
 // === NEW CALENDAR STATE ===
-// Initialize to the user's local "today"
-// We get the user's timezone, respecting their GMT-7 request by using their local system's setting.
 const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-let currentCalendarDate = new Date(); // This will be in the user's local timezone
+let currentCalendarDate = new Date(); 
 
 // === Helper function to get the start of a given date in the user's local timezone ===
 function getStartOfDayInLocalTZ(date) {
-    // Creates a new date object representing midnight *in the local timezone*
     const localDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
     return localDate;
 }
@@ -53,17 +53,17 @@ export function initializeJourney(userId, initialWellnessData) {
     todosRef = collection(db, `users/${userId}/todos`);
     wishesRef = collection(db, `users/${userId}/wishes`);
     reflectionsRef = collection(db, `users/${userId}/reflections`);
-    favoriteNamesRef = collection(db, `users/${userId}/favoriteNames`); // NEW
+    favoriteNamesRef = collection(db, `users/${userId}/favoriteNames`); 
 
     // Load data
     loadTodos();
     loadWishes();
     loadReflections();
-    loadFavoriteNames(); // NEW
+    loadFavoriteNames(); 
 
     // Setup listeners
     setupEventListeners();
-    setupNameGeneratorListeners(); // NEW
+    setupNameGeneratorListeners(); 
 
     // NEW: Render initial calendar
     renderCalendar();
@@ -76,25 +76,75 @@ function loadTodos() {
     if(unsubscribeTodos) unsubscribeTodos();
     const q = query(todosRef, orderBy("createdAt", "desc"));
     unsubscribeTodos = onSnapshot(q, (snapshot) => {
-        currentTodos = [];
-        snapshot.forEach(doc => currentTodos.push({ id: doc.id, ...doc.data() }));
+        // === MODIFICATION START: Task 2 - Separate Recipes Logic ===
+        const allTasks = [];
+        snapshot.forEach(doc => allTasks.push({ id: doc.id, ...doc.data() }));
+
+        // Separate tasks into To-Dos and Recipes
+        currentTodos = allTasks.filter(todo => todo.category !== 'Recipes');
+        currentRecipeTodos = allTasks.filter(todo => todo.category === 'Recipes');
+
+        // Sort To-Dos based on due date (Task 1)
+        currentTodos.sort(sortTodosByDueDate);
+
         renderTodos(currentTodos);
-        renderCalendar(); // NEW: Re-render calendar to update task markers
-        checkNotifications(); // NEW: Check notifications when todos load
+        renderRecipeTodos(currentRecipeTodos); // Render the new Recipes list
+        // === MODIFICATION END: Task 2 - Separate Recipes Logic ===
+        
+        renderCalendar(); 
+        checkNotifications(); 
     });
 }
+
+// === MODIFICATION START: Task 1 - Todo Sorting Helper Function ===
+/**
+ * Custom sorting function for To-Dos. Prioritizes:
+ * 1. Uncompleted tasks over completed tasks.
+ * 2. Tasks with a due date over tasks without.
+ * 3. Nearest due date first.
+ * 4. Most recently created for tie-breaking.
+ * @param {Object} a 
+ * @param {Object} b 
+ * @returns {number}
+ */
+function sortTodosByDueDate(a, b) {
+    // 1. Uncompleted tasks first
+    if (a.completed !== b.completed) {
+        return a.completed - b.completed; 
+    }
+
+    const dateA = a.date ? new Date(a.date + 'T00:00:00').getTime() : Infinity;
+    const dateB = b.date ? new Date(b.date + 'T00:00:00').getTime() : Infinity;
+
+    // 2. Tasks with dates first (if both are uncompleted or both completed)
+    const hasDateA = dateA !== Infinity;
+    const hasDateB = dateB !== Infinity;
+    
+    if (hasDateA && !hasDateB) return -1;
+    if (!hasDateA && hasDateB) return 1;
+
+    // 3. Sort by date (nearest first, i.e., smaller number first)
+    if (dateA !== dateB) {
+        return dateA - dateB;
+    }
+
+    // 4. Fallback: Sort by creation date (newest first)
+    const createdAtA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
+    const createdAtB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
+    return createdAtB - createdAtA; 
+}
+// === MODIFICATION END: Task 1 - Todo Sorting Helper Function ===
+
 
 function loadWishes() {
     if (!wishesRef) return;
     if(unsubscribeWishes) unsubscribeWishes();
-    // No longer ordering by 'createdAt' here, will handle sorting in renderWishes
     const q = query(wishesRef);
     unsubscribeWishes = onSnapshot(q, (snapshot) => {
         currentWishes = [];
         snapshot.forEach(doc => currentWishes.push({ id: doc.id, ...doc.data() }));
-        // Pass current search/sort state when data updates
         renderWishes(currentWishes, currentWishlistSearchTerm, currentWishlistSortBy);
-        checkNotifications(); // NEW: Check notifications when wishes load
+        checkNotifications(); 
     });
 }
 
@@ -109,30 +159,23 @@ function loadReflections() {
     });
 }
 
-// NEW: Load Favorite Names
 function loadFavoriteNames() {
     if (!favoriteNamesRef) return;
     if (unsubscribeFavoriteNames) unsubscribeFavoriteNames();
-    // Order by name for consistency
     const q = query(favoriteNamesRef, orderBy("name"));
     unsubscribeFavoriteNames = onSnapshot(q, (snapshot) => {
         currentFavoriteNames = [];
         snapshot.forEach(doc => currentFavoriteNames.push({ id: doc.id, ...doc.data() }));
         renderFavoriteNames(currentFavoriteNames);
-        // Re-render suggestions if they exist to update heart icons
         if (currentNameSuggestions.length > 0) {
             renderNameSuggestions(currentNameSuggestions);
         }
     });
 }
 
-// Original render functions (renderTodos, renderReflections, etc.) are assumed to be here
-// ... (Keep existing renderTodos, renderReflections, renderAiWishSuggestions, renderAITodoSuggestions, renderAIRecipes)
-
 const formatDate = (dateString) => {
     if (!dateString) return '';
-    const date = new Date(dateString + 'T00:00:00'); // Adjust for timezone issues
-    // UPDATED FORMAT
+    const date = new Date(dateString + 'T00:00:00'); 
     return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
@@ -147,22 +190,23 @@ const formatTime = (timeString) => {
 function renderTodos(todos) {
     if (!elements.todoListContainer) return;
     elements.todoListContainer.innerHTML = '';
+    // === MODIFICATION START: Task 2 - Empty state check (only non-recipes) ===
     if (todos.length === 0) {
         elements.todoListContainer.innerHTML = `<p class="text-center text-gray-400">No tasks yet. Add one below!</p>`;
         return;
     }
-    // ADDED 'Recipes'
+    // === MODIFICATION END: Task 2 - Empty state check ===
+
     const categoryIcons = { Health: '🧘‍♀️', Baby: '🍼', Home: '🏡', Reminder: '💬', Appointment: '🗓️', Recipes: '🍳' };
 
     todos.forEach(todo => {
         const item = document.createElement('div');
-        item.id = `todo-item-${todo.id}`; // <-- ADDED THIS ID
+        item.id = `todo-item-${todo.id}`; 
         item.className = `todo-item flex items-start justify-between p-3 bg-white/5 rounded-lg ${todo.completed ? 'completed' : ''}`;
 
         const displayDate = formatDate(todo.date);
         const displayTime = formatTime(todo.time);
 
-        // NEW: Check if it's an Appointment
         if (todo.category === 'Appointment' && todo.appointment) {
             const appt = todo.appointment;
             const apptType = appt.customType || appt.type || '';
@@ -198,8 +242,6 @@ function renderTodos(todos) {
                 </div>
             `;
         } else {
-            // Original HTML for other categories
-            // NEW: Added 'whitespace-pre-wrap' to the task text <p> tag to respect newlines in recipes
             item.innerHTML = `
                 <div class="flex items-start flex-1 min-w-0">
                     <label for="todo-${todo.id}" class="flex items-center cursor-pointer pt-1">
@@ -247,32 +289,103 @@ function renderTodos(todos) {
     });
 }
 
+// === MODIFICATION START: Task 2 - New function to render Recipes Todos ===
 /**
- * Renders the wish list based on search term and sort criteria.
- * @param {Array} wishes - The full array of wish items from Firestore.
- * @param {string} [searchTerm=''] - The current search term.
- * @param {string} [sortBy='default'] - The current sort criteria ('default', 'category', 'foodType').
+ * Renders the Recipes To-Do list.
+ * @param {Array} todos - The array of todo items where category is 'Recipes'.
  */
-function renderWishes(wishes, searchTerm = '', sortBy = 'default') {
-    elements.wishlistContainer.innerHTML = ''; // Clear previous content
+function renderRecipeTodos(todos) {
+    if (!elements.recipeListContainer) return;
+    elements.recipeListContainer.innerHTML = '';
 
-    // 1. Filter based on search term (case-insensitive)
+    // Sort Recipes: Uncompleted first, then newest first (using standard creation date sort)
+    todos.sort((a, b) => {
+        if (a.completed !== b.completed) {
+            return a.completed - b.completed; 
+        }
+        const dateA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
+        const dateB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
+        return dateB - dateA; 
+    });
+
+    if (todos.length === 0) {
+        elements.recipeListContainer.innerHTML = `<p class="text-center text-gray-400 p-3">No recipes saved yet.</p>`;
+        return;
+    }
+
+    const categoryIcon = '🍳';
+
+    todos.forEach(todo => {
+        const item = document.createElement('div');
+        item.id = `todo-item-${todo.id}`; 
+        item.className = `todo-item flex items-start justify-between p-3 bg-white/5 rounded-lg ${todo.completed ? 'completed' : ''}`;
+
+        const displayDate = formatDate(todo.date);
+        const displayTime = formatTime(todo.time);
+
+        item.innerHTML = `
+            <div class="flex items-start flex-1 min-w-0">
+                <label for="recipe-todo-${todo.id}" class="flex items-center cursor-pointer pt-1">
+                    <input type="checkbox" id="recipe-todo-${todo.id}" class="hidden todo-checkbox">
+                    <div class="w-6 h-6 border-2 border-purple-400 rounded-md mr-3 flex-shrink-0 flex items-center justify-center check-label">
+                        ${todo.completed ? '<svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>' : ''}
+                    </div>
+                </label>
+                <div class="flex-1">
+                    <p class="font-semibold break-words whitespace-pre-wrap">${todo.text}</p>
+                    <div class="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs text-gray-400 mt-1">
+                        <span>${categoryIcon} Recipes</span>
+                        ${displayDate ? `<span>🗓️ ${displayDate}</span>` : ''}
+                        ${displayTime ? `<span>⏰ ${displayTime}</span>` : ''}
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center flex-shrink-0">
+                <button class="icon-btn edit-todo-btn"><svg class="w-5 h-5 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L14.732 3.732z"></path></svg></button>
+                <button class="icon-btn delete-todo-btn ml-1"><svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            </div>
+        `;
+
+        const toggleTodo = async () => {
+             if (!todosRef) return;
+             const todoDocRef = doc(db, `users/${getCurrentUserId()}/todos`, todo.id);
+             await updateDoc(todoDocRef, { completed: !todo.completed });
+        };
+
+        item.querySelector('label').addEventListener('click', (e) => {
+            e.preventDefault();
+            toggleTodo();
+        });
+
+        item.querySelector('.edit-todo-btn').addEventListener('click', () => openEditTodoModal(todo));
+        item.querySelector('.delete-todo-btn').addEventListener('click', async () => {
+            if (!todosRef) return;
+            const todoDocRef = doc(db, `users/${getCurrentUserId()}/todos`, todo.id);
+            await deleteDoc(todoDocRef);
+        });
+
+        elements.recipeListContainer.appendChild(item);
+    });
+}
+// === MODIFICATION END: Task 2 - New function to render Recipes Todos ===
+
+
+function renderWishes(wishes, searchTerm = '', sortBy = 'default') {
+    elements.wishlistContainer.innerHTML = ''; 
+
     const lowerSearchTerm = searchTerm.toLowerCase();
     const filteredWishes = wishes.filter(wish => 
         wish.item.toLowerCase().includes(lowerSearchTerm)
     );
 
-    // 2. Sort the filtered wishes
     const sortedWishes = filteredWishes.sort((a, b) => {
         const aNeeded = (a.purchasedCount || 0) === 0;
         const bNeeded = (b.purchasedCount || 0) === 0;
 
-        // Primary sort: "Not bought" items first
         if (aNeeded !== bNeeded) {
-            return bNeeded - aNeeded; // true (1) comes before false (0)
+            return bNeeded - aNeeded; 
         }
 
-        // Secondary sort: Based on dropdown selection
         if (sortBy === 'category') {
             const categoryCompare = (a.category || '').localeCompare(b.category || '');
             if (categoryCompare !== 0) return categoryCompare;
@@ -281,23 +394,19 @@ function renderWishes(wishes, searchTerm = '', sortBy = 'default') {
             const bFoodType = b.foodDetails?.type || '';
             const foodTypeCompare = aFoodType.localeCompare(bFoodType);
             if (foodTypeCompare !== 0) return foodTypeCompare;
-            // If food types are the same (or non-food), fall back to category
             const categoryCompare = (a.category || '').localeCompare(b.category || '');
             if (categoryCompare !== 0) return categoryCompare;
         }
 
-        // Tertiary sort (fallback for default or if secondary criteria are equal): Newest first
         const dateA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
         const dateB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
         return dateB - dateA;
     });
 
-    // 3. Render the sorted and filtered list
     if (sortedWishes.length === 0) {
         elements.wishlistContainer.innerHTML = `<p class="text-center text-gray-400 md:col-span-2">No wishes found ${searchTerm ? 'matching your search' : 'yet. Add one below!'}</p>`;
-        // Reset progress bar for empty list - based on the *original* full list
         updateWishlistProgress(wishes);
-        return; // Exit function
+        return; 
     }
 
     const foodIcons = {
@@ -314,12 +423,10 @@ function renderWishes(wishes, searchTerm = '', sortBy = 'default') {
         const quantity = wish.quantity || 1;
         const purchasedCount = wish.purchasedCount || 0;
         const isComplete = purchasedCount >= quantity;
-        const isNeeded = purchasedCount === 0; // Use this for styling
+        const isNeeded = purchasedCount === 0; 
 
-        // Adjust card style based on 'isNeeded'
         card.className = `wish-item-card ${isNeeded ? '' : 'purchased'}`;
 
-        // Build Food Details HTML
         let foodDetailsHtml = '';
         if (wish.category === 'Food' && wish.foodDetails) {
             const icon = foodIcons[wish.foodDetails.type] || '🥕';
@@ -327,14 +434,11 @@ function renderWishes(wishes, searchTerm = '', sortBy = 'default') {
             foodDetailsHtml = `<p class="item-food-details mt-1">${icon} ${wish.foodDetails.type || 'Food'}${expiryHtml}</p>`;
         }
 
-        // Build Category Display
         const displayCategory = `${categoryDisplayEmojis[wish.category] || '✨'} ${wish.category}`;
         
-        // Calculate card height/size (simple example based on name length)
-        // You can make this more complex based on other inputs too
-        let sizeClass = 'h-auto'; // Default auto height
+        let sizeClass = 'h-auto'; 
         if (wish.item.length > 30) {
-            sizeClass = 'min-h-[160px]'; // Slightly taller for long names
+            sizeClass = 'min-h-[160px]'; 
         }
         card.classList.add(sizeClass);
 
@@ -381,14 +485,9 @@ function renderWishes(wishes, searchTerm = '', sortBy = 'default') {
         elements.wishlistContainer.appendChild(card);
     });
 
-    // 4. Update progress bar based on the *original* full list
     updateWishlistProgress(wishes);
 }
 
-/**
- * Helper function to calculate and update the wishlist progress bar.
- * @param {Array} allWishes - The unfiltered, unsorted list of all wishes.
- */
 function updateWishlistProgress(allWishes) {
     let totalTarget = 0;
     let totalPurchased = 0;
@@ -421,7 +520,6 @@ function renderReflections(reflections) {
         const item = document.createElement('div');
         item.className = `reflection-note relative p-4 rounded-lg border-l-4 note-color-${note.color} cursor-pointer flex flex-col`;
 
-        // Conditionally add image
         const imageHtml = note.imageUrl ?
             `<img src="${note.imageUrl}" alt="Reflection image" class="mb-3 rounded-md object-cover h-40 w-full">` : '';
 
@@ -455,7 +553,7 @@ function renderReflections(reflections) {
 
 function renderAiWishSuggestions(suggestions) {
     const container = document.getElementById('ai-wish-suggestions-container');
-    container.innerHTML = ''; // Clear loading spinner or old results
+    container.innerHTML = ''; 
 
     if (!suggestions || suggestions.length === 0) {
         container.innerHTML = `<p class="text-center text-gray-400 p-2">No suggestions found.</p>`;
@@ -493,7 +591,6 @@ function renderAiWishSuggestions(suggestions) {
             if (categoryOption) {
                 elements.newWishCategory.value = suggestion.category;
                 elements.customCategoryInput.classList.add('hidden');
-                // NEW: Show/hide food fields based on AI category
                 if (suggestion.category === 'Food') {
                     elements.newWishFoodFields.classList.remove('hidden');
                 } else {
@@ -503,9 +600,9 @@ function renderAiWishSuggestions(suggestions) {
                 elements.newWishCategory.value = 'Custom';
                 elements.customCategoryInput.classList.remove('hidden');
                 elements.customCategoryInput.value = suggestion.category;
-                elements.newWishFoodFields.classList.add('hidden'); // Hide for custom
+                elements.newWishFoodFields.classList.add('hidden'); 
             }
-            elements.newWishQuantityInput.value = 1; // NEW: Reset quantity
+            elements.newWishQuantityInput.value = 1; 
             elements.newWishItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
             elements.newWishItem.focus();
         });
@@ -513,9 +610,8 @@ function renderAiWishSuggestions(suggestions) {
     });
 }
 
-// NEW: Renders the AI To-Do suggestions with "Add" buttons
 function renderAITodoSuggestions(tasks, container) {
-    container.innerHTML = ''; // Clear loading spinner or old results
+    container.innerHTML = ''; 
 
     if (!tasks || tasks.length === 0) {
         container.innerHTML = `<p class="text-center text-gray-400 p-2">No suggestions found.</p>`;
@@ -549,10 +645,9 @@ function renderAITodoSuggestions(tasks, container) {
     });
 }
 
-// NEW: Renders the AI recipe results
 function renderAIRecipes(recipes) {
     const container = elements.aiRecipeResultsContainer;
-    container.innerHTML = ''; // Clear loading spinner or old results
+    container.innerHTML = ''; 
 
     if (!recipes || recipes.length === 0) {
         container.innerHTML = `<p class="text-center text-gray-400 p-2">Sorry, I couldn't find any recipes for that.</p>`;
@@ -561,7 +656,7 @@ function renderAIRecipes(recipes) {
 
     recipes.forEach(recipe => {
         const card = document.createElement('div');
-        card.className = 'glass-card p-4 bg-white/5'; // A little internal card
+        card.className = 'glass-card p-4 bg-white/5'; 
 
         const stepsHtml = recipe.steps.map(step => `<li class="ml-4 list-decimal">${step}</li>`).join('');
         const stepsForTodo = recipe.steps.map((step, i) => `${i + 1}. ${step}`).join('\n');
@@ -577,7 +672,6 @@ function renderAIRecipes(recipes) {
             </button>
         `;
 
-        // Store the data on the button itself for the event listener
         const button = card.querySelector('.add-recipe-btn');
         button.dataset.recipeName = recipe.recipeName;
         button.dataset.recipeSteps = stepsForTodo;
@@ -586,7 +680,6 @@ function renderAIRecipes(recipes) {
     });
 }
 
-// NEW: Render Favorite Names List
 function renderFavoriteNames(favNames) {
     elements.nameFavoritesList.innerHTML = '';
     if (favNames.length === 0) {
@@ -604,19 +697,12 @@ function renderFavoriteNames(favNames) {
             elements.nameFavoritesList.appendChild(item);
         });
     }
-    // Update favorite count on button - REMOVED "My Favorites" text
     elements.nameFavoritesToggleBtn.textContent = `❤️ (${favNames.length})`;
 }
 
 
 // === NEW CALENDAR RENDERING LOGIC ===
 
-/**
- * Checks if two Date objects represent the same day (ignoring time).
- * @param {Date} d1 - First date.
- * @param {Date} d2 - Second date.
- * @returns {boolean} True if they are the same day.
- */
 function isSameDay(d1, d2) {
     if (!d1 || !d2) return false;
     return d1.getFullYear() === d2.getFullYear() &&
@@ -624,80 +710,60 @@ function isSameDay(d1, d2) {
            d1.getDate() === d2.getDate();
 }
 
-/**
- * Changes the displayed month on the calendar.
- * @param {number} offset - -1 to go to the previous month, 1 for the next month.
- */
 function changeMonth(offset) {
-    // Set the date to the 1st of the month to avoid issues with different day counts
     currentCalendarDate.setDate(1); 
     currentCalendarDate.setMonth(currentCalendarDate.getMonth() + offset);
     renderCalendar();
 }
 
-/**
- * Renders the calendar grid for the `currentCalendarDate` month.
- */
 function renderCalendar() {
-    if (!elements.calendarGrid || !elements.calendarMonthYear) return; // Exit if elements aren't cached yet
+    if (!elements.calendarGrid || !elements.calendarMonthYear) return; 
 
-    // Add animation class
-    elements.calendarGrid.classList.remove('calendar-grid-anim'); // Remove old one
-    void elements.calendarGrid.offsetWidth; // Trigger reflow
-    elements.calendarGrid.classList.add('calendar-grid-anim'); // Add new one
+    elements.calendarGrid.classList.remove('calendar-grid-anim'); 
+    void elements.calendarGrid.offsetWidth; 
+    elements.calendarGrid.classList.add('calendar-grid-anim'); 
 
-    // 1. Get info about the current month
     const year = currentCalendarDate.getFullYear();
-    const month = currentCalendarDate.getMonth(); // 0-11
+    const month = currentCalendarDate.getMonth(); 
     
-    // Update header: "October 2025"
     elements.calendarMonthYear.textContent = new Date(year, month).toLocaleDateString(undefined, {
         month: 'long',
         year: 'numeric',
-        timeZone: userTimeZone // Ensure header matches local timezone
+        timeZone: userTimeZone 
     });
 
-    // 2. Find start/end dates
     const firstDayOfMonth = new Date(year, month, 1);
     const lastDayOfMonth = new Date(year, month + 1, 0);
-    const firstDayOfWeek = firstDayOfMonth.getDay(); // 0 (Sun) - 6 (Sat)
+    const firstDayOfWeek = firstDayOfMonth.getDay(); 
     
-    // 3. Find "today" in the user's local timezone
     const today = getStartOfDayInLocalTZ(new Date());
 
-    // 4. Clear grid and render days
-    elements.calendarGrid.innerHTML = ''; // Clear old days
+    elements.calendarGrid.innerHTML = ''; 
 
-    // 5. Create days from the previous month
     for (let i = 0; i < firstDayOfWeek; i++) {
         const day = document.createElement('div');
         day.className = 'calendar-day other-month';
         elements.calendarGrid.appendChild(day);
     }
 
-    // 6. Create days for the current month
     for (let dayNum = 1; dayNum <= lastDayOfMonth.getDate(); dayNum++) {
         const day = document.createElement('div');
         day.className = 'calendar-day';
 
         const date = new Date(year, month, dayNum);
         
-        // Check if this is "today"
         if (isSameDay(date, today)) {
             day.classList.add('is-today');
         }
 
-        // Find tasks for this day
-        // This is the date string we'll use for comparison
         const isoDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
         
-        // Create task markers
         let markersHtml = '';
-        const tasksForDay = currentTodos.filter(todo => todo.date === isoDate);
+        const allTasks = [...currentTodos, ...currentRecipeTodos]; 
+        const tasksForDay = allTasks.filter(todo => todo.date === isoDate);
 
         if (tasksForDay.length > 0) {
             markersHtml = '<div class="task-markers">';
-            // Use .slice(0, 6) to show a max of 6 markers
             tasksForDay.slice(0, 6).forEach(task => {
                 const categoryClass = (task.category || 'Default').replace(/[^a-zA-Z0-9]/g, '');
                 markersHtml += `<div class="task-marker task-marker-${categoryClass}" title="${task.text}"></div>`;
@@ -712,18 +778,15 @@ function renderCalendar() {
             </div>
         `;
         
-        // --- NEW CLICK LISTENER ---
         if (tasksForDay.length > 0) {
             day.classList.add('cursor-pointer');
             day.addEventListener('click', () => handleCalendarDayClick(isoDate));
         }
-        // --- END NEW CLICK LISTENER ---
 
         elements.calendarGrid.appendChild(day);
     }
 
-    // 7. Create days for the next month (to fill the grid)
-    const remainingDays = 42 - (firstDayOfWeek + lastDayOfMonth.getDate()); // 6 weeks * 7 days
+    const remainingDays = 42 - (firstDayOfWeek + lastDayOfMonth.getDate()); 
      for (let i = 0; i < remainingDays; i++) {
         const day = document.createElement('div');
         day.className = 'calendar-day other-month';
@@ -735,7 +798,6 @@ function renderCalendar() {
 // === Event Listener Setup ===
 
 function setupEventListeners() {
-    // Use cached elements
     elements.addTodoBtn.addEventListener('click', async () => {
         const text = elements.newTodoInput.value.trim();
         let category = elements.newTodoCategory.value;
@@ -745,7 +807,6 @@ function setupEventListeners() {
 
         if (!text || !category || !todosRef) return;
 
-        // NEW: Create data payload
         const todoData = {
             text,
             category,
@@ -755,7 +816,6 @@ function setupEventListeners() {
             createdAt: serverTimestamp()
         };
 
-        // NEW: Add appointment data if category is correct
         if (category === 'Appointment') {
             let apptType = elements.newAppointmentType.value;
             if (apptType === 'Custom') {
@@ -775,7 +835,6 @@ function setupEventListeners() {
 
         await addDoc(todosRef, todoData);
 
-        // Reset fields
         elements.newTodoInput.value = '';
         elements.newTodoDate.value = '';
         elements.newTodoTime.value = '';
@@ -783,7 +842,6 @@ function setupEventListeners() {
         elements.customTodoCategoryInput.value = '';
         elements.customTodoCategoryInput.classList.add('hidden');
 
-        // NEW: Reset appointment fields
         elements.newAppointmentFields.classList.add('hidden');
         elements.newAppointmentFname.value = '';
         elements.newAppointmentLname.value = '';
@@ -796,16 +854,13 @@ function setupEventListeners() {
     });
 
     elements.aiGenerateTodosBtn.addEventListener('click', async () => {
-        // NEW: Create and cache the suggestions container if it doesn't exist
         let aiTodoSuggestionsContainer = document.getElementById('ai-todo-suggestions-container');
         if (!aiTodoSuggestionsContainer) {
             aiTodoSuggestionsContainer = document.createElement('div');
             aiTodoSuggestionsContainer.id = 'ai-todo-suggestions-container';
             aiTodoSuggestionsContainer.className = 'mt-4 space-y-3';
-            // Insert it after the button's parent container
             elements.aiGenerateTodosBtn.parentElement.insertAdjacentElement('afterend', aiTodoSuggestionsContainer);
 
-            // Add a delegated listener to this new container
             aiTodoSuggestionsContainer.addEventListener('click', async (e) => {
                 if (e.target.classList.contains('add-ai-todo-btn')) {
                     const button = e.target;
@@ -832,20 +887,18 @@ function setupEventListeners() {
         const pregnancyWeek = Math.floor(Math.abs(new Date() - new Date(wellnessDataForJourney.pregnancyStartDate)) / (1000 * 60 * 60 * 24 * 7));
         const systemPrompt = `You are a helpful assistant. Generate a to-do list of 4-5 tasks for week ${pregnancyWeek} of pregnancy. Categorize each task as 'Health', 'Baby', 'Home', or 'Reminder'. Your response MUST be ONLY a valid JSON array of objects, where each object has "task" (string) and "category" (string) keys.`;
         const userQuery = `Generate a weekly to-do list for week ${pregnancyWeek}.`;
-        const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; // API Key will be injected by the environment
+        const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; 
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
         const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json" } };
         try {
             const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             if (!response.ok) throw new Error(`API error: ${response.statusText}`);
             const result = await response.json(); 
-            // Check for potential errors in the response structure
             if (!result.candidates || !result.candidates[0] || !result.candidates[0].content || !result.candidates[0].content.parts || !result.candidates[0].content.parts[0].text) {
                 throw new Error("Invalid API response structure");
             }
             const data = JSON.parse(result.candidates[0].content.parts[0].text);
 
-            // NEW: Render suggestions instead of auto-adding
             renderAITodoSuggestions(data, aiTodoSuggestionsContainer);
 
         } catch (error) {
@@ -860,21 +913,19 @@ function setupEventListeners() {
         if (category === 'Custom') {
             category = elements.customCategoryInput.value.trim();
         }
-        const quantityVal = parseInt(elements.newWishQuantityInput.value, 10) || 1; // NEW: Get quantity
+        const quantityVal = parseInt(elements.newWishQuantityInput.value, 10) || 1; 
         if (!item || !wishesRef || !category) return;
 
-        // NEW: Create wish data object
         const wishData = {
             item,
             category: category,
             price: elements.newWishPrice.value.trim(),
             link: elements.newWishLink.value.trim(),
-            quantity: quantityVal, // NEW: Save quantity
-            purchasedCount: 0, // NEW: Initialize purchased count
+            quantity: quantityVal, 
+            purchasedCount: 0, 
             createdAt: serverTimestamp()
         };
 
-        // NEW: Add food details if category is Food
         if (category === 'Food') {
             wishData.foodDetails = {
                 type: elements.newWishFoodType.value,
@@ -882,15 +933,14 @@ function setupEventListeners() {
             };
         }
 
-        await addDoc(wishesRef, wishData); // Use the new data object
+        await addDoc(wishesRef, wishData); 
 
         elements.newWishItem.value = elements.newWishPrice.value = elements.newWishLink.value = '';
-        elements.newWishQuantityInput.value = 1; // NEW: Reset quantity
+        elements.newWishQuantityInput.value = 1; 
         elements.customCategoryInput.value = '';
         elements.newWishCategory.value = 'Baby Care';
         elements.customCategoryInput.classList.add('hidden');
 
-        // NEW: Reset food fields
         elements.newWishFoodFields.classList.add('hidden');
         elements.newWishFoodType.value = '';
         elements.newWishFoodExpiry.value = '';
@@ -908,10 +958,9 @@ function setupEventListeners() {
         </div>`;
 
         const pregnancyWeek = Math.floor(Math.abs(new Date() - new Date(wellnessDataForJourney.pregnancyStartDate)) / (1000 * 60 * 60 * 24 * 7));
-        // MODIFIED: Added 'Food' to the list of categories
         const systemPrompt = `You are a helpful shopping assistant for a pregnant woman. Based on the user's request and their pregnancy week (${pregnancyWeek}), use the Google Search tool to find 3-4 real, relevant products. For each item, you MUST extract the actual product name, a relevant category (from "Baby Care", "Nursery", "Hospital Bag", "Health", "Postpartum", "Food"), price, and a working URL to the product page. Your response MUST be ONLY a valid JSON array of objects, with no other text or formatting. Each object must have these keys: "productName", "category", "price", "productUrl".`;
         const userQuery = `My request: "${prompt}". I am in week ${pregnancyWeek} of pregnancy.`;
-        const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; // API Key will be injected by the environment
+        const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; 
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
         const payload = {
             contents: [{ parts: [{ text: userQuery }] }],
@@ -922,12 +971,10 @@ function setupEventListeners() {
             const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             if (!response.ok) throw new Error(`API error: ${response.statusText}`);
             const result = await response.json();
-            // Check for potential errors in the response structure
             if (!result.candidates || !result.candidates[0] || !result.candidates[0].content || !result.candidates[0].content.parts || !result.candidates[0].content.parts[0].text) {
                 throw new Error("Invalid API response structure");
             }
             let jsonString = result.candidates[0].content.parts[0].text;
-            // Attempt to clean potential markdown
             jsonString = jsonString.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
             const data = JSON.parse(jsonString);
             renderAiWishSuggestions(data);
@@ -940,17 +987,16 @@ function setupEventListeners() {
     elements.newWishCategory.addEventListener('change', () => {
         if (elements.newWishCategory.value === 'Custom') {
             elements.customCategoryInput.classList.remove('hidden');
-            elements.newWishFoodFields.classList.add('hidden'); // Hide food fields
+            elements.newWishFoodFields.classList.add('hidden'); 
         } else if (elements.newWishCategory.value === 'Food') {
             elements.newWishFoodFields.classList.remove('hidden');
-            elements.customCategoryInput.classList.add('hidden'); // Hide custom input
+            elements.customCategoryInput.classList.add('hidden'); 
         } else {
             elements.customCategoryInput.classList.add('hidden');
             elements.newWishFoodFields.classList.add('hidden');
         }
     });
 
-    // NEW: Listeners for Add Wish quantity buttons
     setupQuantityButtons(elements.newWishQuantityInput, elements.newWishQuantityMinusBtn, elements.newWishQuantityPlusBtn);
 
     elements.newTodoCategory.addEventListener('change', () => {
@@ -959,15 +1005,15 @@ function setupEventListeners() {
         } else {
             elements.customTodoCategoryInput.classList.add('hidden');
         }
-        // NEW: Show/hide appointment fields
+        // === MODIFICATION START: Task 2 - Appointment & Recipe logic for form ===
         if (elements.newTodoCategory.value === 'Appointment') {
             elements.newAppointmentFields.classList.remove('hidden');
         } else {
             elements.newAppointmentFields.classList.add('hidden');
         }
+        // === MODIFICATION END: Task 2 - Appointment & Recipe logic for form ===
     });
 
-    // NEW: Show/hide custom appointment type fields
     elements.newAppointmentType.addEventListener('change', () => {
         if (elements.newAppointmentType.value === 'Custom') {
             elements.newAppointmentCustomType.classList.remove('hidden');
@@ -991,7 +1037,6 @@ function setupEventListeners() {
         } else {
             elements.editCustomTodoCategoryInput.classList.add('hidden');
         }
-        // NEW: Show/hide edit appointment fields
         if (elements.editTodoCategory.value === 'Appointment') {
             elements.editAppointmentFields.classList.remove('hidden');
         } else {
@@ -1004,12 +1049,19 @@ function setupEventListeners() {
         elements.wishlistToggleIcon.classList.toggle('rotate-180');
     });
 
-    // === NEW TODO COLLAPSE LISTENER ===
     elements.todoListHeader.addEventListener('click', () => {
         elements.collapsibleTodoContent.classList.toggle('hidden');
         elements.todoListToggleIcon.classList.toggle('rotate-180');
     });
-    // === END NEW TODO COLLAPSE LISTENER ===
+
+    // === MODIFICATION START: Task 2 - Recipes Collapse Listener ===
+    if (elements.recipeListHeader) {
+        elements.recipeListHeader.addEventListener('click', () => {
+            elements.collapsibleRecipeContent.classList.toggle('hidden');
+            elements.recipeListToggleIcon.classList.toggle('rotate-180');
+        });
+    }
+    // === MODIFICATION END: Task 2 - Recipes Collapse Listener ===
 
     elements.reflectionHeader.addEventListener('click', () => {
         elements.collapsibleReflectionContent.classList.toggle('hidden');
@@ -1041,7 +1093,7 @@ function setupEventListeners() {
             title,
             content,
             color: activeColor,
-            imageUrl: activeReflectionImageUrl // Add the image URL
+            imageUrl: activeReflectionImageUrl 
         };
 
         if (activeReflectionId) {
@@ -1064,7 +1116,7 @@ function setupEventListeners() {
         const notesToSummarize = currentReflections.slice(0, 3).map(n => `Title: ${n.title}\nContent: ${n.content}`).join('\n\n---\n\n');
         const systemPrompt = "You are an empathetic assistant. Summarize the user's reflection notes into one short, insightful, and emotional paragraph. Focus on the underlying feelings and themes.";
         const userQuery = `Here are my last few notes:\n${notesToSummarize}`;
-        const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; // API Key will be injected by the environment
+        const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; 
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
         const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }};
 
@@ -1076,7 +1128,6 @@ function setupEventListeners() {
             const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             if (!response.ok) throw new Error(`API error: ${response.statusText}`);
             const result = await response.json();
-            // Check for potential errors in the response structure
             if (!result.candidates || !result.candidates[0] || !result.candidates[0].content || !result.candidates[0].content.parts || !result.candidates[0].content.parts[0].text) {
                 throw new Error("Invalid API response structure");
             }
@@ -1096,7 +1147,6 @@ function setupEventListeners() {
     elements.editTodoModalCancelBtn.addEventListener('click', closeEditTodoModal);
     elements.editTodoModal.addEventListener('click', e => e.target === elements.editTodoModal && closeEditTodoModal());
 
-    // --- New Event Listeners for Image Link Modal ---
     const openImageLinkModal = () => {
         elements.imageLinkModal.classList.remove('hidden');
         setTimeout(() => elements.imageLinkModal.classList.add('active'), 10);
@@ -1120,19 +1170,17 @@ function setupEventListeners() {
         closeImageLinkModal();
     });
 
-    // --- NEW Event Listeners for AI Recipe Assistant ---
     elements.aiGenerateRecipeBtn.addEventListener('click', async () => {
         const prompt = elements.aiRecipePrompt.value.trim();
         if (!prompt) return;
 
-        // Show loader
         elements.aiRecipeBtnText.textContent = 'Finding Recipes...';
         elements.aiRecipeLoader.classList.remove('hidden');
         elements.aiGenerateRecipeBtn.disabled = true;
 
         const systemPrompt = `You are a world-class, professional chef, like Gordon Ramsay, but you are also encouraging and helpful, not rude. A pregnant user is asking for recipe ideas. Provide three (3) distinct, healthy, and pregnancy-safe recipes based on their craving. For each recipe, provide a 'recipeName', a 'chefPersona' (e.g., 'Gordon Ramsay', 'Massimo Bottura', 'Clare Smyth'), and 'steps' as an array of strings. Your response MUST be ONLY a valid JSON object with a single key 'recipes' which is an array of these three recipe objects. Example: { "recipes": [ { "recipeName": "...", "chefPersona": "...", "steps": ["Step 1...", "Step 2..."] } ] }`;
         const userQuery = `My craving: "${prompt}"`;
-        const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; // API Key will be injected by the environment
+        const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; 
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
         const payload = {
             contents: [{ parts: [{ text: userQuery }] }],
@@ -1144,7 +1192,6 @@ function setupEventListeners() {
             const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             if (!response.ok) throw new Error(`API error: ${response.statusText}`);
             const result = await response.json();
-             // Check for potential errors in the response structure
              if (!result.candidates || !result.candidates[0] || !result.candidates[0].content || !result.candidates[0].content.parts || !result.candidates[0].content.parts[0].text) {
                 throw new Error("Invalid API response structure");
             }
@@ -1154,14 +1201,12 @@ function setupEventListeners() {
             console.error("AI Recipe generation failed:", error);
             elements.aiRecipeResultsContainer.innerHTML = `<p class="text-center text-red-300 p-4">Sorry, I couldn't find recipes for that right now.</p>`;
         } finally {
-            // Hide loader
             elements.aiRecipeBtnText.textContent = 'Find Recipes';
             elements.aiRecipeLoader.classList.add('hidden');
             elements.aiGenerateRecipeBtn.disabled = false;
         }
     });
 
-    // Delegated event listener for adding recipes to to-do
     elements.aiRecipeResultsContainer.addEventListener('click', async (e) => {
         if (e.target.classList.contains('add-recipe-btn')) {
             const button = e.target;
@@ -1182,13 +1227,11 @@ function setupEventListeners() {
         }
     });
 
-    // --- NEW Event Listeners for Edit Wish Modal ---
     elements.editWishModalSaveBtn.addEventListener('click', handleSaveWish);
     elements.editWishModalCancelBtn.addEventListener('click', closeEditWishModal);
     elements.editWishModal.addEventListener('click', e => e.target === elements.editWishModal && closeEditWishModal());
-    // NEW: Listeners for Edit Wish quantity buttons
     setupQuantityButtons(elements.editWishQuantityInput, elements.editWishQuantityMinusBtn, elements.editWishQuantityPlusBtn);
-    elements.editWishCategory.addEventListener('change', () => { // Listener for category change *inside* edit modal
+    elements.editWishCategory.addEventListener('change', () => { 
         if (elements.editWishCategory.value === 'Custom') {
             elements.editCustomCategoryInput.classList.remove('hidden');
             elements.editWishFoodFields.classList.add('hidden');
@@ -1201,64 +1244,58 @@ function setupEventListeners() {
         }
     });
 
-    // --- NEW Event Listeners for Wishlist Search and Sort ---
     elements.wishlistSearchInput.addEventListener('input', (e) => {
         currentWishlistSearchTerm = e.target.value;
-        // Re-render the list with the current data, search term, and sort order
         renderWishes(currentWishes, currentWishlistSearchTerm, currentWishlistSortBy);
     });
 
     elements.wishlistSortSelect.addEventListener('change', (e) => {
         currentWishlistSortBy = e.target.value;
-        // Re-render the list with the current data, search term, and sort order
         renderWishes(currentWishes, currentWishlistSearchTerm, currentWishlistSortBy);
     });
 
-    // NEW: Add listener for Clear All Notifications button
     if (elements.notificationClearAllBtn) {
         elements.notificationClearAllBtn.addEventListener('click', clearAllNotifications);
     }
 
-    // === NEW CALENDAR LISTENERS ===
     elements.calendarPrevBtn.addEventListener('click', () => changeMonth(-1));
     elements.calendarNextBtn.addEventListener('click', () => changeMonth(1));
 }
 
-// === NEW FUNCTION: Handle clicks on calendar days ===
 /**
  * Handles clicks on a calendar day, finds the first to-do for that day,
  * opens the list, and scrolls to the item.
  * @param {string} isoDate - The date string (YYYY-MM-DD) of the clicked day.
  */
 function handleCalendarDayClick(isoDate) {
-    if (!currentTodos || !elements.collapsibleTodoContent || !elements.todoListToggleIcon) return;
-
-    // Find the first to-do item for that day
-    const firstTodo = currentTodos.find(todo => todo.date === isoDate);
+    const allTasks = [...currentTodos, ...currentRecipeTodos];
+    
+    const firstTodo = allTasks.find(todo => todo.date === isoDate);
     if (!firstTodo) return;
 
-    // Find the corresponding DOM element
-    const todoElement = document.getElementById(`todo-item-${firstTodo.id}`);
-    if (!todoElement) return;
-
-    // Open the to-do list if it's closed
-    if (elements.collapsibleTodoContent.classList.contains('hidden')) {
-        elements.collapsibleTodoContent.classList.remove('hidden');
-        elements.todoListToggleIcon.classList.add('rotate-180');
+    let collapsibleContent, toggleIcon;
+    if (firstTodo.category === 'Recipes') {
+        collapsibleContent = elements.collapsibleRecipeContent;
+        toggleIcon = elements.recipeListToggleIcon;
+    } else {
+        collapsibleContent = elements.collapsibleTodoContent;
+        toggleIcon = elements.todoListToggleIcon;
     }
 
-    // Scroll the item into view
+    const todoElement = document.getElementById(`todo-item-${firstTodo.id}`);
+    if (!todoElement || !collapsibleContent || !toggleIcon) return;
+
+    if (collapsibleContent.classList.contains('hidden')) {
+        collapsibleContent.classList.remove('hidden');
+        toggleIcon.classList.add('rotate-180');
+    }
+
     todoElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-    // Apply the highlight animation
-    // Remove any existing class first
     todoElement.classList.remove('todo-item-highlight');
-    // Force a browser reflow
     void todoElement.offsetWidth;
-    // Add the class to trigger the animation
     todoElement.classList.add('todo-item-highlight');
 
-    // Remove the class after the animation (1.5s)
     setTimeout(() => {
         todoElement.classList.remove('todo-item-highlight');
     }, 1500);
@@ -1267,7 +1304,6 @@ function handleCalendarDayClick(isoDate) {
 
 // === Helper & Action Functions (Original + Name Gen) ===
 
-// NEW: Helper function to manage quantity input fields
 /**
  * Sets up listeners for a quantity input block (+ and - buttons).
  * @param {HTMLInputElement} inputElement - The number input element.
@@ -1297,7 +1333,6 @@ function setupQuantityButtons(inputElement, minusBtn, plusBtn) {
     });
 }
 
-// NEW: Helper function to update a wish's purchased count
 /**
  * Updates the 'purchasedCount' for a wish in Firestore.
  * @param {object} wish - The wish object.
@@ -1307,10 +1342,9 @@ async function handleUpdateWishPurchasedCount(wish, newCount) {
     if (!wishesRef) return;
 
     const quantity = wish.quantity || 1;
-    // Clamp newCount between 0 and quantity
     const clampedCount = Math.max(0, Math.min(newCount, quantity));
 
-    if (clampedCount === (wish.purchasedCount || 0)) return; // No change needed
+    if (clampedCount === (wish.purchasedCount || 0)) return; 
 
     const wishDocRef = doc(db, `users/${getCurrentUserId()}/wishes`, wish.id);
     try {
@@ -1327,8 +1361,9 @@ function openEditTodoModal(todo) {
     elements.editTodoDate.value = todo.date || '';
     elements.editTodoTime.value = todo.time || '';
 
-   // NEW: Added 'Recipes'
+   // === MODIFICATION START: Task 2 - Standard categories updated ===
    const standardCategories = ['Health', 'Baby', 'Home', 'Reminder', 'Appointment', 'Recipes'];
+   // === MODIFICATION END: Task 2 - Standard categories updated ===
     if (standardCategories.includes(todo.category)) {
         elements.editTodoCategory.value = todo.category;
         elements.editCustomTodoCategoryInput.classList.add('hidden');
@@ -1339,7 +1374,6 @@ function openEditTodoModal(todo) {
         elements.editCustomTodoCategoryInput.value = todo.category;
     }
 
-    // NEW: Handle Appointment Fields
     if (todo.category === 'Appointment') {
         elements.editAppointmentFields.classList.remove('hidden');
         const appt = todo.appointment || {};
@@ -1349,7 +1383,6 @@ function openEditTodoModal(todo) {
         elements.editAppointmentContact.value = appt.contact || '';
         elements.editAppointmentEmail.value = appt.email || '';
 
-        // Handle custom type dropdown
         const standardTypes = ['OB/GYN', 'Ultrasound', 'Pediatrician'];
         if (standardTypes.includes(appt.type)) {
             elements.editAppointmentType.value = appt.type;
@@ -1390,16 +1423,14 @@ async function handleSaveTodo() {
 
     const todoDocRef = doc(db, `users/${getCurrentUserId()}/todos`, activeTodoId);
 
-    // NEW: Create data payload
     const todoData = {
         text: text,
         category: category,
         date: elements.editTodoDate.value,
         time: elements.editTodoTime.value,
-        appointment: null // Default to null
+        appointment: null 
     };
 
-    // NEW: Add appointment data if category is correct
     if (category === 'Appointment') {
         let apptType = elements.editAppointmentType.value;
         let customApptType = '';
@@ -1435,7 +1466,6 @@ function openReflectionModal(note = null) {
         elements.reflectionTitleInput.value = note.title;
         elements.reflectionContentInput.value = note.content;
         activeColor = note.color;
-        // Handle image
         if (note.imageUrl) {
             activeReflectionImageUrl = note.imageUrl;
             elements.reflectionImagePreview.src = note.imageUrl;
@@ -1453,11 +1483,10 @@ function openReflectionModal(note = null) {
         elements.reflectionTitleInput.value = '';
         elements.reflectionContentInput.value = '';
         activeColor = 'pink';
-        // Reset image for new note
         activeReflectionImageUrl = null;
         elements.reflectionImagePreviewContainer.classList.add('hidden');
         elements.reflectionImagePreview.src = '';
-        elements.imageLinkInput.value = ''; // Also clear the input for next time
+        elements.imageLinkInput.value = ''; 
     }
     updateColorTags();
     elements.reflectionModal.classList.remove('hidden');
@@ -1468,7 +1497,6 @@ function closeReflectionModal() {
     elements.reflectionModal.classList.remove('active');
     setTimeout(() => {
         elements.reflectionModal.classList.add('hidden');
-        // Also reset image state when modal is fully closed
         activeReflectionImageUrl = null;
         elements.reflectionImagePreviewContainer.classList.add('hidden');
         elements.reflectionImagePreview.src = '';
@@ -1476,16 +1504,13 @@ function closeReflectionModal() {
     }, 300);
 }
 
-// --- NEW Edit Wish Functions ---
-
 function openEditWishModal(wish) {
     activeWishId = wish.id;
     elements.editWishItem.value = wish.item;
     elements.editWishPrice.value = wish.price || '';
     elements.editWishLink.value = wish.link || '';
-    elements.editWishQuantityInput.value = wish.quantity || 1; // NEW: Set quantity
+    elements.editWishQuantityInput.value = wish.quantity || 1; 
 
-    // Set category and handle custom/food fields
     const standardCategories = ['Baby Care', 'Nursery', 'Hospital Bag', 'Health', 'Postpartum', 'Food'];
     if (standardCategories.includes(wish.category)) {
         elements.editWishCategory.value = wish.category;
@@ -1514,7 +1539,7 @@ function closeEditWishModal() {
     elements.editWishModal.classList.remove('active');
     setTimeout(() => {
         elements.editWishModal.classList.add('hidden');
-        activeWishId = null; // Reset active ID
+        activeWishId = null; 
     }, 300);
 }
 
@@ -1526,20 +1551,19 @@ async function handleSaveWish() {
     if (category === 'Custom') {
         category = elements.editCustomCategoryInput.value.trim();
     }
-    const newQuantity = parseInt(elements.editWishQuantityInput.value, 10) || 1; // NEW: Get quantity
+    const newQuantity = parseInt(elements.editWishQuantityInput.value, 10) || 1; 
 
     if (!item || !category) {
         console.error('Item name and category cannot be empty.');
-        return; // Add some user feedback here later if needed
+        return; 
     }
 
     const wishDocRef = doc(db, `users/${getCurrentUserId()}/wishes`, activeWishId);
     
-    // NEW: Check if new quantity is less than current purchased count
     const currentWish = currentWishes.find(w => w.id === activeWishId);
     let currentPurchasedCount = currentWish.purchasedCount || 0;
     if (newQuantity < currentPurchasedCount) {
-        currentPurchasedCount = newQuantity; // Cap purchased count at new quantity
+        currentPurchasedCount = newQuantity; 
     }
 
     const wishData = {
@@ -1547,12 +1571,11 @@ async function handleSaveWish() {
         category,
         price: elements.editWishPrice.value.trim(),
         link: elements.editWishLink.value.trim(),
-        quantity: newQuantity, // NEW: Save quantity
-        purchasedCount: currentPurchasedCount, // NEW: Save potentially adjusted purchased count
-        foodDetails: null // Default to null
+        quantity: newQuantity, 
+        purchasedCount: currentPurchasedCount, 
+        foodDetails: null 
     };
 
-    // Add food details if category is Food
     if (category === 'Food') {
         wishData.foodDetails = {
             type: elements.editWishFoodType.value,
@@ -1565,7 +1588,6 @@ async function handleSaveWish() {
         closeEditWishModal();
     } catch (error) {
         console.error("Error updating wish:", error);
-        // Add user feedback for error here if needed
     }
 }
 
@@ -1579,64 +1601,51 @@ function updateColorTags() {
     });
 }
 
-// === NEW AI Baby Name Generator Functions ===
-
 function setupNameGeneratorListeners() {
-    // Gender Selection
     elements.nameGenderSelector.addEventListener('click', (e) => {
         if (e.target.tagName === 'BUTTON') {
-            // Remove active class from all buttons
             elements.nameGenderSelector.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
-            // Add active class to the clicked button
             e.target.classList.add('active');
             selectedNameGender = e.target.dataset.gender;
         }
     });
 
-    // Origin Selection
     elements.nameOriginSelect.addEventListener('change', () => {
         selectedNameOrigin = elements.nameOriginSelect.value;
         if (selectedNameOrigin === 'Custom') {
             elements.nameOriginCustom.classList.remove('hidden');
         } else {
             elements.nameOriginCustom.classList.add('hidden');
-            elements.nameOriginCustom.value = ''; // Clear custom input
+            elements.nameOriginCustom.value = ''; 
         }
     });
 
-    // Style Selection
     elements.nameStyleSelect.addEventListener('change', () => {
         selectedNameStyle = elements.nameStyleSelect.value;
         if (selectedNameStyle === 'Custom') {
             elements.nameStyleCustom.classList.remove('hidden');
         } else {
             elements.nameStyleCustom.classList.add('hidden');
-            elements.nameStyleCustom.value = ''; // Clear custom input
+            elements.nameStyleCustom.value = ''; 
         }
     });
 
-    // Syllable Selection
     elements.nameSyllableSelector.addEventListener('change', (e) => {
         if (e.target.type === 'radio' && e.target.checked) {
             selectedNameSyllables = e.target.value;
         }
     });
 
-    // Generate Button
     elements.nameGenerateBtn.addEventListener('click', () => generateNames(false));
 
-    // Randomize Button
     elements.nameRandomBtn.addEventListener('click', () => generateNames(true));
 
-    // Generate Again Button
     elements.nameGenerateAgainBtn.addEventListener('click', () => generateNames(false));
 
-    // Favorites Toggle
     elements.nameFavoritesToggleBtn.addEventListener('click', () => {
         elements.nameFavoritesContainer.classList.toggle('hidden');
     });
 
-    // Delegated listener for favorite/unfavorite buttons in results
     elements.nameResultsContainer.addEventListener('click', async (e) => {
         const button = e.target.closest('.toggle-favorite-name-btn');
         if (button) {
@@ -1647,7 +1656,6 @@ function setupNameGeneratorListeners() {
         }
     });
 
-    // Delegated listener for removing favorites from the list
     elements.nameFavoritesList.addEventListener('click', async (e) => {
         const button = e.target.closest('.remove-favorite-name-btn');
         if (button) {
@@ -1666,7 +1674,7 @@ function setupNameGeneratorListeners() {
  * @param {boolean} isRandom - If true, ignores most filters for randomization.
  */
 async function generateNames(isRandom = false) {
-    if (!favoriteNamesRef) return; // Ensure Firebase is ready
+    if (!favoriteNamesRef) return; 
 
     elements.nameGenerateBtnText.textContent = 'Generating...';
     elements.nameGenerateLoader.classList.remove('hidden');
@@ -1682,7 +1690,6 @@ async function generateNames(isRandom = false) {
 
     if (isRandom) {
         userPromptParts.push("Give me 10 random and interesting baby names.");
-        // Optionally add a random gender if none is selected
         if (!selectedNameGender) {
             const genders = ['Boy', 'Girl', 'Neutral'];
             const randomGender = genders[Math.floor(Math.random() * genders.length)];
@@ -1714,7 +1721,7 @@ async function generateNames(isRandom = false) {
 
     const userQuery = userPromptParts.join(' ');
     const systemPrompt = `You are a creative and knowledgeable baby name assistant. Provide baby name suggestions based on the user's criteria. Include the name, its origin, and its meaning. Respond ONLY with a valid JSON array of objects. Each object must have "name" (string), "meaning" (string), and "origin" (string) keys.`;
-    const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; // API Key will be injected by the environment
+    const apiKey = "AIzaSyBCZtCD7xW4mxuYkJ4h0s8nJtZaqKZxvkI"; 
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
 
     const payload = {
@@ -1748,7 +1755,7 @@ async function generateNames(isRandom = false) {
 
         if (result.candidates && result.candidates[0].content && result.candidates[0].content.parts[0].text) {
              const namesData = JSON.parse(result.candidates[0].content.parts[0].text);
-             currentNameSuggestions = namesData; // Store suggestions
+             currentNameSuggestions = namesData; 
              renderNameSuggestions(namesData);
         } else {
              throw new Error("Invalid response structure from API");
@@ -1757,7 +1764,7 @@ async function generateNames(isRandom = false) {
     } catch (error) {
         console.error("AI Name generation failed:", error);
         elements.nameResultsContainer.innerHTML = `<p class="text-center text-red-300 p-4">Sorry, couldn't generate names right now. Error: ${error.message}</p>`;
-        currentNameSuggestions = []; // Clear suggestions on error
+        currentNameSuggestions = []; 
     } finally {
         elements.nameGenerateBtnText.textContent = 'Generate Names';
         elements.nameGenerateLoader.classList.add('hidden');
@@ -1772,7 +1779,7 @@ async function generateNames(isRandom = false) {
  * @param {Array} names - Array of name objects ({name, meaning, origin}).
  */
 function renderNameSuggestions(names) {
-    elements.nameResultsContainer.innerHTML = ''; // Clear previous results or loader
+    elements.nameResultsContainer.innerHTML = ''; 
 
     if (!names || names.length === 0) {
         elements.nameResultsContainer.innerHTML = `<p class="text-center text-gray-400 p-2">No names found matching your criteria.</p>`;
@@ -1783,7 +1790,7 @@ function renderNameSuggestions(names) {
     const favoriteNameSet = new Set(currentFavoriteNames.map(fav => fav.name.toLowerCase()));
 
     const grid = document.createElement('div');
-    grid.className = 'grid grid-cols-1 sm:grid-cols-2 gap-3'; // Responsive grid
+    grid.className = 'grid grid-cols-1 sm:grid-cols-2 gap-3'; 
 
     names.forEach(nameData => {
         const isFavorite = favoriteNameSet.has(nameData.name.toLowerCase());
@@ -1810,38 +1817,33 @@ function renderNameSuggestions(names) {
     });
 
     elements.nameResultsContainer.appendChild(grid);
-    elements.nameGenerateAgainBtn.classList.remove('hidden'); // Show the 'Generate Again' button
+    elements.nameGenerateAgainBtn.classList.remove('hidden'); 
 }
 
 
 /**
  * Adds or removes a name from the user's favorites in Firestore.
- * Uses the name itself (lowercase) as the document ID for easy checking.
  * @param {object} nameData - Object containing {name, meaning, origin}.
  */
 async function toggleFavoriteName(nameData) {
     if (!favoriteNamesRef || !nameData || !nameData.name) return;
 
     const lowerCaseName = nameData.name.toLowerCase();
-    const nameDocRef = doc(favoriteNamesRef, lowerCaseName); // Use lowercase name as ID
+    const nameDocRef = doc(favoriteNamesRef, lowerCaseName); 
 
     try {
         const isCurrentlyFavorite = currentFavoriteNames.some(fav => fav.id === lowerCaseName);
 
         if (isCurrentlyFavorite) {
-            // Remove from favorites
             await deleteDoc(nameDocRef);
         } else {
-            // Add to favorites
-            // Use setDoc with the custom ID to ensure no duplicates based on name
             await setDoc(nameDocRef, {
-                name: nameData.name, // Store original casing
+                name: nameData.name, 
                 meaning: nameData.meaning || '',
                 origin: nameData.origin || '',
                 addedAt: serverTimestamp()
             });
         }
-        // The onSnapshot listener will automatically update the UI (renderFavoriteNames)
     } catch (error) {
         console.error("Error toggling favorite name:", error);
     }
@@ -1869,14 +1871,14 @@ function checkTodoNotifications(todos) {
     const notifications = [];
     const today = getStartOfToday().getTime();
 
-    todos.forEach(todo => {
-        // Skip completed tasks or tasks without a date
+    const allTodos = [...currentTodos, ...currentRecipeTodos];
+
+    allTodos.forEach(todo => {
         if (todo.completed || !todo.date) {
             return;
         }
 
         try {
-            // Parse date as local timezone (e.g., '2023-10-28' becomes Oct 28 at 00:00 local time)
             const dueDate = new Date(todo.date + 'T00:00:00').getTime();
             const diffTime = dueDate - today;
             const diffDays = Math.round(diffTime / DAY_IN_MS);
@@ -1884,7 +1886,6 @@ function checkTodoNotifications(todos) {
             let message = '';
             let type = '';
 
-            // 7, 3, 1 day warnings
             if (diffDays <= 7 && diffDays > 3) {
                 message = `This task is due in ${diffDays} days.`;
                 type = 'todo-soon';
@@ -1900,24 +1901,21 @@ function checkTodoNotifications(todos) {
             }
 
             if (message) {
-                // --- MODIFICATION START ---
                 const notificationData = {
                     id: `todo-${todo.id}`,
-                    title: todo.text, // The main title (e.g., "First Check-Up")
-                    message: message,  // The urgency (e.g., "This task is due TODAY!")
+                    title: todo.text.split('\n')[0], 
+                    message: message,  
                     type: type,
                     daysLeft: diffDays,
-                    details: {} // Create an empty details object
+                    details: {} 
                 };
 
-                // If it's an appointment, add all the appointment details
                 if (todo.category === 'Appointment' && todo.appointment) {
                     notificationData.details.appointment = todo.appointment;
                     notificationData.details.time = todo.time;
                 }
                 
                 notifications.push(notificationData);
-                // --- MODIFICATION END ---
             }
         } catch (e) {
             console.error("Error parsing todo date:", e, todo);
@@ -1936,8 +1934,6 @@ function checkWishNotifications(wishes) {
     const today = getStartOfToday().getTime();
 
     wishes.forEach(wish => {
-        // Skip purchased, non-food, or items without an expiry date
-        // --- UPDATED LOGIC: Check purchasedCount against quantity ---
         const quantity = wish.quantity || 1;
         const purchasedCount = wish.purchasedCount || 0;
         const isFullyPurchased = purchasedCount >= quantity;
@@ -1945,7 +1941,6 @@ function checkWishNotifications(wishes) {
         if (isFullyPurchased || wish.category !== 'Food' || !wish.foodDetails || !wish.foodDetails.expiry) {
             return;
         }
-        // --- END UPDATED LOGIC ---
 
         try {
             const expiryDate = new Date(wish.foodDetails.expiry + 'T00:00:00').getTime();
@@ -1955,7 +1950,6 @@ function checkWishNotifications(wishes) {
             let message = '';
             let type = '';
 
-            // 1 month (30 days), 7, 3, 1 day warnings
             if (diffDays <= 30 && diffDays > 7) {
                 message = `This item expires in ${diffDays} days.`;
                 type = 'wish-soon';
@@ -1974,7 +1968,6 @@ function checkWishNotifications(wishes) {
             }
 
             if (message) {
-                // --- MODIFICATION START ---
                 notifications.push({
                     id: `wish-${wish.id}`,
                     title: wish.item,
@@ -1982,10 +1975,9 @@ function checkWishNotifications(wishes) {
                     type: type,
                     daysLeft: diffDays,
                     details: {
-                        food: wish.foodDetails // Add the food details object
+                        food: wish.foodDetails 
                     }
                 });
-                // --- MODIFICATION END ---
             }
         } catch (e) {
             console.error("Error parsing wish date:", e, wish);
@@ -2001,7 +1993,6 @@ function checkNotifications() {
     const todoNotifications = checkTodoNotifications(currentTodos);
     const wishNotifications = checkWishNotifications(currentWishes);
 
-    // Combine and sort notifications by urgency (daysLeft ascending)
     allNotifications = [...todoNotifications, ...wishNotifications];
     allNotifications.sort((a, b) => a.daysLeft - b.daysLeft);
 
@@ -2014,8 +2005,6 @@ function checkNotifications() {
 function clearAllNotifications() {
     allNotifications = [];
     updateNotificationUI(allNotifications);
-    // The modal will now show the "no notifications" message.
-    // The user can close it manually.
 }
 
 
@@ -2025,12 +2014,10 @@ export function unloadJourney() {
     if (unsubscribeTodos) unsubscribeTodos();
     if (unsubscribeWishes) unsubscribeWishes();
     if (unsubscribeReflections) unsubscribeReflections();
-    if (unsubscribeFavoriteNames) unsubscribeFavoriteNames(); // NEW
-    // Remove specific event listeners if necessary, though often covered by page unload/auth change
+    if (unsubscribeFavoriteNames) unsubscribeFavoriteNames(); 
 }
 
 // === Utility Functions ===
 export function updateWellnessDataForJourney(newData) {
     wellnessDataForJourney = newData;
-    // Potentially trigger updates within Journey tab if needed based on wellness data
 }
