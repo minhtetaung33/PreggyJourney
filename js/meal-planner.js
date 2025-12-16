@@ -452,14 +452,7 @@ async function handleSaveEdit(key, oldMeal) {
     try {
         const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         if (!response.ok) throw new Error(`API error: ${response.statusText}`);
-        const result = await response.json(); 
-        
-        // --- ADDED FIX FOR MARKDOWN STRIPPING ---
-        let text = result.candidates[0].content.parts[0].text;
-        text = text.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim(); 
-        const data = JSON.parse(text);
-        // ---------------------------------------
-
+        const result = await response.json(); const text = result.candidates[0].content.parts[0].text; const data = JSON.parse(text);
         if (data.isSuitable) {
             const currentMeals = [...(dynamicMealOptions[key] || [])];
             if (currentMeals.includes(data.mealName) && data.mealName !== oldMeal) { showApiFeedback(`"${data.mealName}" is already on the list.`, 'warning', editApiFeedback); return; }
@@ -505,14 +498,7 @@ async function handleAddMeal() {
     try {
         const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         if (!response.ok) throw new Error(`API error: ${response.statusText}`);
-        const result = await response.json(); 
-        
-        // --- ADDED FIX FOR MARKDOWN STRIPPING ---
-        let text = result.candidates[0].content.parts[0].text;
-        text = text.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim(); 
-        const data = JSON.parse(text);
-        // ---------------------------------------
-
+        const result = await response.json(); const text = result.candidates[0].content.parts[0].text; const data = JSON.parse(text);
         if (data.isSuitable) {
             const currentMeals = [...(dynamicMealOptions[currentMealKeyForManage] || [])];
             if (!currentMeals.includes(data.mealName)) { 
@@ -575,6 +561,8 @@ async function generateAiMealPlan(dayKey, craving) {
     const dinnerOpts = dynamicMealOptions.dinner || [];
     const cravingText = craving ? `The user's specific craving today is "${craving}". Please try to incorporate this.` : "The user has not specified a craving, so create a generally balanced and appealing plan.";
     
+    // --- THIS IS THE FIX ---
+    // The systemPrompt has been made much more specific to match the display function.
     const systemPrompt = `You are an expert prenatal nutritionist creating a one-day meal plan for a woman in week ${pregnancyWeek} of her pregnancy.
 Create a complete, balanced, and varied one-day meal plan. ${cravingText}
 You can use the user's 'Available meal options' or invent new, healthy suggestions.
@@ -596,6 +584,7 @@ Example structure:
   "nutritionSummary": { "iron": "Good", "calcium": "Okay", "folate": "Good", "fiber": "Good" },
   "feedback": "This plan provides a good balance of nutrients, focusing on your craving for salmon."
 }`;
+    // --- END OF FIX ---
 
     let userQuery = `Available meal options:\n- Breakfast: [${breakfastOpts.join(', ')}]\n- Lunch: [${lunchOpts.join(', ')}]\n- Snack: [${snackOpts.join(', ')}]\n- Dinner: [${dinnerOpts.join(', ')}]\n\nGenerate a new, unique meal plan for a user in week ${pregnancyWeek}.`;
     if(craving) userQuery += ` The user is craving: "${craving}".`
@@ -609,14 +598,7 @@ Example structure:
     try {
         const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         if (!response.ok) throw new Error(`API error: ${response.statusText}`);
-        const result = await response.json(); 
-        
-        // --- ADDED FIX FOR MARKDOWN STRIPPING ---
-        let text = result.candidates[0].content.parts[0].text;
-        text = text.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim(); 
-        const data = JSON.parse(text);
-        // ---------------------------------------
-
+        const result = await response.json(); const text = result.candidates[0].content.parts[0].text; const data = JSON.parse(text);
         currentGeneratedPlan = data;
         displayAiMealPlan(data);
     } catch (error) {
