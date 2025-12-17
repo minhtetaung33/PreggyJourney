@@ -889,7 +889,7 @@ function setupEventListeners() {
         const userQuery = `Generate a weekly to-do list for week ${pregnancyWeek}.`;
         const apiKey = "AIzaSyAsi_DMNTRm648ZO_5iqMbr27XS-MYJjlU"; 
         // Updated model
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
         const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json" } };
         try {
             const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -963,7 +963,7 @@ function setupEventListeners() {
         const userQuery = `My request: "${prompt}". I am in week ${pregnancyWeek} of pregnancy.`;
         const apiKey = "AIzaSyAsi_DMNTRm648ZO_5iqMbr27XS-MYJjlU"; 
         // Updated model
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
         const payload = {
             contents: [{ parts: [{ text: userQuery }] }],
             tools: [{ "google_search": {} }],
@@ -1120,7 +1120,7 @@ function setupEventListeners() {
         const userQuery = `Here are my last few notes:\n${notesToSummarize}`;
         const apiKey = "AIzaSyAsi_DMNTRm648ZO_5iqMbr27XS-MYJjlU"; 
         // Updated model
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
         const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }};
 
         elements.aiSummaryContent.textContent = "Summarizing your thoughts...";
@@ -1185,7 +1185,7 @@ function setupEventListeners() {
         const userQuery = `My craving: "${prompt}"`;
         const apiKey = "AIzaSyAsi_DMNTRm648ZO_5iqMbr27XS-MYJjlU"; 
         // Updated model
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
         const payload = {
             contents: [{ parts: [{ text: userQuery }] }],
             systemInstruction: { parts: [{ text: systemPrompt }] },
@@ -1727,7 +1727,7 @@ async function generateNames(isRandom = false) {
     const systemPrompt = `You are a creative and knowledgeable baby name assistant. Provide baby name suggestions based on the user's criteria. Include the name, its origin, and its meaning. Respond ONLY with a valid JSON array of objects. Each object must have "name" (string), "meaning" (string), and "origin" (string) keys.`;
     const apiKey = "AIzaSyAsi_DMNTRm648ZO_5iqMbr27XS-MYJjlU"; 
     // Updated model
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
     const payload = {
         contents: [{ parts: [{ text: userQuery }] }],
@@ -2026,3 +2026,4 @@ export function unloadJourney() {
 export function updateWellnessDataForJourney(newData) {
     wellnessDataForJourney = newData;
 }
+
