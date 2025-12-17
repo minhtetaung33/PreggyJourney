@@ -451,7 +451,7 @@ async function handleSaveEdit(key, oldMeal) {
     const userQuery = `Evaluate this meal: "${newMeal}"`;
     const apiKey = "AIzaSyAsi_DMNTRm648ZO_5iqMbr27XS-MYJjlU"; 
     // Updated model
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
     const payload = { 
         contents: [{ parts: [{ text: userQuery }] }], 
         systemInstruction: { parts: [{ text: systemPrompt }] }, 
@@ -500,7 +500,7 @@ async function handleAddMeal() {
     const systemPrompt = `You are a helpful and friendly prenatal nutritionist. Your goal is to evaluate if a meal is healthy and suitable for a pregnant woman. If the meal is suitable, provide an estimated nutritional profile with integer values from 0 (none) to 3 (high) for iron, calcium, folate, fiber, protein, and carbs. Your response must be ONLY a valid JSON object matching this structure: { "isSuitable": boolean, "mealName": string, "reasoning": string, "alternatives": string[], "nutrients": { "iron": number, "calcium": number, "folate": number, "fiber": number, "protein": number, "carbs": number } }. If the meal is not suitable, set isSuitable to false and explain why.`;
     const userQuery = `Evaluate this meal: "${userMeal}"`; const apiKey = "AIzaSyAsi_DMNTRm648ZO_5iqMbr27XS-MYJjlU"; 
     // Updated model
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
     const payload = { 
         contents: [{ parts: [{ text: userQuery }] }], 
         systemInstruction: { parts: [{ text: systemPrompt }] }, 
@@ -599,7 +599,7 @@ Example structure:
     if(craving) userQuery += ` The user is craving: "${craving}".`
     const apiKey = "AIzaSyAsi_DMNTRm648ZO_5iqMbr27XS-MYJjlU";
     // Updated model
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
     const payload = {
         contents: [{ parts: [{ text: userQuery }] }],
         systemInstruction: { parts: [{ text: systemPrompt }] },
@@ -677,3 +677,4 @@ export function getCurrentMealPlan() {
 export function getMealNutrients() {
     return { ...mealNutrients, ...customMealNutrients };
 }
+
