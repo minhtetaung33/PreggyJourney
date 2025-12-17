@@ -449,7 +449,9 @@ async function handleSaveEdit(key, oldMeal) {
     // Updated system prompt to include protein and carbs
     const systemPrompt = `You are a helpful and friendly prenatal nutritionist. Your goal is to evaluate if a meal is healthy and suitable for a pregnant woman. If the meal is suitable, provide an estimated nutritional profile with integer values from 0 (none) to 3 (high) for iron, calcium, folate, fiber, protein, and carbs. Your response must be ONLY a valid JSON object matching this structure: { "isSuitable": boolean, "mealName": string, "reasoning": string, "alternatives": string[], "nutrients": { "iron": number, "calcium": number, "folate": number, "fiber": number, "protein": number, "carbs": number } }. If the meal is not suitable, set isSuitable to false and explain why.`;
     const userQuery = `Evaluate this meal: "${newMeal}"`;
-    const apiKey = "AIzaSyAsi_DMNTRm648ZO_5iqMbr27XS-MYJjlU"; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+    const apiKey = "AIzaSyAsi_DMNTRm648ZO_5iqMbr27XS-MYJjlU"; 
+    // Updated model
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
     const payload = { 
         contents: [{ parts: [{ text: userQuery }] }], 
         systemInstruction: { parts: [{ text: systemPrompt }] }, 
@@ -496,7 +498,9 @@ async function handleAddMeal() {
     apiLoader.classList.remove('hidden'); addMealText.textContent = 'Checking...'; addMealBtn.disabled = true; apiFeedback.classList.add('hidden');
     // Updated system prompt to include protein and carbs
     const systemPrompt = `You are a helpful and friendly prenatal nutritionist. Your goal is to evaluate if a meal is healthy and suitable for a pregnant woman. If the meal is suitable, provide an estimated nutritional profile with integer values from 0 (none) to 3 (high) for iron, calcium, folate, fiber, protein, and carbs. Your response must be ONLY a valid JSON object matching this structure: { "isSuitable": boolean, "mealName": string, "reasoning": string, "alternatives": string[], "nutrients": { "iron": number, "calcium": number, "folate": number, "fiber": number, "protein": number, "carbs": number } }. If the meal is not suitable, set isSuitable to false and explain why.`;
-    const userQuery = `Evaluate this meal: "${userMeal}"`; const apiKey = "AIzaSyAsi_DMNTRm648ZO_5iqMbr27XS-MYJjlU"; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+    const userQuery = `Evaluate this meal: "${userMeal}"`; const apiKey = "AIzaSyAsi_DMNTRm648ZO_5iqMbr27XS-MYJjlU"; 
+    // Updated model
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
     const payload = { 
         contents: [{ parts: [{ text: userQuery }] }], 
         systemInstruction: { parts: [{ text: systemPrompt }] }, 
@@ -594,7 +598,8 @@ Example structure:
     let userQuery = `Available meal options:\n- Breakfast: [${breakfastOpts.join(', ')}]\n- Lunch: [${lunchOpts.join(', ')}]\n- Snack: [${snackOpts.join(', ')}]\n- Dinner: [${dinnerOpts.join(', ')}]\n\nGenerate a new, unique meal plan for a user in week ${pregnancyWeek}.`;
     if(craving) userQuery += ` The user is craving: "${craving}".`
     const apiKey = "AIzaSyAsi_DMNTRm648ZO_5iqMbr27XS-MYJjlU";
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+    // Updated model
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
     const payload = {
         contents: [{ parts: [{ text: userQuery }] }],
         systemInstruction: { parts: [{ text: systemPrompt }] },
