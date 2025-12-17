@@ -1,0 +1,1220 @@
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(199, 210, 254, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(199, 210, 254, 0); }
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-image: url('https://i.imgur.com/HnUnpQJ.jpeg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    color: #f0f0f0;
+}
+
+/* --- NEW ANIMATION STYLES --- */
+#page-load-overlay {
+    position: fixed;
+    inset: 0;
+    /* Use a soft gradient as requested */
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.9), rgba(253, 248, 255, 0.9)); /* white to blush/lavender */
+    z-index: 100;
+    opacity: 1;
+    transition: opacity 1.5s cubic-bezier(0.215, 0.61, 0.355, 1); /* easeOutCubic */
+    pointer-events: none;
+}
+
+body.loaded #page-load-overlay {
+    opacity: 0;
+}
+
+#bubble-background {
+    position: fixed;
+    inset: 0;
+    z-index: 0; /* Behind content but above body bg */
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.background-bubble {
+    position: absolute;
+    bottom: -150px;
+    border-radius: 50%;
+    /* Soft, transparent bubble color */
+    background: rgba(220, 235, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    filter: blur(1px);
+    animation: rise 15s infinite ease-in;
+    opacity: 0;
+}
+
+@keyframes rise {
+    0% {
+        transform: translateY(0) scale(1);
+        opacity: 0;
+    }
+    10% {
+        opacity: 0.7;
+    }
+    90% {
+        opacity: 0.7;
+    }
+    100% {
+        transform: translateY(-120vh) scale(0.5);
+        opacity: 0;
+    }
+}
+
+@keyframes bubbleIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    70% {
+        opacity: 1;
+        transform: scale(1.05); /* Gentle overshoot */
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1.0); /* Settle */
+    }
+}
+
+@keyframes softFloat {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-5px); /* Calm breathing motion */
+    }
+}
+
+/* Initial state for animatable cards */
+.anim-card {
+    opacity: 0;
+}
+
+/* Class added by JS to trigger bubble-in animation */
+.anim-card.anim-bubble-in {
+    animation: bubbleIn 0.8s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+}
+
+/* Class added by JS to trigger float animation */
+.anim-card.anim-float {
+    animation: softFloat 5s ease-in-out infinite;
+}
+
+/* Ensure app container is above the bubble background */
+#app-container {
+    position: relative;
+    z-index: 2;
+}
+/* --- END NEW ANIMATION STYLES --- */
+
+
+.hero-section {
+    animation: fadeIn 1s ease-out;
+}
+
+.cta-button {
+    animation: pulse 2s infinite;
+}
+
+.glass-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    transition: all 0.3s ease;
+    /* Add soft glow/reflection */
+    background-image: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0) 50%);
+    box-shadow: 0 0 20px rgba(199, 210, 254, 0.1), 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.glass-card:hover:not(.no-hover) {
+     box-shadow: 0 0 20px rgba(148, 111, 255, 0.2), 0 8px 32px 0 rgba(148, 111, 255, 0.37);
+}
+
+h1, h2, h3 {
+    text-shadow: 0 0 8px rgba(232, 217, 255, 0.5);
+}
+
+.meal-select, .symptom-input, .date-input {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 0.5rem;
+    color: #f0f0f0;
+    padding: 0.75rem;
+    transition: background-color 0.2s;
+    font-size: 1rem;
+    color-scheme: dark;
+}
+
+.meal-select:focus, .symptom-input:focus, .date-input:focus {
+    outline: 2px solid #a78bfa;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.meal-select option {
+    background: #302b63;
+    color: #f0f0f0;
+}
+
+/* Specific styling for wishlist search and sort */
+#wishlist-search-input, #wishlist-sort-select {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    font-size: 0.875rem; /* text-sm */
+}
+#wishlist-search-input {
+    padding-left: 2.5rem; /* Adjust based on icon size */
+}
+
+
+/* Tab Styles */
+.tab-btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+    background: rgba(255, 255, 255, 0.1);
+}
+.tab-btn.active {
+    background: rgba(167, 139, 250, 0.3);
+    color: #fff;
+    border-color: rgba(167, 139, 250, 0.5);
+    box-shadow: 0 4px 12px rgba(167, 139, 250, 0.2);
+}
+.tab-content {
+    display: none;
+}
+.tab-content.active {
+    display: block;
+}
+
+
+/* New styles for the grid */
+.grid-header {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.875rem;
+    padding: 1rem 0.5rem;
+    color: #d8cfff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.meal-slot {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.9rem;
+    line-height: 1.3;
+    text-align: center;
+}
+
+.meal-slot:hover {
+    background: rgba(167, 139, 250, 0.2);
+    transform: translateY(-5px) scale(1.03);
+    box-shadow: 0 8px 32px 0 rgba(148, 111, 255, 0.2);
+}
+
+.meal-slot.empty {
+    color: #a78bfa; /* purple-400 */
+    font-style: italic;
+    opacity: 0.7;
+}
+
+/* Animation for modal content pop-in */
+#meal-modal.active #modal-content,
+#manage-meals-modal.active #manage-modal-content,
+#edit-meal-modal.active #edit-modal-content,
+#start-date-modal.active #start-date-modal-content,
+#sleep-modal.active #sleep-modal-content,
+#auth-modal.active #auth-modal-content,
+#manage-supplements-modal.active #manage-supplements-content,
+#reflection-modal.active #reflection-modal-content,
+#edit-todo-modal.active #edit-todo-modal-content,
+#ai-summary-modal.active #ai-summary-modal-content,
+#nutrition-history-modal.active #nutrition-history-modal-content,
+#edit-day-modal.active #edit-day-modal-content,
+#image-link-modal.active #image-link-modal-content,
+/* FIX: Changed #baby-message-content to #baby-message-modal-content */
+#baby-message-modal.active #baby-message-modal-content,
+#ai-meal-modal.active #ai-meal-modal-content,
+#mindful-reflection-modal.active #mindful-reflection-modal-content, /* NEW MODAL */
+#edit-wish-modal.active #edit-wish-modal-content, /* ADDED THIS LINE FOR EDIT WISH MODAL */
+#notification-modal.active #notification-modal-content /* NEW NOTIFICATION MODAL */ {
+    transform: scale(1);
+    opacity: 1;
+}
+
+
+/* Custom scrollbar for webkit browsers */
+.horizontal-scroll::-webkit-scrollbar {
+    height: 8px;
+}
+.horizontal-scroll::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+.horizontal-scroll::-webkit-scrollbar-thumb {
+    background: rgba(167, 139, 250, 0.5);
+    border-radius: 10px;
+}
+.horizontal-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(167, 139, 250, 0.8);
+}
+
+.modal-scroll::-webkit-scrollbar {
+    width: 8px;
+}
+.modal-scroll::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+.modal-scroll::-webkit-scrollbar-thumb {
+    background: rgba(167, 139, 250, 0.5);
+    border-radius: 10px;
+}
+
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.2s;
+}
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+.icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+}
+.icon-btn:hover {
+    background-color: rgba(255,255,255,0.2);
+}
+
+/* --- NEW: Active state for icon buttons --- */
+/* (Also reused for name generator buttons) */
+.icon-btn.active,
+#name-gender-selector .btn-secondary.active {
+    background-color: rgba(167, 139, 250, 0.3);
+    color: #fff;
+    box-shadow: 0 0 8px rgba(167, 139, 250, 0.3);
+    border-color: rgba(167, 139, 250, 0.5); /* Added border for consistency */
+}
+
+.ai-insight {
+    background: rgba(167, 139, 250, 0.15);
+    border-left: 3px solid #a78bfa;
+    padding: 0.75rem;
+    border-radius: 0 0.5rem 0.5rem 0;
+    font-size: 0.875rem;
+    color: #d8cfff;
+}
+
+.mood-btn.selected,
+#edit-mood-log-buttons .mood-btn.selected,
+.mindful-mood-btn.selected { /* NEW */
+    transform: scale(1.25);
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+}
+.energy-btn.selected,
+#edit-energy-log-buttons .energy-btn.selected {
+    transform: scale(1.25);
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.grid-header.day-header {
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 0.5rem;
+}
+.grid-header.day-header:hover {
+    background: rgba(167, 139, 250, 0.2);
+    color: #fff;
+    transform: scale(1.05);
+}
+
+#ai-meal-modal-content {
+    max-height: 85vh;
+    overflow-y: auto;
+}
+.clickable-header {
+    cursor: pointer;
+    transition: background-color 0.2s;
+    border-radius: 0.5rem;
+    padding: 0.25rem;
+    display: flex;
+    align-items: center;
+}
+.clickable-header:hover {
+    background-color: rgba(255,255,255,0.1);
+}
+
+/* Journey Tab Styles */
+.todo-item { transition: all 0.3s ease; }
+.todo-item.completed { opacity: 0.5; }
+.todo-item.completed p { text-decoration: line-through; }
+@keyframes check-anim { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.todo-checkbox:checked + div svg { animation: check-anim 0.3s ease-out forwards; }
+
+/* === REMOVED OLD wish-item-card STYLES === */
+/* .wish-item-card { transition: all 0.3s ease; } */
+/* .wish-item-card.purchased { box-shadow: 0 0 15px rgba(5, 255, 161, 0.4); border-color: rgba(5, 255, 161, 0.6); } */
+
+/* === NEW Wishlist Card Styles === */
+.wish-item-card {
+    background: rgba(255, 255, 255, 0.07);
+    border-radius: 1rem; /* rounded-lg */
+    padding: 1rem; /* p-4 */
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Push actions/meta to bottom */
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 100%);
+}
+
+.wish-item-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(148, 111, 255, 0.2); /* Use accent color on hover */
+    border-color: rgba(167, 139, 250, 0.3);
+}
+
+.wish-item-card .item-details {
+    flex-grow: 1;
+    margin-bottom: 0.75rem; /* mb-3 */
+}
+
+.wish-item-card .item-name {
+    font-weight: 700; /* font-bold */
+    font-size: 1.125rem; /* text-lg */
+    margin-bottom: 0.25rem; /* mb-1 */
+    word-break: break-word; /* Prevent long names from overflowing */
+    color: #fff; /* Ensure contrast */
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.wish-item-card .item-category {
+    font-size: 0.75rem; /* text-xs */
+    color: #a78bfa; /* text-indigo-300 */
+    margin-bottom: 0.25rem; /* mb-1 */
+    font-weight: 500; /* medium */
+}
+
+.wish-item-card .item-food-details {
+    font-size: 0.75rem; /* text-xs */
+    color: #d1d5db; /* text-gray-300 */
+}
+
+.wish-item-card .item-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.75rem; /* mt-3 */
+    padding-top: 0.75rem; /* pt-3 */
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.wish-item-card .item-quantity-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem; /* gap-2 */
+}
+
+.wish-item-card .quantity-display {
+    font-weight: 600; /* font-semibold */
+    font-size: 1rem; /* text-base */
+    width: 3rem; /* w-12 */
+    text-align: center;
+}
+
+.wish-item-card .item-buttons {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem; /* gap-1 */
+}
+
+.wish-item-card .item-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.875rem; /* text-sm */
+    margin-top: 0.5rem; /* mt-2 */
+}
+
+.wish-item-card .item-price {
+    font-weight: 600; /* font-semibold */
+    color: #6ee7b7; /* text-teal-300 */
+}
+
+.wish-item-card .item-link {
+    color: #93c5fd; /* text-blue-300 */
+    text-decoration: none;
+    transition: color 0.2s;
+}
+.wish-item-card .item-link:hover {
+    text-decoration: underline;
+    color: #bfdbfe; /* text-blue-200 */
+}
+
+/* Style for purchased items - more subtle than before */
+.wish-item-card.purchased {
+    opacity: 0.65;
+    background: rgba(100, 116, 139, 0.1); /* Slightly grayer background */
+    border-color: rgba(255, 255, 255, 0.1); /* Less prominent border */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); /* Reduced shadow */
+}
+
+.wish-item-card.purchased:hover {
+    transform: none; /* Disable hover lift */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Ensure quantity buttons look good inside cards */
+.wish-item-card .quantity-btn {
+    width: 1.75rem;
+    height: 1.75rem;
+    font-size: 1rem;
+    background: rgba(255, 255, 255, 0.15);
+}
+.wish-item-card .quantity-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+.wish-item-card .quantity-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* === END Wishlist Card Styles === */
+
+
+/* New styles for AI Wish Suggestions */
+.ai-suggestion-card {
+    background: rgba(255, 255, 255, 0.07);
+    border-radius: 0.75rem;
+    padding: 0.75rem;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.ai-suggestion-card:hover {
+    background: rgba(167, 139, 250, 0.15);
+}
+.ai-suggestion-img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 0.5rem;
+    background-color: rgba(0,0,0,0.2);
+}
+
+.reflection-note {
+    transition: all 0.3s ease;
+    box-shadow: 5px 5px 15px rgba(0,0,0,0.2);
+}
+.reflection-note:hover { transform: translateY(-5px) rotate(1deg); box-shadow: 8px 8px 25px rgba(0,0,0,0.3); }
+.note-color-pink { background-color: rgba(236, 72, 153, 0.2); border-left-color: #ec4899; }
+.note-color-teal { background-color: rgba(20, 184, 166, 0.2); border-left-color: #14b8a6; }
+.note-color-yellow { background-color: rgba(234, 179, 8, 0.2); border-left-color: #eab308; }
+
+
+/* --- NEW WELLNESS TIP STYLES --- */
+@keyframes pulse-glow {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); opacity: 0.7; }
+    70% { transform: scale(1.05); box-shadow: 0 0 20px 30px rgba(255, 255, 255, 0); opacity: 0.3; }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); opacity: 0.7; }
+}
+
+.wellness-glow {
+    position: absolute;
+    inset: 0;
+    border-radius: 1rem;
+    animation: pulse-glow 3s infinite ease-in-out;
+    transition: background-color 0.5s ease;
+    z-index: 0; /* Ensure glow is behind content */
+}
+
+.glow-green { background-color: rgba(74, 222, 128, 0.2); } /* soft green */
+.glow-lavender { background-color: rgba(196, 181, 253, 0.2); } /* lavender */
+.glow-blue { background-color: rgba(147, 197, 253, 0.2); } /* warm blue */
+
+@keyframes marquee {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+}
+
+.marquee {
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    box-sizing: border-box;
+}
+
+#fun-fact-content {
+    display: inline-block;
+    padding-left: 100%;
+    animation: marquee 15s linear infinite;
+}
+
+/* Ensure modal content is above the background glow/patterns */
+#baby-message-modal-content { /* Changed from baby-message-content */
+    position: relative;
+    z-index: 10;
+}
+
+/* --- NEW BABY MESSAGE STYLES --- */
+
+/* Animation for the baby emoji (Task 3) */
+@keyframes baby-wave {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(20deg); }
+    75% { transform: rotate(-15deg); }
+}
+
+.baby-emoji-animate {
+    display: inline-block;
+    animation: baby-wave 1.5s infinite ease-in-out;
+}
+
+/* Chat bubble style (Task 5 & 6) */
+.chat-bubble-style {
+    /* Light color with 70% opacity */
+    background: rgba(220, 235, 255, 0.7); /* Light blue, 70% opaque */
+    backdrop-filter: blur(5px); /* Add a slight blur to the transparent background */
+    -webkit-backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 1.5rem; /* Rounded corners */
+    position: relative;
+    /* Chat bubble tail */
+    border-bottom-left-radius: 0.5rem;
+}
+
+/* Pseudo-element for the chat bubble "tail" */
+.chat-bubble-style::before {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: -10px; /* Position tail on the left */
+    width: 20px;
+    height: 20px;
+    background-color: transparent;
+    /* This creates the curved cutout for the tail */
+    border-bottom-right-radius: 10px;
+    box-shadow: 5px 0 0 0 rgba(220, 235, 255, 0.7); /* Same color as bubble */
+}
+
+/* Adjust text color inside the light bubble for readability */
+.chat-bubble-style h3 {
+    color: #1e3a8a; /* Dark blue text */
+    text-shadow: none; /* Remove text shadow for clarity on light bg */
+}
+.chat-bubble-style #baby-message-content {
+    color: #334155; /* Dark gray text */
+    font-weight: 500;
+}
+
+/* --- NEW CALM SPACE STYLES --- */
+
+/* Breathing Visualizer */
+#breathing-orb {
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.3), 0 0 40px rgba(255, 255, 255, 0.2);
+}
+
+/* NEW: Emoji Visual Styles */
+@keyframes emoji-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+#breathing-visual-emoji,
+#stretch-visual, /* Apply pulse to stretch too */
+#meditation-visual-emoji {
+    animation: emoji-pulse 3s infinite ease-in-out;
+}
+
+/* Box Breathing Animation */
+#breathing-animation-element.box-glow {
+    width: 150px;
+    height: 150px;
+    border: 4px solid rgba(255, 255, 255, 0.2);
+    border-radius: 0.5rem;
+    position: relative;
+}
+#breathing-animation-element.box-glow::before {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    width: 100%;
+    height: 100%;
+    border: 4px solid #fff;
+    border-radius: 0.5rem;
+    box-shadow: 0 0 20px #fff;
+    clip-path: polygon(0 0, 0 0, 0 0, 0 0); /* Start clipped */
+}
+/* JS will add animation classes .box-inhale, .box-hold1, .box-exhale, .box-hold2 */
+#breathing-animation-element.box-inhale::before {
+    animation: trace-box-inhale 4s linear forwards;
+}
+@keyframes trace-box-inhale {
+    0% { clip-path: polygon(0 0, 0 0, 0 0, 0 0); } /* Top-left */
+    25% { clip-path: polygon(0 0, 100% 0, 100% 0, 0 0); } /* Top edge */
+}
+#breathing-animation-element.box-hold1::before {
+    animation: trace-box-hold1 4s linear forwards;
+    clip-path: polygon(0 0, 100% 0, 100% 0, 0 0); /* Hold top */
+}
+@keyframes trace-box-hold1 {
+    0% { clip-path: polygon(0 0, 100% 0, 100% 0, 0 0); }
+    25% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 0); } /* Right edge */
+}
+#breathing-animation-element.box-exhale::before {
+    animation: trace-box-exhale 4s linear forwards;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 0); /* Hold top & right */
+}
+@keyframes trace-box-exhale {
+    0% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 0); }
+    25% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); } /* Bottom edge */
+}
+#breathing-animation-element.box-hold2::before {
+    animation: trace-box-hold2 4s linear forwards;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); /* Hold top, right, bottom */
+}
+@keyframes trace-box-hold2 {
+    0% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+    25% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); } /* Left edge (full) */
+    100% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+}
+
+
+/* Wave Breathing Animation */
+#breathing-animation-element.wave-glow {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    background: linear-gradient(to top, rgba(147, 197, 253, 0.4), rgba(147, 197, 253, 0.1));
+    transform: scaleY(0.2);
+    transform-origin: bottom;
+    transition: transform 4s ease-in-out;
+}
+
+/* Heartbeat Animation */
+@keyframes heartbeat-pulse {
+    0% { transform: scale(1); box-shadow: 0 0 10px rgba(236, 72, 153, 0.3); }
+    15% { transform: scale(1.1); box-shadow: 0 0 25px rgba(236, 72, 153, 0.7); }
+    30% { transform: scale(1); box-shadow: 0 0 10px rgba(236, 72, 153, 0.3); }
+    100% { transform: scale(1); box-shadow: 0 0 10px rgba(236, 72, 153, 0.3); }
+}
+#breathing-orb.heartbeat {
+    background-color: rgba(236, 72, 153, 0.5); /* Pink color */
+    animation: heartbeat-pulse 1.2s infinite ease-out;
+}
+
+/* Active Button States for Calm Space */
+#breathing-exercise-buttons .btn-secondary.active,
+#stretch-routine-buttons .btn-secondary.active,
+#meditation-type-buttons .btn-secondary.active,
+/* Update: Included timer buttons in active state */
+#breathing-timer-buttons .btn-secondary.active {
+    background: rgba(167, 139, 250, 0.3);
+    color: #fff;
+    border-color: rgba(167, 139, 250, 0.5);
+    box-shadow: 0 4px 12px rgba(167, 139, 250, 0.2);
+}
+
+/* Stretch Visualizer */
+#stretch-visual.cat-pose {
+    /* Simple SVG representation - using emoji now, so clear specific styles */
+    /* width: 150px;
+    height: 100px;
+    border: 3px solid #fff;
+    border-radius: 50% / 30%;
+    transform: translateY(20px); */
+}
+#stretch-visual.cow-pose {
+    /* width: 150px;
+    height: 100px;
+    border: 3px solid #fff;
+    border-radius: 50% / 30%;
+    border-top-color: transparent;
+    border-bottom-color: #fff;
+    transform: translateY(-10px); */
+}
+/* Other stretch pose classes would go here if needed */
+
+
+/* Meditation Visual */
+@keyframes meditation-glow {
+    0% { transform: scale(1); opacity: 0.3; }
+    50% { transform: scale(1.1); opacity: 0.5; }
+    100% { transform: scale(1); opacity: 0.3; }
+}
+#meditation-orb.active {
+    animation: meditation-glow 4s infinite ease-in-out;
+}
+
+/* Sparkle Animation */
+@keyframes sparkle-fade {
+    0% {
+        transform: scale(0) rotate(0deg);
+        opacity: 1;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1.5) rotate(90deg);
+        opacity: 0;
+    }
+}
+.sparkle {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background-color: #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 10px #fff, 0 0 20px #fff;
+    animation: sparkle-fade 1s ease-out forwards;
+    pointer-events: none;
+}
+.sparkle::before, .sparkle::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: #fff;
+    border-radius: 50%;
+}
+.sparkle::before { transform: rotate(45deg); }
+.sparkle::after { transform: rotate(-45deg); }
+
+
+/* --- NEW DAILY SUMMARY STYLES --- */
+
+/* Mood Gauge */
+#summary-mood-gauge {
+    /* The gradient is set in JS, but we need a transition */
+    transition: background-image 1s ease-out;
+}
+
+/* Mood Label Gradients */
+#summary-mood-label.label-g-low {
+    background-image: linear-gradient(to right, #93c5fd, #60a5fa); /* blue-300 to blue-500 */
+}
+#summary-mood-label.label-g-balanced {
+    background-image: linear-gradient(to right, #818cf8, #a78bfa); /* indigo-400 to purple-400 */
+}
+#summary-mood-label.label-g-flow {
+    background-image: linear-gradient(to right, #7dd3fc, #0ea5e9); /* sky-300 to sky-500 */
+}
+#summary-mood-label.label-g-joy {
+    background-image: linear-gradient(to right, #f9a8d4, #f472b6); /* pink-300 to pink-500 */
+}
+
+/* Card Background Color Themes */
+#daily-summary-card.summary-theme-low {
+    /* soft blue/gray */
+    background: linear-gradient(to top, rgba(107, 114, 128, 0.1), rgba(55, 65, 81, 0.2));
+    border-color: rgba(107, 114, 128, 0.3);
+}
+#daily-summary-card.summary-theme-balanced {
+     /* lavender/teal */
+    background: linear-gradient(to top, rgba(79, 70, 229, 0.1), rgba(16, 185, 129, 0.1));
+    border-color: rgba(79, 70, 229, 0.2);
+}
+#daily-summary-card.summary-theme-flow {
+     /* lavender/teal */
+    background: linear-gradient(to top, rgba(167, 139, 250, 0.1), rgba(20, 184, 166, 0.15));
+    border-color: rgba(20, 184, 166, 0.2);
+}
+#daily-summary-card.summary-theme-joy {
+    /* pink/yellow glow */
+    background: linear-gradient(to top, rgba(236, 72, 153, 0.15), rgba(234, 179, 8, 0.1));
+    border-color: rgba(236, 72, 153, 0.2);
+}
+
+/* Summary Bar Chart */
+.summary-bar {
+    flex-grow: 1;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 4px 4px 0 0;
+    transition: all 0.5s ease-out;
+    transform-origin: bottom;
+    /* Default state for animation */
+    transform: scaleY(0);
+}
+/* Animation for bars "popping" in */
+@keyframes summary-bubble-pop {
+    0% { transform: scaleY(0); opacity: 0; }
+    70% { transform: scaleY(1.1); opacity: 1; }
+    100% { transform: scaleY(1); opacity: 1; }
+}
+.summary-bar.animated {
+    animation: summary-bubble-pop 0.5s ease-out forwards;
+}
+
+/* Bar Colors */
+.summary-bar.bar-low { background-color: #93c5fd; } /* blue-300 */
+.summary-bar.bar-balanced { background-color: #818cf8; } /* indigo-400 */
+.summary-bar.bar-flow { background-color: #7dd3fc; } /* sky-300 */
+.summary-bar.bar-joy { background-color: #f9a8d4; } /* pink-300 */
+
+
+/* Summary Glow/Sparkle Animations */
+#summary-glow-effect {
+    pointer-events: none;
+}
+@keyframes summary-glow-pulse {
+    0%, 100% { opacity: 0; transform: scale(0.9); }
+    50% { opacity: 0.15; transform: scale(1.1); }
+}
+.summary-glow {
+    position: absolute;
+    inset: -20px;
+    border-radius: 50%;
+    animation: summary-glow-pulse 1.5s ease-out forwards;
+    /* Default color, will be changed by JS */
+    background-color: #fff;
+}
+
+@keyframes summary-sparkle {
+    0% {
+        opacity: 1;
+        transform: scale(0) rotate(0deg) translateY(0);
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: scale(1.5) rotate(90deg) translateY(-40px);
+    }
+}
+.summary-sparkle-particle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    animation: summary-sparkle 1s ease-out forwards;
+    /* Default color, will be changed by JS */
+    background-color: #fff;
+    box-shadow: 0 0 8px #fff;
+}
+
+/* === NEW AI BABY NAME GENERATOR STYLES === */
+
+/* Custom Radio Buttons for Syllables */
+.name-radio {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    margin-right: 0.3rem;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.name-radio:checked {
+    border-color: #a78bfa; /* purple-400 */
+}
+.name-radio:checked::before {
+    content: '';
+    display: block;
+    width: 0.5rem;
+    height: 0.5rem;
+    background-color: #a78bfa;
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Name Suggestion Card */
+.name-suggestion-card {
+    transition: background-color 0.2s ease-in-out;
+}
+.name-suggestion-card:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Favorite Button (Heart Icon) */
+.toggle-favorite-name-btn svg {
+    transition: fill 0.2s ease, color 0.2s ease;
+    color: #f871b3; /* pink-400 */
+}
+.toggle-favorite-name-btn:hover svg {
+    fill: rgba(248, 113, 179, 0.3); /* Lighter pink fill on hover */
+}
+.toggle-favorite-name-btn.is-favorite svg {
+    fill: #f871b3; /* Solid pink when favorited */
+    color: #f871b3;
+}
+.toggle-favorite-name-btn.is-favorite:hover svg {
+    fill: #ec4899; /* Darker pink on hover when favorited */
+}
+
+/* === NEW QUANTITY INPUT STYLES === */
+.quantity-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 9999px; /* Fully rounded */
+    width: 2rem; /* 32px */
+    height: 2rem; /* 32px */
+    font-weight: bold;
+    font-size: 1.25rem; /* Larger font */
+    color: #cbd5e1; /* gray-300 */
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1; /* Ensure text is centered vertically */
+}
+.quantity-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+.quantity-input {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 0.5rem;
+    color: #f0f0f0;
+    padding: 0.5rem 0.75rem; /* Slightly less padding than meal-select */
+    transition: background-color 0.2s;
+    font-size: 1rem;
+    color-scheme: dark;
+    text-align: center;
+    width: 4rem; /* Fixed width */
+    /* Hide default number input arrows */
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+.quantity-input::-webkit-outer-spin-button,
+.quantity-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.quantity-input:focus {
+    outline: 2px solid #a78bfa;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* === NEW NOTIFICATION STYLES === */
+@keyframes badge-pulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 100, 100, 0.7); }
+    50% { transform: scale(1.1); box-shadow: 0 0 5px 5px rgba(255, 100, 100, 0); }
+}
+
+#notification-badge {
+    animation: badge-pulse 1.5s infinite;
+}
+
+/* Notification Modal Specific Scrollbar */
+#notification-modal-content .modal-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+#notification-modal-content .modal-scroll::-webkit-scrollbar-thumb {
+    background: rgba(167, 139, 250, 0.4);
+}
+#notification-modal-content .modal-scroll::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Notification Item Styling */
+.notification-item {
+    padding: 0.75rem 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    gap: 0.75rem;
+}
+.notification-item:last-child {
+    border-bottom: none;
+}
+.notification-item svg {
+    width: 1.5rem; /* 24px */
+    height: 1.5rem; /* 24px */
+    flex-shrink: 0;
+    margin-top: 2px; /* Align icon better with text */
+}
+
+/* Optional: Different colors/styles based on type */
+.notification-item.type-todo-urgent p:first-child {
+    color: #fecaca; /* red-200 for urgent */
+}
+.notification-item.type-wish-urgent p:first-child {
+     color: #fde68a; /* yellow-200 for urgent */
+}
+
+/* === NEW TODO HIGHLIGHT ANIMATION === */
+@keyframes todo-highlight {
+    0% {
+        background-color: rgba(167, 139, 250, 0.7); /* purple-400 with 70% opacity */
+        box-shadow: 0 0 15px rgba(167, 139, 250, 0.7);
+    }
+    100% {
+        background-color: rgba(255, 255, 255, 0.05); /* Original bg-white/5 */
+        box-shadow: 0 0 0 rgba(167, 139, 250, 0);
+    }
+}
+
+.todo-item-highlight {
+    animation: todo-highlight 1.5s ease-out;
+}
+
+
+/* === NEW CALENDAR STYLES === */
+#calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px; /* A small gap between cells */
+    min-height: 480px; /* Give it a fixed height */
+}
+
+.calendar-day {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 0.5rem;
+    padding: 4px;
+    min-height: 80px; /* Give cells a minimum height */
+    transition: background-color 0.2s ease-in-out;
+    display: flex; /* Use flex to align number */
+    flex-direction: column; /* Stack number and markers */
+}
+
+.calendar-day:hover:not(.other-month) {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.calendar-day .day-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* Make content fill the day cell */
+}
+
+
+.calendar-day .day-number {
+    font-size: 0.875rem; /* text-sm */
+    font-weight: 500;
+    color: #cbd5e1; /* text-gray-300 */
+}
+
+.calendar-day.is-today .day-number {
+    color: #fff;
+    font-weight: 700;
+    background-color: #a78bfa; /* purple-400 */
+    border-radius: 50%;
+    width: 1.75rem;
+    height: 1.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.calendar-day.other-month {
+    opacity: 0.3;
+    background: transparent;
+}
+
+.task-markers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    margin-top: auto; /* Push markers to the bottom */
+    padding-bottom: 2px; /* Add a little space from the bottom */
+    padding-left: 2px;
+}
+
+.task-marker {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* Category colors */
+.task-marker-Health { background-color: #a78bfa; } /* purple-400 */
+.task-marker-Baby { background-color: #f472b6; } /* pink-400 */
+.task-marker-Home { background-color: #6ee7b7; } /* teal-300 */
+.task-marker-Appointment { background-color: #f87171; } /* red-400 */
+.task-marker-Recipes { background-color: #facc15; } /* yellow-400 */
+.task-marker-Reminder { background-color: #60a5fa; } /* blue-400 */
+.task-marker-Custom { background-color: #9ca3af; } /* gray-400 */
+.task-marker-Default { background-color: #9ca3af; } /* gray-400 */
+
+
+#calendar-container {
+    position: relative;
+    overflow: hidden; /* Needed for month switch animation */
+}
+
+@keyframes calendar-fade-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.calendar-grid-anim {
+    animation: calendar-fade-in 0.5s ease-out;
+}
+
+/* === NEW MOBILE STYLES FOR CALENDAR === */
+@media (max-width: 768px) {
+    #calendar-grid {
+        gap: 2px; /* Tighter gap on mobile */
+        min-height: auto; /* Let content define height */
+    }
+
+    .calendar-day {
+        min-height: 60px; /* Shorter cells for mobile */
+        padding: 2px; /* Tighter padding on mobile */
+    }
+
+    .calendar-day .day-number {
+        font-size: 0.75rem; /* text-xs, smaller number */
+    }
+
+    .task-marker {
+        width: 8px; /* Larger, more visible markers */
+        height: 8px; /* Larger, more visible markers */
+    }
+
+    .task-markers {
+        gap: 2px;
+        padding: 1px;
+        margin-top: 4px; /* Add a little space from the number */
+        justify-content: flex-start; /* Align markers to the left */
+    }
+
+    /* Make day of week headers smaller */
+    #calendar-header + div .text-sm {
+        font-size: 0.75rem; /* text-xs */
+    }
+}

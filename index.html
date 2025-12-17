@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pregnancy Wellness Planner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body class="antialiased text-gray-200">
+
+    <div id="page-load-overlay"></div>
+    <div id="bubble-background"></div>
+
+    <div id="sparkle-container" class="fixed inset-0 pointer-events-none z-[100]"></div>
+
+    <div id="app-container" class="container mx-auto p-4 md:p-8 max-w-7xl">
+        <section id="hero-section" class="hero-section text-center py-16 md:py-24">
+            <h1 class="text-4xl md:text-6xl font-bold text-white mb-4">Your Journey, Beautifully Planned</h1>
+            <p class="text-lg md:text-xl text-indigo-200 max-w-3xl mx-auto mb-8">
+                A smart, compassionate companion for your pregnancy. Track meals, monitor wellness, and get AI-powered insights, all in one place.
+            </p>
+            <div id="auth-buttons" class="space-x-4">
+                <button id="sign-up-btn" class="cta-button bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 px-8 rounded-full transition-colors text-lg">
+                    Get Started
+                </button>
+            </div>
+            <div id="user-info" class="hidden items-center justify-center mt-4">
+                <p class="text-indigo-200">Welcome, <span id="user-name" class="font-semibold text-white"></span>!</p>
+                <button id="sign-out-btn" class="ml-4 text-sm text-indigo-300 hover:text-white">Sign Out</button>
+            </div>
+        </section>
+
+        <div id="main-app" class="hidden">
+            <header class="mb-8 flex justify-between items-center">
+                <div class="w-12 h-1"></div> 
+                
+                <h1 class="text-4xl md:text-5xl font-bold text-white text-center">Pregnancy Wellness Planner</h1>
+
+                <button id="notification-bell-btn" class="icon-btn relative p-2 rounded-full hover:bg-white/20 transition-colors">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341A6.002 6.002 0 006 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                    </svg>
+                    <span id="notification-badge" class="absolute top-0 right-0 block h-4 w-4 rounded-full bg-red-600 text-white text-xs font-bold flex items-center justify-center ring-2 ring-gray-800 hidden">
+                        0
+                    </span>
+                </button>
+            </header>
+
+            <div class="flex flex-wrap justify-center gap-2 md:gap-4 mb-8">
+                <button id="tab-meal-plan" class="tab-btn active">🥣 Meal Plan</button>
+                <button id="tab-symptom-tracker" class="tab-btn">💗 Wellness</button>
+                <button id="tab-calm-space" class="tab-btn">🧘‍♀️ Calm Space</button>
+                <button id="tab-journey" class="tab-btn">✨ Journey</button>
+            </div>
+
+            <main>
+                <div id="content-meal-plan" class="tab-content active">
+                    <div class="glass-card anim-card p-4 md:p-6">
+                        <div class="flex items-center justify-between mb-6 px-2">
+                            <h2 class="text-2xl font-bold flex items-center">
+                                <svg class="w-8 h-8 text-purple-300 mr-3 hidden md:block" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 15.546c-.523 0-1.046.151-1.5.454a2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0c.004-.867.126-1.723.38-2.546.174-.53.385-1.054.64-1.571a21.89 21.89 0 012.652-3.956c1.522-1.657 2.733-3.482 3.683-5.527a5.553 5.553 0 011.02-1.923c.37-.621.733-1.21 1.09-1.742a2.492 2.492 0 014.226 2.158c-.373.632-.74,1.226-1.11,1.845a5.553 5.553 0 01-1.02,1.923c-.95,2.045-2.16,3.87-3.684,5.527a21.885 21.885 0 01-2.652,3.956c-.255.517-.466,1.041-.64,1.571-.254.823-.376,1.68-.38,2.546z"></path></svg>
+                                <span>Weekly Meal Plan</span>
+                            </h2>
+                             <div class="flex items-center gap-2 md:gap-4">
+                                <button id="prev-week-btn" class="icon-btn p-2 rounded-full hover:bg-white/20 transition-colors"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg></button>
+                                <h3 id="week-display" class="text-base md:text-lg font-semibold text-center w-36 md:w-48"></h3>
+                                <button id="next-week-btn" class="icon-btn p-2 rounded-full hover:bg-white/20 transition-colors"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></button>
+                            </div>
+                        </div>
+                        
+                        <div class="overflow-x-auto horizontal-scroll pb-4 -mx-4 px-4 md:mx-0 md:px-0">
+                            <div id="meal-plan-grid" class="grid grid-cols-8 gap-2 md:gap-4 min-w-[60rem]">
+                                </div>
+                        </div>
+                        
+                        <div id="loading-spinner" class="flex justify-center items-center h-64">
+                            <svg class="animate-spin -ml-1 mr-3 h-8 w-8 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span class="text-lg">Loading Meal Plan...</span>
+                        </div>
+
+                        <div class="mt-8 pt-6 border-t border-gray-700 grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div>
+                                <h3 class="text-xl font-bold mb-4 flex items-center">
+                                    <svg class="w-6 h-6 text-blue-300 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                                    🫶 Tips for the Partner
+                                </h3>
+                                <div id="partner-tips-container" class="space-y-2 text-gray-300 list-disc list-inside">
+                                    <p id="partner-tips-loader" class="text-gray-400">Loading personalized tips...</p>
+                                </div>
+                                <h4 class="text-lg font-bold mt-6 mb-2 text-red-400">To Avoid</h4>
+                                <div id="partner-avoid-container" class="space-y-2 text-gray-300 list-disc list-inside">
+                                    <p id="partner-avoid-loader" class="text-gray-400">Loading personalized tips...</p>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold mb-4 flex items-center">
+                                    <svg class="w-6 h-6 text-green-300 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    Hydration & Snacks
+                                </h3>
+                                 <div id="hydration-snacks-container" class="space-y-2 text-gray-300 list-disc list-inside">
+                                    <p id="hydration-snacks-loader" class="text-gray-400">Loading personalized tips...</p>
+                                 </div>
+                                <h4 class="text-lg font-bold mt-6 mb-2 text-red-400">To Avoid</h4>
+                                <div id="hydration-avoid-container" class="space-y-2 text-gray-300 list-disc list-inside">
+                                    <p id="hydration-avoid-loader" class="text-gray-400">Loading personalized tips...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="content-symptom-tracker" class="tab-content">
+                    <div class="space-y-8">
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            <div class="glass-card anim-card p-4 md:p-6 lg:col-span-2">
+                                <h3 class="text-xl font-bold mb-4 flex items-center">🤖 AI Symptom Assistant</h3>
+                                <p class="text-gray-300 mb-4">Feeling something? Describe it below for gentle, non-medical suggestions.</p>
+                                <textarea id="symptom-input" class="symptom-input min-h-[80px]" placeholder="e.g., I feel dizzy and tired today..."></textarea>
+                                <button id="symptom-check-btn" class="mt-4 w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
+                                    <span id="symptom-btn-text">Get Suggestions</span>
+                                    <svg id="symptom-loader" class="animate-spin ml-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                </button>
+                                <div id="symptom-response" class="mt-4"></div>
+                            </div>
+                            <div class="space-y-8">
+                               <div id="wellness-tip-card" class="glass-card anim-card p-4 md:p-6 text-center relative overflow-hidden cursor-pointer no-hover">
+                                    <div id="wellness-glow" class="wellness-glow"></div>
+                                    <div class="relative z-10">
+                                        <h3 class="text-xl font-bold mb-3">💡 Wellness Tip</h3>
+                                        <p id="wellness-tip" class="text-gray-300 mb-3">Eat small meals every 3 hours to help with nausea and maintain energy.</p>
+                                        <div class="marquee text-xs text-indigo-200">
+                                            <span id="fun-fact-content">Did you know? Your baby can already hear your voice!</span>
+                                        </div>
+                                    </div>
+                               </div>
+                               <div id="baby-growth-card" class="glass-card anim-card p-4 md:p-6 text-center cursor-pointer hover:bg-white/10 transition-colors">
+                                    <h3 class="text-xl font-bold mb-2">🍼 Baby Growth</h3>
+                                    <p id="baby-growth-snapshot" class="text-gray-300 text-lg">Week 10 — baby is the size of a strawberry 🍓</p>
+                               </div>
+                            </div>
+                        </div>
+                        
+                        <div class="glass-card anim-card p-4 md:p-6">
+                            <div class="flex items-center justify-between mb-6">
+                                <h3 class="text-2xl font-bold flex items-center">📈 Wellness Dashboard</h3>
+                                <div class="flex items-center gap-2 md:gap-4">
+                                    <button id="wellness-prev-week-btn" class="icon-btn p-2 rounded-full hover:bg-white/20 transition-colors">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                                    </button>
+                                    <h3 id="wellness-week-display" class="text-base md:text-lg font-semibold text-center w-36 md:w-48"></h3>
+                                    <button id="wellness-next-week-btn" class="icon-btn p-2 rounded-full hover:bg-white/20 transition-colors">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                                <div class="bg-white/5 rounded-xl p-4 space-y-3">
+                                    <h4 class="font-bold text-lg">🩺 Daily Summary</h4>
+                                    <div class="flex justify-between items-center text-sm"><span>Mood:</span> <span id="summary-mood" class="font-semibold text-lg"></span></div>
+                                    <div class="flex justify-between items-center text-sm"><span>Sleep:</span> <span id="summary-sleep" class="font-semibold"></span></div>
+                                    <div class="flex justify-between items-center text-sm"><span>Water:</span> <span id="summary-water" class="font-semibold"></span></div>
+                                    <div class="flex justify-between items-center text-sm"><span>Energy:</span> <span id="summary-energy" class="font-semibold"></span></div>
+                                    <div id="summary-ai-insight" class="ai-insight mt-2"></div>
+                                </div>
+
+                                 <div class="bg-white/5 rounded-xl p-4 flex flex-col items-center justify-center">
+                                    <h4 class="font-bold text-lg mb-2">💧 Hydration</h4>
+                                    <div class="relative w-32 h-32">
+                                        <svg class="w-full h-full" viewBox="0 0 100 100">
+                                            <circle class="text-gray-700" stroke-width="10" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50" />
+                                            <circle id="hydration-progress" class="text-blue-400" stroke-width="10" stroke-linecap="round" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50" style="stroke-dasharray: 283; stroke-dashoffset: 283; transition: stroke-dashoffset 0.5s ease-in-out;" transform="rotate(-90 50 50)" />
+                                        </svg>
+                                        <div id="hydration-text" class="absolute inset-0 flex flex-col items-center justify-center text-2xl font-bold">
+                                        </div>
+                                    </div>
+                                    <div class="flex space-x-2 mt-3">
+                                        <button id="hydration-minus" class="bg-white/10 rounded-full w-8 h-8 font-bold text-lg">-</button>
+                                        <button id="hydration-plus" class="bg-white/10 rounded-full w-8 h-8 font-bold text-lg">+</button>
+                                    </div>
+                                    <p id="hydration-ai-insight" class="ai-insight text-center mt-2 w-full"></p>
+                                </div>
+
+                                <div class="bg-white/5 rounded-xl p-4">
+                                    <h4 class="font-bold text-lg mb-3">💬 Daily Logs</h4>
+                                    <p class="text-sm text-gray-400 mb-2">How are you feeling today?</p>
+                                    <div id="mood-log-buttons" class="flex justify-around mb-3">
+                                        <button class="text-3xl hover:scale-125 transition-transform mood-btn" data-mood="😣">😣</button>
+                                        <button class="text-3xl hover:scale-125 transition-transform mood-btn" data-mood="😐">😐</button>
+                                        <button class="text-3xl hover:scale-125 transition-transform mood-btn" data-mood="🙂">🙂</button>
+                                        <button class="text-3xl hover:scale-125 transition-transform mood-btn" data-mood="😊">😊</button>
+                                        <button class="text-3xl hover:scale-125 transition-transform mood-btn" data-mood="🥰">🥰</button>
+                                    </div>
+                                    <div class="w-full h-2 rounded-full bg-gradient-to-r from-red-500 via-yellow-400 to-green-500 mb-4"></div>
+                                    
+                                    <p class="text-sm text-gray-400 mb-2">What's your energy level?</p>
+                                    <div id="energy-log-buttons" class="flex justify-around mb-3">
+                                        <button class="text-2xl hover:scale-125 transition-transform energy-btn p-1 rounded-full" data-energy="1">😴</button>
+                                        <button class="text-2xl hover:scale-125 transition-transform energy-btn p-1 rounded-full" data-energy="2">🚶‍♀️</button>
+                                        <button class="text-2xl hover:scale-125 transition-transform energy-btn p-1 rounded-full" data-energy="3">🙂</button>
+                                        <button class="text-2xl hover:scale-125 transition-transform energy-btn p-1 rounded-full" data-energy="4">🤸‍♀️</button>
+                                        <button class="text-2xl hover:scale-125 transition-transform energy-btn p-1 rounded-full" data-energy="5">⚡️</button>
+                                    </div>
+                                    <div class="w-full h-2 rounded-full bg-gradient-to-r from-yellow-600 via-yellow-400 to-teal-400 mb-3"></div>
+
+                                    <div id="mood-ai-insight" class="ai-insight"></div>
+                                </div>
+                                
+                                <div class="bg-white/5 rounded-xl p-4 md:col-span-2 lg:col-span-3">
+                                    <h4 class="font-bold text-lg mb-2">📊 Weekly Wellness</h4>
+                                    <canvas id="wellnessChart"></canvas>
+                                    <div id="chart-ai-insight" class="ai-insight mt-3"></div>
+                                </div>
+
+                                <div class="bg-white/5 rounded-xl p-4 lg:col-span-2">
+                                    <div class="flex justify-between items-center mb-3">
+                                        <h4 class="font-bold text-lg">🍽️ Nutrition Tracker</h4>
+                                        <div class="flex items-center gap-2">
+                                            <button id="nutrition-history-btn" class="icon-btn" title="View History">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-300" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.414-1.415L11 9.586V6z" clip-rule="evenodd" />
+                                                </svg>
+                                            </button>
+                                            <button id="manage-supplements-btn-header" class="icon-btn" title="Manage & Log Supplements">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <p class="text-xs text-gray-400 mb-2">Based on today's scheduled meals & supplements.</p>
+                                    <div id="daily-supplements-list" class="flex flex-wrap gap-2 mb-3"></div>
+                                    <div class="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+                                        <div id="nutrition-iron">
+                                            <div class="flex justify-between mb-1"><span>Iron</span><span class="status-text"></span></div>
+                                            <div class="w-full bg-gray-700 rounded-full h-1.5"><div class="progress-bar h-1.5 rounded-full"></div></div>
+                                        </div>
+                                        <div id="nutrition-calcium">
+                                            <div class="flex justify-between mb-1"><span>Calcium</span><span class="status-text"></span></div>
+                                            <div class="w-full bg-gray-700 rounded-full h-1.5"><div class="progress-bar h-1.5 rounded-full"></div></div>
+                                        </div>
+                                         <div id="nutrition-folate">
+                                            <div class="flex justify-between mb-1"><span>Folate</span><span class="status-text"></span></div>
+                                            <div class="w-full bg-gray-700 rounded-full h-1.5"><div class="progress-bar h-1.5 rounded-full"></div></div>
+                                        </div>
+                                        <div id="nutrition-fiber">
+                                            <div class="flex justify-between mb-1"><span>Fiber</span><span class="status-text"></span></div>
+                                            <div class="w-full bg-gray-700 rounded-full h-1.5"><div class="progress-bar h-1.5 rounded-full"></div></div>
+                                        </div>
+                                        <!-- NEW: Protein and Carbs -->
+                                        <div id="nutrition-protein">
+                                            <div class="flex justify-between mb-1"><span>Protein</span><span class="status-text"></span></div>
+                                            <div class="w-full bg-gray-700 rounded-full h-1.5"><div class="progress-bar h-1.5 rounded-full"></div></div>
+                                        </div>
+                                        <div id="nutrition-carbs">
+                                            <div class="flex justify-between mb-1"><span>Carbs</span><span class="status-text"></span></div>
+                                            <div class="w-full bg-gray-700 rounded-full h-1.5"><div class="progress-bar h-1.5 rounded-full"></div></div>
+                                        </div>
+                                    </div>
+                                    <div id="nutrition-ai-insight" class="ai-insight mt-4"></div>
+                                </div>
+                                
+                                 <div id="sleep-monitor-card" class="bg-white/5 rounded-xl p-4 cursor-pointer hover:bg-white/10 transition-colors">
+                                    <h4 class="font-bold text-lg mb-3">😴 Sleep Monitor</h4>
+                                    <div id="sleep-monitor-display" class="text-center mb-3">
+                                        <p class="text-4xl font-bold"><span id="sleep-hours"></span> <span class="text-lg font-normal">hrs</span></p>
+                                        <p class="text-xs text-gray-400">Last Night</p>
+                                    </div>
+                                    <div id="sleep-ai-insight" class="ai-insight"></div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="content-calm-space" class="tab-content">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        
+                        <div class="glass-card anim-card p-4 md:p-6">
+                            <h3 class="text-2xl font-bold mb-4">🌬️ Gentle Breathing</h3>
+                            <div id="breathing-visualizer-container" class="relative w-full h-64 md:h-96 rounded-lg overflow-hidden flex items-center justify-center transition-colors duration-1000" style="background-color: #3a506b;">
+                                <div id="breathing-orb" class="w-32 h-32 bg-white/30 rounded-full transition-transform duration-3000 ease-in-out"></div>
+                                <div id="breathing-animation-element" class=""></div> <span id="breathing-visual-emoji" class="absolute text-5xl text-white z-10">🧘‍♀️</span>
+                            </div>
+                            <div class="pt-4 mt-4 border-t border-white/10">
+                                <div class="flex flex-wrap items-center justify-between gap-4">
+                                    <div class="flex flex-wrap gap-2" id="breathing-exercise-buttons">
+                                        <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-breath="4-7-8">4-7-8 Breathing</button>
+                                        <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-breath="box">Box Breathing</button>
+                                        <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-breath="wave">Wave Breathing</button>
+                                        <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-breath="heartbeat">Heartbeat Sync</button>
+                                        <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-breath="energizer">Morning Energizer</button>
+                                        <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-breath="sleep">Sleep Wind-Down</button>
+                                    </div>
+                                    </div>
+                                <div class="flex flex-wrap items-center justify-between gap-4 mt-4">
+                                    
+                                    <div class="flex items-center gap-3 flex-grow">
+                                        <label for="breathing-timer-input" class="font-semibold">Timer (min):</label>
+                                        <input type="number" id="breathing-timer-input" class="meal-select text-sm flex-grow" placeholder="Minutes..." min="1" value="3">
+                                    </div>
+                                    
+                                    <div class="flex items-center gap-3">
+                                        <button id="breathing-play-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-5 rounded-lg w-20">Play</button>
+                                        <button id="breathing-stop-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-5 rounded-lg w-20 hidden">Stop</button>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <input type="checkbox" id="breathing-silent-toggle" class="hidden">
+                                        <label for="breathing-silent-toggle" class="icon-btn p-2 rounded-full cursor-pointer" title="Toggle Silent Mode (Animation Only)">
+                                            <svg id="breathing-sound-on-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M20 4a9 9 0 010 12.728M6.717 3.342A.5.5 0 017.5 3.85v16.298a.5.5 0 01-.783.41l-4-3.5H1a1 1 0 01-1-1V7.94a1 1 0 011-1h1.717l4-3.5a.5.5 0 01.783-.088z"></path></svg>
+                                            <svg id="breathing-sound-off-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.866 3.866M21 21l-3.866-3.866"></path></svg>
+                                        </label>
+                                        <span id="breathing-timer-display" class="font-semibold text-lg ml-2">0:00</span>
+                                    </div>
+                                </div>
+                                <div id="breathing-instruction" class="ai-insight mt-4">
+                                    <p>Select an exercise and timer to begin.</p>
+                                    <ul id="breathing-steps-list" class="list-disc list-inside mt-2"></ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="glass-card anim-card p-4 md:p-6">
+                            <h3 class="text-2xl font-bold mb-4">💖 Baby Connection</h3>
+                            <div id="meditation-visual-container" class="w-full h-48 bg-white/5 rounded-lg flex items-center justify-center mb-4 relative overflow-hidden">
+                                <div id="meditation-orb" class="w-24 h-24 bg-pink-400/30 rounded-full transition-all duration-3000 ease-in-out"></div>
+                                <span id="meditation-visual-emoji" class="absolute text-5xl z-10">💖</span>
+                            </div>
+                            <div class="space-y-3">
+                                <div id="meditation-type-buttons" class="grid grid-cols-2 gap-3">
+                                    <button class="btn-secondary py-3 px-2 rounded-lg text-sm" data-meditation="first-connection">First Connection</button>
+                                    <button class="btn-secondary py-3 px-2 rounded-lg text-sm" data-meditation="love-visualization">Love Visualization</button>
+                                    <button class="btn-secondary py-3 px-2 rounded-lg text-sm" data-meditation="heartbeat-harmony">Heartbeat Harmony</button>
+                                    <button class="btn-secondary py-3 px-2 rounded-lg text-sm" data-meditation="peaceful-night">Peaceful Night</button>
+                                    <button class="btn-secondary py-3 px-2 rounded-lg text-sm" data-meditation="morning-gratitude">Morning Gratitude</button>
+                                </div>
+                                <div class="flex items-center justify-between gap-4 pt-3 border-t border-white/10">
+                                    <input type="number" id="meditation-timer-input" class="meal-select text-sm flex-grow" placeholder="Minutes..." min="1" value="3">
+                                    
+                                    <span id="meditation-timer-display" class="font-semibold text-lg">0:00</span>
+
+                                    <input type="checkbox" id="meditation-voice-toggle" class="hidden">
+                                    <label for="meditation-voice-toggle" class="icon-btn p-2 rounded-full cursor-pointer" title="Toggle Voice Guide">
+                                        <svg id="meditation-sound-on-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M20 4a9 9 0 010 12.728M6.717 3.342A.5.5 0 017.5 3.85v16.298a.5.5 0 01-.783.41l-4-3.5H1a1 1 0 01-1-1V7.94a1 1 0 011-1h1.717l4-3.5a.5.5 0 01.783-.088z"></path></svg>
+                                        <svg id="meditation-sound-off-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.866 3.866M21 21l-3.866-3.866"></path></svg>
+                                    </label>
+                                </div>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <button id="start-meditation-btn" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Start Meditation</button>
+                                    <button id="stop-meditation-btn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition-colors hidden">Stop Meditation</button>
+                                </div>
+                                <div id="meditation-instruction" class="ai-insight mt-2">
+                                    <p>Select a meditation type and duration to begin.</p>
+                                </div>
+                            </div>
+                            <audio id="meditation-audio-player" loop class="hidden"></audio>
+                        </div>
+
+                        <div class="glass-card anim-card p-4 md:p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-2xl font-bold">🧘‍♀️ Gentle Stretch Guide</h3>
+                                <span id="stretch-timer-display" class="font-semibold text-2xl text-purple-300">0:00</span>
+                            </div>
+                            <div class="flex flex-col md:flex-row gap-6">
+                                <div id="stretch-visual-container" class="w-full md:w-1/2 h-64 bg-white/5 rounded-lg flex items-center justify-center relative overflow-hidden">
+                                    <div id="stretch-visual" class="transition-all duration-500 text-6xl">
+                                        </div>
+                                    <span id="stretch-pose-display" class="absolute bottom-4 text-lg font-semibold">Select a routine</span>
+                                </div>
+                                <div class="w-full md:w-1/2">
+                                    <div class="flex flex-wrap gap-2 mb-4" id="stretch-routine-buttons">
+                                        <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-stretch="morning-flow">Morning Flow</button>
+                                        <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-stretch="back-hip">Back & Hip</button>
+                                        <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-stretch="leg-relax">Leg Relax</button>
+                                        <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-stretch="shoulder-neck">Shoulder Release</button>
+                                        <button class="btn-secondary text-sm py-2 px-3 rounded-lg" data-stretch="sleep-wind">Sleep Wind-Down</button>
+                                    </div>
+                                    <div class="flex items-center justify-between gap-4 mb-4">
+                                        <input type="number" id="stretch-timer-input" class="meal-select text-sm flex-grow" placeholder="Minutes..." min="1" value="5">
+
+                                        <input type="checkbox" id="stretch-voice-toggle" class="hidden">
+                                        <label for="stretch-voice-toggle" class="icon-btn p-2 rounded-full cursor-pointer" title="Toggle Voice Guide">
+                                            <svg id="stretch-sound-on-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M20 4a9 9 0 010 12.728M6.717 3.342A.5.5 0 017.5 3.85v16.298a.5.5 0 01-.783.41l-4-3.5H1a1 1 0 01-1-1V7.94a1 1 0 011-1h1.717l4-3.5a.5.5 0 01.783-.088z"></path></svg>
+                                            <svg id="stretch-sound-off-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.866 3.866M21 21l-3.866-3.866"></path></svg>
+                                        </label>
+                                        <input type="checkbox" id="stretch-loop-toggle" class="hidden">
+                                        <label for="stretch-loop-toggle" class="icon-btn p-2 rounded-full cursor-pointer hidden" title="Toggle Loop">
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9.5m0 5a8.001 8.001 0 0014.836 2.5m.582 5v-5h-.582"></path></svg>
+                                        </label>
+                                    </div>
+                                    <div class="flex items-center justify-center gap-4" id="stretch-controls">
+                                        <button id="stretch-prev-pose-btn" class="btn-secondary py-2 px-4 rounded-lg">Prev</button>
+                                        <button id="stretch-play-pause-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-5 rounded-lg w-20">
+                                            <span id="stretch-play-icon">Play</span>
+                                            <span id="stretch-pause-icon" style="display: none;">Pause</span>
+                                        </button>
+                                        <button id="stretch-next-pose-btn" class="btn-secondary py-2 px-4 rounded-lg">Next</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="stretch-instruction" class="ai-insight mt-4">
+                                <p>Select a routine. Stretches are filtered by trimester for your safety.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="glass-card anim-card p-4 md:p-6">
+                            <h3 class="text-2xl font-bold mb-4">🏃‍♀️ Preggy Steps</h3>
+                            
+                            <div class="w-full h-48 bg-white/5 rounded-lg flex flex-col items-center justify-center mb-4 relative overflow-hidden">
+                                <span id="preggy-timer-display" class="font-bold text-6xl text-white" style="text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);">00:00:00</span>
+                                <span id="preggy-calories-display" class="font-semibold text-lg text-yellow-300">~0 kcal</span>
+                            </div>
+
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-center gap-4" id="preggy-controls">
+                                    <button id="preggy-play-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg w-28">
+                                        Start
+                                    </button>
+                                    <button id="preggy-pause-btn" class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-6 rounded-lg w-28 hidden">
+                                        Pause
+                                    </button>
+                                    <button id="preggy-stop-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg w-28 hidden">
+                                        Stop
+                                    </button>
+                                </div>
+                                
+                                <div class="text-center">
+                                    <button id="preggy-manual-toggle-btn" class="text-sm text-indigo-300 hover:text-white transition-colors">Log Manually Instead?</button>
+                                </div>
+
+                                <div>
+                                    <label for="preggy-activity-select" class="block text-sm font-semibold mb-2">Activity Type</label>
+                                    <select id="preggy-activity-select" class="meal-select text-sm">
+                                        <option value="walking">Walking 🚶</option>
+                                        <option value="yoga">Yoga 🧘‍♀️</option>
+                                        <option value="stretching">Stretching 🧍‍♀️</option>
+                                        <option value="light_exercise">Light Exercise 💪</option>
+                                        <option value="other">Other ✨</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label for="preggy-intensity-slider" class="block text-sm font-semibold mb-2">Intensity</label>
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-xs text-gray-400">Light</span>
+                                        <input type="range" id="preggy-intensity-slider" min="1" max="5" value="3" class="flex-grow">
+                                        <span class="text-xs text-gray-400">Heavy</span>
+                                    </div>
+                                </div>
+                                
+                                <div id="preggy-manual-form" class="hidden space-y-3 pt-3 border-t border-white/10">
+                                    <div class="flex items-center gap-3">
+                                        <label for="preggy-manual-input" class_alias="font-semibold">Duration (min):</label>
+                                        <input type="number" id="preggy-manual-input" class="meal-select text-sm flex-grow" placeholder="e.g., 25" min="1">
+                                    </div>
+                                    <button id="preggy-manual-save-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg">
+                                        Save Manual Log
+                                    </button>
+                                </div>
+
+                            </div>
+                        </div>
+                        <div id="daily-summary-card" class="glass-card anim-card p-4 md:p-6 transition-colors duration-1000 lg:col-span-2">
+                            <h3 class="text-2xl font-bold mb-4">📅 Daily Summary</h3>
+                            
+                            <div class="relative w-full h-56 flex items-center justify-center mb-4">
+                                <div id="summary-mood-gauge" class="w-56 h-56 rounded-full p-4" style="background-image: conic-gradient(from 0deg, #4d5bf9 0%, #00d4ff 0%, #1a203c 0%);">
+                                    <div class="w-full h-full bg-gray-900 rounded-full flex items-center justify-center">
+                                        <div class="text-center">
+                                            <span id="summary-mood-emoji" class="text-6xl">😌</span>
+                                            <p id="summary-mood-label" class="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">Finding Balance</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="summary-glow-effect" class="absolute inset-0"></div>
+                            </div>
+
+                            <div classs="space-y-3 mb-4">
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="font-semibold">🌬️ Breathing:</span>
+                                    <span id="summary-breath-level" class="font-bold text-lg text-blue-300">0 min</span>
+                                </div>
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="font-semibold">🧘‍♀️ Stretching:</span>
+                                    <span id="summary-stretch-level" class="font-bold text-lg text-purple-300">0 min</span>
+                                </div>
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="font-semibold">💖 Connection:</span>
+                                    <span id="summary-meditation-level" class="font-bold text-lg text-pink-300">0 min</span>
+                                </div>
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="font-semibold">🏃‍♀️ Movement:</span>
+                                    <span id="summary-movement-level" class="font-bold text-lg text-green-300">0 min</span>
+                                </div>
+                            </div>
+
+                            <div id="summary-positive-message" class="ai-insight text-center my-4">
+                                Your calm energy is shining bright ✨
+                            </div>
+
+                            <div class="pt-4 border-t border-white/10">
+                                <div class="flex justify-between items-center mb-3">
+                                    <h4 class="font-semibold">Your 7-Day Trend</h4>
+                                    <span id="summary-streak-badge" class="text-xs font-bold bg-yellow-500/30 text-yellow-300 py-1 px-3 rounded-full">🔥 0 Day Streak</span>
+                                </div>
+                                <div id="summary-bar-chart" class="flex justify-between items-end h-16 w-full gap-1">
+                                    <div class="summary-bar" style="height: 20%;" title="Mon: 😌"></div>
+                                    <div class="summary-bar" style="height: 40%;" title="Tue: 🙂"></div>
+                                    <div class="summary-bar" style="height: 60%;" title="Wed: 😊"></div>
+                                    <div class="summary-bar" style="height: 80%;" title="Thu: 🥰"></div>
+                                    <div class="summary-bar" style="height: 50%;" title="Fri: 🙂"></div>
+                                    <div class="summary-bar" style="height: 30%;" title="Sat: 😌"></div>
+                                    <div class="summary-bar" style="height: 70%;" title="Sun: 😊"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div id="content-journey" class="tab-content">
+                    <div class="space-y-8">
+
+                        <div class="glass-card anim-card p-4 md:p-6">
+                            <div id="calendar-header" class="flex items-center justify-between mb-4">
+                                <button id="calendar-prev-btn" class="icon-btn p-2 rounded-full hover:bg-white/20 transition-colors">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                                </button>
+                                <h3 id="calendar-month-year" class="text-2xl font-bold text-center">October 2025</h3>
+                                <button id="calendar-next-btn" class="icon-btn p-2 rounded-full hover:bg-white/20 transition-colors">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                </button>
+                            </div>
+
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                
+                                <div id="calendar-container" class="lg:col-span-2">
+                                    <div class="grid grid-cols-7 gap-2 mb-2">
+                                        <div class="text-center font-bold text-indigo-300 text-sm">SUN</div>
+                                        <div class="text-center font-bold text-indigo-300 text-sm">MON</div>
+                                        <div class="text-center font-bold text-indigo-300 text-sm">TUE</div>
+                                        <div class="text-center font-bold text-indigo-300 text-sm">WED</div>
+                                        <div class="text-center font-bold text-indigo-300 text-sm">THU</div>
+                                        <div class="text-center font-bold text-indigo-300 text-sm">FRI</div>
+                                        <div class="text-center font-bold text-indigo-300 text-sm">SAT</div>
+                                    </div>
+                                    <div id="calendar-grid" class="grid grid-cols-7 gap-1">
+                                        </div>
+                                </div>
+                                
+                                <div class="lg:col-span-1 space-y-6">
+                                    <div class="bg-white/5 rounded-lg p-4">
+                                        <div id="todo-list-header" class="flex justify-between items-center cursor-pointer">
+                                            <h3 class="text-xl font-bold">✅ To-Do List</h3>
+                                            <svg id="todo-list-toggle-icon" class="w-6 h-6 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                        </div>
+                                        <div id="collapsible-todo-content" class="hidden pt-4 mt-4 border-t border-white/10">
+                                            <div id="todo-list-container" class="space-y-3 max-h-72 overflow-y-auto modal-scroll pr-2">
+                                                </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="lg:col-span-1 space-y-6">
+                                    <div class="bg-white/5 rounded-lg p-4">
+                                        <div id="recipe-list-header" class="flex justify-between items-center cursor-pointer">
+                                            <h3 class="text-xl font-bold">🍳 Recipes</h3>
+                                            <svg id="recipe-list-toggle-icon" class="w-6 h-6 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                        </div>
+                                        <div id="collapsible-recipe-content" class="hidden pt-4 mt-4 border-t border-white/10"> 
+                                            <div id="recipe-list-container" class="space-y-3 max-h-72 overflow-y-auto modal-scroll pr-2">
+                                                </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="lg:col-span-2 space-y-6">
+                                    <div class="bg-white/5 rounded-lg p-4">
+                                        <p class="text-lg font-semibold text-white mb-3">Add New Task</p>
+                                        <div class="space-y-3">
+                                            <textarea id="new-todo-input" class="symptom-input text-sm min-h-[60px]" placeholder="New task or note..."></textarea>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                <input type="date" id="new-todo-date" class="date-input text-sm">
+                                                <input type="time" id="new-todo-time" class="date-input text-sm">
+                                            </div>
+                                            <select id="new-todo-category" class="meal-select text-sm">
+                                                <option value="Health">🧘‍♀️ Health</option>
+                                                <option value="Baby">🍼 Baby Prep</option>
+                                                <option value="Home">🏡 Home</option>
+                                                <option value="Appointment">🗓️ Appointment</option>
+                                                <option value="Recipes">🍳 Recipes</option>
+                                                <option value="Reminder">💬 Reminder</option>
+                                                <option value="Custom">✨ Custom</option>
+                                            </select>
+                                            <input type="text" id="custom-todo-category-input" class="meal-select text-sm hidden" placeholder="Your custom category...">
+                                            
+                                            <div id="new-appointment-fields" class="hidden space-y-3 pt-3 mt-3 border-t border-white/10">
+                                                <p class="text-sm font-semibold text-indigo-200">Appointment Details</p>
+                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                    <input type="text" id="new-appointment-fname" class="meal-select text-sm" placeholder="First Name">
+                                                    <input type="text" id="new-appointment-lname" class="meal-select text-sm" placeholder="Last Name">
+                                                </div>
+                                                <input type="text" id="new-appointment-address" class="meal-select text-sm" placeholder="Address">
+                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                    <input type="tel" id="new-appointment-contact" class="meal-select text-sm" placeholder="Contact Number">
+                                                    <input type="email" id="new-appointment-email" class="meal-select text-sm" placeholder="Email">
+                                                </div>
+                                                <div class="flex gap-3">
+                                                    <select id="new-appointment-type" class="meal-select text-sm flex-grow">
+                                                        <option value="">Appointment Type</option>
+                                                        <option value="OB/GYN">OB/GYN</option>
+                                                        <option value="Ultrasound">Ultrasound</option>
+                                                        <option value="Pediatrician">Pediatrician</option>
+                                                        <option value="Custom">Custom Type</option>
+                                                    </select>
+                                                    <input type="text" id="new-appointment-custom-type" class="meal-select text-sm flex-grow hidden" placeholder="Custom Appointment Type">
+                                                </div>
+                                            </div>
+                                            <button id="add-todo-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Add Task</button>
+                                        </div>
+                                        <div class="mt-6 pt-6 border-t border-white/10 text-center">
+                                            <p class="mb-2 text-indigo-200">Need ideas? Let AI help!</p>
+                                            <button id="ai-generate-todos-btn" class="btn-secondary font-semibold py-2 px-5 rounded-lg">Generate Weekly To-Do List</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="lg:col-span-2 space-y-6">
+                                    <div class="bg-white/5 rounded-lg p-4">
+                                        <h3 class="text-xl font-bold text-center mb-3">🧑‍🍳 AI Recipe Assistant</h3>
+                                        <div class="space-y-3">
+                                            <textarea id="ai-recipe-prompt" class="symptom-input min-h-[80px]" placeholder="e.g., I'm craving a simple, healthy pasta dish..."></textarea>
+                                            <button id="ai-generate-recipe-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
+                                                <span id="ai-recipe-btn-text">Find Recipes</span>
+                                                <svg id="ai-recipe-loader" class="animate-spin ml-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                            </button>
+                                            <div id="ai-recipe-results-container" class="mt-4 space-y-4">
+                                                </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            
+                            <div class="glass-card anim-card p-4 md:p-6 lg:col-span-2">
+                                <div id="wishlist-header" class="flex justify-between items-center mb-4 cursor-pointer">
+                                    <h3 class="text-2xl font-bold">🎁 Little Wishes</h3>
+                                    <svg id="wishlist-toggle-icon" class="w-6 h-6 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </div>
+
+                                <div id="collapsible-wishlist-content" class="hidden">
+                                    <div class="mb-4">
+                                        <div class="flex justify-between text-sm mb-1">
+                                            <span>Purchased</span>
+                                            <span id="wishlist-progress-text">0/0 Items</span>
+                                        </div>
+                                        <div class="w-full bg-gray-700 rounded-full h-2.5">
+                                            <div id="wishlist-progress-bar" class="bg-gradient-to-r from-teal-400 to-blue-500 h-2.5 rounded-full" style="width: 0%; transition: width 0.5s ease;"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex flex-col md:flex-row gap-3 mb-4">
+                                        <div class="relative flex-grow">
+                                            <input type="text" id="wishlist-search-input" class="meal-select text-sm w-full pl-10" placeholder="Find an item...">
+                                            <svg class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                            </svg>
+                                        </div>
+                                        <select id="wishlist-sort-select" class="meal-select text-sm md:w-48">
+                                            <option value="default">Sort by... (Default)</option>
+                                            <option value="category">Sort by Category</option>
+                                            <option value="foodType">Sort by Food Type</option>
+                                        </select>
+                                    </div>
+                                    <div id="wishlist-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[28rem] overflow-y-auto modal-scroll pr-2 mb-4">
+                                        </div>
+                                </div>
+                                
+                                <div class="pt-4 border-t border-white/10 space-y-3">
+                                    <input type="text" id="new-wish-item" class="meal-select text-sm" placeholder="Item name (e.g., Baby Monitor)">
+                                    <select id="new-wish-category" class="meal-select text-sm">
+                                        <option value="Baby Care">🍼 Baby Care</option>
+                                        <option value="Nursery">🧸 Nursery</option>
+                                        <option value="Hospital Bag">👜 Hospital Bag</option>
+                                        <option value="Health">🧘‍♀️ Health</option>
+                                        <option value="Postpartum">💖 Postpartum</option> 
+                                        <option value="Food">🥕 Food</option>
+                                        <option value="Custom">✨ Custom</option>
+                                    </select>
+                                    <input type="text" id="custom-category-input" class="meal-select text-sm hidden" placeholder="Your custom category...">
+                                    
+                                    <div id="new-wish-food-fields" class="hidden space-y-3 pt-3 mt-3 border-t border-white/10">
+                                        <p class="text-sm font-semibold text-indigo-200">Food Details</p>
+                                        <select id="new-wish-food-type" class="meal-select text-sm">
+                                            <option value="">Select food type...</option>
+                                            <option value="Meat">🥩 Meat</option>
+                                            <option value="Fruit">🍎 Fruit</option>
+                                            <option value="Vege">🥦 Vege</option>
+                                            <option value="Snack">🥨 Snack</option>
+                                            <option value="Diary">🧀 Diary</option>
+                                            <option value="Grain">🍚 Grain</option> 
+                                            <option value="Soup">🍲 Soup</option>
+                                            <option value="Dog">🐶 Dog Food</option>
+                                            <option value="Drinks">🥤 Drinks</option>
+                                        </select>
+                                        <label for="new-wish-food-expiry" class="text-sm text-gray-300 -mb-2 block">Expiration Date:</label>
+                                        <input type="date" id="new-wish-food-expiry" class="date-input text-sm">
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <input type="text" id="new-wish-price" class="meal-select text-sm w-1/2" placeholder="Price ($)">
+                                        <input type="text" id="new-wish-link" class="meal-select text-sm w-1/2" placeholder="Store Link">
+                                    </div>
+
+                                    <div>
+                                        <label for="new-wish-quantity" class="text-sm text-gray-300 mb-1 block">Quantity</label>
+                                        <div class="flex items-center gap-2">
+                                            <button type="button" id="new-wish-quantity-minus" class="quantity-btn">-</button>
+                                            <input type="number" id="new-wish-quantity" class="quantity-input" value="1" min="1">
+                                            <button type="button" id="new-wish-quantity-plus" class="quantity-btn">+</button>
+                                        </div>
+                                    </div>
+                                    <button id="add-wish-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Add Wish</button>
+                                </div>
+                                <div class="mt-6 text-center">
+                                    <p class="mb-2 text-indigo-200">Let AI suggest items!</p>
+                                    <form id="ai-wish-form" class="flex gap-2">
+                                        <input type="text" id="ai-wish-prompt" class="meal-select text-sm flex-grow" placeholder="e.g., Hospital bag for third trimester">
+                                        <button type="submit" class="btn-secondary font-semibold py-2 px-4 rounded-lg">Go</button>
+                                    </form>
+                                </div>
+                                <div id="ai-wish-suggestions-container" class="mt-4 space-y-3"></div>
+                            </div>
+                            <div class="lg:col-span-1 space-y-8">
+
+                                <div class="glass-card anim-card p-4 md:p-6">
+                                    <div id="reflection-header" class="flex justify-between items-center mb-4 cursor-pointer">
+                                        <h3 class="text-2xl font-bold">📝 Tiny Reflections</h3>
+                                        <div class="flex items-center">
+                                            <button id="add-reflection-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg text-sm mr-2">New Note</button>
+                                            <svg id="reflection-toggle-icon" class="w-6 h-6 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                        </div>
+                                    </div>
+                                    <div id="collapsible-reflection-content" class="hidden pt-4 border-t border-white/10">
+                                        <div class="flex justify-end mb-4">
+                                            <button id="ai-summarize-reflections-btn" title="Summarize my last 3 notes" class="icon-btn">
+                                                <svg class="w-6 h-6 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                                            </button>
+                                        </div>
+                                        <div id="reflections-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-1 gap-4"></div>
+                                        <div id="toggle-reflections-container" class="text-center mt-4 hidden">
+                                            <button id="toggle-reflections-btn" class="btn-secondary text-sm font-semibold py-2 px-4 rounded-lg">Show All</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="dream-name-card" class="glass-card anim-card p-4 md:p-6">
+                                    <div class="flex justify-between items-center mb-4">
+                                        <h3 class="text-2xl font-bold">🍼 Dream Name</h3>
+                                        <button id="name-favorites-toggle-btn" class="btn-secondary text-sm font-semibold py-2 px-4 rounded-lg">
+                                            ❤️ (0)
+                                        </button>
+                                    </div>
+
+                                    <div id="name-favorites-container" class="hidden mb-6 pt-4 border-t border-white/10">
+                                        <h4 class="font-bold text-lg mb-3">Saved Names</h4>
+                                        <div id="name-favorites-list" class="space-y-2 max-h-48 overflow-y-auto modal-scroll pr-2">
+                                            <p class="text-gray-400 text-sm text-center">Your favorite names will appear here.</p>
+                                            </div>
+                                    </div>
+
+                                    <div class="space-y-4">
+                                        <div>
+                                            <label class="block text-sm font-semibold mb-2">Gender</label>
+                                            <div id="name-gender-selector" class="flex flex-wrap gap-2">
+                                                <button class="btn-secondary flex-grow text-sm py-2 px-3 rounded-lg" data-gender="Boy">Boy 👦</button>
+                                                <button class="btn-secondary flex-grow text-sm py-2 px-3 rounded-lg" data-gender="Girl">Girl 👧</button>
+                                                <button class="btn-secondary flex-grow text-sm py-2 px-3 rounded-lg" data-gender="Neutral">Neutral 🌈</button>
+                                            </div>
+                                        </div>
+
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label for="name-origin-select" class="block text-sm font-semibold mb-2">Origin / Language</label>
+                                                <select id="name-origin-select" class="meal-select text-sm">
+                                                    <option value="">Any Origin</option>
+                                                    <option value="English">English</option>
+                                                    <option value="Burmese">Burmese</option>
+                                                    <option value="Japanese">Japanese</option>
+                                                    <option value="Biblical">Biblical</option>
+                                                    <option value="Modern">Modern</option>
+                                                    <option value="Hong Kong">Hong Kong</option>
+                                                    <option value="Korean">Korean</option>
+                                                    <option value="Custom">Custom...</option>
+                                                </select>
+                                                <input type="text" id="name-origin-custom" class="meal-select text-sm mt-2 hidden" placeholder="Type custom origin...">
+                                            </div>
+
+                                            <div>
+                                                <label for="name-style-select" class="block text-sm font-semibold mb-2">Style / Mood</label>
+                                                <select id="name-style-select" class="meal-select text-sm">
+                                                    <option value="">Any Style</option>
+                                                    <option value="Classic">Classic</option>
+                                                    <option value."unique"">Unique</option>
+                                                    <option value="Trendy">Trendy</option>
+                                                    <option value="Short & Cute">Short & Cute</option>
+                                                    <option value="Royal">Royal</option>
+                                                    <option value="Nature-inspired">Nature-inspired</option>
+                                                    <option value="Custom">Custom...</option>
+                                                </select>
+                                                <input type="text" id="name-style-custom" class="meal-select text-sm mt-2 hidden" placeholder="Type custom style...">
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label for="name-meaning-input" class="block text-sm font-semibold mb-2">Meaning / Vibe</label>
+                                            <input type="text" id="name-meaning-input" class="meal-select text-sm" placeholder="e.g., 'peace', 'strong', 'light'">
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-sm font-semibold mb-2">Syllables</label>
+                                            <div id="name-syllable-selector" class="flex flex-wrap gap-3">
+                                                <label class="flex items-center gap-2"><input type="radio" name="syllables" value="" class="name-radio" checked> Any</label>
+                                                <label class="flex items-center gap-2"><input type="radio" name="syllables" value="1" class="name-radio"> 1</label>
+                                                <label class="flex items-center gap-2"><input type="radio" name="syllables" value="2" class="name-radio"> 2</label>
+                                                <label class="flex items-center gap-2"><input type="radio" name="syllables" value="3+" class="name-radio"> 3+</label>
+                                            </div>
+                                        </div>
+
+                                        <div class="grid grid-cols-2 gap-3 pt-4 border-t border-white/10">
+                                            <button id="name-random-btn" class="btn-secondary font-semibold py-3 px-4 rounded-lg text-sm">
+                                                🔀 Randomize
+                                            </button>
+                                            <button id="name-generate-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
+                                                <span id="name-generate-btn-text">Generate Names</span>
+                                                <svg id="name-generate-loader" class="animate-spin ml-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div id="name-results-container" class="mt-6 pt-6 border-t border-white/10 space-y-3">
+                                        <p class="text-gray-400 text-sm text-center">Your name suggestions will appear here.</p>
+                                    </div>
+                                    
+                                    <button id="name-generate-again-btn" class="w-full btn-secondary font-semibold py-2 px-4 rounded-lg mt-4 hidden">
+                                        🔁 Generate Again
+                                    </button>
+                                </div>
+                                </div>
+                            </div>
+                    </div>
+                </div>
+                </main>
+        </div>
+    </div>
+
+    <div id="notification-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-[120] p-4">
+        <div id="notification-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-white">Notifications</h3>
+                <button id="notification-clear-all-btn" class="icon-btn" title="Clear All Notifications">
+                    <svg class="w-6 h-6 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div id="notification-list-container" class="space-y-3 max-h-80 overflow-y-auto modal-scroll pr-2 mb-6">
+                <p id="no-notifications-message" class="text-center text-gray-400">No new notifications.</p>
+            </div>
+            
+            <button id="notification-modal-close-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Close</button>
+        </div>
+    </div>
+
+    <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-[110] p-4">
+        <div id="auth-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-sm transform scale-95 opacity-0 transition-transform transition-opacity duration-300 text-center">
+            <h3 class="text-2xl font-bold mb-2">Welcome!</h3>
+            <p class="text-indigo-200 mb-6">Sign in to save and share your journey.</p>
+            <button id="google-signin-btn" class="w-full bg-white text-gray-800 font-semibold py-3 px-4 rounded-lg flex items-center justify-center transition-transform hover:scale-105">
+                <svg class="w-6 h-6 mr-3" viewBox="0 0 48 48"><path fill="#4285F4" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path><path fill="#34A853" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6.02C43.51 39.88 46.98 32.93 46.98 24.55z"></path><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path><path fill="#EA4335" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6.02c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path><path fill="none" d="M0 0h48v48H0z"></path></svg>
+                Sign In with Google
+            </button>
+             <button id="auth-modal-close-btn" class="mt-6 text-sm text-indigo-300 hover:text-white">Cancel</button>
+        </div>
+    </div>
+    
+    <div id="meal-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-[110] p-4">
+        <div id="modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-md transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
+             <h3 id="modal-title" class="text-2xl font-bold mb-4 text-center">Edit Meal</h3>
+             <select id="modal-meal-select" class="meal-select mb-4"></select>
+             <button id="manage-meals-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg transition-colors mb-4">Manage Meal Options</button>
+             <p class="text-sm text-gray-400 mb-6 text-center">Select a meal from the list above. The plan saves automatically.</p>
+             <button id="modal-close-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Close</button>
+        </div>
+    </div>
+    <div id="manage-meals-modal" class="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-md flex justify-center items-center hidden z-[120] p-4">
+        <div id="manage-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
+            <h3 id="manage-modal-title" class="text-2xl font-bold mb-6 text-center">Manage Meals</h3>
+            <div id="meal-list-container" class="space-y-2 mb-6 max-h-60 overflow-y-auto pr-2"></div>
+            <div class="space-y-4">
+                <input type="text" id="new-meal-input" class="meal-select w-full" placeholder="Enter a new healthy meal...">
+                <div id="api-feedback" class="text-sm p-3 rounded-md bg-opacity-20 hidden"></div>
+                <button id="add-meal-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
+                    <span id="add-meal-text">Check & Add Meal</span>
+                    <svg id="api-loader" class="animate-spin ml-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                </button>
+                <button id="manage-modal-close-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg transition-colors">Done</button>
+            </div>
+        </div>
+    </div>
+    <div id="edit-meal-modal" class="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-md flex justify-center items-center hidden z-[130] p-4">
+        <div id="edit-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-md transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
+            <h3 class="text-2xl font-bold mb-6 text-center">Edit Meal</h3>
+            <input type="text" id="edit-meal-input" class="meal-select w-full mb-4" placeholder="Enter new meal name...">
+            <div id="edit-api-feedback" class="text-sm p-3 rounded-md bg-opacity-20 hidden mb-4"></div>
+            <div class="flex gap-4">
+                <button id="edit-modal-cancel-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg transition-colors">Cancel</button>
+                <button id="edit-modal-save-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
+                    <span id="edit-meal-text">Check & Save</span>
+                    <svg id="edit-api-loader" class="animate-spin ml-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div id="start-date-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-[110] p-4">
+        <div id="start-date-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-md transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
+             <h3 class="text-2xl font-bold mb-4 text-center">Update Pregnancy Dates</h3>
+             <p class="text-gray-300 mb-4 text-center">Start date is usually the first day of your last menstrual period.</p>
+             <label for="start-date-input" class="block text-sm font-medium text-gray-300 mb-1">Start Date</label>
+             <input type="date" id="start-date-input" class="date-input w-full mb-4">
+             <label for="end-date-input" class="block text-sm font-medium text-gray-300 mb-1">Due Date (Optional)</label>
+             <p class="text-xs text-gray-400 mb-2">Defaults to 40 weeks from start date if left empty.</p>
+             <input type="date" id="end-date-input" class="date-input w-full mb-6">
+             <div class="flex gap-4">
+                <button id="start-date-modal-cancel-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg transition-colors">Cancel</button>
+                <button id="start-date-modal-save-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Save</button>
+             </div>
+        </div>
+    </div>
+    <div id="ai-meal-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-[110] p-4">
+        <div id="ai-meal-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300 modal-scroll">
+             <h3 id="ai-modal-title" class="text-2xl font-bold mb-4 text-center">AI Meal Plan for Monday</h3>
+             
+             <div id="ai-meal-initial-view" class="my-6">
+                <p class="text-center text-gray-300 mb-4">What are you craving today? Or let our AI suggest a balanced plan for you.</p>
+                <textarea id="craving-input" class="symptom-input" placeholder="e.g., something savory, like chicken soup..."></textarea>
+                <button id="generate-from-craving-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors mt-4">Generate Plan from Craving</button>
+                <div class="relative flex py-5 items-center">
+                    <div class="flex-grow border-t border-gray-600"></div>
+                    <span class="flex-shrink mx-4 text-gray-400">OR</span>
+                    <div class="flex-grow border-t border-gray-600"></div>
+                </div>
+                <button id="ai-suggestion-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg transition-colors">Get AI Suggestion</button>
+             </div>
+             <div id="ai-meal-plan-container" class="my-6 min-h-[200px] hidden">
+                <div id="ai-meal-loader" class="flex flex-col justify-center items-center h-full">
+                    <svg class="animate-spin h-8 w-8 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <p class="mt-3 text-lg">Generating a healthy meal plan...</p>
+                </div>
+                <div id="ai-meal-plan-display" class="hidden space-y-3"></div>
+                <div id="ai-meal-feedback" class="ai-insight mt-4 hidden"></div>
+             </div>
+             <div id="ai-meal-buttons" class="flex gap-4 hidden">
+                <button id="ai-meal-regenerate-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg transition-colors">Generate Different</button>
+                <button id="ai-meal-save-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Save to Meal Plan</button>
+             </div>
+              <button id="ai-meal-close-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg transition-colors mt-4">Close</button>
+        </div>
+    </div>
+    <div id="manage-supplements-modal" class="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-md flex justify-center items-center hidden z-[130] p-4">
+        <div id="manage-supplements-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
+            <h3 class="text-2xl font-bold mb-6 text-center">Manage & Log Supplements</h5>
+            <p class="text-sm text-center text-gray-300 mb-4">Add supplements to your saved list. Click a supplement in the list to log it for today.</p>
+            <div id="supplement-list-container" class="space-y-2 mb-6 max-h-60 overflow-y-auto pr-2 modal-scroll"></div>
+            <div class="space-y-4">
+                <input type="text" id="new-supplement-input" class="meal-select w-full" placeholder="e.g., Prenatal Vitamin, Iron Supplement...">
+                <div id="supplement-api-feedback" class="text-sm p-3 rounded-md bg-opacity-20 hidden"></div>
+                <button id="add-supplement-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
+                    <span id="add-supplement-text">Check & Add Supplement</span>
+                    <svg id="supplement-api-loader" class="animate-spin ml-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                </button>
+                <button id="manage-supplements-close-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg transition-colors">Done</button>
+            </div>
+        </div>
+    </div>
+    <div id="reflection-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-[110] p-4">
+        <div id="reflection-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
+            <h3 id="reflection-modal-title" class="text-2xl font-bold mb-4 text-center">New Reflection</h3>
+            <input type="text" id="reflection-title-input" class="meal-select mb-4" placeholder="Note Title...">
+            <div id="reflection-image-preview-container" class="mb-4 hidden">
+                <img id="reflection-image-preview" src="" alt="Reflection image preview" class="max-h-48 w-auto mx-auto rounded-lg">
+            </div>
+            <textarea id="reflection-content-input" class="symptom-input min-h-[120px] mb-4" placeholder="Your thoughts..."></textarea>
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-3">
+                    <span class="text-gray-300">Color:</span>
+                    <div class="flex gap-3" id="reflection-color-tags">
+                        <button data-color="pink" class="w-8 h-8 rounded-full bg-pink-500/50 border-2 border-transparent"></button>
+                        <button data-color="teal" class="w-8 h-8 rounded-full bg-teal-500/50 border-2 border-transparent"></button>
+                        <button data-color="yellow" class="w-8 h-8 rounded-full bg-yellow-500/50 border-2 border-transparent"></button>
+                    </div>
+                </div>
+                <button id="add-reflection-image-btn" class="icon-btn" title="Add Image from Link">
+                    <svg class="w-6 h-6 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                </button>
+            </div>
+            <div class="flex gap-4">
+                <button id="reflection-modal-cancel-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg">Cancel</button>
+                <button id="reflection-modal-save-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg">Save</button>
+            </div>
+        </div>
+    </div>
+    <div id="edit-todo-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-[110] p-4">
+        <div id="edit-todo-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
+            <h3 id="edit-todo-modal-title" class="text-2xl font-bold mb-4 text-center">Edit Task</h3>
+            <div class="space-y-3">
+                <textarea id="edit-todo-input" class="symptom-input text-sm min-h-[80px]" placeholder="Task or note..."></textarea>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <input type="date" id="edit-todo-date" class="date-input text-sm">
+                    <input type="time" id="edit-todo-time" class="date-input text-sm">
+                </div>
+                <select id="edit-todo-category" class="meal-select text-sm">
+                    <option value="Health">🧘‍♀️ Health</option>
+                    <option value="Baby">🍼 Baby Prep</option>
+                    <option value="Home">🏡 Home</option>
+                    <option value="Appointment">🗓️ Appointment</option>
+                    <option value="Recipes">🍳 Recipes</option>
+                    <option value="Reminder">💬 Reminder</option>
+                    <option value="Custom">✨ Custom</option>
+                </select>
+                <input type="text" id="edit-custom-todo-category-input" class="meal-select text-sm hidden" placeholder="Your custom category...">
+            
+                <div id="edit-appointment-fields" class="hidden space-y-3 pt-3 mt-3 border-t border-white/10">
+                    <p class="text-sm font-semibold text-indigo-200">Appointment Details</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <input type="text" id="edit-appointment-fname" class="meal-select text-sm" placeholder="First Name">
+                        <input type="text" id="edit-appointment-lname" class="meal-select text-sm" placeholder="Last Name">
+                    </div>
+                    <input type="text" id="edit-appointment-address" class="meal-select text-sm" placeholder="Address">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <input type="tel" id="edit-appointment-contact" class="meal-select text-sm" placeholder="Contact Number">
+                        <input type="email" id="edit-appointment-email" class="meal-select text-sm" placeholder="Email">
+                    </div>
+                    <div class="flex gap-3">
+                        <select id="edit-appointment-type" class="meal-select text-sm flex-grow">
+                            <option value="">Appointment Type</option>
+                            <option value="OB/GYN">OB/GYN</option>
+                            <option value="Ultrasound">Ultrasound</option>
+                            <option value="Pediatrician">Pediatrician</option>
+                            <option value="Custom">Custom Type</option>
+                        </select>
+                        <input type="text" id="edit-appointment-custom-type" class="meal-select text-sm flex-grow hidden" placeholder="Custom Appointment Type">
+                    </div>
+                </div>
+                </div>
+            <div class="flex gap-4 mt-6">
+                <button id="edit-todo-modal-cancel-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg">Cancel</button>
+                <button id="edit-todo-modal-save-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg">Save Changes</button>
+            </div>
+        </div>
+    </div>
+    <div id="ai-summary-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-[110] p-4">
+        <div id="ai-summary-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-md transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
+             <h3 class="text-2xl font-bold mb-4 text-center">AI Reflection Summary</h3>
+             <div id="ai-summary-content" class="text-gray-300 bg-white/5 p-4 rounded-lg min-h-[100px]"></div>
+             <button id="ai-summary-close-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors mt-6">Close</button>
+        </div>
+    </div>
+    <div id="nutrition-history-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-[110] p-4">
+        <div id="nutrition-history-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-2xl transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
+            <div class="flex items-center justify-between mb-4">
+                <button id="nutrition-history-prev-week-btn" class="icon-btn p-2 rounded-full hover:bg-white/20 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                </button>
+                <div class="text-center">
+                     <h3 class="text-2xl font-bold">Nutrition History</h3>
+                     <p id="nutrition-history-week-display" class="text-sm text-indigo-200"></p>
+                </div>
+                <button id="nutrition-history-next-week-btn" class="icon-btn p-2 rounded-full hover:bg-white/20 transition-colors">
+                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </button>
+            </div>
+             <p class="text-center text-gray-300 mb-4">A summary of your nutrient intake for the selected week.</p>
+             <div id="nutrition-history-container" class="space-y-3 max-h-80 overflow-y-auto modal-scroll pr-2 my-4">
+                </div>
+             <button id="nutrition-history-close-btn" class_alias="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors mt-6">Close</button>
+        </div>
+    </div>
+    
+    <div id="sleep-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-[110] p-4">
+        <div id="sleep-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
+             <div class="flex items-center justify-between mb-4">
+                <button id="sleep-prev-week-btn" class="icon-btn p-2 rounded-full hover:bg-white/20 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                </button>
+                <div class="text-center">
+                    <h3 class="text-2xl font-bold">Update Weekly Sleep</h3>
+                    <p id="sleep-week-display" class="text-sm text-indigo-200"></p>
+                </div>
+                <button id="sleep-next-week-btn" class="icon-btn p-2 rounded-full hover:bg-white/20 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </button>
+            </div>
+             <p class="text-gray-300 mb-4 text-center">Log your sleep and wake up times for each night.</p>
+             <div id="sleep-schedule-container" class="space-y-3 max-h-60 overflow-y-auto modal-scroll pr-2 my-4">
+                </div>
+             <div class="flex gap-4 mt-6">
+                <button id="sleep-modal-cancel-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg transition-colors">Cancel</button>
+                <button id="sleep-modal-save-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Save Schedule</button>
+             </div>
+        </div>
+    </div>
+
+    <div id="edit-day-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-[110] p-4">
+        <div id="edit-day-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
+            <h3 id="edit-day-modal-title" class="text-2xl font-bold mb-6 text-center">Edit Log for Wednesday</h3>
+            <div class="space-y-6">
+                <div>
+                    <p class="text-center font-semibold mb-2">Mood</p>
+                    <div id="edit-mood-log-buttons" class="flex justify-around">
+                         <button class="text-4xl hover:scale-125 transition-transform mood-btn" data-mood="😣">😣</button>
+                         <button class="text-4xl hover:scale-125 transition-transform mood-btn" data-mood="😐">😐</button>
+                         <button class="text-4xl hover:scale-125 transition-transform mood-btn" data-mood="🙂">🙂</button>
+                         <button class="text-4xl hover:scale-125 transition-transform mood-btn" data-mood="😊">😊</button>
+                         <button class="text-4xl hover:scale-125 transition-transform mood-btn" data-mood="🥰">🥰</button>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-center font-semibold mb-2">Energy Level</p>
+                    <div id="edit-energy-log-buttons" class="flex justify-around">
+                        <button class="text-3xl hover:scale-125 transition-transform energy-btn p-1 rounded-full" data-energy="1">😴</button>
+                        <button class="text-3xl hover:scale-125 transition-transform energy-btn p-1 rounded-full" data-energy="2">🚶‍♀️</button>
+                        <button class="text-3xl hover:scale-125 transition-transform energy-btn p-1 rounded-full" data-energy="3">🙂</button>
+                        <button class="text-3xl hover:scale-125 transition-transform energy-btn p-1 rounded-full" data-energy="4">🤸‍♀️</button>
+                        <button class="text-3xl hover:scale-125 transition-transform energy-btn p-1 rounded-full" data-energy="5">⚡️</button>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-center font-semibold mb-2">Water Intake (glasses)</p>
+                    <div class="flex items-center justify-center gap-4">
+                        <button id="edit-hydration-minus" class="bg-white/10 rounded-full w-10 h-10 font-bold text-xl">-</button>
+                        <span id="edit-hydration-text" class="text-2xl font-bold w-16 text-center">6</span>
+                        <button id="edit-hydration-plus" class="bg-white/10 rounded-full w-10 h-10 font-bold text-xl">+</button>
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-4 mt-8">
+                <button id="edit-day-modal-cancel-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg">Cancel</button>
+                <button id="edit-day-modal-save-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg">Save Changes</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="image-link-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-[120] p-4">
+        <div id="image-link-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-md transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
+            <h3 class="text-2xl font-bold mb-4 text-center">Add Image Link</h3>
+            <p class="text-gray-300 mb-4 text-center text-sm">Paste a direct link to an image (e.g., from Imgur).</p>
+            <input type="text" id="image-link-input" class="meal-select w-full mb-4" placeholder="https://i.imgur.com/your-image.jpeg">
+            <div class="flex gap-4">
+                <button id="image-link-cancel-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg">Cancel</button>
+                <button id="image-link-save-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg">Save Link</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="baby-message-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-[110] p-4">
+        <div id="baby-message-modal-content" class="chat-bubble-style p-6 md:p-8 rounded-lg w-full max-w-md transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
+             <h3 class="text-xl font-bold mb-4 flex items-center justify-start gap-2">
+                 Mini Piggy <span class="baby-emoji-animate">👶</span>
+             </h3>
+             <div id="baby-message-content" class="text-lg min-h-[80px] flex items-center justify-start relative">
+                Hi Mama, I’m just a tiny speck now, but I already feel your love 💕
+             </div>
+             </div>
+    </div>
+
+    <div id="mindful-reflection-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-[110] p-4">
+        <div id="mindful-reflection-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-md transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
+            <h3 id="mindful-reflection-title" class="text-2xl font-bold mb-4 text-center">How do you feel?</h3>
+            <p class="text-center text-gray-300 mb-6">Take a moment to check in after your session.</p>
+            <div class="flex justify-around mb-6" id="mindful-mood-buttons">
+                <button class="text-4xl hover:scale-125 transition-transform mindful-mood-btn" data-mood="1">😣</button>
+                <button class="text-4xl hover:scale-125 transition-transform mindful-mood-btn" data-mood="2">😐</button>
+                <button class="text-4xl hover:scale-125 transition-transform mindful-mood-btn" data-mood="3">🙂</button>
+                <button class="text-4xl hover:scale-125 transition-transform mindful-mood-btn" data-mood="4">😊</button>
+                <button class="text-4xl hover:scale-125 transition-transform mindful-mood-btn" data-mood="5">🥰</button>
+            </div>
+            <textarea id="mindful-reflection-textarea" class="symptom-input min-h-[100px] mb-4 hidden" placeholder="A quick thought... (optional)"></textarea>
+            <div class="flex gap-4">
+                <button id="mindful-reflection-close-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg">Skip</button>
+                <button id="mindful-reflection-save-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg">Save</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="edit-wish-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center hidden z-[110] p-4">
+        <div id="edit-wish-modal-content" class="glass-card p-6 md:p-8 rounded-lg w-full max-w-lg transform scale-95 opacity-0 transition-transform transition-opacity duration-300">
+            <h3 class="text-2xl font-bold mb-4 text-center">Edit Wish</h3>
+            <div class="space-y-3">
+                <input type="text" id="edit-wish-item" class="meal-select text-sm" placeholder="Item name">
+                <select id="edit-wish-category" class="meal-select text-sm">
+                     <option value="Baby Care">🍼 Baby Care</option>
+                     <option value="Nursery">🧸 Nursery</option>
+                     <option value="Hospital Bag">👜 Hospital Bag</option>
+                     <option value="Health">🧘‍♀️ Health</option>
+                     <option value="Postpartum">💖 Postpartum</option> 
+                     <option value="Food">🥕 Food</option>
+                     <option value="Custom">✨ Custom</option>
+                </select>
+                <input type="text" id="edit-custom-category-input" class="meal-select text-sm hidden" placeholder="Your custom category...">
+                
+                <div id="edit-wish-food-fields" class="hidden space-y-3 pt-3 mt-3 border-t border-white/10">
+                     <p class="text-sm font-semibold text-indigo-200">Food Details</p>
+                     <select id="edit-wish-food-type" class="meal-select text-sm">
+                         <option value="">Select food type...</option>
+                         <option value="Meat">🥩 Meat</option>
+                         <option value="Fruit">🍎 Fruit</option>
+                         <option value="Vege">🥦 Vege</option>
+                         <option value="Snack">🥨 Snack</option>
+                         <option value="Diary">🧀 Diary</option>
+                         <option value="Grain">🍚 Grain</option> I
+                         <option value="Soup">🍲 Soup</option>
+                         <option value="Dog">🐶 Dog Food</option>
+                         <option value="Drinks">🥤 Drinks</option>
+                     </select>
+                     <label for="edit-wish-food-expiry" class="text-sm text-gray-300 -mb-2 block">Expiration Date:</label>
+                     <input type="date" id="edit-wish-food-expiry" class="date-input text-sm">
+                 </div>
+
+                 <div class="flex gap-2">
+                     <input type="text" id="edit-wish-price" class="meal-select text-sm w-1/2" placeholder="Price ($)">
+                     <input type="text" id="edit-wish-link" class="meal-select text-sm w-1/2" placeholder="Store Link">
+                 </div>
+
+                 <div>
+                    <label for="edit-wish-quantity" class="text-sm text-gray-300 mb-1 block">Quantity</label>
+                    <div class="flex items-center gap-2">
+                        <button type="button" id="edit-wish-quantity-minus" class="quantity-btn">-</button>
+                        <input type="number" id="edit-wish-quantity" class="quantity-input" value="1" min="1">
+                        <button type="button" id="edit-wish-quantity-plus" class="quantity-btn">+</button>
+                    </div>
+                 </div>
+                 </div>
+            <div class="flex gap-4 mt-6">
+                <button id="edit-wish-modal-cancel-btn" class="w-full btn-secondary text-white font-bold py-3 px-4 rounded-lg">Cancel</button>
+                <button id="edit-wish-modal-save-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script type="module" src="./js/main.js"></script>
+    <script type="module" src="./js/ui.js"></script>
+    <script type="module" src="./js/auth.js"></script>
+    <script type="module" src="./js/firebase.js"></script>
+    <script type="module" src="./js/meal-planner.js"></script>
+    <script type="module" src="./js/wellness.js"></script>
+    <script type="module" src="./js/journey.js"></script>
+    <script type="module" src="./js/calm-space.js"></script>
+</body>
+</html>
