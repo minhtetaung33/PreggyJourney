@@ -859,8 +859,8 @@ async function handleSymptomCheck() {
     symptomLoader.classList.remove('hidden'); symptomBtnText.textContent = 'Analyzing...'; symptomCheckBtn.disabled = true; symptomResponseEl.innerHTML = '';
     const systemPrompt = `You are a caring wellness assistant for pregnant women. Analyze the symptom, provide potential non-medical causes and gentle remedies. Crucially, always include a disclaimer to consult a doctor. Your response must be ONLY a valid JSON object matching this structure: { "possibleCauses": string[], "gentleRemedies": string[], "disclaimer": string }.`;
     const userQuery = `My symptom today: "${symptomText}"`;
-    const apiKey = "AIzaSyDCYjgJQJmZTJ7XSTyjR8G-mdOOdT5P0NM";
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    const apiKey = "AIzaSyAehDFUgOHxNN6jlW1BnrKndlgpgfsGvcs";
+    const apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
     const payload = {
         contents: [{ parts: [{ text: userQuery }] }],
         systemInstruction: { parts: [{ text: systemPrompt }] },
@@ -1227,7 +1227,7 @@ async function handleAddSupplement() {
     supplementApiLoader.classList.remove('hidden'); addSupplementText.textContent = 'Checking...'; addSupplementBtn.disabled = true; supplementApiFeedback.classList.add('hidden');
     // Updated system prompt to include protein and carbs (scale 0-3)
     const systemPrompt = "You are a prenatal nutritionist. Evaluate if a supplement is generally safe for pregnancy. Provide an estimated nutritional profile (integers 0-3) for iron, calcium, folate, protein, and carbs. Your response MUST be ONLY a valid JSON object matching this structure: { \"isSuitable\": boolean, \"supplementName\": string, \"reasoning\": string, \"nutrients\": { \"iron\": number, \"calcium\": number, \"folate\": number, \"protein\": number, \"carbs\": number } }.";
-    const userQuery = `Evaluate this supplement for pregnancy: "${userSupp}"`; const apiKey = "AIzaSyDCYjgJQJmZTJ7XSTyjR8G-mdOOdT5P0NM"; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    const userQuery = `Evaluate this supplement for pregnancy: "${userSupp}"`; const apiKey = "AIzaSyAehDFUgOHxNN6jlW1BnrKndlgpgfsGvcs"; const apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
     const payload = {
         contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] },
         generationConfig: { responseMimeType: "application/json" }
@@ -1485,8 +1485,8 @@ export async function generateAllWellnessTips() {
         
         const userQuery = `Context for today:\n- Pregnancy Week: ${pregnancyWeek}\n- Today's Meal Plan: ${mealPlanString}\n- Her Mood: ${mood}\n- Her Energy Level (1-5): ${energy}\n\nGenerate all four sets of tips.`;
         
-        const apiKey = "AIzaSyDCYjgJQJmZTJ7XSTyjR8G-mdOOdT5P0NM";
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+        const apiKey = "AIzaSyAehDFUgOHxNN6jlW1BnrKndlgpgfsGvcs";
+        const const apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
         const payload = {
             contents: [{ parts: [{ text: userQuery }] }],
             systemInstruction: { parts: [{ text: systemPrompt }] },
@@ -1609,6 +1609,7 @@ export function unloadWellness() {
         wellnessChart = null;
     }
 }
+
 
 
 
