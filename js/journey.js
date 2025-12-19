@@ -887,7 +887,7 @@ function setupEventListeners() {
         const pregnancyWeek = Math.floor(Math.abs(new Date() - new Date(wellnessDataForJourney.pregnancyStartDate)) / (1000 * 60 * 60 * 24 * 7));
         const systemPrompt = `You are a helpful assistant. Generate a to-do list of 4-5 tasks for week ${pregnancyWeek} of pregnancy. Categorize each task as 'Health', 'Baby', 'Home', or 'Reminder'. Your response MUST be ONLY a valid JSON array of objects, where each object has "task" (string) and "category" (string) keys.`;
         const userQuery = `Generate a weekly to-do list for week ${pregnancyWeek}.`;
-        const apiKey = "AIzaSyB33mq-yCpazBPZGr_e3ebM7zvE0o0t36o"; 
+        const apiKey = "AIzaSyDxLlOIcRvAb2SaEuZ2tLVskcIY-l5xQ6E"; 
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
         const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json" } };
         try {
@@ -960,7 +960,7 @@ function setupEventListeners() {
         const pregnancyWeek = Math.floor(Math.abs(new Date() - new Date(wellnessDataForJourney.pregnancyStartDate)) / (1000 * 60 * 60 * 24 * 7));
         const systemPrompt = `You are a helpful shopping assistant for a pregnant woman. Based on the user's request and their pregnancy week (${pregnancyWeek}), use the Google Search tool to find 3-4 real, relevant products. For each item, you MUST extract the actual product name, a relevant category (from "Baby Care", "Nursery", "Hospital Bag", "Health", "Postpartum", "Food"), price, and a working URL to the product page. Your response MUST be ONLY a valid JSON array of objects, with no other text or formatting. Each object must have these keys: "productName", "category", "price", "productUrl".`;
         const userQuery = `My request: "${prompt}". I am in week ${pregnancyWeek} of pregnancy.`;
-        const apiKey = "AIzaSyB33mq-yCpazBPZGr_e3ebM7zvE0o0t36o"; 
+        const apiKey = "AIzaSyDxLlOIcRvAb2SaEuZ2tLVskcIY-l5xQ6E"; 
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
         const payload = {
             contents: [{ parts: [{ text: userQuery }] }],
@@ -1116,7 +1116,7 @@ function setupEventListeners() {
         const notesToSummarize = currentReflections.slice(0, 3).map(n => `Title: ${n.title}\nContent: ${n.content}`).join('\n\n---\n\n');
         const systemPrompt = "You are an empathetic assistant. Summarize the user's reflection notes into one short, insightful, and emotional paragraph. Focus on the underlying feelings and themes.";
         const userQuery = `Here are my last few notes:\n${notesToSummarize}`;
-        const apiKey = "AIzaSyB33mq-yCpazBPZGr_e3ebM7zvE0o0t36o"; 
+        const apiKey = "AIzaSyDxLlOIcRvAb2SaEuZ2tLVskcIY-l5xQ6E"; 
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
         const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }};
 
@@ -1180,7 +1180,7 @@ function setupEventListeners() {
 
         const systemPrompt = `You are a world-class, professional chef, like Gordon Ramsay, but you are also encouraging and helpful, not rude. A pregnant user is asking for recipe ideas. Provide three (3) distinct, healthy, and pregnancy-safe recipes based on their craving. For each recipe, provide a 'recipeName', a 'chefPersona' (e.g., 'Gordon Ramsay', 'Massimo Bottura', 'Clare Smyth'), and 'steps' as an array of strings. Your response MUST be ONLY a valid JSON object with a single key 'recipes' which is an array of these three recipe objects. Example: { "recipes": [ { "recipeName": "...", "chefPersona": "...", "steps": ["Step 1...", "Step 2..."] } ] }`;
         const userQuery = `My craving: "${prompt}"`;
-        const apiKey = "AIzaSyB33mq-yCpazBPZGr_e3ebM7zvE0o0t36o"; 
+        const apiKey = "AIzaSyDxLlOIcRvAb2SaEuZ2tLVskcIY-l5xQ6E"; 
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
         const payload = {
             contents: [{ parts: [{ text: userQuery }] }],
@@ -1721,7 +1721,7 @@ async function generateNames(isRandom = false) {
 
     const userQuery = userPromptParts.join(' ');
     const systemPrompt = `You are a creative and knowledgeable baby name assistant. Provide baby name suggestions based on the user's criteria. Include the name, its origin, and its meaning. Respond ONLY with a valid JSON array of objects. Each object must have "name" (string), "meaning" (string), and "origin" (string) keys.`;
-    const apiKey = "AIzaSyB33mq-yCpazBPZGr_e3ebM7zvE0o0t36o"; 
+    const apiKey = "AIzaSyDxLlOIcRvAb2SaEuZ2tLVskcIY-l5xQ6E"; 
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
 
     const payload = {
@@ -2021,4 +2021,5 @@ export function unloadJourney() {
 export function updateWellnessDataForJourney(newData) {
     wellnessDataForJourney = newData;
 }
+
 
