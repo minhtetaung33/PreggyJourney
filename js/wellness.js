@@ -1,8 +1,7 @@
 import { doc, onSnapshot, setDoc, getDoc, updateDoc, collection, addDoc, serverTimestamp, arrayUnion, arrayRemove, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-// NEW: Import httpsCallable for cloud functions
 import { httpsCallable } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-functions.js";
-// NEW: Import functions from your firebase.js
-import { db, functions } from './firebase.js';
+// FIX: Imported auth to force token synchronization
+import { db, functions, auth } from './firebase.js';
 import { getCurrentMealPlan, getMealNutrients } from './meal-planner.js';
 import { getCurrentUserId } from "./auth.js";
 
@@ -75,8 +74,6 @@ const wellnessGlow = document.getElementById('wellness-glow');
 const funFactEl = document.getElementById('fun-fact-content');
 const babyMessageModal = document.getElementById('baby-message-modal');
 const babyMessageContent = document.getElementById('baby-message-content');
-// --- End of NEW DOM Elements ---
-
 
 let wellnessDataRef, symptomTrackerCollectionRef, userSupplementsRef, supplementNutrientsRef;
 let unsubscribeWellnessData, unsubscribeUserSupplements, unsubscribeSupplementNutrients, unsubscribeSupplementLog, unsubscribeDailyWellness;
@@ -89,7 +86,6 @@ let nutritionHistoryCurrentDate = new Date();
 let supplementLogDate = new Date();
 let sleepModalCurrentDate = new Date();
 
-// New state for wellness history
 let wellnessHistoryCurrentDate = new Date();
 let isHistoryView = false;
 let selectedDayKey = 'monday'; 
@@ -263,6 +259,43 @@ const sleepDays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'frid
 const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 const dayTitles = { monday: 'Monday', tuesday: 'Tuesday', wednesday: 'Wednesday', thursday: 'Thursday', friday: 'Friday', saturday: 'Saturday', sunday: 'Sunday' };
 const moodToValue = {'😣': 1, '😐': 2, '🙂': 3, '😊': 4, '🥰': 5};
+
+// --- SECURE BACKEND CALL HELPER ---
+// FIX: Robust backoff logic that forces token synchronization.
+async function callGeminiWithBackoff(payload, maxRetries = 4) {
+    let delay = 1000; 
+    for (let i = 0; i < maxRetries; i++) {
+        try {
+            // 1. Ensure user is logged in before calling
+            if (!auth.currentUser) {
+                throw new Error("You must be signed in to use AI features.");
+            }
+            
+            // 2. Force token retrieval to ensure the Functions SDK is perfectly synchronized.
+            // This fixes the exact '401 Unauthorized' race condition you experienced.
+            await auth.currentUser.getIdToken();
+            
+            const callGemini = httpsCallable(functions, 'callGemini');
+            const result = await callGemini({ payload: payload });
+            return result; 
+        } catch (error) {
+            console.error(`Cloud function call failed (Attempt ${i + 1}):`, error);
+            
+            // If it's an Auth error, force refresh the token for the next try
+            if (error.code === 'functions/unauthenticated' || (error.message && error.message.includes('signed in'))) {
+                console.warn("Auth issue detected. Forcing token refresh...");
+                if (auth.currentUser) await auth.currentUser.getIdToken(true); 
+            }
+            
+            if (i === maxRetries - 1) {
+                throw error; 
+            }
+            await new Promise(resolve => setTimeout(resolve, delay));
+            delay *= 2;
+        }
+    }
+    throw new Error('API request failed after multiple retries.');
+}
 
 // --- HELPER FUNCTIONS ---
 function formatList(items) {
@@ -685,15 +718,6 @@ function updateNutritionTracker() {
     updateNutritionUI(nutritionData);
 }
 
-function getStatusFromAI(statusString) {
-    statusString = (statusString || 'low').toLowerCase();
-     let status, color, bgColor, percentage;
-    if (statusString === 'good') { status = 'Good'; color = 'text-green-400'; bgColor = 'bg-green-500'; percentage = 90; } 
-    else if (statusString === 'okay') { status = 'Okay'; color = 'text-yellow-400'; bgColor = 'bg-yellow-500'; percentage = 60; } 
-    else { status = 'Low'; color = 'text-red-400'; bgColor = 'bg-red-500'; percentage = 25; }
-    return { status, percentage, color, bgColor };
-}
-
 function calculateNutrientStatus(total, goal) {
     const percentage = goal > 0 ? Math.min(Math.round((total / goal) * 100), 100) : 0;
     let status, color, bgColor;
@@ -820,11 +844,9 @@ async function handleSymptomCheck() {
     };
     
     try {
-        // Securely call Firebase Function instead of standard fetch
-        const callGemini = httpsCallable(functions, 'callGemini');
-        const result = await callGemini({ payload: payload });
+        // FIX: Using the backoff helper which handles Auth readiness
+        const result = await callGeminiWithBackoff(payload, 2); 
         
-        // Extract data correctly from Firebase Function result
         const text = result.data.candidates[0].content.parts[0].text; 
         const data = JSON.parse(text);
         
@@ -1166,11 +1188,9 @@ async function handleAddSupplement() {
     };
     
      try {
-        // Securely call Firebase Function instead of standard fetch
-        const callGemini = httpsCallable(functions, 'callGemini');
-        const result = await callGemini({ payload: payload });
+        // FIX: Using the backoff helper which handles Auth readiness
+        const result = await callGeminiWithBackoff(payload, 2);
         
-        // Extract data correctly from Firebase Function result
         const text = result.data.candidates[0].content.parts[0].text; 
         const data = JSON.parse(text);
         
@@ -1326,29 +1346,6 @@ async function populateSleepModal(date) {
 
 function closeSleepModal() { sleepModal.classList.remove('active'); setTimeout(() => sleepModal.classList.add('hidden'), 300); }
 
-// --- SECURE BACKEND CALL 3: Custom fetchWithBackoff replaced with Cloud Function call ---
-async function callGeminiWithBackoff(payload, maxRetries = 5) {
-    const callGemini = httpsCallable(functions, 'callGemini');
-    let delay = 1000; 
-    for (let i = 0; i < maxRetries; i++) {
-        try {
-            const result = await callGemini({ payload: payload });
-            return result; // Successfully got the data from backend
-        } catch (error) {
-            console.error('Cloud function call failed:', error);
-            // If it's a known rate-limit error passed from your backend, we can wait and try again
-            if (error.message && error.message.includes('429')) {
-                console.warn(`Rate limited. Retrying in ${delay / 1000}s...`);
-            } else if (i === maxRetries - 1) {
-                throw error; // If it's the last retry and it failed, throw the error
-            }
-            await new Promise(resolve => setTimeout(resolve, delay));
-            delay *= 2;
-        }
-    }
-    throw new Error('API request failed after multiple retries.');
-}
-
 export async function generateAllWellnessTips() {
     const partnerTipsContainer = document.getElementById('partner-tips-container');
     const partnerTipsLoader = document.getElementById('partner-tips-loader');
@@ -1410,10 +1407,8 @@ export async function generateAllWellnessTips() {
             generationConfig: { responseMimeType: "application/json" }
         };
 
-        // Securely call Firebase Function with our backoff retry logic
         const result = await callGeminiWithBackoff(payload);
         
-        // Extract data correctly from Firebase Function result
         const allTips = JSON.parse(result.data.candidates[0].content.parts[0].text);
 
         const renderTips = (container, tips) => {
