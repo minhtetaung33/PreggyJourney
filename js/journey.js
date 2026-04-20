@@ -1,20 +1,16 @@
 // Firebase Imports
 import { collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, where, getDocs, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-// NEW: Import httpsCallable for cloud functions
 import { httpsCallable } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-functions.js";
-// IMPORT db and functions
-import { db, functions } from './firebase.js';
+// FIX: Imported auth to force token synchronization
+import { db, functions, auth } from './firebase.js';
 import { getCurrentUserId } from "./auth.js";
-// IMPORT THE NEW NOTIFICATION UI FUNCTION and ELEMENTS
 import { elements, updateNotificationUI } from './ui.js'; 
 
 // === State Variables ===
 let todosRef, wishesRef, reflectionsRef, favoriteNamesRef;
 let unsubscribeTodos, unsubscribeWishes, unsubscribeReflections, unsubscribeFavoriteNames;
-// === MODIFICATION START: Task 2 - Separate Recipes State ===
 let currentTodos = [], currentWishes = [], currentReflections = [], currentFavoriteNames = [];
-let currentRecipeTodos = []; // New state for Recipes tasks
-// === MODIFICATION END: Task 2 - Separate Recipes State ===
+let currentRecipeTodos = []; 
 let wellnessDataForJourney = {};
 let activeReflectionId = null;
 let activeColor = 'pink';
@@ -23,15 +19,12 @@ let activeWishId = null;
 let showAllReflections = false;
 let activeReflectionImageUrl = null;
 
-// === NEW Wishlist State ===
 let currentWishlistSearchTerm = '';
 let currentWishlistSortBy = 'default';
 
-// === NEW Notification State ===
 let allNotifications = [];
 const DAY_IN_MS = 1000 * 60 * 60 * 24;
 
-// === NEW Baby Name Generator State ===
 let selectedNameGender = null;
 let selectedNameOrigin = '';
 let selectedNameStyle = '';
@@ -39,30 +32,43 @@ let selectedNameMeaning = '';
 let selectedNameSyllables = '';
 let currentNameSuggestions = []; 
 
-// === NEW CALENDAR STATE ===
 const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 let currentCalendarDate = new Date(); 
 
-// === Helper function to get the start of a given date in the user's local timezone ===
 function getStartOfDayInLocalTZ(date) {
     const localDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
     return localDate;
 }
 
-// === SECURE BACKEND CALL: Custom fetchWithBackoff replaced with Cloud Function call ===
-async function callGeminiWithBackoff(payload, maxRetries = 5) {
-    const callGemini = httpsCallable(functions, 'callGemini');
+// --- SECURE BACKEND CALL HELPER ---
+// FIX: Robust backoff logic that forces token synchronization.
+async function callGeminiWithBackoff(payload, maxRetries = 4) {
     let delay = 1000; 
     for (let i = 0; i < maxRetries; i++) {
         try {
+            // 1. Ensure user is logged in before calling
+            if (!auth.currentUser) {
+                throw new Error("You must be signed in to use AI features.");
+            }
+            
+            // 2. Force token retrieval to ensure the Functions SDK is perfectly synchronized.
+            // This fixes the exact '401 Unauthorized' race condition.
+            await auth.currentUser.getIdToken();
+            
+            const callGemini = httpsCallable(functions, 'callGemini');
             const result = await callGemini({ payload: payload });
-            return result; // Successfully got the data from backend
+            return result; 
         } catch (error) {
-            console.error('Cloud function call failed:', error);
-            if (error.message && error.message.includes('429')) {
-                console.warn(`Rate limited. Retrying in ${delay / 1000}s...`);
-            } else if (i === maxRetries - 1) {
-                throw error; // If it's the last retry and it failed, throw the error
+            console.error(`Cloud function call failed (Attempt ${i + 1}):`, error);
+            
+            // If it's an Auth error, force refresh the token for the next try
+            if (error.code === 'functions/unauthenticated' || (error.message && error.message.includes('signed in'))) {
+                console.warn("Auth issue detected. Forcing token refresh...");
+                if (auth.currentUser) await auth.currentUser.getIdToken(true); 
+            }
+            
+            if (i === maxRetries - 1) {
+                throw error; 
             }
             await new Promise(resolve => setTimeout(resolve, delay));
             delay *= 2;
@@ -74,66 +80,45 @@ async function callGeminiWithBackoff(payload, maxRetries = 5) {
 // === Initialization ===
 export function initializeJourney(userId, initialWellnessData) {
     wellnessDataForJourney = initialWellnessData;
-    // Firebase collection references
     todosRef = collection(db, `users/${userId}/todos`);
     wishesRef = collection(db, `users/${userId}/wishes`);
     reflectionsRef = collection(db, `users/${userId}/reflections`);
     favoriteNamesRef = collection(db, `users/${userId}/favoriteNames`); 
 
-    // Load data
     loadTodos();
     loadWishes();
     loadReflections();
     loadFavoriteNames(); 
 
-    // Setup listeners
     setupEventListeners();
     setupNameGeneratorListeners(); 
 
-    // NEW: Render initial calendar
     renderCalendar();
 }
 
-// === Data Loading & Rendering (Original + Name Gen Favorites) ===
 
 function loadTodos() {
     if (!todosRef) return;
     if(unsubscribeTodos) unsubscribeTodos();
     const q = query(todosRef, orderBy("createdAt", "desc"));
     unsubscribeTodos = onSnapshot(q, (snapshot) => {
-        // === MODIFICATION START: Task 2 - Separate Recipes Logic ===
         const allTasks = [];
         snapshot.forEach(doc => allTasks.push({ id: doc.id, ...doc.data() }));
 
-        // Separate tasks into To-Dos and Recipes
         currentTodos = allTasks.filter(todo => todo.category !== 'Recipes');
         currentRecipeTodos = allTasks.filter(todo => todo.category === 'Recipes');
 
-        // Sort To-Dos based on due date (Task 1)
         currentTodos.sort(sortTodosByDueDate);
 
         renderTodos(currentTodos);
-        renderRecipeTodos(currentRecipeTodos); // Render the new Recipes list
-        // === MODIFICATION END: Task 2 - Separate Recipes Logic ===
+        renderRecipeTodos(currentRecipeTodos); 
         
         renderCalendar(); 
         checkNotifications(); 
     });
 }
 
-// === MODIFICATION START: Task 1 - Todo Sorting Helper Function ===
-/**
- * Custom sorting function for To-Dos. Prioritizes:
- * 1. Uncompleted tasks over completed tasks.
- * 2. Tasks with a due date over tasks without.
- * 3. Nearest due date first.
- * 4. Most recently created for tie-breaking.
- * @param {Object} a 
- * @param {Object} b 
- * @returns {number}
- */
 function sortTodosByDueDate(a, b) {
-    // 1. Uncompleted tasks first
     if (a.completed !== b.completed) {
         return a.completed - b.completed; 
     }
@@ -141,25 +126,20 @@ function sortTodosByDueDate(a, b) {
     const dateA = a.date ? new Date(a.date + 'T00:00:00').getTime() : Infinity;
     const dateB = b.date ? new Date(b.date + 'T00:00:00').getTime() : Infinity;
 
-    // 2. Tasks with dates first (if both are uncompleted or both completed)
     const hasDateA = dateA !== Infinity;
     const hasDateB = dateB !== Infinity;
     
     if (hasDateA && !hasDateB) return -1;
     if (!hasDateA && hasDateB) return 1;
 
-    // 3. Sort by date (nearest first, i.e., smaller number first)
     if (dateA !== dateB) {
         return dateA - dateB;
     }
 
-    // 4. Fallback: Sort by creation date (newest first)
     const createdAtA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
     const createdAtB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
     return createdAtB - createdAtA; 
 }
-// === MODIFICATION END: Task 1 - Todo Sorting Helper Function ===
-
 
 function loadWishes() {
     if (!wishesRef) return;
@@ -215,13 +195,12 @@ const formatTime = (timeString) => {
 function renderTodos(todos) {
     if (!elements.todoListContainer) return;
     elements.todoListContainer.innerHTML = '';
-    // === MODIFICATION START: Task 2 - Empty state check (only non-recipes) ===
+    
     if (todos.length === 0) {
         elements.todoListContainer.innerHTML = `<p class="text-center text-gray-400">No tasks yet. Add one below!</p>`;
         return;
     }
-    // === MODIFICATION END: Task 2 - Empty state check ===
-
+    
     const categoryIcons = { Health: '🧘‍♀️', Baby: '🍼', Home: '🏡', Reminder: '💬', Appointment: '🗓️', Recipes: '🍳' };
 
     todos.forEach(todo => {
@@ -314,16 +293,10 @@ function renderTodos(todos) {
     });
 }
 
-// === MODIFICATION START: Task 2 - New function to render Recipes Todos ===
-/**
- * Renders the Recipes To-Do list.
- * @param {Array} todos - The array of todo items where category is 'Recipes'.
- */
 function renderRecipeTodos(todos) {
     if (!elements.recipeListContainer) return;
     elements.recipeListContainer.innerHTML = '';
 
-    // Sort Recipes: Uncompleted first, then newest first (using standard creation date sort)
     todos.sort((a, b) => {
         if (a.completed !== b.completed) {
             return a.completed - b.completed; 
@@ -392,8 +365,6 @@ function renderRecipeTodos(todos) {
         elements.recipeListContainer.appendChild(item);
     });
 }
-// === MODIFICATION END: Task 2 - New function to render Recipes Todos ===
-
 
 function renderWishes(wishes, searchTerm = '', sortBy = 'default') {
     elements.wishlistContainer.innerHTML = ''; 
@@ -494,7 +465,6 @@ function renderWishes(wishes, searchTerm = '', sortBy = 'default') {
             </div>
         `;
 
-        // Add event listeners
         card.querySelector('.wish-quantity-plus').addEventListener('click', () => {
             handleUpdateWishPurchasedCount(wish, purchasedCount + 1);
         });
@@ -726,8 +696,6 @@ function renderFavoriteNames(favNames) {
 }
 
 
-// === NEW CALENDAR RENDERING LOGIC ===
-
 function isSameDay(d1, d2) {
     if (!d1 || !d2) return false;
     return d1.getFullYear() === d2.getFullYear() &&
@@ -819,8 +787,6 @@ function renderCalendar() {
     }
 }
 
-
-// === Event Listener Setup ===
 
 function setupEventListeners() {
     elements.addTodoBtn.addEventListener('click', async () => {
@@ -1021,13 +987,11 @@ function setupEventListeners() {
         } else {
             elements.customTodoCategoryInput.classList.add('hidden');
         }
-        // === MODIFICATION START: Task 2 - Appointment & Recipe logic for form ===
         if (elements.newTodoCategory.value === 'Appointment') {
             elements.newAppointmentFields.classList.remove('hidden');
         } else {
             elements.newAppointmentFields.classList.add('hidden');
         }
-        // === MODIFICATION END: Task 2 - Appointment & Recipe logic for form ===
     });
 
     elements.newAppointmentType.addEventListener('change', () => {
@@ -1070,14 +1034,12 @@ function setupEventListeners() {
         elements.todoListToggleIcon.classList.toggle('rotate-180');
     });
 
-    // === MODIFICATION START: Task 2 - Recipes Collapse Listener ===
     if (elements.recipeListHeader) {
         elements.recipeListHeader.addEventListener('click', () => {
             elements.collapsibleRecipeContent.classList.toggle('hidden');
             elements.recipeListToggleIcon.classList.toggle('rotate-180');
         });
     }
-    // === MODIFICATION END: Task 2 - Recipes Collapse Listener ===
 
     elements.reflectionHeader.addEventListener('click', () => {
         elements.collapsibleReflectionContent.classList.toggle('hidden');
@@ -1266,11 +1228,6 @@ function setupEventListeners() {
     elements.calendarNextBtn.addEventListener('click', () => changeMonth(1));
 }
 
-/**
- * Handles clicks on a calendar day, finds the first to-do for that day,
- * opens the list, and scrolls to the item.
- * @param {string} isoDate - The date string (YYYY-MM-DD) of the clicked day.
- */
 function handleCalendarDayClick(isoDate) {
     const allTasks = [...currentTodos, ...currentRecipeTodos];
     
@@ -1306,14 +1263,6 @@ function handleCalendarDayClick(isoDate) {
 }
 
 
-// === Helper & Action Functions (Original + Name Gen) ===
-
-/**
- * Sets up listeners for a quantity input block (+ and - buttons).
- * @param {HTMLInputElement} inputElement - The number input element.
- * @param {HTMLButtonElement} minusBtn - The minus button.
- * @param {HTMLButtonElement} plusBtn - The plus button.
- */
 function setupQuantityButtons(inputElement, minusBtn, plusBtn) {
     minusBtn.addEventListener('click', () => {
         let currentValue = parseInt(inputElement.value, 10);
@@ -1337,11 +1286,6 @@ function setupQuantityButtons(inputElement, minusBtn, plusBtn) {
     });
 }
 
-/**
- * Updates the 'purchasedCount' for a wish in Firestore.
- * @param {object} wish - The wish object.
- * @param {number} newCount - The new purchasedCount to set.
- */
 async function handleUpdateWishPurchasedCount(wish, newCount) {
     if (!wishesRef) return;
 
@@ -1365,9 +1309,7 @@ function openEditTodoModal(todo) {
     elements.editTodoDate.value = todo.date || '';
     elements.editTodoTime.value = todo.time || '';
 
-   // === MODIFICATION START: Task 2 - Standard categories updated ===
    const standardCategories = ['Health', 'Baby', 'Home', 'Reminder', 'Appointment', 'Recipes'];
-   // === MODIFICATION END: Task 2 - Standard categories updated ===
     if (standardCategories.includes(todo.category)) {
         elements.editTodoCategory.value = todo.category;
         elements.editCustomTodoCategoryInput.classList.add('hidden');
@@ -1672,11 +1614,6 @@ function setupNameGeneratorListeners() {
     });
 }
 
-
-/**
- * Calls the Gemini API to generate baby names based on current filters.
- * @param {boolean} isRandom - If true, ignores most filters for randomization.
- */
 async function generateNames(isRandom = false) {
     if (!favoriteNamesRef) return; 
 
@@ -1768,10 +1705,6 @@ async function generateNames(isRandom = false) {
     }
 }
 
-/**
- * Renders the generated name suggestions in the results container.
- * @param {Array} names - Array of name objects ({name, meaning, origin}).
- */
 function renderNameSuggestions(names) {
     elements.nameResultsContainer.innerHTML = ''; 
 
@@ -1814,11 +1747,6 @@ function renderNameSuggestions(names) {
     elements.nameGenerateAgainBtn.classList.remove('hidden'); 
 }
 
-
-/**
- * Adds or removes a name from the user's favorites in Firestore.
- * @param {object} nameData - Object containing {name, meaning, origin}.
- */
 async function toggleFavoriteName(nameData) {
     if (!favoriteNamesRef || !nameData || !nameData.name) return;
 
@@ -1844,23 +1772,12 @@ async function toggleFavoriteName(nameData) {
 }
 
 
-// === NEW NOTIFICATION FUNCTIONS ===
-
-/**
- * Gets the start of the current day (midnight) in the user's local timezone.
- * @returns {Date} A Date object set to today at 00:00:00.
- */
 function getStartOfToday() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     return today;
 }
 
-/**
- * Checks all To-Dos for upcoming due dates and returns an array of notifications.
- * @param {Array} todos - The current list of todo items.
- * @returns {Array} An array of notification objects.
- */
 function checkTodoNotifications(todos) {
     const notifications = [];
     const today = getStartOfToday().getTime();
@@ -1918,11 +1835,6 @@ function checkTodoNotifications(todos) {
     return notifications;
 }
 
-/**
- * Checks all "Food" wishes for upcoming expiration dates.
- * @param {Array} wishes - The current list of wish items.
- * @returns {Array} An array of notification objects.
- */
 function checkWishNotifications(wishes) {
     const notifications = [];
     const today = getStartOfToday().getTime();
@@ -1980,9 +1892,6 @@ function checkWishNotifications(wishes) {
     return notifications;
 }
 
-/**
- * Main function to check all notifications, sort them, and update the UI.
- */
 function checkNotifications() {
     const todoNotifications = checkTodoNotifications(currentTodos);
     const wishNotifications = checkWishNotifications(currentWishes);
@@ -1993,16 +1902,10 @@ function checkNotifications() {
     updateNotificationUI(allNotifications);
 }
 
-/**
- * Clears all current notifications from the UI.
- */
 function clearAllNotifications() {
     allNotifications = [];
     updateNotificationUI(allNotifications);
 }
-
-
-// === Unloading ===
 
 export function unloadJourney() {
     if (unsubscribeTodos) unsubscribeTodos();
@@ -2011,7 +1914,6 @@ export function unloadJourney() {
     if (unsubscribeFavoriteNames) unsubscribeFavoriteNames(); 
 }
 
-// === Utility Functions ===
 export function updateWellnessDataForJourney(newData) {
     wellnessDataForJourney = newData;
 }
